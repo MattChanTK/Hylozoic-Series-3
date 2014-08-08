@@ -1747,9 +1747,11 @@ design rules under a new name.</description>
 <contactref element="IC1" pad="OUT"/>
 <contactref element="JP2" pad="1"/>
 <contactref element="JP2" pad="3"/>
+<contactref element="JP1" pad="2"/>
 <wire x1="-51.435" y1="35.56" x2="-97.79" y2="-2.54" width="0" layer="19" extent="1-1"/>
 <wire x1="-33.15" y1="54.61" x2="-51.435" y2="35.56" width="0" layer="19" extent="1-1"/>
-<wire x1="-175.26" y1="-171.45" x2="-97.79" y2="-2.54" width="0" layer="19" extent="1-1"/>
+<wire x1="-165.1" y1="-171.45" x2="-97.79" y2="-2.54" width="0" layer="19" extent="1-1"/>
+<wire x1="-175.26" y1="-171.45" x2="-165.1" y2="-171.45" width="0" layer="19" extent="1-1"/>
 <wire x1="-180.34" y1="-171.45" x2="-175.26" y2="-171.45" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="+3V3">
@@ -1824,7 +1826,6 @@ design rules under a new name.</description>
 <contactref element="T4" pad="3"/>
 <contactref element="R7" pad="1"/>
 <contactref element="C5" pad="2"/>
-<contactref element="JP1" pad="2"/>
 <contactref element="X2" pad="2"/>
 <contactref element="JP3" pad="2"/>
 <contactref element="C1" pad="2"/>
@@ -1847,8 +1848,7 @@ design rules under a new name.</description>
 <wire x1="-35.56" y1="46.97" x2="-40.51" y2="54.61" width="0" layer="19" extent="1-1"/>
 <wire x1="-30.35" y1="54.61" x2="-35.56" y2="46.97" width="0" layer="19" extent="1-1"/>
 <wire x1="-20.32" y1="46.97" x2="-30.35" y2="54.61" width="0" layer="19" extent="1-1"/>
-<wire x1="-165.1" y1="-171.45" x2="-136.042" y2="-104.14" width="0" layer="19" extent="1-1"/>
-<wire x1="-190.5" y1="-182.88" x2="-165.1" y2="-171.45" width="0" layer="19" extent="1-1"/>
+<wire x1="-190.5" y1="-182.88" x2="-136.042" y2="-104.14" width="0" layer="19" extent="1-1"/>
 <wire x1="-218.44" y1="-223.52" x2="-190.5" y2="-182.88" width="0" layer="19" extent="1-1"/>
 <wire x1="-228.6" y1="-223.52" x2="-218.44" y2="-223.52" width="0" layer="19" extent="1-1"/>
 <wire x1="-214.5" y1="-242.57" x2="-218.44" y2="-223.52" width="0" layer="19" extent="1-1"/>
@@ -1857,9 +1857,9 @@ design rules under a new name.</description>
 <signal name="SMA1_OUT-">
 <contactref element="T1" pad="2"/>
 <contactref element="X5" pad="2"/>
-<contactref element="LED1" pad="A"/>
+<contactref element="R9" pad="1"/>
 <wire x1="-67.31" y1="8.85" x2="-110.53" y2="-6.35" width="0" layer="19" extent="1-1"/>
-<wire x1="-143.03" y1="-120.65" x2="-110.53" y2="-6.35" width="0" layer="19" extent="1-1"/>
+<wire x1="-147.472" y1="-137.16" x2="-110.53" y2="-6.35" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="N$4">
 <contactref element="T1" pad="1"/>
@@ -1878,7 +1878,9 @@ design rules under a new name.</description>
 <signal name="SMA2_OUT-">
 <contactref element="T2" pad="2"/>
 <contactref element="X6" pad="2"/>
+<contactref element="R10" pad="1"/>
 <wire x1="-142.24" y1="-36.87" x2="-139.74" y2="-50.8" width="0" layer="19" extent="1-1"/>
+<wire x1="-147.472" y1="-143.51" x2="-139.74" y2="-50.8" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="N$2">
 <contactref element="T3" pad="1"/>
@@ -1899,24 +1901,15 @@ design rules under a new name.</description>
 <contactref element="R9" pad="2"/>
 <wire x1="-146.53" y1="-120.65" x2="-144.628" y2="-137.16" width="0" layer="19" extent="1-1"/>
 </signal>
-<signal name="SMA1_OUT-1">
-<contactref element="LED2" pad="A"/>
-</signal>
 <signal name="N$6">
 <contactref element="LED2" pad="C"/>
 <contactref element="R10" pad="2"/>
 <wire x1="-144.628" y1="-143.51" x2="-146.53" y2="-149.86" width="0" layer="19" extent="1-1"/>
 </signal>
-<signal name="SMA1_OUT-2">
-<contactref element="LED3" pad="A"/>
-</signal>
 <signal name="N$7">
 <contactref element="LED3" pad="C"/>
 <contactref element="R11" pad="2"/>
 <wire x1="-144.628" y1="-154.94" x2="-146.53" y2="-161.29" width="0" layer="19" extent="1-1"/>
-</signal>
-<signal name="SMA1_OUT-3">
-<contactref element="LED4" pad="A"/>
 </signal>
 <signal name="N$8">
 <contactref element="LED4" pad="C"/>
@@ -1926,23 +1919,23 @@ design rules under a new name.</description>
 <signal name="SMA3_OUT-">
 <contactref element="T3" pad="2"/>
 <contactref element="X7" pad="2"/>
+<contactref element="R11" pad="1"/>
 <wire x1="-142.24" y1="-64.81" x2="-139.74" y2="-78.74" width="0" layer="19" extent="1-1"/>
+<wire x1="-147.472" y1="-154.94" x2="-139.74" y2="-78.74" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="SMA4_OUT-">
 <contactref element="T4" pad="2"/>
 <contactref element="X8" pad="2"/>
-<wire x1="-142.24" y1="-92.75" x2="-139.74" y2="-106.68" width="0" layer="19" extent="1-1"/>
-</signal>
-<signal name="GND_TEST">
-<contactref element="R11" pad="1"/>
 <contactref element="R12" pad="1"/>
-<contactref element="JP1" pad="1"/>
-<contactref element="R9" pad="1"/>
-<contactref element="R10" pad="1"/>
-<wire x1="-147.472" y1="-166.37" x2="-167.64" y2="-171.45" width="0" layer="19" extent="1-1"/>
-<wire x1="-147.472" y1="-154.94" x2="-147.472" y2="-166.37" width="0" layer="19" extent="1-1"/>
-<wire x1="-147.472" y1="-143.51" x2="-147.472" y2="-154.94" width="0" layer="19" extent="1-1"/>
-<wire x1="-147.472" y1="-137.16" x2="-147.472" y2="-143.51" width="0" layer="19" extent="1-1"/>
+<wire x1="-142.24" y1="-92.75" x2="-139.74" y2="-106.68" width="0" layer="19" extent="1-1"/>
+<wire x1="-147.472" y1="-166.37" x2="-139.74" y2="-106.68" width="0" layer="19" extent="1-1"/>
+</signal>
+<signal name="LED_TEST">
+<contactref element="LED2" pad="A"/>
+<contactref element="LED3" pad="A"/>
+<contactref element="LED4" pad="A"/>
+<wire x1="-143.03" y1="-161.29" x2="-143.03" y2="-172.72" width="0" layer="19" extent="1-1"/>
+<wire x1="-143.03" y1="-149.86" x2="-143.03" y2="-161.29" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="+5V_HI-PWR">
 <contactref element="JP2" pad="2"/>
@@ -1954,6 +1947,11 @@ design rules under a new name.</description>
 <wire x1="-144.74" y1="-50.8" x2="-144.74" y2="-78.74" width="0" layer="19" extent="1-1"/>
 <wire x1="-115.53" y1="-6.35" x2="-144.74" y2="-50.8" width="0" layer="19" extent="1-1"/>
 <wire x1="-177.8" y1="-171.45" x2="-144.74" y2="-106.68" width="0" layer="19" extent="1-1"/>
+</signal>
+<signal name="TEST_LED">
+<contactref element="LED1" pad="A"/>
+<contactref element="JP1" pad="3"/>
+<wire x1="-143.03" y1="-120.65" x2="-162.56" y2="-171.45" width="0" layer="19" extent="1-1"/>
 </signal>
 </signals>
 </board>
