@@ -8497,7 +8497,7 @@ Grid 5.08 mm&lt;p&gt;
 <frame x1="0" y1="0" x2="292.1" y2="203.2" columns="8" rows="5" layer="91"/>
 <text x="198.12" y="20.32" size="5.08" layer="91">Tentacle Module</text>
 <text x="198.12" y="10.16" size="2.54" layer="91">Matthew T.K. Chan
-2014-08-08</text>
+2014-08-09</text>
 <text x="15.24" y="124.46" size="1.778" layer="91">+12V supply headers
     * for attachment of polarized headers
     * may deliver power to another module with the second header</text>
