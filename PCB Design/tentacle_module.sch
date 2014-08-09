@@ -8409,7 +8409,7 @@ Grid 5.08 mm&lt;p&gt;
 <part name="X2" library="con-wago-508" deviceset="W237-03P" device=""/>
 <part name="C4" library="rcl" deviceset="C-US" device="C1206" value="10uF"/>
 <part name="C2" library="rcl" deviceset="C-US" device="C1206" value="10uF"/>
-<part name="C5" library="rcl" deviceset="C-US" device="C1210" value="10uF"/>
+<part name="C5" library="rcl" deviceset="C-US" device="C1206" value="10uF"/>
 <part name="P+1" library="supply1" deviceset="+12V" device=""/>
 <part name="P+2" library="supply1" deviceset="+12V" device=""/>
 <part name="P+7" library="supply1" deviceset="+5V" device="" value="+5V_SW-REG"/>
@@ -8455,7 +8455,7 @@ Grid 5.08 mm&lt;p&gt;
 <part name="JP3" library="pinhead" deviceset="PINHD-1X3" device="/90"/>
 <part name="PE16" library="supply1" deviceset="PE" device=""/>
 <part name="P+12" library="supply1" deviceset="+5V" device="" value="+5V_SW-REG"/>
-<part name="C1" library="rcl" deviceset="C-US" device="C1210" value="470uF"/>
+<part name="C1" library="rcl" deviceset="C-US" device="C1206" value="470uF"/>
 <part name="PE18" library="supply1" deviceset="PE" device=""/>
 <part name="PE19" library="supply1" deviceset="PE" device=""/>
 <part name="JP5" library="pinhead" deviceset="PINHD-1X3" device="/90"/>
