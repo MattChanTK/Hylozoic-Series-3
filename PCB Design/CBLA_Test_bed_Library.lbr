@@ -4025,8 +4025,6 @@ Source: VISHAY wscwsn.pdf</description>
 <text x="-2.54" y="7.62" size="1.778" layer="95">&gt;NAME</text>
 <text x="-2.54" y="-5.588" size="1.778" layer="96">&gt;VALUE</text>
 </symbol>
-<<<<<<< HEAD
-=======
 <symbol name="74HC4051">
 </symbol>
 <symbol name="78XX-1">
