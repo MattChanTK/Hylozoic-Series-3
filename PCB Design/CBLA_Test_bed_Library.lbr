@@ -5502,7 +5502,7 @@ Source: &lt;a href="http://www.onsemi.com/pub_link/Collateral/MC7800-D.PDF"&gt;D
 </device>
 </devices>
 </deviceset>
-<deviceset name="UA78M">
+<deviceset name="UA78M" prefix="IC">
 <description>Linear Voltage Reg
 &lt;A href= "http://www.ti.com/lit/ds/symlink/ua78m05.pdf"&gt; Datasheet&lt;/A&gt;</description>
 <gates>
