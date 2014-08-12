@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.0.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -15123,8 +15123,8 @@ Grid 5.08 mm&lt;p&gt;
 <attribute name="NAME" x="36.195" y="165.354" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="39.751" y="175.006" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="LED5" gate="G$1" x="48.26" y="165.1"/>
-<instance part="R13" gate="G$1" x="48.26" y="154.94" rot="R90"/>
+<instance part="LED5" gate="G$1" x="50.8" y="167.64"/>
+<instance part="R13" gate="G$1" x="50.8" y="157.48" rot="R90"/>
 <instance part="X6" gate="-1" x="226.06" y="109.22"/>
 <instance part="X6" gate="-2" x="226.06" y="104.14"/>
 <instance part="LED7" gate="G$1" x="261.62" y="111.76"/>
@@ -15158,7 +15158,7 @@ Grid 5.08 mm&lt;p&gt;
 <instance part="JP13" gate="A" x="139.7" y="152.4" rot="R180"/>
 <instance part="U1" gate="G$1" x="27.94" y="53.34"/>
 <instance part="P+13" gate="1" x="63.5" y="76.2"/>
-<instance part="JP14" gate="1" x="53.34" y="68.58"/>
+<instance part="JP14" gate="1" x="53.34" y="71.12" rot="MR0"/>
 <instance part="PE1" gate="1" x="50.8" y="22.86"/>
 <instance part="P+3" gate="1" x="73.66" y="76.2" smashed="yes">
 <attribute name="VALUE" x="73.66" y="76.2" size="1.778" layer="96"/>
@@ -15166,7 +15166,7 @@ Grid 5.08 mm&lt;p&gt;
 <instance part="R10" gate="G$1" x="40.64" y="43.18" rot="R90"/>
 <instance part="LED2" gate="G$1" x="66.04" y="45.72"/>
 <instance part="R11" gate="G$1" x="66.04" y="33.02" rot="R90"/>
-<instance part="JP2" gate="1" x="45.72" y="142.24" rot="R90"/>
+<instance part="JP2" gate="1" x="45.72" y="144.78" rot="R90"/>
 <instance part="C3" gate="G$1" x="139.7" y="86.36"/>
 <instance part="C5" gate="G$1" x="139.7" y="43.18"/>
 <instance part="C6" gate="G$1" x="246.38" y="144.78"/>
@@ -15220,12 +15220,12 @@ Grid 5.08 mm&lt;p&gt;
 <junction x="25.4" y="172.72"/>
 <pinref part="D1" gate="G$1" pin="C"/>
 <wire x1="38.1" y1="172.72" x2="38.1" y2="170.18" width="0.1524" layer="91"/>
-<wire x1="38.1" y1="172.72" x2="48.26" y2="172.72" width="0.1524" layer="91"/>
+<wire x1="38.1" y1="172.72" x2="50.8" y2="172.72" width="0.1524" layer="91"/>
 <junction x="38.1" y="172.72"/>
 <pinref part="X1" gate="-1" pin="KL"/>
 <junction x="25.4" y="165.1"/>
 <pinref part="LED5" gate="G$1" pin="A"/>
-<wire x1="48.26" y1="172.72" x2="48.26" y2="167.64" width="0.1524" layer="91"/>
+<wire x1="50.8" y1="172.72" x2="50.8" y2="170.18" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="76.2" y1="175.26" x2="76.2" y2="152.4" width="0.1524" layer="91"/>
@@ -15246,12 +15246,12 @@ Grid 5.08 mm&lt;p&gt;
 <segment>
 <pinref part="U1" gate="G$1" pin="VIN"/>
 <pinref part="P+13" gate="1" pin="+12V"/>
-<wire x1="38.1" y1="55.88" x2="63.5" y2="55.88" width="0.1524" layer="91"/>
-<wire x1="63.5" y1="55.88" x2="63.5" y2="66.04" width="0.1524" layer="91"/>
-<pinref part="JP14" gate="1" pin="3"/>
-<wire x1="63.5" y1="66.04" x2="63.5" y2="73.66" width="0.1524" layer="91"/>
-<wire x1="55.88" y1="66.04" x2="63.5" y2="66.04" width="0.1524" layer="91"/>
-<junction x="63.5" y="66.04"/>
+<wire x1="38.1" y1="55.88" x2="55.88" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="55.88" y1="55.88" x2="63.5" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="55.88" x2="63.5" y2="73.66" width="0.1524" layer="91"/>
+<pinref part="JP14" gate="1" pin="1"/>
+<wire x1="55.88" y1="68.58" x2="55.88" y2="55.88" width="0.1524" layer="91"/>
+<junction x="55.88" y="55.88"/>
 </segment>
 </net>
 <net name="+5V" class="0">
@@ -15547,21 +15547,21 @@ Grid 5.08 mm&lt;p&gt;
 </segment>
 <segment>
 <pinref part="PE1" gate="1" pin="GND"/>
-<pinref part="JP14" gate="1" pin="1"/>
 <pinref part="U1" gate="G$1" pin="GND"/>
 <wire x1="50.8" y1="25.4" x2="50.8" y2="38.1" width="0.1524" layer="91"/>
 <wire x1="50.8" y1="38.1" x2="50.8" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="50.8" y1="53.34" x2="50.8" y2="66.04" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="53.34" x2="50.8" y2="53.34" width="0.1524" layer="91"/>
-<junction x="50.8" y="53.34"/>
 <pinref part="R10" gate="G$1" pin="1"/>
 <wire x1="40.64" y1="38.1" x2="50.8" y2="38.1" width="0.1524" layer="91"/>
 <junction x="50.8" y="38.1"/>
+<pinref part="JP14" gate="1" pin="3"/>
+<wire x1="50.8" y1="53.34" x2="50.8" y2="68.58" width="0.1524" layer="91"/>
+<junction x="50.8" y="53.34"/>
 </segment>
 <segment>
 <pinref part="PE18" gate="1" pin="GND"/>
 <wire x1="58.42" y1="142.24" x2="58.42" y2="139.7" width="0.1524" layer="91"/>
-<pinref part="JP2" gate="1" pin="2"/>
+<pinref part="JP2" gate="1" pin="1"/>
 <wire x1="48.26" y1="142.24" x2="58.42" y2="142.24" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -15879,9 +15879,9 @@ Grid 5.08 mm&lt;p&gt;
 <segment>
 <pinref part="U1" gate="G$1" pin="ON/OFF"/>
 <wire x1="38.1" y1="58.42" x2="53.34" y2="58.42" width="0.1524" layer="91"/>
-<pinref part="JP14" gate="1" pin="2"/>
-<wire x1="53.34" y1="58.42" x2="53.34" y2="66.04" width="0.1524" layer="91"/>
 <label x="35.56" y="58.42" size="1.778" layer="95"/>
+<pinref part="JP14" gate="1" pin="2"/>
+<wire x1="53.34" y1="58.42" x2="53.34" y2="68.58" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$6" class="0">
@@ -15900,18 +15900,19 @@ Grid 5.08 mm&lt;p&gt;
 </net>
 <net name="PWR_LED_GND" class="0">
 <segment>
-<pinref part="R13" gate="G$1" pin="1"/>
-<wire x1="48.26" y1="149.86" x2="48.26" y2="144.78" width="0.1524" layer="91"/>
-<pinref part="JP2" gate="1" pin="3"/>
-<label x="53.34" y="144.78" size="1.778" layer="95"/>
-<wire x1="48.26" y1="144.78" x2="53.34" y2="144.78" width="0.1524" layer="91"/>
-<junction x="48.26" y="144.78"/>
-</segment>
-<segment>
 <pinref part="R11" gate="G$1" pin="1"/>
 <wire x1="66.04" y1="25.4" x2="66.04" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="25.4" x2="81.28" y2="25.4" width="0.1524" layer="91"/>
 <label x="73.66" y="25.4" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="JP2" gate="1" pin="2"/>
+<wire x1="48.26" y1="144.78" x2="50.8" y2="144.78" width="0.1524" layer="91"/>
+<wire x1="50.8" y1="144.78" x2="50.8" y2="152.4" width="0.1524" layer="91"/>
+<pinref part="R13" gate="G$1" pin="1"/>
+<label x="58.42" y="144.78" size="1.778" layer="95"/>
+<wire x1="50.8" y1="144.78" x2="58.42" y2="144.78" width="0.1524" layer="91"/>
+<junction x="50.8" y="144.78"/>
 </segment>
 </net>
 <net name="N$12" class="0">
