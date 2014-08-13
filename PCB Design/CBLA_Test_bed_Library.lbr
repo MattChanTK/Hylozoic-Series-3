@@ -6283,7 +6283,7 @@ Source: &lt;a href="http://www.onsemi.com/pub_link/Collateral/MC7800-D.PDF"&gt;D
 </device>
 </devices>
 </deviceset>
-<deviceset name="SQP500">
+<deviceset name="SQP500" prefix="R">
 <gates>
 <gate name="G$1" symbol="R-US" x="0" y="0"/>
 </gates>
