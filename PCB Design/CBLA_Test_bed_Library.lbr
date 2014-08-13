@@ -4395,16 +4395,16 @@ Source: VISHAY wscwsn.pdf</description>
 <description>RES 5.6 OHM 5W 5% AXIAL
 SQP500JB-5R6
 (&lt;a href="http://www.yageo.com/documents/recent/Yageo%20LR_SQP%20NSP_2013.pdf"&gt;Datasheet&lt;/a&gt;)</description>
-<wire x1="0" y1="10.5" x2="23.5" y2="10.5" width="0.127" layer="21"/>
-<wire x1="23.5" y1="0" x2="0" y2="0" width="0.127" layer="21"/>
-<wire x1="-0.75" y1="5.25" x2="-2" y2="5.25" width="0.85" layer="21"/>
-<wire x1="25.5" y1="5.25" x2="24.25" y2="5.25" width="0.85" layer="21"/>
-<text x="4" y="3" size="1.6764" layer="21">5 W 5.6 OHM J
+<wire x1="-11.5" y1="5.25" x2="12" y2="5.25" width="0.127" layer="21"/>
+<wire x1="12" y1="-5.25" x2="-11.5" y2="-5.25" width="0.127" layer="21"/>
+<wire x1="-12.25" y1="0" x2="-13.5" y2="0" width="0.85" layer="21"/>
+<wire x1="14" y1="0" x2="12.75" y2="0" width="0.85" layer="21"/>
+<text x="-7.5" y="-2.25" size="1.6764" layer="21">5 W 5.6 OHM J
 YAGEO 926</text>
-<pad name="1" x="-3.5" y="5.25" drill="1.2"/>
-<pad name="2" x="27" y="5.25" drill="1.2"/>
-<wire x1="0" y1="10.5" x2="0" y2="0" width="0.127" layer="21"/>
-<wire x1="23.5" y1="10.5" x2="23.5" y2="0.25" width="0.127" layer="21"/>
+<pad name="1" x="-15" y="0" drill="1.2"/>
+<pad name="2" x="15.5" y="0" drill="1.2"/>
+<wire x1="-11.5" y1="5.25" x2="-11.5" y2="-5.25" width="0.127" layer="21"/>
+<wire x1="12" y1="5.25" x2="12" y2="-5.25" width="0.127" layer="21"/>
 </package>
 </packages>
 <symbols>
