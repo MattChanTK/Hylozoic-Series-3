@@ -5116,7 +5116,7 @@ Source: MBRS340T3-D.pdf</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="MA04-2" prefix="SV" uservalue="yes">
+<deviceset name="MA04-2" prefix="X" uservalue="yes">
 <description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
 <gates>
 <gate name="G$1" symbol="MA04-2" x="0" y="0"/>
