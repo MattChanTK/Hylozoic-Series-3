@@ -6186,7 +6186,7 @@ Source: MBRS340T3-D.pdf</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="558872-1" prefix="J" uservalue="yes">
+<deviceset name="558872-1" prefix="X" uservalue="yes">
 <description>&lt;b&gt;AMP connector&lt;/b&gt;</description>
 <gates>
 <gate name="G$1" symbol="JACK4" x="0" y="0"/>
