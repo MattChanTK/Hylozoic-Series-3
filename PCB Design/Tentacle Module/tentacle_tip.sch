@@ -7878,11 +7878,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 </net>
 <net name="SCL" class="0">
 <segment>
-<pinref part="X1" gate="G$1" pin="6"/>
-<wire x1="43.18" y1="147.32" x2="30.48" y2="147.32" width="0.1524" layer="91"/>
-<label x="30.48" y="147.32" size="1.778" layer="95"/>
-</segment>
-<segment>
 <pinref part="U1" gate="G$1" pin="SCL"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="96.52" y1="88.9" x2="119.38" y2="88.9" width="0.1524" layer="91"/>
@@ -7891,13 +7886,13 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <junction x="119.38" y="88.9"/>
 <label x="129.54" y="88.9" size="1.778" layer="95"/>
 </segment>
-</net>
-<net name="SDA" class="0">
 <segment>
 <pinref part="X1" gate="G$1" pin="5"/>
 <wire x1="58.42" y1="147.32" x2="71.12" y2="147.32" width="0.1524" layer="91"/>
 <label x="66.04" y="147.32" size="1.778" layer="95"/>
 </segment>
+</net>
+<net name="SDA" class="0">
 <segment>
 <pinref part="R1" gate="G$1" pin="1"/>
 <wire x1="111.76" y1="96.52" x2="111.76" y2="91.44" width="0.1524" layer="91"/>
@@ -7906,6 +7901,11 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <junction x="111.76" y="91.44"/>
 <label x="129.54" y="91.44" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="SDA"/>
+</segment>
+<segment>
+<pinref part="X1" gate="G$1" pin="6"/>
+<wire x1="43.18" y1="147.32" x2="30.48" y2="147.32" width="0.1524" layer="91"/>
+<label x="30.48" y="147.32" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>

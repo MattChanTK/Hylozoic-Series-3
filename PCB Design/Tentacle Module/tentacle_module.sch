@@ -15414,19 +15414,19 @@ Grid 5.08 mm&lt;p&gt;
 <label x="96.52" y="172.72" size="1.778" layer="95"/>
 </segment>
 <segment>
-<pinref part="X5" gate="G$1" pin="6"/>
-<wire x1="137.16" y1="175.26" x2="127" y2="175.26" width="0.1524" layer="91"/>
-<label x="127" y="175.26" size="1.778" layer="95"/>
-</segment>
-<segment>
 <wire x1="114.3" y1="144.78" x2="96.52" y2="144.78" width="0.1524" layer="91"/>
 <label x="96.52" y="144.78" size="1.778" layer="95"/>
 <pinref part="X4" gate="A" pin="2"/>
 </segment>
 <segment>
-<wire x1="142.24" y1="147.32" x2="127" y2="147.32" width="0.1524" layer="91"/>
-<label x="127" y="147.32" size="1.778" layer="95"/>
-<pinref part="X6" gate="A" pin="3"/>
+<pinref part="X5" gate="G$1" pin="5"/>
+<wire x1="137.16" y1="177.8" x2="127" y2="177.8" width="0.1524" layer="91"/>
+<label x="127" y="177.8" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="142.24" y1="149.86" x2="127" y2="149.86" width="0.1524" layer="91"/>
+<label x="127" y="149.86" size="1.778" layer="95"/>
+<pinref part="X6" gate="A" pin="4"/>
 </segment>
 </net>
 <net name="SDA" class="0">
@@ -15436,19 +15436,19 @@ Grid 5.08 mm&lt;p&gt;
 <label x="96.52" y="170.18" size="1.778" layer="95"/>
 </segment>
 <segment>
-<pinref part="X5" gate="G$1" pin="5"/>
-<wire x1="137.16" y1="177.8" x2="127" y2="177.8" width="0.1524" layer="91"/>
-<label x="127" y="177.8" size="1.778" layer="95"/>
-</segment>
-<segment>
 <wire x1="114.3" y1="142.24" x2="96.52" y2="142.24" width="0.1524" layer="91"/>
 <label x="96.52" y="142.24" size="1.778" layer="95"/>
 <pinref part="X4" gate="A" pin="1"/>
 </segment>
 <segment>
-<wire x1="142.24" y1="149.86" x2="127" y2="149.86" width="0.1524" layer="91"/>
-<label x="127" y="149.86" size="1.778" layer="95"/>
-<pinref part="X6" gate="A" pin="4"/>
+<pinref part="X5" gate="G$1" pin="6"/>
+<wire x1="137.16" y1="175.26" x2="127" y2="175.26" width="0.1524" layer="91"/>
+<label x="127" y="175.26" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="142.24" y1="147.32" x2="127" y2="147.32" width="0.1524" layer="91"/>
+<label x="127" y="147.32" size="1.778" layer="95"/>
+<pinref part="X6" gate="A" pin="3"/>
 </segment>
 </net>
 <net name="+3.3V" class="0">
