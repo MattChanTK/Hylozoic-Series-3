@@ -14828,7 +14828,7 @@ Grid 5.08 mm&lt;p&gt;
 <part name="IC1" library="CBLA_Test_bed_Library" deviceset="MC78" device="" technology="05BDTRKG"/>
 <part name="R3" library="CBLA_Test_bed_Library" deviceset="SQP500" device="JB-5R6" value="5.6"/>
 <part name="P+6" library="supply1" deviceset="+12V" device=""/>
-<part name="R2" library="CBLA_Test_bed_Library" deviceset="R-US_" device="R0603"/>
+<part name="R2" library="CBLA_Test_bed_Library" deviceset="R-US_" device="R0603" value="4.7k"/>
 <part name="C3" library="rcl" deviceset="C-US" device="C0603" value="1uF"/>
 <part name="P+8" library="supply1" deviceset="+5V" device=""/>
 <part name="GND7" library="supply1" deviceset="GND" device=""/>
