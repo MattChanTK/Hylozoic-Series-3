@@ -128,6 +128,20 @@
 <text x="18.46" y="14" size="0.6096" layer="21">5V</text>
 <text x="20.794" y="14" size="0.6096" layer="21">GND</text>
 <text x="26.924" y="6.096" size="0.6096" layer="21" rot="R90">AXDL345</text>
+<text x="9.272" y="8.5" size="0.6096" layer="22" rot="MR0">SCL</text>
+<text x="9.272" y="6" size="0.6096" layer="22" rot="MR0">IR2</text>
+<text x="9.685" y="2.135" size="0.6096" layer="22" rot="MR0">GND</text>
+<text x="17.226" y="2.135" size="0.6096" layer="22" rot="MR0">3.3V</text>
+<text x="16.504" y="6" size="0.6096" layer="22" rot="MR0">5V</text>
+<text x="15.5" y="8.5" size="0.6096" layer="21">SDA</text>
+<text x="17.012" y="8.5" size="0.6096" layer="22" rot="MR0">SDA</text>
+<text x="19.386" y="14" size="0.6096" layer="22" rot="MR0">5V</text>
+<text x="22.386" y="14" size="0.6096" layer="22" rot="MR0">GND</text>
+<text x="24.76" y="14" size="0.6096" layer="22" rot="MR0">SIG</text>
+<text x="32.766" y="1.016" size="1.27" layer="21" ratio="15">Tentacle Tip</text>
+<text x="31.75" y="7.366" size="1.27" layer="22" ratio="15" rot="MR0">Tentacle Tip</text>
+<text x="31.496" y="6.096" size="0.6096" layer="22" ratio="15" rot="MR0">08/2014</text>
+<text x="41.402" y="2.794" size="0.6096" layer="21" ratio="15">08/2014</text>
 </plain>
 <libraries>
 <library name="rcl">
