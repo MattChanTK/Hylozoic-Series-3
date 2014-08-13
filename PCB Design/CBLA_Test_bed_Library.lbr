@@ -5208,7 +5208,7 @@ Source: MBRS340T3-D.pdf</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="OKR-T/10-W12">
+<deviceset name="OKR-T/10-W12" prefix="IC">
 <description>&lt;b&gt;5V/10A Murata POL DC/DC Converter&lt;/b&gt;</description>
 <gates>
 <gate name="G$1" symbol="OKR-T/*-W12" x="0" y="0"/>
