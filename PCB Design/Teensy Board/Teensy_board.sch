@@ -15951,6 +15951,7 @@ W = angled&lt;p&gt;
 <pinref part="R1" gate="G$1" pin="2"/>
 <pinref part="LED1" gate="G$1" pin="C"/>
 <wire x1="232.41" y1="57.15" x2="232.41" y2="55.88" width="0.1524" layer="91"/>
+<junction x="232.41" y="55.88"/>
 </segment>
 </net>
 <net name="SPWM_1_1" class="0">
@@ -16715,6 +16716,7 @@ W = angled&lt;p&gt;
 <pinref part="R5" gate="G$1" pin="2"/>
 <pinref part="R5" gate="G$1" pin="2"/>
 <wire x1="180.34" y1="24.13" x2="180.34" y2="25.4" width="0.1524" layer="91"/>
+<junction x="180.34" y="24.13"/>
 </segment>
 </net>
 <net name="TEENSY_3V3" class="0">
