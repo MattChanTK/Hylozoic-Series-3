@@ -2073,14 +2073,7 @@ for trimmer refence see : &lt;u&gt;www.electrospec-inc.com/cross_references/trim
 <class number="0" name="default" width="0" drill="0">
 </class>
 </classes>
-<designrules name="default *">
-<description language="de">&lt;b&gt;EAGLE Design Rules&lt;/b&gt;
-&lt;p&gt;
-Die Standard-Design-Rules sind so gewählt, dass sie für 
-die meisten Anwendungen passen. Sollte ihre Platine 
-besondere Anforderungen haben, treffen Sie die erforderlichen
-Einstellungen hier und speichern die Design Rules unter 
-einem neuen Namen ab.</description>
+<designrules name="SparkFun">
 <description language="en">&lt;b&gt;EAGLE Design Rules&lt;/b&gt;
 &lt;p&gt;
 The default Design Rules have been set to cover
@@ -2102,10 +2095,10 @@ design rules under a new name.</description>
 <param name="mdSmdSmd" value="8mil"/>
 <param name="mdViaViaSameLayer" value="8mil"/>
 <param name="mnLayersViaInSmd" value="2"/>
-<param name="mdCopperDimension" value="24mil"/>
+<param name="mdCopperDimension" value="10mil"/>
 <param name="mdDrill" value="8mil"/>
 <param name="mdSmdStop" value="0mil"/>
-<param name="msWidth" value="10mil"/>
+<param name="msWidth" value="8mil"/>
 <param name="msDrill" value="20mil"/>
 <param name="msMicroVia" value="9.99mm"/>
 <param name="msBlindViaRatio" value="0.5"/>
@@ -2116,15 +2109,15 @@ design rules under a new name.</description>
 <param name="rvViaInner" value="0.25"/>
 <param name="rvMicroViaOuter" value="0.25"/>
 <param name="rvMicroViaInner" value="0.25"/>
-<param name="rlMinPadTop" value="10mil"/>
+<param name="rlMinPadTop" value="12mil"/>
 <param name="rlMaxPadTop" value="20mil"/>
 <param name="rlMinPadInner" value="10mil"/>
 <param name="rlMaxPadInner" value="20mil"/>
-<param name="rlMinPadBottom" value="10mil"/>
+<param name="rlMinPadBottom" value="12mil"/>
 <param name="rlMaxPadBottom" value="20mil"/>
-<param name="rlMinViaOuter" value="8mil"/>
+<param name="rlMinViaOuter" value="10mil"/>
 <param name="rlMaxViaOuter" value="20mil"/>
-<param name="rlMinViaInner" value="8mil"/>
+<param name="rlMinViaInner" value="10mil"/>
 <param name="rlMaxViaInner" value="20mil"/>
 <param name="rlMinMicroViaOuter" value="4mil"/>
 <param name="rlMaxMicroViaOuter" value="20mil"/>
@@ -2141,7 +2134,7 @@ design rules under a new name.</description>
 <param name="mlMaxStopFrame" value="4mil"/>
 <param name="mlMinCreamFrame" value="0mil"/>
 <param name="mlMaxCreamFrame" value="0mil"/>
-<param name="mlViaStopLimit" value="0mil"/>
+<param name="mlViaStopLimit" value="25mil"/>
 <param name="srRoundness" value="0"/>
 <param name="srMinRoundness" value="0mil"/>
 <param name="srMaxRoundness" value="0mil"/>
@@ -2329,15 +2322,15 @@ design rules under a new name.</description>
 <wire x1="34.075" y1="11.31" x2="34.075" y2="12.495" width="0.3048" layer="1"/>
 <wire x1="34.075" y1="12.495" x2="33.87" y2="12.7" width="0.3048" layer="1"/>
 <wire x1="31.4831" y1="10.255" x2="33.02" y2="10.255" width="0.3048" layer="1"/>
-<wire x1="33.02" y1="10.255" x2="34.29" y2="10.255" width="0.3048" layer="1"/>
-<wire x1="34.29" y1="10.255" x2="35.465" y2="10.255" width="0.3048" layer="1"/>
+<wire x1="33.02" y1="10.255" x2="34.544" y2="10.255" width="0.3048" layer="1"/>
+<wire x1="34.544" y1="10.255" x2="35.465" y2="10.255" width="0.3048" layer="1"/>
 <wire x1="35.465" y1="10.255" x2="35.56" y2="10.16" width="0.3048" layer="1"/>
 <wire x1="35.56" y1="10.16" x2="36.195" y2="9.655" width="0.3048" layer="1"/>
 <wire x1="31.75" y1="2.325" x2="33.86" y2="2.325" width="0.6096" layer="1"/>
 <wire x1="33.86" y1="2.325" x2="35.345" y2="3.81" width="0.6096" layer="1"/>
-<wire x1="34.29" y1="10.255" x2="34.29" y2="4.865" width="0.3048" layer="1"/>
-<wire x1="34.29" y1="4.865" x2="35.345" y2="3.81" width="0.3048" layer="1"/>
-<wire x1="32.9" y1="6.255" x2="35.345" y2="3.81" width="0.3048" layer="1"/>
+<wire x1="34.544" y1="10.255" x2="34.544" y2="4.611" width="0.3048" layer="1"/>
+<wire x1="32.9" y1="6.255" x2="34.544" y2="4.611" width="0.3048" layer="1"/>
+<wire x1="34.544" y1="4.611" x2="35.345" y2="3.81" width="0.3048" layer="1"/>
 <wire x1="27.94" y1="2.325" x2="28.995" y2="1.27" width="0.6096" layer="1"/>
 <wire x1="28.995" y1="1.27" x2="30.48" y2="1.27" width="0.6096" layer="1"/>
 <wire x1="30.48" y1="1.27" x2="31.535" y2="2.325" width="0.6096" layer="1"/>

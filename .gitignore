@@ -9,6 +9,7 @@
 *.l#?
 *~*.xlsx
 
+
 # Eagle project file
 # It contains a serial number and references to the file structure
 # on your computer.
@@ -38,3 +39,17 @@ eagle.epf
 *.info
 
 *.eps
+
+*.GTO
+*.GBP
+*.GML
+*.GBS
+*.TXT
+*.GTP
+*.GTS
+*.GTP
+*.GBO
+*.GBL
+*.GTL
+!PCB\ Design/Fabrication/*/*/*
+PCB\ Design/Fabrication/*/*.zip
