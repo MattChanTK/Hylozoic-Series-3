@@ -31,8 +31,10 @@ Below gives a high-level overview of the functions and requirements of each modu
 
 ### Teensy Manager
 
-File: `TeensyInterface.py`
-Base class: `TeensyInterface.TeensyManager`
+```Python
+File: TeensyInterface.py
+Base class: TeensyInterface.TeensyManager
+```
 
 The Teensy Manager is responsible for sending to and receiving messages from the Teensy devices. At start-up, it scans for all Teensy devices connected to the computer. After that, it creates one thread for each Teensy device. This allows messages to be sent to all Teensy devices in parallel. 
 Each Teensy device is identifiable by its unique serial number. The Teensy Manager will assign name to each Teensy device. This allows programming of the _Behaviours_ module without knowing the location of the actual hardware. In addition, Teensy devices can be replaced simply modifying the mapping between names and serial numbers. 
