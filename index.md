@@ -21,7 +21,7 @@ There are mainly two types of software. The first type of software is the firmwa
 * [QT-5](https://qt-project.org/downloads)
 * [PySide](https://qt-project.org/wiki/PySide_Binaries_Windows)
 * [Arduino IDE](http://www.arduino.cc/en/Main/Software)
-* [Teensyduino Add-on](https://www.pjrc.com/teensy/td_download.html)
+* [Teensyduino add-on](https://www.pjrc.com/teensy/td_download.html)
 
 
 ## Python Functional Modules
@@ -32,8 +32,8 @@ Below gives a high-level overview of the functions and requirements of each modu
 ### Teensy Manager
 
 ```
-File: TeensyInterface.py
-Base class: TeensyInterface.TeensyManager
+File: 			TeensyInterface.py
+Base class: 	TeensyInterface.TeensyManager
 ```
 
 The Teensy Manager is responsible for sending to and receiving messages from the Teensy devices. At start-up, it scans for all Teensy devices connected to the computer. After that, it creates one thread for each Teensy device. This allows messages to be sent to all Teensy devices in parallel. 
@@ -49,17 +49,21 @@ To ensure that the correct messages are received by the Teensy devices, the firs
 ### System Parameters
 
 ```
-File: SystemParameters.py, TestUnitConfigurations.py
-Base class: SystemParameters.SystemParameters
-Sub-classes:  TestUnitConfigurations.SimplifiedTestUnit, TestUnitConfigurations.FullTestUnit
+Files: 			SystemParameters.py
+				TestUnitConfigurations.py
+Base class: 	SystemParameters.SystemParameters
+Sub-classes:  	TestUnitConfigurations.SimplifiedTestUnit
+				TestUnitConfigurations.FullTestUnit
 ```
 
 ### Behaviours
 
 ```
-File: InteractiveCMD.py, Behaviours.py
-Base class: InteractiveCMD.InteractiveCMD
-Sub-classes: Behaviours.HardcodedBehaviours, HardcodedBehaviours_test
+File: 			InteractiveCMD.py
+				Behaviours.py
+Base class: 	InteractiveCMD.InteractiveCMD
+Sub-classes: 	Behaviours.HardcodedBehaviours
+				HardcodedBehaviours_test
 ```
 
 ## Graphical User Interface (GUI)
