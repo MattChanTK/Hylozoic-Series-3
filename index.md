@@ -49,18 +49,18 @@ To ensure that the correct messages are received by the Teensy devices, the firs
 ### System Parameters
 
 ```
-<b>File:</b> SystemParameters.py, TestUnitConfigurations.py
+File: SystemParameters.py, TestUnitConfigurations.py
 Base class: SystemParameters.SystemParameters
 Sub-classes:  TestUnitConfigurations.SimplifiedTestUnit, TestUnitConfigurations.FullTestUnit
 ```
 
 ### Behaviours
 
-File: `InteractiveCMD.py`, `Behaviours.py`
-
-Base class: `InteractiveCMD.InteractiveCMD`
-
-Sub-classes: `Behaviours.HardcodedBehaviours`, `HardcodedBehaviours_test`
+```
+File: InteractiveCMD.py, Behaviours.py
+Base class: InteractiveCMD.InteractiveCMD
+Sub-classes: Behaviours.HardcodedBehaviours, HardcodedBehaviours_test
+```
 
 ## Graphical User Interface (GUI)
 
