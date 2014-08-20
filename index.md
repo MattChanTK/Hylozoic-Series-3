@@ -31,7 +31,7 @@ Below gives a high-level overview of the functions and requirements of each modu
 
 ### Teensy Manager
 
-```Python
+```
 File: TeensyInterface.py
 Base class: TeensyInterface.TeensyManager
 ```
@@ -48,11 +48,11 @@ To ensure that the correct messages are received by the Teensy devices, the firs
 
 ### System Parameters
 
-File: `SystemParameters.py`, `TestUnitConfigurations.py`
-
-Base class: `SystemParameters.SystemParameters`
-
-Sub-classes:  `TestUnitConfigurations.SimplifiedTestUnit`, `TestUnitConfigurations.FullTestUnit`
+```
+<b>File:</b> SystemParameters.py, TestUnitConfigurations.py
+Base class: SystemParameters.SystemParameters
+Sub-classes:  TestUnitConfigurations.SimplifiedTestUnit, TestUnitConfigurations.FullTestUnit
+```
 
 ### Behaviours
 
