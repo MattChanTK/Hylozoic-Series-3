@@ -11,7 +11,7 @@ The main microcontroller used in the current version of the CBLA Test Bed is Tee
 
 There are mainly two types of software. The first type of software is the firmware. They are the software that get uploaded onto the Teensy. They are written in Arduino and compiled using Teensyduino. They perform low-level and local functions. These functions should continue to function even if the connection to the computer is severed. The firmware is mainly responsible for routines that require high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run those Python scripts, the software packages listed under _System Requirements_ must be installed and set up appropriately. 
 
-
+  
 ## System Requirements
 
 * Windows OS (tested on Windows 8, but should work on XP, Vista and 7 too)
@@ -23,12 +23,12 @@ There are mainly two types of software. The first type of software is the firmwa
 * [Arduino IDE](http://www.arduino.cc/en/Main/Software)
 * [Teensyduino add-on](https://www.pjrc.com/teensy/td_download.html)
 
-
+  
 ## Python Functional Modules
 
 The Python scripts facilitate all communications among the Teensy devices. They can mainly be separated into three functional modules. Each module are encapsulated in ways that modifications of implementation details in one module will not affect another module, as long as all the required parameters are given correctly. 
 Below gives a high-level overview of the functions and requirements of each module and how they interact with other modules. In a nutshell, one modifies the interface between the computer and Teensy devices at the _Teensy Manager_ module; the input and output parameters and the messaging protocol at the _System Parameters_ module; and the system behaviours (i.e. what to do with the input data and what output command to send out) at the _Behaviours_ module. The best practice would be to creating a sub-class from those modules and overriding only the necessary functions. 
-
+  
 ### Teensy Manager
 
 ```
@@ -56,9 +56,9 @@ Sub-classes:  	TestUnitConfigurations.SimplifiedTestUnit
 				TestUnitConfigurations.FullTestUnit
 ```
 
-A _System Parameters_ is instantiate within each Teensy thread. In other word, if desired, each Teensy device may have different sets of input and output parameters. The output parameters specify the action that can be performed by the sculptural system. For example, an action may be "blink LED" and its parameter is the blinking period. The firmware on the Teensy device will take care of low-level timing of the LED actuation, while the Python scripts on the computer can specify how often the LED should turn on or off. In scheme, a transfer of message is only necessary when a change in parameter is required. Moreover, even when the connection between computer and a Teensy device is severed, the Teensy device will continue to function according to the latest parameter values before the disconnection.  Input parameters are the sensor readings and state information measured right after the latest parameter change request (which can be empty) is sent. The idea is that the list of output parameters will always be synchronized between the computer and the Teensy. On the other hand, the input parameters represents the state of the system corresponding an action enforced by the computer. It is up to the _Behaviours_ module to decide what to do with the input parameters. 
+A _System Parameters_ is instantiated within each Teensy thread. In other word, if desired, each Teensy device may have different sets of input and output parameters. The output parameters specify the action that can be performed by the sculptural system. For example, an action may be "blink LED" and its parameter is the blinking period. The firmware on the Teensy device will take care of low-level timing of the LED actuation, while the Python scripts on the computer can specify how often the LED should turn on or off. In scheme, a transfer of message is only necessary when a change in parameter is required. Moreover, even when the connection between computer and a Teensy device is severed, the Teensy device will continue to function according to the latest parameter values before the disconnection.  Input parameters are the sensor readings and state information measured right after the latest parameter change request (which can be empty) is sent. The idea is that the list of output parameters will always be synchronized between the computer and the Teensy. On the other hand, the input parameters represents the state of the system corresponding an action enforced by the computer. It is up to the _Behaviours_ module to decide what to do with the input parameters. 
 
-Currently, each parameter is stored as a dictionary, or a hash table. Each entry has key which is a string, and a value, which can be of any type. One can modify the list of parameters by overriding the `__init__()` function. In `compose_message_content()` and `parse_message_content()` , one has to specify how to translate those system parameters, to data that can fit in a 62-bytes message and vice versa. The specification of the protocol is completely flexible, as long as the same protocol is implemented on the Teensy devices' firmware. 
+Currently, each parameter is stored as a dictionary, or a hash table. Each entry has key which is a string, and a value, which can be of any type. One can modify the list of parameters by overriding the `__init__()` function. In `compose_message_content()` and `parse_message_content()`, one has to specify how to translate those system parameters, to data that can fit in a 62-bytes message and vice versa. The specification of the protocol is completely flexible, as long as the same protocol is implemented on the Teensy devices' firmware. 
 
 
 ### Behaviours
@@ -68,12 +68,24 @@ Files: 			InteractiveCMD.py
 				Behaviours.py
 Base class: 	InteractiveCMD.InteractiveCMD
 Sub-classes: 	Behaviours.HardcodedBehaviours
-				HardcodedBehaviours_test
+				Behaviours.HardcodedBehaviours_test
 ```
 
+The _Behaviours_ module is where one can program how outputs parameters should be changed and how the input parameters can be used. In the base class `InteractiveCMD`, it prompts the user to enter the command that specify which Teensy to command and what are the changes in parameters. By overriding the `run()` function, one can modify the system's behaviours. In order to effect a change in parameters on a Teensy device, the _Behaviours_ module has to create a `command_object`. It basically has two parameters: the Teensy ID and a queue of change requests for that particular Teensy. To submit change requests to multiple Teensy devices, multiple instances of `command_object` must be created.  These `command_object`'s will then be stored in a queue, called `cmd_q`, within the _Behaviours_ module. Once all the desired commands are entered in the `cmd_q`, a `send_commands()` function can be invoked to send them to the _Teensy Manager_, which will then be sent to the Teensy devices. If all commands in the queue are destined for different Teensy devices, they can all be applied in parallel since one thread will be created to apply each of those commands. If multiple commands are destined to the same Teensy devices, those commands will be sent sequentially. If there are conflicts between the different commands (i.e. one command instructs Teensy to turn a LED on while the other instructs it to turn it off), the command happened later in the queue will be applied. 
+
+  
 ## Graphical User Interface (GUI)
+
+This has yet to be started. It will most likely be written using QT-5 frame work. Currently, I am considering either writing it in its native language, C++, or in Python using PySide as a wrapper. 
+
 
 ## Teensy Firmware
 
+To be written
 
+  
 ## Current Works
+
+* GUI tool for tuning of parameters
+* List of input and output parameters for the CBLA Test Bed
+* An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
