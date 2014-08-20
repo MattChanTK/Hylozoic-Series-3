@@ -26,10 +26,13 @@ There are mainly two types of software. The first type of software is the firmwa
 
 ## Python Functional Modules
 
-The Python scripts facilitates all communications among the Teensy devices. They can mainly be separated into three functional modules. Each module are encapsulated in ways that modifications of implementation details in one module will not affect another module, as long as all the required parameters are given correctly. 
-Below gives a high-level overview of the functions and requirements of each module and how they interact with other modules. 
+The Python scripts facilitate all communications among the Teensy devices. They can mainly be separated into three functional modules. Each module are encapsulated in ways that modifications of implementation details in one module will not affect another module, as long as all the required parameters are given correctly. 
+Below gives a high-level overview of the functions and requirements of each module and how they interact with other modules. In a nutshell, one modifies the interface between the computer and Teensy devices at the Teensy Manager module; the input and output parameters and the messaging protocol at the System Parameters module; and the system behaviours (i.e. what to do with the input data and what output command to send out) at the Behaviours module. The best practice would be to creating a sub-class from those modules and overriding only the necessary functions. 
 
 ### Teensy Manager
+
+File: `TeensyInterface.py`
+Base class: `TeensyInterface.TeensyManager`
 
 The Teensy Manager is responsible for sending to and receiving messages from the Teensy devices. At start-up, it scans for all Teensy devices connected to the computer. After that, it creates one thread for each Teensy device. This allows messages to be sent to all Teensy devices in parallel. 
 Each Teensy device is identifiable by its unique serial number. The Teensy Manager will assign name to each Teensy device. This allows programming of the _Behaviours_ module without knowing the location of the actual hardware. In addition, Teensy devices can be replaced simply modifying the mapping between names and serial numbers. 
@@ -43,8 +46,15 @@ To ensure that the correct messages are received by the Teensy devices, the firs
 
 ### System Parameters
 
+File: `SystemParameters.py`, `TestUnitConfigurations.py`
+Base class: `SystemParameters.SystemParameters`
+Sub-classes:  `TestUnitConfigurations.SimplifiedTestUnit`, `TestUnitConfigurations.FullTestUnit`
+
 ### Behaviours
 
+File: `InteractiveCMD.py`, `Behaviours.py`
+Base class: `InteractiveCMD.InteractiveCMD`
+Sub-classes: `Behaviours.HardcodedBehaviours`, `HardcodedBehaviours_test`
 
 ## Graphical User Interface (GUI)
 
