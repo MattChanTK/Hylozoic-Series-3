@@ -31,17 +31,22 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h2>
+        <h1>
+<a name="software" class="anchor" href="#software"><span class="octicon octicon-link"></span></a>Software</h1>
+
+<h2>
 <a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
 
 <p>The software for the CBLA Test Bed was written to enable both reliable local functions and complex inter-node functions.
-The main microcontroller used in the current version of the CBLA Test Bed is Teensy. Its code is written in Arduino and compiled using Teensyduino. Each Teensy is connected to computer through USB connection. </p>
+The main microcontroller used in the current version of the CBLA Test Bed is Teensy. All Teensy devices are connected to computer through USB connection. The computer is acting as a master node and the Teensy are acting as slave nodes. The main function of the computer is to enable complex behaviours that requires co-ordinations of multiple Teensy slave nodes. </p>
+
+<p>There are mainly two types of software. The first type of software is the <em>Firmware</em>. They are software that get uploaded on the Teensy. They are written in Arduino and compiled using Teensyduino. They perform low-level and local functions. These functions should continue to function even if connection to the computer is severed. The firmware is mainly responsible for routines that requires high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run those the <em>System Requirements</em> must be met. </p>
 
 <h2>
 <a name="system-requirements" class="anchor" href="#system-requirements"><span class="octicon octicon-link"></span></a>System Requirements</h2>
 
 <ul>
-<li>Windows OS (tested on Windows 8, but should work on XP, Vista and 7 too)</li>
+<li>Windows OS (tested on Windows 8, but should work on XP, Vista and &amp; too)</li>
 <li><a href="https://www.python.org/downloads/">Python 3.3+</a></li>
 <li><a href="https://github.com/walac/pyusb">pyUSB</a></li>
 <li><a href="http://sourceforge.net/p/libusb-win32/wiki/Home/">libusb-win32</a></li>
