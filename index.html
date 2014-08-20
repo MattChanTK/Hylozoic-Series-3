@@ -40,7 +40,7 @@
 <p>The software for the CBLA Test Bed was written to enable both reliable local functions and complex inter-node functions.
 The main microcontroller used in the current version of the CBLA Test Bed is Teensy. All Teensy devices are connected to computer through USB connection. The computer is acting as a master node and the Teensy are acting as slave nodes. The main function of the computer is to enable complex behaviours that requires co-ordinations of multiple Teensy slave nodes. </p>
 
-<p>There are mainly two types of software. The first type of software is the firmware. They are software that get uploaded on the Teensy. They are written in Arduino and compiled using Teensyduino. They perform low-level and local functions. These functions should continue to function even if connection to the computer is severed. The firmware is mainly responsible for routines that requires high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run these Python scripts, the computer must be set up such that all <em>System Requirements</em> are met. </p>
+<p>There are mainly two types of software. The first type of software is the firmware. They are the software that get uploaded onto the Teensy. They are written in Arduino and compiled using Teensyduino. They perform low-level and local functions. These functions should continue to function even if connection to the computer is severed. The firmware is mainly responsible for routines that requires high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run these Python scripts, the computer must be set up such that all <em>System Requirements</em> are met. </p>
 
 <h2>
 <a name="system-requirements" class="anchor" href="#system-requirements"><span class="octicon octicon-link"></span></a>System Requirements</h2>
@@ -50,9 +50,22 @@ The main microcontroller used in the current version of the CBLA Test Bed is Tee
 <li><a href="https://www.python.org/downloads/">Python 3.3+</a></li>
 <li><a href="https://github.com/walac/pyusb">PyUSB</a></li>
 <li><a href="http://sourceforge.net/p/libusb-win32/wiki/Home/">libusb-win32</a></li>
+<li><a href="https://qt-project.org/downloads">QT-5</a></li>
+<li><a href="https://qt-project.org/wiki/PySide_Binaries_Windows">PySide for Microsoft Winsows</a></li>
 <li><a href="http://www.arduino.cc/en/Main/Software">Arduino IDE</a></li>
 <li><a href="https://www.pjrc.com/teensy/td_download.html">Teensyduino Add-on</a></li>
 </ul>
+
+
+<h2>
+<a name="Modules" class="anchor" href="#system-requirements"><span class="octicon octicon-link"></span></a>System Requirements</h2>
+
+
+<h2>
+<a name="Current Work" class="anchor" href="#system-requirements"><span class="octicon octicon-link"></span></a>System Requirements</h2>
+
+
+
       </section>
     </div>
 
