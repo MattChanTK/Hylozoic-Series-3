@@ -51,4 +51,5 @@ eagle.epf
 *.GBO
 *.GBL
 *.GTL
-!PCB\ Design/Fabrication/*/*/*
+
+!Hardware/PCB\ Design/Fabrication/*/*/*
