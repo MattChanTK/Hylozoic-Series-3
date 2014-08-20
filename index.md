@@ -23,6 +23,7 @@ There are mainly two types of software. The first type of software is the firmwa
 * [Arduino IDE](http://www.arduino.cc/en/Main/Software)
 * [Teensyduino Add-on](https://www.pjrc.com/teensy/td_download.html)
 
+
 ## Python Software Modules
 
 ### Teensy Manager
