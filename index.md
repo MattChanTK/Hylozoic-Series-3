@@ -27,7 +27,7 @@ There are mainly two types of software. The first type of software is the firmwa
 ## Python Functional Modules
 
 The Python scripts facilitate all communications among the Teensy devices. They can mainly be separated into three functional modules. Each module are encapsulated in ways that modifications of implementation details in one module will not affect another module, as long as all the required parameters are given correctly. 
-Below gives a high-level overview of the functions and requirements of each module and how they interact with other modules. In a nutshell, one modifies the interface between the computer and Teensy devices at the Teensy Manager module; the input and output parameters and the messaging protocol at the System Parameters module; and the system behaviours (i.e. what to do with the input data and what output command to send out) at the Behaviours module. The best practice would be to creating a sub-class from those modules and overriding only the necessary functions. 
+Below gives a high-level overview of the functions and requirements of each module and how they interact with other modules. In a nutshell, one modifies the interface between the computer and Teensy devices at the _Teensy Manager_ module; the input and output parameters and the messaging protocol at the _System Parameters_ module; and the system behaviours (i.e. what to do with the input data and what output command to send out) at the _Behaviours_ module. The best practice would be to creating a sub-class from those modules and overriding only the necessary functions. 
 
 ### Teensy Manager
 
@@ -36,13 +36,13 @@ File: 			TeensyInterface.py
 Base class: 	TeensyInterface.TeensyManager
 ```
 
-The Teensy Manager is responsible for sending to and receiving messages from the Teensy devices. At start-up, it scans for all Teensy devices connected to the computer. After that, it creates one thread for each Teensy device. This allows messages to be sent to all Teensy devices in parallel. 
-Each Teensy device is identifiable by its unique serial number. The Teensy Manager will assign name to each Teensy device. This allows programming of the _Behaviours_ module without knowing the location of the actual hardware. In addition, Teensy devices can be replaced simply modifying the mapping between names and serial numbers. 
-Furthermore, additional features that increase the reliability of the system can be added to the Teensy Manager. Some of these features might be monitoring connection of Teensy devices, prioritizing the Teensy threads, and incorporating new interface method such as Ethernet, and wireless SPI. 
+The _Teensy Manager_ is responsible for sending to and receiving messages from the Teensy devices. At start-up, it scans for all Teensy devices connected to the computer. After that, it creates one thread for each Teensy device. This allows messages to be sent to all Teensy devices in parallel. 
+Each Teensy device is identifiable by its unique serial number. The _Teensy Manager_ will assign name to each Teensy device. This allows programming of the _Behaviours_ module without knowing the location of the actual hardware. In addition, Teensy devices can be replaced simply modifying the mapping between names and serial numbers. 
+Furthermore, additional features that increase the reliability of the system can be added to the _Teensy Manager_. Some of these features might be monitoring connection of Teensy devices, prioritizing the Teensy threads, and incorporating new interface method such as Ethernet, and wireless SPI. 
 
 In the Teensy threads, each transfer consists of one packet, or 64 bytes, of data. Only the computer can initiate communication. During the lifetime of a Teensy Thread, it constantly checks for a parameter change event invoked by the _System Parameters_ module. The parameters are what define the action, or _behaviour_ of the system. When a parameter change event is detected, the Teensy thread will initiate an transfer of message. After that, it will wait for a reply from the Teensy device. Currently, the reply message consists of sensor readings and other state information measured right after the new set of parameters is applied. If an valid reply message was received, the message will parsed and the Teensy device's _System Parameters_ module will be updated accordingly. 
 
-To ensure that the correct messages are received by the Teensy devices, the first and last byte of each message will be the message signature. The message signature is basically two 8-bit random numbers generated at each transfer. The middle 62-bytes will be the message content, which is specified in the _System Parameters_ module. After sending the message, the Teensy thread will be waiting for a reply from the Teensy device. The reply message must contain the correct message signature. If invalid message signatures was received more than 5 times or if a timeout of 100ms is reached, an error message will be printed to the terminal and the Teensy thread will be terminated. The Teensy Manager will then remove the dead Teensy thread from the list of active Teensy devices. Note that it is up to the _Behaviours_ modules to handle the disconnection of Teensy devices. 
+To ensure that the correct messages are received by the Teensy devices, the first and last byte of each message will be the message signature. The message signature is basically two 8-bit random numbers generated at each transfer. The middle 62-bytes will be the message content, which is specified in the _System Parameters_ module. After sending the message, the Teensy thread will be waiting for a reply from the Teensy device. The reply message must contain the correct message signature. If an invalid message signature is received more than 5 times or if a timeout of 100ms is reached, an error message will be printed to the terminal and the Teensy thread will be terminated. The _Teensy Manager_ will then remove the dead Teensy thread from the list of active Teensy devices. Note that it is up to the _Behaviours_ modules to handle the disconnection of Teensy devices. 
 
 
 
@@ -56,10 +56,15 @@ Sub-classes:  	TestUnitConfigurations.SimplifiedTestUnit
 				TestUnitConfigurations.FullTestUnit
 ```
 
+A _System Parameters_ is instantiate within each Teensy thread. In other word, if desired, each Teensy device may have different sets of input and output parameters. The output parameters specify the action that can be performed by the sculptural system. For example, an action may be "blink LED" and its parameter is the blinking period. The firmware on the Teensy device will take care of low-level timing of the LED actuation, while the Python scripts on the computer can specify how often the LED should turn on or off. In scheme, a transfer of message is only necessary when a change in parameter is required. Moreover, even when the connection between computer and a Teensy device is severed, the Teensy device will continue to function according to the latest parameter values before the disconnection.  Input parameters are the sensor readings and state information measured right after the latest parameter change request (which can be empty) is sent. The idea is that the list of output parameters will always be synchronized between the computer and the Teensy. On the other hand, the input parameters represents the state of the system corresponding an action enforced by the computer. It is up to the _Behaviours_ module to decide what to do with the input parameters. 
+
+Currently, each parameter is stored as a dictionary, or a hash table. Each entry has key which is a string, and a value, which can be of any type. In `compose_message_content` and `parse_message_content()` , one has to specify how to translate those system parameters, to data that can fit in a 62-bytes message and vice versa. The specification of the protocol is completely flexible, as long as the same protocol is implemented on the Teensy devices' firmware. 
+
+
 ### Behaviours
 
 ```
-File: 			InteractiveCMD.py
+Files: 			InteractiveCMD.py
 				Behaviours.py
 Base class: 	InteractiveCMD.InteractiveCMD
 Sub-classes: 	Behaviours.HardcodedBehaviours
