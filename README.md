@@ -1,6 +1,11 @@
-CBLA-Test-Bed-Hardware
+CBLA Test Bed
 ======================
 
-<b>PCB Design</b>: Eagle schematic and PCB layout files for the CBLA Test Bed. Also contains gerber files sent to PCB fabrication house. 
+# Software
+<b>InteractiveSystem</b>: code for the Teensy-based system to communicate with the computer
+
+
+# Hardware
+<b>PCB Design</b>: Eagle schematic, PCB layout, and library files for the CBLA Test Bed. Also contains gerber files sent to PCB fabrication house. 
 
 <b>Reference</b>: contains datasheets and useful tutorials relevant to the project. 
