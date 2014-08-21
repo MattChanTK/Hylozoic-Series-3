@@ -23,15 +23,15 @@ if __name__ == '__main__':
     changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
 
     # instantiate Teensy Monitor
-    teensy_manager = TeensyManager()
+    teensy_manager = TeensyManager(import_config=True)
 
     # find all the Teensy
-    serial_num_list = teensy_manager.get_teensy_serial_num()
-    print("Number of Teensy devices found: " + str(len(serial_num_list)))
+
+    print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))
 
 
     # interactive code
-    behaviours = cmd(teensy_manager.get_teensy_thread_list())
+    behaviours = cmd(teensy_manager._get_teensy_thread_list())
     behaviours.run()
 
 

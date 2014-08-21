@@ -12,48 +12,104 @@ TEENSY_PRODUCT_ID = 0x0486
 
 class TeensyManager(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, import_config=True):
 
-        # find all connected Teensy
-        self.__find_teensy_serial_number()
+        # table that store all the Teensy threads
+        self.teensy_thread_table = dict()
 
-        self.Teensy_thread_list = []
+        # configuration of the Teensy threads
+        self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
+        self.print_to_term_default = False
+        self.import_config = import_config
 
-        self.unit_config = 'SIMPLIFIED_TEST_UNIT'
-        self.print_to_term = False
-
-        # create all the initial Teensy Threads
-        Teensy_id = 0
-        for serial_num in self.serial_num_list:
-            print("Teensy " + str(Teensy_id) + " --- " + str(serial_num))
-            Teensy_id += 1
-
-            # create a new thread for communicating with
-            try:
-                Teensy_thread = TeensyInterface(serial_num, unit_config=self.unit_config, print_to_term=self.print_to_term)
-                self.Teensy_thread_list.append(Teensy_thread)
-            except Exception as e:
-                print(str(e))
+        self.create_teensy_threads()
 
         # start thread
         threading.Thread.__init__(self)
         self.daemon = False
         self.start()
 
+    def create_teensy_threads(self):
+
+        # find all connected Teensy
+        serial_num_list = self.__find_teensy_serial_number()
+
+        # import config file
+        teensy_config_table = dict()
+
+        try:
+            if self.import_config is True:
+                # read from file
+                with open("teensy_config", mode='r') as f:
+                    teensy_config = [line.rstrip() for line in f]
+
+                for line in teensy_config:
+                    entry = line.split(' ')
+                    try:
+                        if len(entry) != 3:
+                            raise Exception("Invalid configuration at line -> " + line)
+                        teensy_config_table[entry[0]] = (entry[1], entry[2])
+                    except Exception as e:
+                        print(e)
+        except Exception as e:
+            print(e)
+
+
+        # create all the initial Teensy Threads
+        unknown_Teensy_id = 0
+
+        for serial_num in serial_num_list:
+
+
+            # if the serial_num appears in the config file
+            if serial_num in teensy_config_table:
+                Teensy_name = teensy_config_table[serial_num][0]
+                Teensy_unit_config = teensy_config_table[serial_num][1]
+
+            # else mark it as unknown Teensy
+            else:
+                unknown_Teensy_id += 1
+                Teensy_name = "Unknown_" + str(unknown_Teensy_id)
+                Teensy_unit_config = self.unit_config_default
+
+            print(Teensy_name + " --- " + str(serial_num))
+
+            # create a new thread for communicating with
+            try:
+                Teensy_thread = TeensyInterface(serial_num, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
+                self.teensy_thread_table[Teensy_name] = Teensy_thread
+            except Exception as e:
+                print(str(e))
+
 
     def run(self):
 
         # #wait for each thread to terminate
-        for t in self.get_teensy_thread_list():
+        for t in self._get_teensy_thread_list():
             t.join()
 
         print("All threads terminated")
 
-    def get_teensy_serial_num(self):
-        return self.serial_num_list
+    def _get_teensy_serial_num_list(self):
+        serial_num_list = []
+        for teensy_name, teensy_thread in self.teensy_thread_table.items():
+            serial_num_list.append(teensy_thread.serial_number)
+        return serial_num_list
 
-    def get_teensy_thread_list(self):
-        return self.Teensy_thread_list
+    def _get_teensy_thread_list(self):
+        teensy_thread_list = []
+        for teensy_name, teensy_thread in self.teensy_thread_table.items():
+            teensy_thread_list.append(teensy_thread)
+        return teensy_thread_list
+
+    def get_teensy_thread(self, teensy_name):
+        try:
+            return self.teensy_thread_table[teensy_name]
+        except KeyError:
+            return None
+
+    def get_num_teensy_thread(self):
+        return len(self.teensy_thread_table)
 
     def __find_teensy_serial_number(self, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID):
 
@@ -64,9 +120,7 @@ class TeensyManager(threading.Thread):
         for iter in dev_iter:
             serialNum.append(iter.serial_number)
 
-        self.serial_num_list = tuple(serialNum)
-
-
+        return tuple(serialNum)
 
 
 
@@ -300,3 +354,5 @@ class TeensyInterface(threading.Thread):
             print(string)
 
 
+if __name__ == '__main__':
+    tm = TeensyManager()
