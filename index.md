@@ -95,7 +95,7 @@ Description to be written
 ## Project Timeline
 
 Date					| Deliverable
--------------			| -------------
+----------------------- | -------------
 August 28, 2014			| Complete assembly and testing of hardware prototype
 September 8, 2014		| Order final version of hardware
 September 10, 2014		| Specify the software architecture of the CBLA algorithm
