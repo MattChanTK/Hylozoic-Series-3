@@ -93,8 +93,9 @@ Description to be written
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
 
 ## Project Timeline
-
-Date					| Deliverable
------------------------ | -------------
-hello					| bye
+  
+  
+|Date					| Deliverable|
+| --------------------- | ------------- |
+|hello					| bye|
 
