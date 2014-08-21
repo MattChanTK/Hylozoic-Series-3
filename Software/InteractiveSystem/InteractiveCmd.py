@@ -3,11 +3,11 @@ import queue
 
 class InteractiveCmd():
 
-    def __init__(self, Teensy_thread_list):
+    def __init__(self, Teensy_manager):
 
         # command queue
         self.cmd_q = queue.Queue()
-        self.Teensy_thread_list = Teensy_thread_list
+        self.teensy_manager = Teensy_manager
 
 
     def run(self):
@@ -15,12 +15,15 @@ class InteractiveCmd():
         while True:
             self.enter_command()
 
-            for teensy_id in range(len(self.Teensy_thread_list)):
-                sample, is_new_update = self.get_input_states(teensy_id)
+            all_input_states = self.get_input_states(list(self.teensy_manager.get_teensy_name_list()))
+
+            for teensy_name, input_states in all_input_states.items():
+                sample = input_states[0]
+                is_new_update = input_states[1]
                 if is_new_update:
-                    print(teensy_id, ": new* ", sample)
+                    print(teensy_name, ": new* ", sample)
                 else:
-                    print(teensy_id, ": ", sample)
+                    print(teensy_name, ": ", sample)
 
     def enter_command(self, cmd=None):
 
@@ -29,7 +32,7 @@ class InteractiveCmd():
 
         # prompt users for inputs
         elif cmd is None:
-            cmd = input("Enter--> [Teensy_ID] [param_type]:[param_value] (separated by space).\n" +
+            cmd = input("Enter--> [Teensy_name] [param_type]:[param_value] (separated by space).\n" +
                         "To apply changes, enter '>>apply'.\n")
 
             # tokenize the command
@@ -38,8 +41,18 @@ class InteractiveCmd():
             # check if it's the "apply" command
             try:
                 applying_cmd = str(param_cmd_list[0])
-                if applying_cmd == ">>apply":
+                if applying_cmd == ">>apply" or applying_cmd == ">>Apply":
                     self.send_commands()
+                    return 1
+            except Exception as e:
+                print(e)
+                return -1
+
+            # check if it's the "read" command
+            try:
+                applying_cmd = str(param_cmd_list[0])
+                if applying_cmd == ">>read" or applying_cmd == ">>Read":
+                    self.update_input_states(self.teensy_manager.get_teensy_name_list())
                     return 1
             except Exception as e:
                 print(e)
@@ -47,13 +60,16 @@ class InteractiveCmd():
 
             # extract the Teensy ID
             try:
-                dev_id = int(param_cmd_list[0])
-            except ValueError:
-                 print("Teensy ID must be integer!")
+                if len(param_cmd_list) < 2:
+                    raise Exception("Error: invalid command!")
+                dev_name = param_cmd_list[0]
+
+            except Exception as e:
+                 print(e)
                  return -1
 
             # create a command object
-            cmd_obj = command_object(dev_id)
+            cmd_obj = command_object(dev_name)
 
             # extracts the parameters change requests
             try:
@@ -79,45 +95,97 @@ class InteractiveCmd():
     def apply_change_request(self, cmd_obj):
 
         #print("apply change request")
-        if cmd_obj.teensy_id >= len(self.Teensy_thread_list):
-            print("Teensy #" + str(cmd_obj.teensy_id) + " does not exist!")
+        teensy_thread = self.teensy_manager.get_teensy_thread(cmd_obj.teensy_name)
+        if teensy_thread is None:
+            print(cmd_obj.teensy_name + " does not exist!")
             return -1
-        self.Teensy_thread_list[cmd_obj.teensy_id].lock.acquire()
-        self.Teensy_thread_list[cmd_obj.teensy_id].inputs_sampled_event.clear()
+        teensy_thread.lock.acquire()
+        teensy_thread.inputs_sampled_event.clear()
 
         try:
             #cmd_obj.print()
             for param_type, param_val in cmd_obj.change_request.items():
-                self.Teensy_thread_list[cmd_obj.teensy_id].param.set_output_param(param_type, param_val)
-            self.Teensy_thread_list[cmd_obj.teensy_id].param_updated_event.set()
+                teensy_thread.param.set_output_param(param_type, param_val)
+            teensy_thread.param_updated_event.set()
             #print(">>>>> sent command to Teensy #" + str(cmd_obj.teensy_id))
         except Exception as e:
             print(e)
 
         finally:
-            self.Teensy_thread_list[cmd_obj.teensy_id].lock.release()
+            teensy_thread.lock.release()
 
         return 0
 
-    def get_input_states(self, teensy_id, input_types='all', timeout=0.005):
+    def update_input_states(self, teensy_names):
+        for teensy_name in teensy_names:
+            t = threading.Thread(target=self.__update_input_states_thread, args=(teensy_name,))
+            t.daemon = True
+            t.start()
+
+    def __update_input_states_thread(self, teensy_name):
+        teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
+        if teensy_thread is None:
+            print(teensy_name + " does not exist!")
+            return -1
+        teensy_thread.lock.acquire()
+        teensy_thread.inputs_sampled_event.clear()
+
+        try:
+            teensy_thread.param_updated_event.set()
+        except Exception as e:
+            print(e)
+
+        finally:
+            teensy_thread.lock.release()
+
+        return 0
+
+
+    def get_input_states(self, teensy_names, input_types='all', timeout=0.005):
+        t_list = []
+        result_queue = queue.Queue()
+        all_input_states = dict()
+
+        for teensy_name in teensy_names:
+            t = threading.Thread(target=self.__get_input_states_thread, args=(result_queue, teensy_name, input_types, timeout))
+            t_list.append(t)
+            t.daemon = True
+            t.start()
+
+        for t in t_list:
+            t.join()
+
+        while not result_queue.empty():
+            result = result_queue.get()
+            all_input_states[result[0]] = [result[1], result[2]]
+
+        return all_input_states
+
+
+    def __get_input_states_thread(self, result_queue, teensy_name, input_types, timeout):
 
         if input_types == 'all':
             input_types = ('all',)
 
-        if not isinstance(teensy_id, int):
-            raise TypeError("Teensy ID must be integers!")
+        if not isinstance(teensy_name, str):
+            raise TypeError("Teensy Name must be a string!")
         if not isinstance(input_types, tuple):
             raise TypeError("'Input Types' must be inputted as tuple of strings!")
 
         # wait for sample update
-        new_sample_received = self.Teensy_thread_list[teensy_id].inputs_sampled_event.wait(timeout=timeout)
+        teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
+        if teensy_thread is None:
+            print(teensy_name + " does not exist!")
+            return None
+
+        new_sample_received = teensy_thread.inputs_sampled_event.wait(timeout=timeout)
 
         # acquiring the lock for the Teensy thread, so that value cannot change while reading
-        self.Teensy_thread_list[teensy_id].lock.acquire()
+        teensy_thread.lock.acquire()
 
         # clear the input_sampled_event flag
         if new_sample_received:
-            self.Teensy_thread_list[teensy_id].inputs_sampled_event.clear()
+            teensy_thread.inputs_sampled_event.clear()
 
         requested_inputs = dict()
         for input_type in input_types:
@@ -125,23 +193,23 @@ class InteractiveCmd():
                 raise TypeError("'Input type' must be a string!")
 
             if input_type == 'all':
-                requested_inputs = self.Teensy_thread_list[teensy_id].param.input_state
+                requested_inputs = teensy_thread.param.input_state
             else:
-                requested_inputs[input_type] = self.Teensy_thread_list[teensy_id].param.get_input_state(input_type)
+                requested_inputs[input_type] = teensy_thread.param.get_input_state(input_type)
 
         # releasing the lock for the Teensy thread
-        self.Teensy_thread_list[teensy_id].lock.release()
+        teensy_thread.lock.release()
 
-        return requested_inputs, new_sample_received
+        result_queue.put([teensy_name, requested_inputs, new_sample_received])
 
 
 class command_object():
 
-    def __init__(self, teensy_id):
-        if not isinstance(teensy_id, int):
-            raise TypeError("Teensy ID must be an integer!")
+    def __init__(self, teensy_name):
+        if not isinstance(teensy_name, str):
+            raise TypeError("Teensy Name must be a string!")
 
-        self.teensy_id = teensy_id
+        self.teensy_name = teensy_name
         self.change_request = dict()
 
     def add_param_change(self, type, value):
@@ -151,7 +219,7 @@ class command_object():
             raise TypeError("'State type' must be a string!")
 
     def print(self):
-        print(self.teensy_id, end=': ')
+        print(self.teensy_name, end=': ')
         for type, value in self.change_request.items():
             print('(', type, '-', value, ') ', end="")
         print('')

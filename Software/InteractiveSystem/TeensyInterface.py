@@ -111,6 +111,9 @@ class TeensyManager(threading.Thread):
     def get_num_teensy_thread(self):
         return len(self.teensy_thread_table)
 
+    def get_teensy_name_list(self):
+        return self.teensy_thread_table.keys()
+
     def __find_teensy_serial_number(self, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID):
 
         # find our device

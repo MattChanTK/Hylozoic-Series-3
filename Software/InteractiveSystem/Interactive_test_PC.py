@@ -1,7 +1,7 @@
 import changePriority
 from TeensyInterface import TeensyManager
 
-behaviours_config = 2
+behaviours_config = 0
 
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 
     # interactive code
-    behaviours = cmd(teensy_manager._get_teensy_thread_list())
+    behaviours = cmd(teensy_manager)
     behaviours.run()
 
 
