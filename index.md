@@ -92,10 +92,9 @@ Description to be written
 * List of input and output parameters for the CBLA Test Bed
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
 
-## Project Timeline
   
-  
-|Date					| Deliverable|
-| --------------------- | ------------- |
-|hello					| bye|
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
 
