@@ -2,21 +2,6 @@
 layout: index
 ---
 
-Colons can be used to align columns.
-
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
- col 2 is      | centered      |   $12 |
- zebra stripes | are neat      |    $1 |
-
-The outer pipes (|) are optional, and you don't need to make the raw Markdown line up prettily. You can also use inline Markdown.
-
-Markdown | Less | Pretty
---- | --- | ---
-*Still* | `renders` | **nicely**
-1 | 2 | 3
-
 # Software
 
 ## Overview
@@ -105,9 +90,25 @@ Description to be written
 * List of input and output parameters for the CBLA Test Bed
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
 
-  
-First Header  | Second Header
-------------- | -------------
-Content Cell  | Content Cell
-Content Cell  | Content Cell
+## Project Timeline
+
+Date					| Deliverable
+-------------			| -------------
+August 28, 2014			| Complete assembly and testing of hardware prototype
+September 8, 2014		| Order final version of hardware
+September 10, 2014		| Specify the software architecture of the CBLA algorithm
+September 23, 2014		| Complete CBLA algorithm simulation 
+September 30, 2014		| Confirm user study venue
+November 12, 2014		| Submit ORE application form
+December 17, 2014		| Finalize CBLA algorithm for user study 
+January 5, 2015			| Subjects recruitment for the 1st round of user study begins
+January	12, 2015		| 1st round of user study begins
+January 31, 2015		| 1st round of user study ends
+February 13, 2015		| Complete analysis on the 1st round of user study
+February 16, 2015		| Subjects recruitment for the 2nd round of user study begins
+March 2, 2015			| 2nd round of user study begins
+March 20, 2015			| 2nd round of user study ends
+April 10, 2015			| Complete analysis on the 2nd round of user study
+Early-June, 2015		| MASc seminar
+Mid-August, 2015		| MASc thesis submission
 
