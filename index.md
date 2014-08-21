@@ -91,3 +91,5 @@ Description to be written
 * GUI tool for tuning of parameters
 * List of input and output parameters for the CBLA Test Bed
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
+
+## Timeline
