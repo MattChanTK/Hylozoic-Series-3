@@ -97,13 +97,15 @@ Description to be written
 
 Date					| Deliverable
 -------------			| -------------
-August 28, 2014			| Complete assembly and testing of hardware prototype
-September 8, 2014		| Order final version of hardware
-September 10, 2014		| Specify the software architecture of the CBLA algorithm
-September 23, 2014		| Complete CBLA algorithm simulation 
+August 28, 2014			| [_hardware_] Complete assembly and testing of prototype hardware
+September 8, 2014		| [_hardware_] Order final version of PCB
+September 10, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
+September 23, 2014		| [_software_] Complete CBLA algorithm simulation 
 September 30, 2014		| Confirm user study venue
+September 30, 2014		| [_hardware_] Complete assembly and testing of final test bed hardware
+October 13, 2014		| Review user study proposal 
 November 12, 2014		| Submit ORE application form
-December 17, 2014		| Finalize CBLA algorithm for user study 
+December 17, 2014		| [_software_] Finalize CBLA algorithm for user study 
 January 5, 2015			| Subjects recruitment for the 1st round of user study begins
 January	12, 2015		| 1st round of user study begins
 January 31, 2015		| 1st round of user study ends
