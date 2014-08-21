@@ -104,20 +104,23 @@ Date					| Deliverable
 August 28, 2014			| [_hardware_] Complete assembly and testing of prototype hardware
 September 8, 2014		| [_hardware_] Order final version of PCB
 September 10, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
-September 23, 2014		| [_software_] Complete CBLA algorithm simulation 
+September 23, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
 September 30, 2014		| Confirm user study venue
 September 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
-October 13, 2014		| Review user study proposal 
-November 12, 2014		| Submit initial ORE application form
+October 13, 2014		| Review proposal for the 1st round of user study
+November 11, 2014		| Submit initial ORE application form
+December 2, 2014		| [_software_] Review CBLA algorithm that will be used for user study
 December 17, 2014		| [_software_] ==Finalize CBLA algorithm for user study==
-January 5, 2015			| Subjects recruitment for the 1st round of user study begins
+December 17, 2014		| Subjects recruitment for the 1st round of user study begins
 January	12, 2015		| ==1st round of user study begins==
 January 31, 2015		| 1st round of user study ends
 February 13, 2015		| Complete analysis on the 1st round of user study
-February 16, 2015		| Subjects recruitment for the 2nd round of user study begins
-March 2, 2015			| 2nd round of user study begins
-March 20, 2015			| 2nd round of user study ends
-April 10, 2015			| Complete analysis on the 2nd round of user study
+February 24, 2015		| Review proposal for the 2nd round of user study
+March 3, 2015			| Submit revision to the ORE application
+March 16, 2015			| Subjects recruitment for the 2nd round of user study begins
+April 6, 2015			| 2nd round of user study begins
+April 24, 2015			| 2nd round of user study ends
+May 12, 2015			| Complete analysis on the 2nd round of user study
 Early-June, 2015		| MASc seminar
 Mid-August, 2015		| ==MASc thesis submission==
 
