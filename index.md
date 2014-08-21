@@ -91,7 +91,7 @@ Description to be written
 * List of input and output parameters for the CBLA Test Bed
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
 
-## <a name="project_timeline"/> Project Timeline
+## Project Timeline
 
 Date					| Deliverable
 -------------			| -------------
