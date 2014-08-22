@@ -10,6 +10,7 @@ import sys
 TEENSY_VENDOR_ID = 0x16C0
 TEENSY_PRODUCT_ID = 0x0486
 
+
 class TeensyManager():
 
     def __init__(self, import_config=True):
@@ -133,7 +134,6 @@ class TeensyManager():
         return tuple(serialNum)
 
 
-
 class TeensyInterface(threading.Thread):
 
     packet_size_in = 64
@@ -199,6 +199,7 @@ class TeensyInterface(threading.Thread):
         # change priority of the the Python process to HIGH
         changePriority.SetPriority(changePriority.Priorities.REALTIME_PRIORITY_CLASS)
 
+        no_reply_counter = 0
         while True:
 
             self.lock.acquire()
@@ -236,7 +237,7 @@ class TeensyInterface(threading.Thread):
                     received_reply = False
                     data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
                     invalid_reply_counter = 0
-                    no_reply_counter = 0
+
                     while received_reply is False:
                         if data:
                             # check if reply matches sent message
@@ -266,11 +267,14 @@ class TeensyInterface(threading.Thread):
                                     data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
                         else:
                             no_reply_counter += 1
-                            print("Teensy (" + str(self.serial_number) + ")......Didn't receive any reply. Packet lost......." + str(no_reply_counter))
+                            error_text = "Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter)
                             if no_reply_counter >= 5:
                                 print("Teensy (" + str(self.serial_number) + ") has probably been disconnected.")
-
                                 return
+                            else:
+                                raise Exception(error_text)
+                except Exception as e:
+                    print(e)
                 finally:
                     self.lock.release()
                 # print(self.serial_number, " - Echo time: ", clock() - start_time)
