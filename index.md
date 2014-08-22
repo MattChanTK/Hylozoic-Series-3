@@ -103,6 +103,7 @@ Date				| Deliverable
 -------------			| -------------
 August 28, 2014			| [_hardware_] Complete assembly and testing of prototype hardware
 September 3, 2014		| [_software_] Complete the coding of reflex behaviours
+September 5, 2014		| [_hardware_] Complete PCB layout of the sound module
 September 8, 2014		| [_hardware_] ==Order final version of PCB==
 September 10, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
 September 23, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
