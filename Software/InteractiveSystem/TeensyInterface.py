@@ -5,6 +5,7 @@ import random
 import struct
 import changePriority
 import sys
+import cProfile
 
 
 TEENSY_VENDOR_ID = 0x16C0
@@ -196,6 +197,7 @@ class TeensyInterface(threading.Thread):
         self.print_to_term_enabled = print_to_term
 
     def run(self):
+
         # change priority of the the Python process to HIGH
         changePriority.SetPriority(changePriority.Priorities.REALTIME_PRIORITY_CLASS)
 
@@ -280,6 +282,7 @@ class TeensyInterface(threading.Thread):
                     self.lock.release()
                 # print(self.serial_number, " - Echo time: ", clock() - start_time)
                 self.print_to_term("Teensy thread: lock released")
+
 
 
 

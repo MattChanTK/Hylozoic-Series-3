@@ -17,7 +17,7 @@ class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 0
 
         while True:
-            start_time = clock()
+            #start_time = clock()
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
@@ -55,7 +55,7 @@ class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
                 indicator_led_period[teensy_name] += 0.002
                 indicator_led_on[teensy_name] %= 10
 
-            print("Loop Time:", clock() - start_time)
+            #print("Loop Time:", clock() - start_time)
 
 
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):

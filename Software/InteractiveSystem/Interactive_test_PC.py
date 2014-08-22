@@ -1,5 +1,7 @@
 import changePriority
 from TeensyInterface import TeensyManager
+import cProfile
+from pstats import Stats
 
 behaviours_config = 1
 
@@ -17,8 +19,9 @@ packet_size_in = 64
 packet_size_out = 64
 
 
-if __name__ == '__main__':
 
+
+def main():
     # change priority of the the Python process to HIGH
     changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
 
@@ -39,3 +42,10 @@ if __name__ == '__main__':
 
 
 
+if __name__ == '__main__':
+    pr = cProfile.Profile()
+
+    pr.run('main()')
+    pr.print_stats(sort='cumtime')
+
+    main()
