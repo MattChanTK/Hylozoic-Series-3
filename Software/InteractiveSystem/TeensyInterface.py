@@ -251,12 +251,13 @@ class TeensyInterface(threading.Thread):
                                 self.print_data(data, raw_dec=True)
 
                             else:
-                                self.print_to_term("......Received invalid reply......")
+
+                                self.print_to_term("Teensy (" + str(self.serial_number) + ") ---- Received invalid reply......" + str(invalid_reply_counter))
                                 self.print_data(data, raw_dec=True)
 
                                 invalid_reply_counter += 1
                                 if invalid_reply_counter > 5:
-                                    print(str(self.serial_number) + "......Number of invalid replies exceeded 5! Stopped trying......")
+                                    print("Teensy (" + str(self.serial_number) + ") ---- Number of invalid replies exceeded 5! Packet lost......")
                                     print("Sent:")
                                     self.print_data(out_msg, raw_dec=True)
                                     print("Received:")
