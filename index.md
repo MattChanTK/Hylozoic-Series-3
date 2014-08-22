@@ -99,14 +99,16 @@ The CBLA code will be written as a _Behaviours_ module. It is still under develo
 
 ## Project Timeline
 
-Date					| Deliverable
+Date				| Deliverable
 -------------			| -------------
 August 28, 2014			| [_hardware_] Complete assembly and testing of prototype hardware
+September 3, 2014		| [_software_] Complete the coding of reflex behaviours
 September 8, 2014		| [_hardware_] Order final version of PCB
 September 10, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
 September 23, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
 September 30, 2014		| Confirm user study venue
 September 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
+October 13, 2014		| [_software_] Review GUI for CBLA Test bed
 October 13, 2014		| Review proposal for the 1st round of user study
 November 11, 2014		| Submit initial ORE application form
 December 2, 2014		| [_software_] Review CBLA algorithm that will be used for user study
