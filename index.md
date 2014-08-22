@@ -95,6 +95,7 @@ The CBLA code will be written as a _Behaviours_ module. It is still under develo
 * GUI tool for tuning of parameters
 * List of input and output parameters for the CBLA Test Bed
 * An unit testing script as a behaviours which allows the users to check if the hardware are connected correctly. 
+* Code that generates documentations automatically
 
 
 ## Project Timeline
