@@ -1,18 +1,20 @@
 import threading
 import queue
+from time import clock
 
 class InteractiveCmd():
 
-    def __init__(self, Teensy_manager):
+    def __init__(self, Teensy_manager, multithread_mode=False):
 
         # command queue
         self.cmd_q = queue.Queue()
         self.teensy_manager = Teensy_manager
+        self.multithread_mode = multithread_mode
 
 
     def run(self):
 
-        while True:
+        while self.teensy_manager.get_num_teensy_thread() > 0:
             self.enter_command()
 
             all_input_states = self.get_input_states(list(self.teensy_manager.get_teensy_name_list()))
@@ -88,12 +90,17 @@ class InteractiveCmd():
     def send_commands(self):
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
-            t = threading.Thread(target=self.apply_change_request, args=(cmd_obj,))
-            t.daemon = True
-            t.start()
+
+            if self.multithread_mode:
+                t = threading.Thread(target=self.apply_change_request, args=(cmd_obj,))
+                t.daemon = True
+                t.start()
+            else:
+                self.apply_change_request(cmd_obj)
+
+
 
     def apply_change_request(self, cmd_obj):
-
         #print("apply change request")
         teensy_thread = self.teensy_manager.get_teensy_thread(cmd_obj.teensy_name)
         if teensy_thread is None:
@@ -118,9 +125,12 @@ class InteractiveCmd():
 
     def update_input_states(self, teensy_names):
         for teensy_name in teensy_names:
-            t = threading.Thread(target=self.__update_input_states_thread, args=(teensy_name,))
-            t.daemon = True
-            t.start()
+            if self.multithread_mode:
+                t = threading.Thread(target=self.__update_input_states_thread, args=(teensy_name,))
+                t.daemon = True
+                t.start()
+            else:
+                self.__update_input_states_thread(teensy_name)
 
     def __update_input_states_thread(self, teensy_name):
         teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
@@ -146,18 +156,25 @@ class InteractiveCmd():
         result_queue = queue.Queue()
         all_input_states = dict()
 
-        for teensy_name in teensy_names:
-            t = threading.Thread(target=self.__get_input_states_thread, args=(result_queue, teensy_name, input_types, timeout))
-            t_list.append(t)
-            t.daemon = True
-            t.start()
+        for teensy_name in list(teensy_names):
+            if self.multithread_mode:
+                t = threading.Thread(target=self.__get_input_states_thread, args=(result_queue, teensy_name, input_types, timeout))
+                t_list.append(t)
+                t.daemon = True
+                t.start()
 
-        for t in t_list:
-            t.join()
+
+            else:
+                self.__get_input_states_thread(result_queue, teensy_name, input_types, timeout)
+
+        if self.multithread_mode:
+            for t in t_list:
+                        t.join()
 
         while not result_queue.empty():
-            result = result_queue.get()
-            all_input_states[result[0]] = [result[1], result[2]]
+                result = result_queue.get()
+                all_input_states[result[0]] = [result[1], result[2]]
+
 
         return all_input_states
 

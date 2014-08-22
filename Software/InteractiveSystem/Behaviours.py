@@ -2,137 +2,111 @@ import InteractiveCmd
 from InteractiveCmd import command_object
 
 from copy import copy
+from time import clock
 
-class HardcodedBehaviours(InteractiveCmd.InteractiveCmd):
+class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
 
     def run(self):
 
-        teensy_ids = range(len(self.Teensy_thread_list))
-        led_period = [0]*len(self.Teensy_thread_list)
-        indicator_led_on = [0]*len(self.Teensy_thread_list)
-        high_power_led_level = [0]*len(self.Teensy_thread_list)
-        reflex_level = [0]*len(self.Teensy_thread_list)
-        sma_level = [255]*len(self.Teensy_thread_list)
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        indicator_led_period = dict()
+        indicator_led_on = dict()
+        for teensy_name in teensy_names:
+            indicator_led_period[teensy_name] = 0
+            indicator_led_on[teensy_name] = 0
 
         while True:
-        #for i in range(5):
+            start_time = clock()
 
-            analog_0_samples = []
-            if len(self.Teensy_thread_list) == 0:
+            if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
 
-            for teensy_id in teensy_ids:
+            for teensy_name in list(teensy_names):
+
+                Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
                 # check if the thread is still alive
-                if not self.Teensy_thread_list[teensy_id].is_alive():
+                if Teensy_thread is not None:
 
-                    self.Teensy_thread_list.pop(teensy_id)
-                    led_period.pop(teensy_id)
-                    indicator_led_on.pop(teensy_id)
-                    teensy_ids = range(len(self.Teensy_thread_list))
+                    cmd_obj = command_object(teensy_name)
 
-                else:
-                    cmd_obj = command_object(teensy_id)
-
-                    cmd_obj.add_param_change('indicator_led_on',  int(indicator_led_on[teensy_id]))
-                    cmd_obj.add_param_change('indicator_led_period', int(led_period[teensy_id])*25)
-                    cmd_obj.add_param_change('high_power_led_level', int(high_power_led_level[teensy_id]))
-                    cmd_obj.add_param_change('sma_0_level', int(sma_level[teensy_id]))
-                    cmd_obj.add_param_change('sma_1_level', int(sma_level[teensy_id]))
-                    cmd_obj.add_param_change('reflex_0_level', int((reflex_level[teensy_id])+50)%150)
-                    cmd_obj.add_param_change('reflex_1_level', int((reflex_level[teensy_id])+100)%150)
-                    cmd_obj.add_param_change('high_power_led_reflex_threshold',  10)
+                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
+                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
 
                     self.enter_command(cmd_obj)
 
             self.send_commands()
 
-            for teensy_id in teensy_ids:
-                 # check if the thread is still alive
-                if not self.Teensy_thread_list[teensy_id].is_alive():
+            all_input_states = self.get_input_states(teensy_names, ('all', ))
+            for teensy_name, input_states in all_input_states.items():
+                sample = input_states[0]
+                is_new_update = input_states[1]
 
-                    self.Teensy_thread_list.pop(teensy_id)
-                    led_period.pop(teensy_id)
-                    indicator_led_on.pop(teensy_id)
-                    teensy_ids = range(len(self.Teensy_thread_list))
+                if is_new_update:
+                    if sample['analog_0_state'] > 850:
+                        indicator_led_on[teensy_name] = 0
+                    else:
+                        indicator_led_on[teensy_name] = 1
 
-                else:
-                    sample, is_new_update = self.get_input_states(teensy_id, ('all', ))
+                print(teensy_name, ": ", sample)
 
-                    if is_new_update:
+                # new blink period
+                indicator_led_period[teensy_name] += 0.002
+                indicator_led_on[teensy_name] %= 10
 
-                        if sample['analog_0_state'] > 850:
-                            indicator_led_on[(teensy_id+1)%len(self.Teensy_thread_list)] = 1
-                        else:
-                            indicator_led_on[(teensy_id+1)%len(self.Teensy_thread_list)] = 1
-
-                    print(teensy_id, ": ", sample)
-
-                    # new blink period
-                    led_period[teensy_id] += 0.002
-                    led_period[teensy_id] %= 10
-                    high_power_led_level[teensy_id] += 0.2
-                    high_power_led_level[teensy_id] %= 100
-                    reflex_level[teensy_id] += 0.2
-                    reflex_level[teensy_id] %= 150
+            print("Loop Time:", clock() - start_time)
 
 
-class HardcodedBehaviours_test(InteractiveCmd.InteractiveCmd):
+class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
     def run(self):
 
-        teensy_ids = range(len(self.Teensy_thread_list))
-        led_period = [0]*len(self.Teensy_thread_list)
-        indicator_led_on = [0]*len(self.Teensy_thread_list)
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        indicator_led_period = dict()
+        indicator_led_on = dict()
+        for teensy_name in teensy_names:
+            indicator_led_period[teensy_name] = 0
+            indicator_led_on[teensy_name] = 0
 
         while True:
-        #for i in range(5):
+            start_time = clock()
 
-            analog_0_samples = []
-            if len(self.Teensy_thread_list) == 0:
+            if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
 
-            for teensy_id in teensy_ids:
+            for teensy_name in list(teensy_names):
+
+                Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
                 # check if the thread is still alive
-                if not self.Teensy_thread_list[teensy_id].is_alive():
+                if Teensy_thread is not None:
 
-                    self.Teensy_thread_list.pop(teensy_id)
-                    led_period.pop(teensy_id)
-                    indicator_led_on.pop(teensy_id)
-                    teensy_ids = range(len(self.Teensy_thread_list))
+                    cmd_obj = command_object(teensy_name)
 
-                else:
-                    cmd_obj = command_object(teensy_id)
+                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
+                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
 
-                    cmd_obj.add_param_change('indicator_led_on',  int(indicator_led_on[teensy_id]))
-                    cmd_obj.add_param_change('indicator_led_period', int(led_period[teensy_id])*25)
                     self.enter_command(cmd_obj)
 
             self.send_commands()
 
-            for teensy_id in teensy_ids:
-                 # check if the thread is still alive
-                if not self.Teensy_thread_list[teensy_id].is_alive():
+            all_input_states = self.get_input_states(teensy_names, ('all', ))
+            for teensy_name, input_states in all_input_states.items():
+                sample = input_states[0]
+                is_new_update = input_states[1]
 
-                    self.Teensy_thread_list.pop(teensy_id)
-                    led_period.pop(teensy_id)
-                    indicator_led_on.pop(teensy_id)
-                    teensy_ids = range(len(self.Teensy_thread_list))
+                if is_new_update:
+                    if sample['analog_0_state'] > 850:
+                        indicator_led_on[teensy_name] = 0
+                    else:
+                        indicator_led_on[teensy_name] = 1
 
-                else:
-                    sample, is_new_update = self.get_input_states(teensy_id, ('analog_0_state', ))
-                    analog_0_samples.append(copy(sample['analog_0_state']))
-                    if is_new_update:
+                print(teensy_name, ": ", sample)
 
-                        if analog_0_samples[teensy_id] > 850:
-                            indicator_led_on[(teensy_id+1)%len(self.Teensy_thread_list)] = 1
-                        else:
-                            indicator_led_on[(teensy_id+1)%len(self.Teensy_thread_list)] = 0
+                # new blink period
+                indicator_led_period[teensy_name] += 0.002
+                indicator_led_on[teensy_name] %= 10
 
-                    # new blink period
-                    led_period[teensy_id] += 0.002
-                    led_period[teensy_id] %= 10
-
-
-            print("Analog 0 State: ", analog_0_samples)
+            print("Loop Time:", clock() - start_time)

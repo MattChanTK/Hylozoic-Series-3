@@ -5,12 +5,12 @@ import random
 import struct
 import changePriority
 import sys
-from time import clock
+
 
 TEENSY_VENDOR_ID = 0x16C0
 TEENSY_PRODUCT_ID = 0x0486
 
-class TeensyManager(threading.Thread):
+class TeensyManager():
 
     def __init__(self, import_config=True):
 
@@ -24,10 +24,6 @@ class TeensyManager(threading.Thread):
 
         self.create_teensy_threads()
 
-        # start thread
-        threading.Thread.__init__(self)
-        self.daemon = False
-        self.start()
 
     def create_teensy_threads(self):
 
@@ -81,15 +77,6 @@ class TeensyManager(threading.Thread):
             except Exception as e:
                 print(str(e))
 
-
-    def run(self):
-
-        # #wait for each thread to terminate
-        for t in self._get_teensy_thread_list():
-            t.join()
-
-        print("All threads terminated")
-
     def _get_teensy_serial_num_list(self):
         serial_num_list = []
         for teensy_name, teensy_thread in self.teensy_thread_table.items():
@@ -103,7 +90,11 @@ class TeensyManager(threading.Thread):
         return teensy_thread_list
 
     def get_teensy_thread(self, teensy_name):
+
         try:
+            if not self.teensy_thread_table[teensy_name].is_alive():
+                self.remove_teensy_thread(teensy_name)
+                return None
             return self.teensy_thread_table[teensy_name]
         except KeyError:
             return None
@@ -113,6 +104,22 @@ class TeensyManager(threading.Thread):
 
     def get_teensy_name_list(self):
         return self.teensy_thread_table.keys()
+
+    def remove_teensy_thread(self, teensy_name):
+        try:
+            del self.teensy_thread_table[teensy_name]
+            return 0
+        except KeyError:
+            print(teensy_name + ' does not exist!')
+            return -1
+
+    def is_teensy_thread_alive(self, teensy_name):
+        try:
+            return self.teensy_thread_table[teensy_name].is_alive()
+        except KeyError:
+            print(teensy_name + ' does not exist!')
+            return -1
+
 
     def __find_teensy_serial_number(self, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID):
 
@@ -139,7 +146,7 @@ class TeensyInterface(threading.Thread):
         elif unit_config == 'SIMPLIFIED_TEST_UNIT':
             from TestUnitConfiguration import SimplifiedTestUnit as SysParam
         else:
-            from SystemParameters import SimplifiedTestUnit as SysParam
+            from SystemParameters import SystemParameters as SysParam
 
         # find our device
         dev = usb.core.find(idVendor=vendor_id, idProduct=product_id, serial_number=serial_num)
@@ -181,7 +188,7 @@ class TeensyInterface(threading.Thread):
 
         # start thread
         threading.Thread.__init__(self)
-        self.daemon = False
+        self.daemon = True
         self.start()
 
 
@@ -355,6 +362,27 @@ class TeensyInterface(threading.Thread):
     def print_to_term(self, string):
         if self.print_to_term_enabled:
             print(string)
+
+
+class TeensyMonitor(threading.Thread):
+
+    def __init__(self, teensy_thread_table):
+
+        self.teensy_thread_table = teensy_thread_table
+
+        # start thread
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self.start()
+
+    def run(self):
+
+        while True:
+
+            for teensy_name in list(self.teensy_thread_table.keys()):
+                if not self.teensy_thread_table[teensy_name].is_alive():
+                    del self.teensy_thread_table[teensy_name]
+
 
 
 if __name__ == '__main__':

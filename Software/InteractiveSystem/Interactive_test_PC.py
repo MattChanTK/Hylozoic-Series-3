@@ -1,14 +1,14 @@
 import changePriority
 from TeensyInterface import TeensyManager
 
-behaviours_config = 0
+behaviours_config = 1
 
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
 elif behaviours_config == 1:
-    from Behaviours import HardcodedBehaviours_test as cmd
+    from Behaviours import Test_Behaviours as cmd
 elif behaviours_config == 2:
-    from Behaviours import HardcodedBehaviours as cmd
+    from Behaviours import Hardcoded_Behaviours as cmd
 else:
     from InteractiveCmd import InteractiveCmd as cmd
 
@@ -33,6 +33,9 @@ if __name__ == '__main__':
     # interactive code
     behaviours = cmd(teensy_manager)
     behaviours.run()
+
+    if teensy_manager.get_num_teensy_thread() <= 0:
+        print("All threads terminated")
 
 
 
