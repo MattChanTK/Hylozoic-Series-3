@@ -95,23 +95,29 @@ class SystemParameters():
 
     def compose_message_content(self):
 
-        # create an 64 bytes of zeros
-        msg = bytearray(chr(0)*SystemParameters.msg_length, 'utf-8')
-
         # byte 0 and byte 63: the msg signature; left as 0 for now
+        signature_front = bytearray(chr(0), 'utf-8')
+        signature_back = bytearray(chr(0), 'utf-8')
 
         # byte 1: type of request
-        msg[1] = self.request_type_ids[self.request_type]
+        header = bytearray(chr(self.request_type_ids[self.request_type]), 'utf-8')
+
+        # create an 64 - 3 bytes of zeros (w/o the signature and header)
+        content = bytearray(chr(0)*(SystemParameters.msg_length - 3), 'utf-8')
+
+        self.__compose_outgoing_msg(content)
+
+        return signature_front + header + content + signature_back
+
+    def __compose_outgoing_msg(self, content):
 
         if self.request_type == 'basic':
-            # byte 2: indicator LED on or off
-            msg[2] = self.output_param['indicator_led_on']
+            # byte 0: indicator LED on or off
+            content[0] = self.output_param['indicator_led_on']
 
-            # byte 3 to 4: blinking frequency of the indicator LED
-            msg[3:5] = struct.pack('H', self.output_param['indicator_led_period'])
+            # byte 1 to 2: blinking frequency of the indicator LED
+            content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
 
-
-        return msg
 
 def enum_dict(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
