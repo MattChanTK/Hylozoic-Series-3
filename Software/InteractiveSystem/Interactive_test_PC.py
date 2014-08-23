@@ -43,9 +43,9 @@ def main():
 
 
 if __name__ == '__main__':
-    pr = cProfile.Profile()
-
-    pr.run('main()')
-    pr.print_stats(sort='cumtime')
+    # pr = cProfile.Profile()
+    #
+    # pr.run('main()')
+    # pr.print_stats(sort='cumtime')
 
     main()

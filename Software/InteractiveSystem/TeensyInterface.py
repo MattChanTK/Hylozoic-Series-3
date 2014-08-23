@@ -5,8 +5,7 @@ import random
 import struct
 import changePriority
 import sys
-import cProfile
-
+from time import clock
 
 TEENSY_VENDOR_ID = 0x16C0
 TEENSY_PRODUCT_ID = 0x0486
@@ -176,6 +175,27 @@ class TeensyInterface(threading.Thread):
         # claiming device
         usb.util.claim_interface(dev, self.intf)
 
+        # get OUT endpoint
+        self.ep_out = usb.util.find_descriptor(
+            self.intf,
+            # match the first OUT endpoint
+            custom_match = \
+            lambda e: \
+                usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT and \
+                usb.util.endpoint_type(e.bEndpointAddress) == usb.util.ENDPOINT_TYPE_CTRL)
+
+        assert self.ep_out is not None
+
+        # get IN endpoint
+        self.ep_in = usb.util.find_descriptor(
+            self.intf,  # match the first IN endpoint
+            custom_match = \
+            lambda e: \
+                usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN and \
+                usb.util.endpoint_type(e.bEndpointAddress) == usb.util.ENDPOINT_TYPE_INTR)
+
+        assert self.ep_in is not None
+
         # instantiate the system parameters
         self.param = SysParam()
 
@@ -204,25 +224,16 @@ class TeensyInterface(threading.Thread):
         no_reply_counter = 0
         while True:
 
-            self.lock.acquire()
-
-            if self.connected:
-                self.lock.release()
-            else:
-                # release lock before terminating
-                self.lock.release()
-                # terminate itself
-                return
-
             if self.param_updated_event.wait(timeout=1):
 
                 self.param_updated_event.clear()
 
-                self.lock.acquire()
-                try:
-                    self.inputs_sampled_event.clear()
 
-                    self.print_to_term("Teensy thread: lock acquired, sampled event cleared")
+                try:
+                    with self.lock:
+                        self.inputs_sampled_event.clear()
+
+                    self.print_to_term("Teensy thread: sampled event cleared")
 
 
                     # compose the data
@@ -230,23 +241,31 @@ class TeensyInterface(threading.Thread):
 
 
                     # sending the data
-                    # start_time = clock()
+                    #start_time = clock()
                     self.talk_to_Teensy(out_msg, timeout=0)
                     self.print_to_term("\n---Sent---")
                     self.print_data(out_msg, raw_dec=True)
+                    #print("Talk time: ", clock()-start_time)
 
                     # waiting for reply
                     received_reply = False
+                    #start_time = clock()
                     data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
+                    #print("Listen time: ", clock()-start_time)
                     invalid_reply_counter = 0
 
                     while received_reply is False:
                         if data:
+                            no_reply_counter = 0
+                            #print("Echo Time:", clock() - start_time)
                             # check if reply matches sent message
                             if data[0] == front_id and data[-1] == back_id:
                                 received_reply = True
-                                self.param.parse_message_content(data)
-                                self.inputs_sampled_event.set()
+
+                                with self.lock:
+                                    self.param.parse_message_content(data)
+                                    self.inputs_sampled_event.set()
+
                                 self.print_to_term("Teensy thread: input sampled")
 
                                 self.print_to_term("---Received Reply---")
@@ -278,11 +297,8 @@ class TeensyInterface(threading.Thread):
                                 raise Exception(error_text)
                 except Exception as e:
                     print(e)
-                finally:
-                    self.lock.release()
-                # print(self.serial_number, " - Echo time: ", clock() - start_time)
-                self.print_to_term("Teensy thread: lock released")
 
+                # print(self.serial_number, " - Echo time: ", clock() - start_time)
 
 
 
@@ -317,17 +333,8 @@ class TeensyInterface(threading.Thread):
 
     def listen_to_Teensy(self, timeout=100, byte_num=64):
 
-        ep = usb.util.find_descriptor(
-            self.intf,  # match the first IN endpoint
-            custom_match = \
-            lambda e: \
-                usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN and \
-                usb.util.endpoint_type(e.bEndpointAddress) == usb.util.ENDPOINT_TYPE_INTR)
-
-        assert ep is not None
-
         try:
-            data = ep.read(byte_num, timeout)
+            data = self.ep_in.read(byte_num, timeout)
         except usb.core.USBError:
             #print("Timeout! Couldn't read anything")
             data = None
@@ -336,18 +343,8 @@ class TeensyInterface(threading.Thread):
 
     def talk_to_Teensy(self, out_msg, timeout=10):
 
-        ep = usb.util.find_descriptor(
-            self.intf,
-            # match the first OUT endpoint
-            custom_match = \
-            lambda e: \
-                usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT and \
-                usb.util.endpoint_type(e.bEndpointAddress) == usb.util.ENDPOINT_TYPE_CTRL)
-
-        assert ep is not None
-
         try:
-            ep.write(out_msg, timeout)
+            self.ep_out.write(out_msg, timeout)
         except usb.core.USBError:
             pass
             #print("Timeout! Couldn't write")
