@@ -21,18 +21,13 @@ class SystemParameters():
         # ---defaults---
         self.input_state['analog_0_state'] = 0
 
-        #=== list of behaviours for selection ====
-        self.behaviour_type = enum_dict('INTERACTIVE', 'AUTO')
-        self.behaviour = self.behaviour_type['INTERACTIVE']
+        #=== request type ====
+        self.request_types = dict()
+        self.request_types['basic'] = ('indicator_led_on', 'indicator_led_period')
+        self.request_types['wave_1'] = ()
+        self.request_type_ids = enum_dict('basic', 'wave_1')
+        self.request_type = 'basic'
 
-    def set_behaviour_type(self, behaviour_type):
-        if isinstance(behaviour_type, str):
-            if behaviour_type in self.behaviour_type:
-                self.behaviour = self.behaviour_type[behaviour_type]
-            else:
-                raise ValueError(behaviour_type + " does not exist!")
-        else:
-            raise TypeError("'State type' must be a string!")
 
     def get_input_state(self, state_type):
         if isinstance(state_type, str):
@@ -42,8 +37,18 @@ class SystemParameters():
                 raise ValueError(state_type + " does not exist!")
         else:
             raise TypeError("'State type' must be a string!")
+    def set_request_type(self, change_request_type):
+        self.request_type = change_request_type
+        return self.request_type
 
     def set_output_param(self, param_type, param_val):
+
+        try:
+            if param_type not in self.request_types[self.request_type]:
+                return 1
+        except KeyError:
+            return -1
+
         if isinstance(param_type, str):
             if param_type in self.output_param:
                 if param_type in self.bool_var_list:
@@ -59,6 +64,8 @@ class SystemParameters():
                 raise ValueError(param_type + " does not exist!")
         else:
             raise TypeError("'Parameter type' must be a string!")
+
+        return 0
 
 
     def __set_int_var(self, input_type, input, num_bit):
@@ -93,14 +100,16 @@ class SystemParameters():
 
         # byte 0 and byte 63: the msg signature; left as 0 for now
 
-        # byte 1: type of behaviour
-        msg[1] = self.behaviour
+        # byte 1: type of request
+        msg[1] = self.request_type_ids[self.request_type]
 
-        # byte 2: indicator LED on or off
-        msg[2] = self.output_param['indicator_led_on']
+        if self.request_type == 'basic':
+            # byte 2: indicator LED on or off
+            msg[2] = self.output_param['indicator_led_on']
 
-        # byte 3 to 4: blinking frequency of the indicator LED
-        msg[3:5] = struct.pack('H', self.output_param['indicator_led_period'])
+            # byte 3 to 4: blinking frequency of the indicator LED
+            msg[3:5] = struct.pack('H', self.output_param['indicator_led_period'])
+
 
         return msg
 

@@ -101,13 +101,18 @@ class InteractiveCmd():
         if teensy_thread is None:
             print(cmd_obj.teensy_name + " does not exist!")
             return -1
+
         with teensy_thread.lock:
             teensy_thread.inputs_sampled_event.clear()
-
+            request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
             try:
                 #cmd_obj.print()
                 for param_type, param_val in cmd_obj.change_request.items():
-                    teensy_thread.param.set_output_param(param_type, param_val)
+                    y = teensy_thread.param.set_output_param(param_type, param_val)
+                    if y == 1:
+                        print(param_type, " is not a ", request_type, " request. Change request did not apply.")
+                    elif y == -1:
+                        print("Request Type ", request_type, " does not exist! Change request did not apply.")
                 teensy_thread.param_updated_event.set()
                 #print(">>>>> sent command to Teensy #" + str(cmd_obj.teensy_id))
             except Exception as e:
@@ -151,8 +156,10 @@ class InteractiveCmd():
         for teensy_name in list(teensy_names):
 
              if not self.multithread_mode:
+
                 result = self.__get_input_states_func(teensy_name, input_types, timeout)
-                all_input_states[result[0]] = [result[1], result[2]]
+                if result:
+                    all_input_states[result[0]] = [result[1], result[2]]
 
              else:
 
@@ -208,6 +215,7 @@ class InteractiveCmd():
                     requested_inputs[input_type] = teensy_thread.param.get_input_state(input_type)
 
         return teensy_name, requested_inputs, new_sample_received
+
 
 class GetInputStateThread(threading.Thread):
 
@@ -276,15 +284,18 @@ class GetInputStateThread(threading.Thread):
             self.result_queue.put([self.teensy_name, requested_inputs, new_sample_received])
 
 
-
 class command_object():
 
-    def __init__(self, teensy_name):
+    def __init__(self, teensy_name, change_request_type):
         if not isinstance(teensy_name, str):
             raise TypeError("Teensy Name must be a string!")
 
+        if not isinstance(change_request_type, str):
+            raise TypeError("Change Request Type must be a string!")
+
         self.teensy_name = teensy_name
         self.change_request = dict()
+        self.change_request_type = change_request_type
 
     def add_param_change(self, type, value):
         if isinstance(type, str):

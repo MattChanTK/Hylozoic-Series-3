@@ -83,7 +83,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 # check if the thread is still alive
                 if Teensy_thread is not None:
 
-                    cmd_obj = command_object(teensy_name)
+                    cmd_obj = command_object(teensy_name, 'basic')
 
                     cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
                     cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
@@ -98,7 +98,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 is_new_update = input_states[1]
 
                 if is_new_update:
-                    if sample['analog_0_state'] > 850:
+                    if sample['analog_0_state'] > 900:
                         indicator_led_on[teensy_name] = 0
                     else:
                         indicator_led_on[teensy_name] = 1
@@ -107,6 +107,6 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 # new blink period
                 indicator_led_period[teensy_name] += 0.002
-                indicator_led_on[teensy_name] %= 10
+                indicator_led_period[teensy_name] %= 10
 
             print("Loop Time:", clock() - start_time)

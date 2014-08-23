@@ -20,7 +20,7 @@ class TeensyManager():
 
         # configuration of the Teensy threads
         self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
-        self.print_to_term_default = False
+        self.print_to_term_default = True
         self.import_config = import_config
 
         self.create_teensy_threads()
@@ -141,9 +141,7 @@ class TeensyInterface(threading.Thread):
 
     def __init__(self, serial_num, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID, print_to_term=False, unit_config='default'):
 
-        if unit_config == 'FULL_TEST_UNIT':
-            from TestUnitConfiguration import FullTestUnit as SysParam
-        elif unit_config == 'SIMPLIFIED_TEST_UNIT':
+        if unit_config == 'SIMPLIFIED_TEST_UNIT':
             from TestUnitConfiguration import SimplifiedTestUnit as SysParam
         else:
             from SystemParameters import SystemParameters as SysParam
