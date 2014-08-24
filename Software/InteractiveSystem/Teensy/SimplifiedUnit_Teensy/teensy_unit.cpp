@@ -1,6 +1,8 @@
-#include "system_config.h"
+#include "teensy_unit.h"
 
-
+//===========================================================================
+//===== CONSTRUCTOR and DECONSTRUCTOR =====
+//===========================================================================
 
 TeensyUnit::TeensyUnit(){
 	
@@ -36,10 +38,13 @@ TeensyUnit::TeensyUnit(){
 	pinMode(vbatt_pin, INPUT);
 }
 
-//===========================================================================
-//===========================================================================
+TeensyUnit::~TeensyUnit(){
 
+}
+
+//===========================================================================
 //===== INITIALIZATION =====
+//===========================================================================
 
 void TeensyUnit::init(){
 
@@ -53,11 +58,10 @@ void TeensyUnit::set_led_state(bool state){
 }
 
 //===========================================================================
+//====== COMMUNICATION ======
 //===========================================================================
 
-//====== COMMUNICATION CODES ======
-
-boolean TeensyUnit::receive_msg(){
+bool TeensyUnit::receive_msg(){
 
 	noInterrupts();
 	unsigned short byteCount = RawHID.recv(recv_data_buff, 0);

@@ -1,7 +1,6 @@
 
-#include "system_config.h"
-//#include "communication.h"
-//#include "behaviours.h"
+#include "teensy_unit.h"
+#include "behaviours.h"
 
 //===========================================================================
 //===========================================================================
@@ -31,7 +30,6 @@ void loop() {
 
 	volatile unsigned long curr_time = millis();
 	
-
 	// check for new messages
 	if (teensy.receive_msg()){
 		
