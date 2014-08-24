@@ -72,11 +72,9 @@ class TeensyManager():
             print(Teensy_name + " --- " + str(serial_num))
 
             # create a new thread for communicating with
-            try:
-                Teensy_thread = TeensyInterface(serial_num, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
-                self.teensy_thread_table[Teensy_name] = Teensy_thread
-            except Exception as e:
-                print(str(e))
+
+            Teensy_thread = TeensyInterface(serial_num, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
+            self.teensy_thread_table[Teensy_name] = Teensy_thread
 
     def _get_teensy_serial_num_list(self):
         serial_num_list = []
@@ -226,75 +224,72 @@ class TeensyInterface(threading.Thread):
 
                 self.param_updated_event.clear()
 
+                with self.lock:
+                    self.inputs_sampled_event.clear()
 
-                try:
-                    with self.lock:
-                        self.inputs_sampled_event.clear()
-
-                    self.print_to_term("Teensy thread: sampled event cleared")
+                self.print_to_term("Teensy thread: sampled event cleared")
 
 
-                    # compose the data
-                    out_msg, front_id, back_id = self.compose_msg()
+                # compose the data
+                out_msg, front_id, back_id = self.compose_msg()
 
 
-                    # sending the data
-                    #start_time = clock()
-                    self.talk_to_Teensy(out_msg, timeout=0)
-                    self.print_to_term("\n---Sent---")
-                    self.print_data(out_msg, raw_dec=True)
-                    #print("Talk time: ", clock()-start_time)
+                # sending the data
+                #start_time = clock()
+                self.talk_to_Teensy(out_msg, timeout=0)
+                self.print_to_term("\n---Sent---")
+                self.print_data(out_msg, raw_dec=True)
+                #print("Talk time: ", clock()-start_time)
 
-                    # waiting for reply
-                    received_reply = False
-                    #start_time = clock()
-                    data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
-                    #print("Listen time: ", clock()-start_time)
-                    invalid_reply_counter = 0
+                # waiting for reply
+                received_reply = False
+                #start_time = clock()
+                data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
+                #print("Listen time: ", clock()-start_time)
+                invalid_reply_counter = 0
 
-                    while received_reply is False:
-                        if data:
-                            no_reply_counter = 0
-                            #print("Echo Time:", clock() - start_time)
-                            # check if reply matches sent message
-                            if data[0] == front_id and data[-1] == back_id:
-                                received_reply = True
+                while received_reply is False:
+                    if data:
+                        no_reply_counter = 0
+                        #print("Echo Time:", clock() - start_time)
+                        # check if reply matches sent message
+                        if data[0] == front_id and data[-1] == back_id:
+                            received_reply = True
 
-                                with self.lock:
-                                    self.param.parse_message_content(data)
-                                    self.inputs_sampled_event.set()
+                            with self.lock:
+                                self.param.parse_message_content(data)
+                                self.inputs_sampled_event.set()
 
-                                self.print_to_term("Teensy thread: input sampled")
+                            self.print_to_term("Teensy thread: input sampled")
 
-                                self.print_to_term("---Received Reply---")
-                                self.print_data(data, raw_dec=True)
+                            self.print_to_term("---Received Reply---")
+                            self.print_data(data, raw_dec=True)
 
-                            else:
-
-                                self.print_to_term("Teensy (" + str(self.serial_number) + ") ---- Received invalid reply......" + str(invalid_reply_counter))
-                                self.print_data(data, raw_dec=True)
-
-                                invalid_reply_counter += 1
-                                if invalid_reply_counter > 5:
-                                    print("Teensy (" + str(self.serial_number) + ") ---- Number of invalid replies exceeded 5! Packet lost......")
-                                    print("Sent:")
-                                    self.print_data(out_msg, raw_dec=True)
-                                    print("Received:")
-                                    self.print_data(data, raw_dec=True)
-                                    break
-                                else:
-                                    # request another reply
-                                    data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
                         else:
-                            no_reply_counter += 1
-                            error_text = "Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter)
-                            if no_reply_counter >= 5:
-                                print("Teensy (" + str(self.serial_number) + ") has probably been disconnected.")
-                                return
+
+                            self.print_to_term("Teensy (" + str(self.serial_number) + ") ---- Received invalid reply......" + str(invalid_reply_counter))
+                            self.print_data(data, raw_dec=True)
+
+                            invalid_reply_counter += 1
+                            if invalid_reply_counter > 5:
+                                print("Teensy (" + str(self.serial_number) + ") ---- Number of invalid replies exceeded 5! Packet lost......")
+                                print("Sent:")
+                                self.print_data(out_msg, raw_dec=True)
+                                print("Received:")
+                                self.print_data(data, raw_dec=True)
+                                break
                             else:
-                                raise Exception(error_text)
-                except Exception as e:
-                    print(e)
+                                # request another reply
+                                data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
+                    else:
+                        no_reply_counter += 1
+
+                        if no_reply_counter >= 5:
+                            print("Teensy (" + str(self.serial_number) + ") has probably been disconnected.")
+                            return
+                        else:
+                            print("Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter))
+
 
                 # print(self.serial_number, " - Echo time: ", clock() - start_time)
 

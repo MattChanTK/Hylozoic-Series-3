@@ -42,24 +42,20 @@ class InteractiveCmd():
             param_cmd_list = cmd.split(" ")
 
             # check if it's the "apply" command
-            try:
-                applying_cmd = str(param_cmd_list[0])
-                if applying_cmd == ">>apply" or applying_cmd == ">>Apply":
-                    self.send_commands()
-                    return 1
-            except Exception as e:
-                print(e)
-                return -1
+
+            applying_cmd = str(param_cmd_list[0])
+            if applying_cmd == ">>apply" or applying_cmd == ">>Apply":
+                self.send_commands()
+                return 1
+
 
             # check if it's the "read" command
-            try:
-                applying_cmd = str(param_cmd_list[0])
-                if applying_cmd == ">>read" or applying_cmd == ">>Read":
-                    self.update_input_states(self.teensy_manager.get_teensy_name_list())
-                    return 1
-            except Exception as e:
-                print(e)
-                return -1
+
+            applying_cmd = str(param_cmd_list[0])
+            if applying_cmd == ">>read" or applying_cmd == ">>Read":
+                self.update_input_states(self.teensy_manager.get_teensy_name_list())
+                return 1
+
 
             # extract the Teensy ID
             try:
@@ -72,7 +68,7 @@ class InteractiveCmd():
                  return -1
 
             # create a command object
-            cmd_obj = command_object(dev_name)
+            cmd_obj = command_object(dev_name, 'basic')
 
             # extracts the parameters change requests
             try:
@@ -105,19 +101,16 @@ class InteractiveCmd():
         with teensy_thread.lock:
             teensy_thread.inputs_sampled_event.clear()
             request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
-            try:
-                #cmd_obj.print()
-                for param_type, param_val in cmd_obj.change_request.items():
-                    y = teensy_thread.param.set_output_param(param_type, param_val)
-                    if y == 1:
-                        print(param_type, " is not a ", request_type, " request. Change request did not apply.")
-                    elif y == -1:
-                        print("Request Type ", request_type, " does not exist! Change request did not apply.")
-                teensy_thread.param_updated_event.set()
-                #print(">>>>> sent command to Teensy #" + str(cmd_obj.teensy_id))
-            except Exception as e:
-                print(e)
 
+            #cmd_obj.print()
+            for param_type, param_val in cmd_obj.change_request.items():
+                y = teensy_thread.param.set_output_param(param_type, param_val)
+                if y == 1:
+                    print(param_type, " is not a ", request_type, " request. Change request did not apply.")
+                elif y == -1:
+                    print("Request Type ", request_type, " does not exist! Change request did not apply.")
+            teensy_thread.param_updated_event.set()
+            #print(">>>>> sent command to Teensy #" + str(cmd_obj.teensy_id))
 
         return 0
 
@@ -131,10 +124,7 @@ class InteractiveCmd():
             with teensy_thread.lock:
                 teensy_thread.inputs_sampled_event.clear()
 
-                try:
-                    teensy_thread.param_updated_event.set()
-                except Exception as e:
-                    print(e)
+                teensy_thread.param_updated_event.set()
 
         return 0
 

@@ -57,26 +57,28 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
 
     def __compose_outgoing_msg(self, content):
 
-        # byte 0: indicator LED on or off
-        content[0] = self.output_param['indicator_led_on']
+        if self.request_type == 'basic':
 
-        # byte 3 to 4: blinking frequency of the indicator LED
-        content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
+            # byte 0: indicator LED on or off
+            content[0] = self.output_param['indicator_led_on']
 
-        # byte 5: high power LED level
-        content[3] = self.output_param['high_power_led_level']
+            # byte 3 to 4: blinking frequency of the indicator LED
+            content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
 
-        # byte 6 to 7: high power LED reflex threshold
-        content[4:6] = struct.pack('H', self.output_param['high_power_led_reflex_threshold'])
+            # byte 5: high power LED level
+            content[3] = self.output_param['high_power_led_level']
 
-        # byte 8: SMA 0 level
-        content[6] = self.output_param['sma_0_level']
+            # byte 6 to 7: high power LED reflex threshold
+            content[4:6] = struct.pack('H', self.output_param['high_power_led_reflex_threshold'])
 
-        # byte 9: SMA 1 level
-        content[7] = self.output_param['sma_1_level']
+            # byte 8: SMA 0 level
+            content[6] = self.output_param['sma_0_level']
 
-        # byte 10: Reflex 0 level
-        content[8] = self.output_param['reflex_0_level']
+            # byte 9: SMA 1 level
+            content[7] = self.output_param['sma_1_level']
 
-        # byte 11: Reflex 1 level
-        content[9] = self.output_param['reflex_1_level']
+            # byte 10: Reflex 0 level
+            content[8] = self.output_param['reflex_0_level']
+
+            # byte 11: Reflex 1 level
+            content[9] = self.output_param['reflex_1_level']

@@ -12,9 +12,16 @@ class SystemParameters():
         self.output_param['indicator_led_on'] = True
         self.output_param['indicator_led_period'] = 100
 
-        self.bool_var_list = ('indicator_led_on',)
-        self.int8_var_list = ()
-        self.int16_var_list = ('indicator_led_period',)
+        #~~~~ variable type ~~~~
+        self.var_list = dict()
+        self.var_list["bool"] = ('indicator_led_on',)
+        self.var_list["int8"] = ()
+        self.var_list["int16"] = ('indicator_led_period',)
+        #~~~ function to encode variable type ~~~~
+        self.var_encode_func = dict()
+        self.var_encode_func["bool"] = self.__set_bool_var
+        self.var_encode_func["int8"] = self.__set_int8_var
+        self.var_encode_func["int16"] = self.__set_int_var
 
         #==== inputs ====
         self.input_state = dict()
@@ -28,6 +35,8 @@ class SystemParameters():
         self.request_type_ids = enum_dict('basic', 'wave_1')
         self.request_type = 'basic'
 
+    def __var_encode(self, func, args):
+         func(*args)
 
     def get_input_state(self, state_type):
         if isinstance(state_type, str):
@@ -37,6 +46,7 @@ class SystemParameters():
                 raise ValueError(state_type + " does not exist!")
         else:
             raise TypeError("'State type' must be a string!")
+
     def set_request_type(self, change_request_type):
         self.request_type = change_request_type
         return self.request_type
@@ -51,12 +61,13 @@ class SystemParameters():
 
         if isinstance(param_type, str):
             if param_type in self.output_param:
-                if param_type in self.bool_var_list:
-                    self.__set_bool_var(param_type, int(param_val))
-                elif param_type in self.int8_var_list:
-                    self.__set_int_var(param_type, int(param_val), 8)
-                elif param_type in self.int16_var_list:
-                    self.__set_int_var(param_type, int(param_val), 16)
+                for var_type, var_entry in self.var_list.items():
+                    if param_type in var_entry:
+                        try:
+                            self.var_encode_func[var_type](param_type, int(param_val))
+                            break
+                        except KeyError:
+                            raise KeyError("There isn't any encode function for " + str(var_type))
                 else:
                     #warning! this function does not do type error check on values
                     self.output_param[param_type] = param_val
@@ -68,13 +79,16 @@ class SystemParameters():
         return 0
 
 
-    def __set_int_var(self, input_type, input, num_bit):
+    def __set_int_var(self, input_type, input, num_bit=16):
         if isinstance(input, int):
             if input > 2**num_bit - 1 or input < 0:
                 raise TypeError(input_type + " must either be positive and less than " + str(2**num_bit))
             self.output_param[input_type] = input
         else:
             raise TypeError(input_type + " must be an integer")
+
+    def __set_int8_var(self, input_type, input, num_bit=16):
+        self.__set_int_var(input_type, input, 8)
 
     def __set_bool_var(self, input_type, input):
         if isinstance(input, bool):
