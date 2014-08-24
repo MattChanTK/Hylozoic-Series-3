@@ -4,40 +4,8 @@ import struct
 
 class SimplifiedTestUnit(SysParam.SystemParameters):
 
-    def __init__(self):
-
-        #==== outputs ====
-        self.output_param = dict()
-        # ---defaults---
-        self.output_param['indicator_led_on'] = True
-        self.output_param['indicator_led_period'] = 100
-        self.output_param['high_power_led_level'] = 5
-        self.output_param['high_power_led_reflex_threshold'] = 100
-        self.output_param['sma_0_level'] = 100
-        self.output_param['sma_1_level'] = 100
-        self.output_param['reflex_0_level'] = 100
-        self.output_param['reflex_1_level'] = 100
-
-        self.bool_var_list = ('indicator_led_on',)
-        self.int8_var_list = ('high_power_led_level','sma_0_level', 'sma_1_level',
-                              'reflex_0_level', 'reflex_1_level')
-        self.int16_var_list = ('indicator_led_period', 'high_power_led_reflex_threshold')
-
-
-        #==== inputs ====
-        self.input_state = dict()
-        # ---defaults---
-        self.input_state['analog_0_state'] = 0
-        self.input_state['ambient_light_state'] = 0
-        self.input_state['ir_0_state'] = 0
-        self.input_state['ir_1_state'] = 0
-
-        #=== request type ====
-        self.request_types = dict()
-        self.request_types['basic'] = ('indicator_led_on', 'indicator_led_period')
-        self.request_types['wave_1'] = ()
-        self.request_type_ids = enum_dict('basic', 'wave_1')
-        self.request_type = 'basic'
+    input_param_config_filename = 'param_config_input_simplified'
+    output_param_config_filename = 'param_config_output_simplified'
 
     def parse_message_content(self, msg):
 

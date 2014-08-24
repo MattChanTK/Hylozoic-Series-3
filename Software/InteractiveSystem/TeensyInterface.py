@@ -5,6 +5,7 @@ import random
 import struct
 import changePriority
 import sys
+import re
 from time import clock
 
 TEENSY_VENDOR_ID = 0x16C0
@@ -20,7 +21,7 @@ class TeensyManager():
 
         # configuration of the Teensy threads
         self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
-        self.print_to_term_default = True
+        self.print_to_term_default = False
         self.import_config = import_config
 
         self.create_teensy_threads()
@@ -41,7 +42,7 @@ class TeensyManager():
                     teensy_config = [line.rstrip() for line in f]
 
                 for line in teensy_config:
-                    entry = line.split(' ')
+                    entry = re.split('\W*', line)
                     try:
                         if len(entry) != 3:
                             raise Exception("Invalid configuration at line -> " + line)

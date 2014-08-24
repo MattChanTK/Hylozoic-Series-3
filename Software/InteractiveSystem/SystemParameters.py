@@ -1,8 +1,12 @@
 import struct
+import re
+import copy
 
 class SystemParameters():
 
     msg_length = 64
+    input_param_config_filename = 'param_config_input_default'
+    output_param_config_filename = 'param_config_output_default'
 
     def __init__(self):
 
@@ -14,9 +18,9 @@ class SystemParameters():
 
         #~~~~ variable type ~~~~
         self.var_list = dict()
-        self.var_list["bool"] = ('indicator_led_on',)
-        self.var_list["int8"] = ()
-        self.var_list["int16"] = ('indicator_led_period',)
+        self.var_list["bool"] = set(('indicator_led_on',))
+        self.var_list["int8"] = set()
+        self.var_list["int16"] = set(('indicator_led_period',))
         #~~~ function to encode variable type ~~~~
         self.var_encode_func = dict()
         self.var_encode_func["bool"] = self.__set_bool_var
@@ -30,13 +34,68 @@ class SystemParameters():
 
         #=== request type ====
         self.request_types = dict()
-        self.request_types['basic'] = ('indicator_led_on', 'indicator_led_period')
-        self.request_types['wave_1'] = ()
-        self.request_type_ids = enum_dict('basic', 'wave_1')
+        self.request_types['basic'] = set(('indicator_led_on', 'indicator_led_period'))
+        self.request_type_ids = enum_dict('basic', )
         self.request_type = 'basic'
 
-    def __var_encode(self, func, args):
-         func(*args)
+        # import parameters from files
+        self.__import_output_param(SystemParameters.output_param_config_filename)
+        self.__import_input_param(SystemParameters.input_param_config_filename)
+
+    def __import_output_param(self, filename):
+
+        try:
+            with open(filename, mode='r') as f:
+                param_config = [line.rstrip() for line in f]
+        except FileNotFoundError:
+            print("Cannot find the file: " + filename)
+        else:
+            for line in param_config:
+                entry = re.split('\W*', line)
+                try:
+                    if len(entry) != 4:
+                        raise Exception("Invalid configuration at line -> " + line)
+                except Exception as e:
+                    print(e)
+                else:
+                    name = entry[0]
+                    init_val = entry[1]
+                    var_type = entry[2]
+                    req_type = entry[3]
+
+                    # add name to the variable list
+                    if var_type not in self.var_list.keys():
+                        self.var_list[var_type] = set((name,))
+                    else:
+                        self.var_list[var_type].add(name)
+                    if req_type not in self.request_types.keys():
+                        self.request_types[req_type] = set((name, ))
+                    else:
+                        self.request_types[req_type].add(name)
+
+                    self.var_encode_func[var_type](name, init_val)
+
+        print("Output parameters: ", list(self.output_param.keys()))
+
+    def __import_input_param(self, filename):
+
+        try:
+            with open(filename, mode='r') as f:
+                param_config = [line.rstrip() for line in f]
+        except FileNotFoundError:
+            print("Cannot find the file: " + filename)
+        else:
+            for line in param_config:
+                entry = re.split('\W*', line)
+                try:
+                    if len(entry) != 1:
+                        raise Exception("Invalid configuration at line -> " + line)
+                except Exception as e:
+                    print(e)
+                else:
+                    name = entry[0]
+                    self.input_state[name] = 0
+        print("Input parameters: ", list(self.input_state.keys()))
 
     def get_input_state(self, state_type):
         if isinstance(state_type, str):
@@ -80,25 +139,34 @@ class SystemParameters():
 
 
     def __set_int_var(self, input_type, input, num_bit=16):
-        if isinstance(input, int):
-            if input > 2**num_bit - 1 or input < 0:
-                raise TypeError(input_type + " must either be positive and less than " + str(2**num_bit))
-            self.output_param[input_type] = input
-        else:
-            raise TypeError(input_type + " must be an integer")
 
-    def __set_int8_var(self, input_type, input, num_bit=16):
+        if not isinstance(input, int):
+            try:
+                input = int(input)
+            except ValueError:
+                raise TypeError(input_type + " must be an integer")
+
+        if input > 2**num_bit - 1 or input < 0:
+            raise TypeError(input_type + " must either be positive and less than " + str(2**num_bit))
+        self.output_param[input_type] = input
+
+
+    def __set_int8_var(self, input_type, input):
         self.__set_int_var(input_type, input, 8)
 
     def __set_bool_var(self, input_type, input):
+
         if isinstance(input, bool):
             self.output_param[input_type] = input
-        elif input == 0:
+        elif input == 0 or input == 'False' or input == '0':
             self.output_param[input_type] = False
-        elif input == 1:
+        elif input == 1 or input == 'True' or input == '1':
             self.output_param[input_type] = True
+
         else:
             raise TypeError(input_type + " must either be 'True' or 'False'")
+
+
 
     def parse_message_content(self, msg):
 
@@ -153,6 +221,6 @@ if __name__ == '__main__':
             print('\n')
 
     s = SystemParameters()
-    s.set_indicator_led_on(True)
-    s.set_indicator_led_period(65535)
+    print(s.request_types)
+    print(s.var_list)
     print_data(s.compose_message_content(), raw_dec=True)
