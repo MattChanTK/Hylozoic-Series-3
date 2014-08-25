@@ -1,6 +1,6 @@
 
-#include "teensy_unit.h"
 #include "behaviours.h"
+#include "teensy_unit.h"
 
 //===========================================================================
 //===========================================================================
@@ -8,19 +8,12 @@
 //===== INITIALIZATION =====
 
 TeensyUnit teensy;
+Behaviours test_unit(teensy);
 
 void setup() {
 
-	
-	//===== clear all existing messages ======
-	unsigned long clearing_counter = 0;
-	while (teensy.receive_msg()){
-	    // this prevents the Teensy from being stuck in infinite loop
-	    clearing_counter++;
-	    if (clearing_counter>10000){
-		break;
-           }
-	}
+	//--- Teensy Unit ---
+	teensy.init();
 
 }
 
@@ -34,14 +27,11 @@ void loop() {
 	if (teensy.receive_msg()){
 		
 		// parse the message and save to parameters
-		//parse_msg(teensy.incomingByte);
+		teensy.parse_msg();
 	
 
-		teensy.set_led_state(true);
-		delay(1000);
-		teensy.set_led_state(false);
-		delay(150);
-	
+		teensy.set_led_state();
+		
 	}
 
 }

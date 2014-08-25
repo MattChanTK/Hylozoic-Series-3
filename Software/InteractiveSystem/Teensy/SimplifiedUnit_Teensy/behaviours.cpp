@@ -5,59 +5,27 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours(){
-
-	//--- Input Sampling ----
-	//~~Teensy on-board~~
-	analog_0_state = 0;
-	//~~IR sensors state~~
-	ir_0_state = 0;
-	ir_1_state = 0;
-	//~~Ambient light sensor state~~
-	ambient_light_sensor_state = 0;
-	//~~Sound_moudle states~~
-	sound_detect_state = 0;
-	sound_module_ir_state = 0;
+Behaviours::Behaviours(TeensyUnit &Teensy): teensy(Teensy)
+{
 	
 	//---- indicator LED blinking -----
 	//~~indicator LED on~~
-	indicator_led_on = false; //exposed
 	indicator_led_on_0 = false;
 	//~~indicator LED blink~~
 	indicator_led_blinkPeriod_0 = -99;
-	indicator_led_blinkPeriod = 0; //exposed
-	
 	
 	//----- Protocell reflex -----
-	//~~output~~
-	high_power_led_level = 5;  //exposed
-	high_power_led_reflex_enabled = true;
 	high_power_led_cycling = false;
-	high_power_led_level_max = 125;
-	high_power_led_reflex_threshold = 50;
-	//~~timing~~
-	protocell_reflex_phase_time;
+	protocell_reflex_phase_time = 0;
 	
 	//--- Tentacle reflex ----
-	//~~output~~
-	tentacle_reflex_enabled = true;
 	tentacle_reflex_cycling = false;
-	sma_0_level = 0; //exposed
-	sma_1_level = 0; //exposed
-	reflex_0_level = 10; //exposed
-	reflex_1_level = 10; //exposed
-	ir_0_threshold = 150;
-	ir_1_threshold = 150;
-	//~~timing~~
-	tentacle_reflex_phase_time;
+	tentacle_reflex_phase_time = 0;
 	
 	//--- sound module reflex ---
-	//~~output~~
-	sound_module_reflex_enabled = true;
 	sound_module_cycling = false;
-	//~~timing~~
-	sound_module_reflex_phase_time;
-	
+	sound_module_reflex_phase_time = 0;
+
 	
 }
 
@@ -68,15 +36,6 @@ Behaviours::~Behaviours(){
 //===========================================================================
 //============ BEHAVIOUR CODES =========
 //===========================================================================
-
-
-//--- Sampling function ---
-void Behaviours::sample_inputs(){
-	// analog_0_state = analogRead(analog_0_pin);
-	// ambient_light_sensor_state = analogRead(ambient_light_sensor_pin);
-	// ir_0_state = analogRead(ir_0_pin);
-	// ir_1_state = analogRead(ir_1_pin);
-}
 
 
 //--- Wave Table Synthesis ---
