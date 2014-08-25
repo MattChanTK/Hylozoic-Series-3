@@ -108,7 +108,7 @@ September 5, 2014		| [_hardware_] Complete PCB layout of the sound module
 September 5, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
 September 8, 2014		| [_hardware_] ==Order final version of PCB==
 September 15, 2014		| [_hardware_] Set up test bed hardware in Waterloo
-September 23, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
+September 30, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
 September 30, 2014		| Confirm user study venue
 September 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
 October 6, 2014			| Review ORE applicaiton form and experimental logistics proposal
