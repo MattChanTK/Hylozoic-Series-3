@@ -11,7 +11,7 @@ layout: index
 The software for the CBLA Test Bed was written to enable both reliable local functions and complex inter-node functions.
 The main microcontroller used in the current version of the CBLA Test Bed is Teensy 3.1. All Teensy devices are connected to computer through USB connection. The computer is acting as a master node and the Teensy are acting as slave nodes. The main function of the computer is to enable complex behaviours that requires co-ordinations of multiple Teensy slave nodes. 
 
-There are mainly two types of software. The first type of software is the firmware. They are the software that get uploaded onto the Teensy. They are written in Arduino and compiled using Teensyduino. They perform low-level and local functions. These functions should continue to function even if the connection to the computer is severed. The firmware is mainly responsible for routines that require high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run those Python scripts, the software packages listed under _System Requirements_ must be installed and set up appropriately. 
+There are mainly two types of software. The first type of software is the firmware. They are the software that get uploaded onto the Teensy. They are written in C++. They perform low-level and local functions. These functions should continue to function even if the connection to the computer is severed. The firmware is mainly responsible for routines that require high update rates, such as controlling the timing pattern of the brightness of an LED. The second type of software is the Python script. They perform high-level functions such as coordinating all Teensy devices connected to the computer, controlling Teensy devices from the computer, and displaying sensor readings. To run those Python scripts, the software packages listed under _System Requirements_ must be installed and set up appropriately. 
 
   
 ## System Requirements
@@ -103,16 +103,18 @@ The CBLA code will be written as a _Behaviours_ module. It is still under develo
 Date				| Deliverable
 -------------			| -------------
 August 28, 2014			| [_hardware_] Complete assembly and testing of prototype hardware
-September 3, 2014		| [_software_] Complete the coding of reflex behaviours
+September 3, 2014		| [_software_] Complete the Teensy level software
 September 5, 2014		| [_hardware_] Complete PCB layout of the sound module
+September 5, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
 September 8, 2014		| [_hardware_] ==Order final version of PCB==
-September 10, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
+September 15, 2014		| [_hardware_] Set up test bed hardware in Waterloo
 September 23, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
 September 30, 2014		| Confirm user study venue
 September 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
+October 6, 2014			| Review ORE applicaiton form and experimental logistics proposal
 October 13, 2014		| [_software_] Review GUI for CBLA Test bed
 October 13, 2014		| Review proposal for the 1st round of user study
-November 11, 2014		| Submit initial ORE application form
+October 15, 2014		| Submit initial ORE application form
 December 2, 2014		| [_software_] Review CBLA algorithm that will be used for user study
 December 17, 2014		| [_software_] ==Finalize CBLA algorithm for user study==
 December 17, 2014		| Subjects recruitment for the 1st round of user study begins
