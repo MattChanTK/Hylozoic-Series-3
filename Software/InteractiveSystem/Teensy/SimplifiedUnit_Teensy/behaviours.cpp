@@ -5,27 +5,9 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours(TeensyUnit &Teensy): teensy(Teensy)
+Behaviours::Behaviours()
 {
 	
-	//---- indicator LED blinking -----
-	//~~indicator LED on~~
-	indicator_led_on_0 = false;
-	//~~indicator LED blink~~
-	indicator_led_blinkPeriod_0 = -99;
-	
-	//----- Protocell reflex -----
-	high_power_led_cycling = false;
-	protocell_reflex_phase_time = 0;
-	
-	//--- Tentacle reflex ----
-	tentacle_reflex_cycling = false;
-	tentacle_reflex_phase_time = 0;
-	
-	//--- sound module reflex ---
-	sound_module_cycling = false;
-	sound_module_reflex_phase_time = 0;
-
 	
 }
 
@@ -44,44 +26,37 @@ Behaviours::~Behaviours(){
 //}
 
 
-//---- Sampling function -----
-void Behaviours::blink_led(void){
-	// ledState ^= 1;
-	// digitalWrite(indicator_led_pin, ledState);  
-}
-
 //---- indicator LED -----
-void Behaviours::led_blink_behaviour(){
-	// //..... indicator LED .....
-	// // if it should be on
-	// if (indicator_led_on == 1){
+
+void Behaviours::led_blink_behaviour(unsigned long curr_time){
+	if (indicator_led_on){
 		
-		// // if there is a change in blink period
-		// if (indicator_led_blinkPeriod != indicator_led_blinkPeriod_0 ||
-				// indicator_led_on != indicator_led_on_0){
-			// indicator_led_on_0 = indicator_led_on;
-			// indicator_led_blinkPeriod_0 = indicator_led_blinkPeriod;
+		// starting a blink cycle
+		if (indicator_led_blink_cycling == false){
+			indicator_led_blink_cycling = true;
+			indicator_led_blink_phase_time = millis();      
+			digitalWrite(indicator_led_pin, 1);
+		}
+		else if (indicator_led_blink_cycling == true){
 			
-			// //update the blinker's period
-			// if (indicator_led_blinkPeriod > 0){
-				// indicator_led_blinkTimer.begin(blinkLED, indicator_led_blinkPeriod);
-			// }
-			// //if the period is 0 just end the blink timer and and turn it on 
-			// else if (indicator_led_blinkPeriod == 0){
-				// indicator_led_blinkTimer.end();
-				// ledState = 1;
-				// digitalWrite(indicator_led_pin, ledState);
-			// }
-		// }
-	// }
-	// // if it should be off
-	// else if (indicator_led_on == 0){ 
-		// indicator_led_on_0 = indicator_led_on;
-		// // end the blink timer and turn it off
-		// indicator_led_blinkTimer.end();
-		// ledState = 0;
-		// digitalWrite(indicator_led_pin, ledState);
-	// }
+			// if reaches the full period, restart cycle
+			if ((curr_time - indicator_led_blink_phase_time) > indicator_led_blink_period){
+				indicator_led_blink_cycling = false;
+			}
+			// if reaches half the period, turn it off
+			else if ((curr_time - indicator_led_blink_phase_time) > indicator_led_blink_period>>1){
+				digitalWrite(indicator_led_pin, 0);
+			}	
+		}
+	}
+	else{
+	
+		// if stopped in the middle of a cycle
+		if (indicator_led_blink_cycling){
+			indicator_led_blink_cycling = false;
+			digitalWrite(indicator_led_pin, 0);
+		}
+	}
 }
 
 //----- Protocell reflex -----

@@ -1,24 +1,21 @@
 #ifndef _BEHAVIOUR_H
 #define _BEHAVIOUR_H
 
-//#include "Arduino.h"
+#include "Arduino.h"
 #include "teensy_unit.h"
 
 
-class Behaviours{
+class Behaviours : public TeensyUnit{
 
 	public:
 		
-		Behaviours(TeensyUnit &Teensy);
+		Behaviours();
 		~Behaviours();
-		
-		//---- Test Unit Configuration ----
-		TeensyUnit &teensy;
-		
+				
 		
 		//---- indicator LED -----
 		void blink_led(void);
-		void led_blink_behaviour(void);
+		void led_blink_behaviour(unsigned long curr_time);
 		
 		//----- Protocell reflex -----
 		void protocell_reflex(unsigned long curr_time);
@@ -34,22 +31,24 @@ class Behaviours{
 	
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
-		volatile boolean indicator_led_on_0;
+		volatile bool indicator_led_state = 0;
+		volatile bool indicator_led_on_0 = 1;
 		//~~indicator LED blink~~
-		IntervalTimer indicator_led_blinkTimer;
-		volatile int indicator_led_blinkPeriod_0;
+		volatile bool indicator_led_blink_cycling = false;
+		volatile unsigned long indicator_led_blink_phase_time= 0;
+		volatile int indicator_led_blink_0 = 100;
 		
 		//----- Protocell reflex -----
-		volatile boolean high_power_led_cycling;
-		volatile unsigned long protocell_reflex_phase_time;
+		volatile bool high_power_led_cycling = false;
+		volatile unsigned long protocell_reflex_phase_time= 0;
 		
 		//--- Tentacle reflex ----
-		volatile boolean tentacle_reflex_cycling;
-		volatile unsigned long tentacle_reflex_phase_time;
+		volatile bool tentacle_reflex_cycling = false;
+		volatile unsigned long tentacle_reflex_phase_time = 0;
 
 		//--- sound module reflex ---
-		volatile boolean sound_module_cycling;
-		volatile unsigned long sound_module_reflex_phase_time;
+		volatile bool sound_module_cycling = false;
+		volatile unsigned long sound_module_reflex_phase_time = 0;
 
 			
 

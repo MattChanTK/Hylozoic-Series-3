@@ -60,7 +60,7 @@ class TeensyUnit{
 		//~~indicator LED on~~
 		volatile bool indicator_led_on = true; //exposed
 		//~~indicator LED blink~~
-		volatile int indicator_led_blinkPeriod = 0; //exposed
+		volatile int indicator_led_blink_period = 5000; //exposed
 				
 		//----- Protocell reflex -----
 		//~~output~~

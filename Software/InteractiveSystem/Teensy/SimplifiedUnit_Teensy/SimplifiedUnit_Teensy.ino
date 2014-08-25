@@ -7,13 +7,12 @@
 
 //===== INITIALIZATION =====
 
-TeensyUnit teensy;
-Behaviours test_unit(teensy);
+Behaviours test_unit;
 
 void setup() {
 
 	//--- Teensy Unit ---
-	teensy.init();
+	test_unit.init();
 
 }
 
@@ -21,17 +20,18 @@ void setup() {
 
 void loop() {
 
-	volatile unsigned long curr_time = millis();
-	
-	// check for new messages
-	if (teensy.receive_msg()){
-		
-		// parse the message and save to parameters
-		teensy.parse_msg();
-	
 
-		teensy.set_led_state();
-		
+	// check for new messages
+	if (test_unit.receive_msg()){
+			
+		// parse the message and save to parameters
+		test_unit.parse_msg();
+
 	}
+	
+	volatile unsigned long curr_time = millis();
+	test_unit.led_blink_behaviour(curr_time);
+	
+	
 
 }

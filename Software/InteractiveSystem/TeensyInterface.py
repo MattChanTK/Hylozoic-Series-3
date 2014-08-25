@@ -21,7 +21,7 @@ class TeensyManager():
 
         # configuration of the Teensy threads
         self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
-        self.print_to_term_default = False
+        self.print_to_term_default = True
         self.import_config = import_config
 
         self.create_teensy_threads()

@@ -116,7 +116,7 @@ void TeensyUnit::parse_msg(){
 	val = 0;
 	for (int i = 0; i < 2 ; i++)
 	  val += recv_data_buff[i+3] << (8*i);
-	indicator_led_blinkPeriod = val*1000;
+	indicator_led_blink_period = val;
 
 	// byte 5 --- high power LED level
 	high_power_led_level = recv_data_buff[5];
