@@ -78,7 +78,7 @@ The _Behaviours_ module is where one can program how outputs parameters should b
   
 ## Graphical User Interface (GUI)
 
-This has yet to be started. It will most likely be written using QT-5 frame work. Currently, I am considering either writing it in its native language, C++, or in Python using PySide as a wrapper. 
+This has yet to be started. It will most likely be written using QT-5 frame work. 
 
 
 ## Teensy Firmware
@@ -131,4 +131,4 @@ Early-June, 2015		| MASc seminar
 Mid-August, 2015		| ==MASc thesis submission==
 
 
-_Updated on 2014-08-22_
+_Updated on 2014-08-25_
