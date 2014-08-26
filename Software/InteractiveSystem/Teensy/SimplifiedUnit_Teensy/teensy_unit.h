@@ -132,6 +132,7 @@ class TeensyUnit{
 		//==== COMMUNICATION variables =====
 		byte send_data_buff[64];
 		byte recv_data_buff[64];
+		uint8_t request_type = 0;
 		
 
 		//==== WAVE FUNCTION variables ====

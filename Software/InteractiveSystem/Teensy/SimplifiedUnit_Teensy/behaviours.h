@@ -31,7 +31,6 @@ class Behaviours : public TeensyUnit{
 		
 	private:
 
-	
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
 		bool indicator_led_state = 0;
@@ -52,10 +51,6 @@ class Behaviours : public TeensyUnit{
 		//--- sound module reflex ---
 		bool sound_module_cycling = false;
 		uint32_t sound_module_reflex_phase_time = 0;
-		
-
-			
-
 
 };
 

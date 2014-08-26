@@ -100,37 +100,51 @@ void TeensyUnit::send_msg(){
 
 void TeensyUnit::parse_msg(){
 
-	int16_t val = 0;
+	uint16_t val = 0;
+	
+	// byte 1 --- type of request
+	request_type = recv_data_buff[1];
         
-	// byte 2 --- indicator led on or off
-	indicator_led_on = recv_data_buff[2];
+	switch (request_type){
+		case 1: 
+			// byte 2 to 33 --- indicator LED wave 
+			for (short i = 0; i < 32; i++)
+				indicator_led_wave[i] = recv_data_buff[i+2];
+			
+			break;
+		
+		default:
+			// byte 2 --- indicator led on or off
+			indicator_led_on = recv_data_buff[2];
 
-	// byte 3 and 4 --- indicator led blinking frequency
-	val = 0;
-	for (int i = 0; i < 2 ; i++)
-	  val += recv_data_buff[i+3] << (8*i);
-	indicator_led_blink_period = val;
+			// byte 3 and 4 --- indicator led blinking frequency
+			val = 0;
+			for (short i = 0; i < 2 ; i++)
+			  val += recv_data_buff[i+3] << (8*i);
+			indicator_led_blink_period = val;
 
-	// byte 5 --- high power LED level
-	high_power_led_level = recv_data_buff[5];
-        
-	// byte 6 and byte 7 --- high power LED reflex threshold
-	val = 0;
-	for (int i = 0; i < 2 ; i++)
-	  val += recv_data_buff[i+6] << (8*i);
-	high_power_led_reflex_threshold = val;
-	
-	// byte 8 --- SMA 0 level
-	sma_0_level = recv_data_buff[8];
-	
-	// byte 9 --- SMA 1 level
-	sma_1_level = recv_data_buff[9];
-	
-	// byte 10 --- Reflex 0 level
-	reflex_0_level = recv_data_buff[10];
-	
-	// byte 11 --- Reflex 1 level
-	reflex_1_level = recv_data_buff[11];
+			// byte 5 --- high power LED level
+			high_power_led_level = recv_data_buff[5];
+				
+			// byte 6 and byte 7 --- high power LED reflex threshold
+			val = 0;
+			for (short i = 0; i < 2 ; i++)
+			  val += recv_data_buff[i+6] << (8*i);
+			high_power_led_reflex_threshold = val;
+			
+			// byte 8 --- SMA 0 level
+			sma_0_level = recv_data_buff[8];
+			
+			// byte 9 --- SMA 1 level
+			sma_1_level = recv_data_buff[9];
+			
+			// byte 10 --- Reflex 0 level
+			reflex_0_level = recv_data_buff[10];
+			
+			// byte 11 --- Reflex 1 level
+			reflex_1_level = recv_data_buff[11];
+			break;
+	}
 
 }
 
@@ -140,21 +154,26 @@ void TeensyUnit::compose_reply(byte front_signature, byte back_signature){
 	send_data_buff[0] = front_signature;
 	send_data_buff[num_outgoing_byte-1] = back_signature;
 
-	// byte 1 and 2 --- analog 0
-	for (int i = 0; i < 2 ; i++)
-		send_data_buff[i+1] = analog_0_state >> (8*i);
-
-	// byte 3 and 4 --- ambient light sensor
-	for (int i = 0; i < 2 ; i++)
-		send_data_buff[i+3] = ambient_light_sensor_state >> (8*i);
+	switch (request_type){
 	
-	// byte 5 and 6 --- IR 0 state
-	for (int i = 0; i < 2 ; i++)
-		send_data_buff[i+5] = ir_0_state >> (8*i);
-		
-	// byte 7 and 8 --- IR 1 state
-	for (int i = 0; i < 2 ; i++)
-		send_data_buff[i+7] = ir_1_state >> (8*i);
+		default:
+			// byte 1 and 2 --- analog 0
+			for (int i = 0; i < 2 ; i++)
+				send_data_buff[i+1] = analog_0_state >> (8*i);
+
+			// byte 3 and 4 --- ambient light sensor
+			for (int i = 0; i < 2 ; i++)
+				send_data_buff[i+3] = ambient_light_sensor_state >> (8*i);
+			
+			// byte 5 and 6 --- IR 0 state
+			for (int i = 0; i < 2 ; i++)
+				send_data_buff[i+5] = ir_0_state >> (8*i);
+				
+			// byte 7 and 8 --- IR 1 state
+			for (int i = 0; i < 2 ; i++)
+				send_data_buff[i+7] = ir_1_state >> (8*i);
+		break;
+	}
 
 }
 
@@ -193,7 +212,7 @@ void TeensyUnit::wave_function(const uint32_t curr_time, const uint8_t pin_num,
 	else if (wave_function_cycling == true){
 	
 		// if reaches full time duration
-		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) > duration){
+		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) >= duration){
 			wave_function_cycling = false;
 		}
 		// if reaches one time step
