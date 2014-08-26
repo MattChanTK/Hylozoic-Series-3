@@ -1,11 +1,23 @@
 import SystemParameters as SysParam
 from SystemParameters import enum_dict
 import struct
+import re
 
 class SimplifiedTestUnit(SysParam.SystemParameters):
 
-    input_param_config_filename = 'param_config_input_simplified'
-    output_param_config_filename = 'param_config_output_simplified'
+    def __init__(self):
+        super(SimplifiedTestUnit, self).__init__()
+
+    def additional_config_routine(self):
+
+        self.request_type_ids = enum_dict('basic', 'wave')
+        self.var_encode_func["int8s"] = self.__set_int8_array
+
+        # import parameters from files
+        self.output_param_config_filename = 'param_config_output_simplified'
+        self.input_param_config_filename = 'param_config_input_simplified'
+
+        self._import_param_from_file()
 
     def parse_message_content(self, msg):
 
@@ -23,7 +35,7 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
         # byte 7 and 8: ir sensor 1 state
         self.input_state['ir_1_state'] = struct.unpack_from('H', msg[7:9])[0]
 
-    def __compose_outgoing_msg(self, content):
+    def _compose_outgoing_msg(self, content):
 
         if self.request_type == 'basic':
 
@@ -50,3 +62,30 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
 
             # byte 11: Reflex 1 level
             content[9] = self.output_param['reflex_1_level']
+
+        elif self.request_type == 'wave':
+
+            # byte 0 to 32: indicator led wave
+            content[0:32] = self.output_param['indicator_led_wave']
+
+
+    def __set_int8_array(self, input_type, raw_input):
+
+        if raw_input is None:
+            raise TypeError("The array must not be empty.")
+
+        # extract the numbers from the string
+        input = re.split('_*', raw_input)
+        input = list(filter(None, input))
+
+        for i in range(len(input)):
+            try:
+                input[i] = int(input[i])
+            except ValueError:
+                raise TypeError(input_type + " must be an array of integers separated by '_'.")
+            else:
+                if 0 <= input[i] < 256:
+                    self.output_param[input_type] = input
+                else:
+                    raise TypeError("Elements of " + input_type + " must be positive and less than 255")
+

@@ -5,8 +5,7 @@ import copy
 class SystemParameters():
 
     msg_length = 64
-    input_param_config_filename = 'param_config_input_default'
-    output_param_config_filename = 'param_config_output_default'
+
 
     def __init__(self):
 
@@ -21,6 +20,7 @@ class SystemParameters():
         self.var_list["bool"] = set(('indicator_led_on',))
         self.var_list["int8"] = set()
         self.var_list["int16"] = set(('indicator_led_period',))
+
         #~~~ function to encode variable type ~~~~
         self.var_encode_func = dict()
         self.var_encode_func["bool"] = self.__set_bool_var
@@ -39,8 +39,18 @@ class SystemParameters():
         self.request_type = 'basic'
 
         # import parameters from files
-        self.__import_output_param(SystemParameters.output_param_config_filename)
-        self.__import_input_param(SystemParameters.input_param_config_filename)
+        self.output_param_config_filename = 'param_config_output_default'
+        self.input_param_config_filename = 'param_config_input_default'
+
+        self.additional_config_routine()
+
+
+    def additional_config_routine(self):
+        self._import_param_from_file()
+
+    def _import_param_from_file(self):
+        self.__import_output_param(self.output_param_config_filename)
+        self.__import_input_param(self.input_param_config_filename)
 
     def __import_output_param(self, filename):
 
@@ -59,9 +69,9 @@ class SystemParameters():
                     print(e)
                 else:
                     name = entry[0]
-                    init_val = entry[1]
-                    var_type = entry[2]
-                    req_type = entry[3]
+                    var_type = entry[1]
+                    req_type = entry[2]
+                    init_val = entry[3]
 
                     # add name to the variable list
                     if var_type not in self.var_list.keys():
@@ -123,7 +133,7 @@ class SystemParameters():
                 for var_type, var_entry in self.var_list.items():
                     if param_type in var_entry:
                         try:
-                            self.var_encode_func[var_type](param_type, int(param_val))
+                            self.var_encode_func[var_type](param_type, param_val)
                             break
                         except KeyError:
                             raise KeyError("There isn't any encode function for " + str(var_type))
@@ -144,10 +154,10 @@ class SystemParameters():
             try:
                 input = int(input)
             except ValueError:
-                raise TypeError(input_type + " must be an integer")
+                raise TypeError(input_type + " must be an integer.")
 
         if input > 2**num_bit - 1 or input < 0:
-            raise TypeError(input_type + " must either be positive and less than " + str(2**num_bit))
+            raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + ".")
         self.output_param[input_type] = input
 
 
@@ -164,8 +174,7 @@ class SystemParameters():
             self.output_param[input_type] = True
 
         else:
-            raise TypeError(input_type + " must either be 'True' or 'False'")
-
+            raise TypeError(input_type + " must either be 'True' or 'False'.")
 
 
     def parse_message_content(self, msg):
@@ -187,11 +196,11 @@ class SystemParameters():
         # create an 64 - 3 bytes of zeros (w/o the signature and header)
         content = bytearray(chr(0)*(SystemParameters.msg_length - 3), 'utf-8')
 
-        self.__compose_outgoing_msg(content)
+        self._compose_outgoing_msg(content)
 
         return signature_front + header + content + signature_back
 
-    def __compose_outgoing_msg(self, content):
+    def _compose_outgoing_msg(self, content):
 
         if self.request_type == 'basic':
             # byte 0: indicator LED on or off
