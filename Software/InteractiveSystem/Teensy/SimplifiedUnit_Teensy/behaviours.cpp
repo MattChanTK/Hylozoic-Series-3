@@ -18,38 +18,6 @@ Behaviours::~Behaviours(){
 //============ BEHAVIOUR CODES =========
 //===========================================================================
 
-
-//--- Wave Table Synthesis ---
-void Behaviours::wave_function(const uint32_t curr_time, const uint8_t pin_num, 
-					const wave_t (&Wave)[wave_size], const uint16_t duration, const float amplitude) {
-	
-
-	// starting a wave cycle
-	if (wave_function_cycling == false){
-
-		wave_function_cycling = true;
-		wave_function_phase_time = millis();
-		step_duration = duration/wave_size ;
-		step_count = 1;
-		
-		analogWrite(pin_num, (uint8_t) Wave[0]*amplitude);
-	}
-	else if (wave_function_cycling == true){
-	
-		// if reaches full time duration
-		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) > duration){
-			wave_function_cycling = false;
-		}
-		// if reaches one time step
-		if ((curr_time - wave_function_phase_time) > step_count*step_duration){
-			step_count++;
-			analogWrite(pin_num, (uint8_t) Wave[step_count]*amplitude);
-		}
-	}
-	
-}
-
-
 //---- indicator LED -----
 
 void Behaviours::led_blink_behaviour(uint32_t curr_time) {

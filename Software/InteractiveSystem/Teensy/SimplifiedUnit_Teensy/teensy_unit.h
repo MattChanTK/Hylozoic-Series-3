@@ -3,6 +3,10 @@
 
 #include "Arduino.h"
 
+#define wave_size 32
+
+typedef prog_uchar PROGMEM const_wave_t;
+typedef uint8_t wave_t;
 
 class TeensyUnit{
 	
@@ -83,6 +87,15 @@ class TeensyUnit{
 		//~~output~~
 		boolean sound_module_reflex_enabled = true;
 		
+		//--- Wave tables ----
+		//~~~ Indicator LED Wave ~~~~
+		wave_t indicator_led_wave[wave_size] = {
+			255,255,255,255,255,255,255,255,
+			128,128,128,128,128,128,128,128,
+			255,255,255,255,255,255,255,255,
+			0,  0,  0,  0,  0,  0,  0,  0,  
+		};
+		
 		
 		//===============================================
 		//==== Functions ====
@@ -107,16 +120,28 @@ class TeensyUnit{
 		//--- Input functions----
 		void sample_inputs();
 		
+		//--- Wave function ----
+		void wave_function(const uint32_t curr_time, const uint8_t pin_num, 
+						   const wave_t (&Wave)[wave_size], 
+						   const uint16_t duration, const float amplitude) ;
+		
 	private:
 		
 		//==== constants ====
-		const uint16_t num_outgoing_byte = 64;
-		const uint16_t num_incoming_byte = 64;
-		
+		const uint8_t num_outgoing_byte = 64;
+		const uint8_t num_incoming_byte = 64;
 
+		
 		//==== COMMUNICATION variables =====
 		byte send_data_buff[64];
 		byte recv_data_buff[64];
+		
+
+		//==== WAVE FUNCTION variables ====
+		bool wave_function_cycling = false;
+		uint32_t wave_function_phase_time = 0;
+		uint16_t step_duration = 0;
+		uint16_t step_count = 0;
 
 };
 

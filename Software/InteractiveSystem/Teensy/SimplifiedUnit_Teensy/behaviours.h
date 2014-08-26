@@ -4,31 +4,16 @@
 #include "Arduino.h"
 #include "teensy_unit.h"
 
-#define wave_size 32
 
-typedef prog_uchar PROGMEM const_wave_t;
-typedef uint8_t wave_t;
 
 class Behaviours : public TeensyUnit{
 
 	public:
 		
+		//--- Constructor and destructor ---
 		Behaviours();
 		~Behaviours();
-		
-		
-		//--- Wave tables ----
-		wave_t indicator_led_wave[wave_size] = {
-			255,255,255,255,255,255,255,255,
-			128,128,128,128,128,128,128,128,
-			255,255,255,255,255,255,255,255,
-			0,  0,  0,  0,  0,  0,  0,  0,  
-		};
-	
-		void wave_function(const uint32_t curr_time, const uint8_t pin_num, 
-					const wave_t (&Wave)[wave_size], const uint16_t duration, const float amplitude) ;
 
-		
 		//---- indicator LED -----
 		void led_blink_behaviour(uint32_t curr_time);
 		
