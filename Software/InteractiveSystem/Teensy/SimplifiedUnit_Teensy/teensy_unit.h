@@ -13,30 +13,30 @@ class TeensyUnit{
 		//===============================================
 		
 		//--- Teensy on-board ---
-		const unsigned short indicator_led_pin = 13;
-		const unsigned short analog_0_pin = A0;
+		const uint8_t indicator_led_pin = 13;
+		const uint8_t analog_0_pin = A0;
 		
 		//--- Protocell module ---
-		const unsigned short high_power_led_pin = 23;
-		const unsigned short ambient_light_sensor_pin = A3;
+		const uint8_t high_power_led_pin = 23;
+		const uint8_t ambient_light_sensor_pin = A3;
 
 		//--- Tentacle module ----
-		const unsigned short sma_0_pin = 5;
-		const unsigned short sma_1_pin = 6;
-		const unsigned short reflex_0_pin = 9;
-		const unsigned short reflex_1_pin = 10;
-		const unsigned short ir_0_pin = A2;
-		const unsigned short ir_1_pin = A1;
-		const unsigned short acc_scl_pin = A5;
-		const unsigned short acc_sda_pin = A4;
+		const uint8_t sma_0_pin = 5;
+		const uint8_t sma_1_pin = 6;
+		const uint8_t reflex_0_pin = 9;
+		const uint8_t reflex_1_pin = 10;
+		const uint8_t ir_0_pin = A2;
+		const uint8_t ir_1_pin = A1;
+		const uint8_t acc_scl_pin = A5;
+		const uint8_t acc_sda_pin = A4;
 
 		//--- Sound module ---
-		const unsigned short sound_detect_pin = 5;
-		const unsigned short sound_trigger_pin = 6;
-		const unsigned short sound_module_led_0_pin = 9;
-		const unsigned short sound_module_led_1_pin = 10;
-		const unsigned short sound_module_ir_pin = A2;
-		const unsigned short vbatt_pin = A1;
+		const uint8_t sound_detect_pin = 5;
+		const uint8_t sound_trigger_pin = 6;
+		const uint8_t sound_module_led_0_pin = 9;
+		const uint8_t sound_module_led_1_pin = 10;
+		const uint8_t sound_module_ir_pin = A2;
+		const uint8_t vbatt_pin = A1;
 		
 		
 		//===============================================
@@ -45,43 +45,43 @@ class TeensyUnit{
 		
 		//--- Input Sampling ----
 		//~~Teensy on-board~~
-		volatile unsigned int analog_0_state = 0;
+		uint16_t analog_0_state = 0;
 		//~~IR sensors state~~
-		volatile unsigned int ir_0_state = 0;
-		volatile unsigned int ir_1_state = 0;
+		uint16_t ir_0_state = 0;
+		uint16_t ir_1_state = 0;
 		//~~Ambient light sensor state~~
-		volatile unsigned int ambient_light_sensor_state = 0;
+		uint16_t ambient_light_sensor_state = 0;
 		//~~Sound module states~~
-		volatile bool sound_detect_state = 0;
-		volatile unsigned int sound_module_ir_state = 0;
+		bool sound_detect_state = 0;
+		uint16_t sound_module_ir_state = 0;
 		
 		
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
-		volatile bool indicator_led_on = true; //exposed
+		bool indicator_led_on = true; //exposed
 		//~~indicator LED blink~~
-		volatile int indicator_led_blink_period = 5000; //exposed
+		int16_t indicator_led_blink_period = 5000; //exposed
 				
 		//----- Protocell reflex -----
 		//~~output~~
-		volatile unsigned short high_power_led_level = 0;  //exposed
-		volatile int high_power_led_reflex_enabled = false;
-		unsigned short high_power_led_level_max = 125;
-		volatile unsigned int high_power_led_reflex_threshold = 50;
+		uint8_t high_power_led_level = 0;  //exposed
+		bool high_power_led_reflex_enabled = false;
+		uint8_t high_power_led_level_max = 125;
+		uint16_t high_power_led_reflex_threshold = 50;
 		
 		//--- Tentacle reflex ----
 		//~~output~~
-		volatile boolean tentacle_reflex_enabled = true;
-		volatile unsigned short sma_0_level = 0; //exposed
-		volatile unsigned short sma_1_level = 0; //exposed
-		volatile unsigned short reflex_0_level = 0; //exposed
-		volatile unsigned short reflex_1_level = 0; //exposed
-		volatile unsigned int ir_0_threshold = 150;
-		volatile unsigned int ir_1_threshold = 150;
+		bool tentacle_reflex_enabled = true;
+		uint8_t sma_0_level = 0; //exposed
+		uint8_t sma_1_level = 0; //exposed
+		uint8_t reflex_0_level = 0; //exposed
+		uint8_t reflex_1_level = 0; //exposed
+		uint16_t ir_0_threshold = 150;
+		uint16_t ir_1_threshold = 150;
 		
 		//--- sound module reflex ---
 		//~~output~~
-		volatile boolean sound_module_reflex_enabled = true;
+		boolean sound_module_reflex_enabled = true;
 		
 		
 		//===============================================
@@ -110,8 +110,8 @@ class TeensyUnit{
 	private:
 		
 		//==== constants ====
-		const unsigned int num_outgoing_byte = 64;
-		const unsigned int num_incoming_byte = 64;
+		const uint16_t num_outgoing_byte = 64;
+		const uint16_t num_incoming_byte = 64;
 		
 
 		//==== COMMUNICATION variables =====

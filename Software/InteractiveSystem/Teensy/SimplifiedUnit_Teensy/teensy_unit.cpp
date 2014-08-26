@@ -75,7 +75,7 @@ void TeensyUnit::init(){
 bool TeensyUnit::receive_msg(){
 
 	noInterrupts();
-	unsigned short byteCount = RawHID.recv(recv_data_buff, 0);
+	uint8_t byteCount = RawHID.recv(recv_data_buff, 0);
 	interrupts();
 
 	if (byteCount > 0) {
@@ -107,7 +107,7 @@ void TeensyUnit::send_msg(){
 
 void TeensyUnit::parse_msg(){
 
-	int val = 0;
+	int16_t val = 0;
         
 	// byte 2 --- indicator led on or off
 	indicator_led_on = recv_data_buff[2];

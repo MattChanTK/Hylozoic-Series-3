@@ -20,9 +20,10 @@ Behaviours::~Behaviours(){
 
 
 //--- Wave Table Synthesis ---
-void Behaviours::wave_function(const unsigned long curr_time, const unsigned short pin_num, 
-					wave_t (&Wave)[wave_size], const unsigned int duration, const unsigned short amplitude) {
+void Behaviours::wave_function(const uint32_t curr_time, const uint8_t pin_num, 
+					const wave_t (&Wave)[wave_size], const uint16_t duration, const float amplitude) {
 	
+
 	// starting a wave cycle
 	if (wave_function_cycling == false){
 
@@ -31,7 +32,7 @@ void Behaviours::wave_function(const unsigned long curr_time, const unsigned sho
 		step_duration = duration/wave_size ;
 		step_count = 1;
 		
-		analogWrite(pin_num, Wave[0]);
+		analogWrite(pin_num, (uint8_t) Wave[0]*amplitude);
 	}
 	else if (wave_function_cycling == true){
 	
@@ -42,7 +43,7 @@ void Behaviours::wave_function(const unsigned long curr_time, const unsigned sho
 		// if reaches one time step
 		if ((curr_time - wave_function_phase_time) > step_count*step_duration){
 			step_count++;
-			analogWrite(pin_num, Wave[step_count]*amplitude);
+			analogWrite(pin_num, (uint8_t) Wave[step_count]*amplitude);
 		}
 	}
 	
@@ -51,7 +52,7 @@ void Behaviours::wave_function(const unsigned long curr_time, const unsigned sho
 
 //---- indicator LED -----
 
-void Behaviours::led_blink_behaviour(unsigned long curr_time) {
+void Behaviours::led_blink_behaviour(uint32_t curr_time) {
 	if (indicator_led_on){
 		
 		// starting a blink cycle
@@ -83,99 +84,18 @@ void Behaviours::led_blink_behaviour(unsigned long curr_time) {
 }
 
 //----- Protocell reflex -----
-void Behaviours::protocell_reflex(unsigned long curr_time){
-	// if (high_power_led_reflex_enabled){
-		
-		// ambient_light_sensor_state = analogRead(ambient_light_sensor_pin);
-		
-		// if (high_power_led_cycling == false && 
-                    // sound_module_ir_state > 300){
-			// //	ambient_light_sensor_state < high_power_led_reflex_threshold){
-			// high_power_led_cycling = true;
-			// protocell_reflex_phase_time = millis();       
-		// }
-		// else if (high_power_led_cycling == true){
-			// if ((curr_time - protocell_reflex_phase_time) < 2000){
-				// analogWrite(high_power_led_pin, high_power_led_level);
-			// }
-			// else if ((curr_time - protocell_reflex_phase_time) < 4000){
-				// analogWrite(high_power_led_pin, 0);
-			// }
-                        // else{
-				// high_power_led_cycling = false;
-				// analogWrite(high_power_led_pin, 0);
-			// }
-		// }
-	// }
+void Behaviours::protocell_reflex(uint32_t curr_time){
+
 }
 
 //--- Tentacle reflex ----
-void Behaviours::tentacle_reflex(unsigned long curr_time){
-	// if (tentacle_reflex_enabled){
-		// ir_0_state = analogRead(ir_0_pin);
-		// ir_1_state = analogRead(ir_1_pin);
-		
-		// if (tentacle_reflex_cycling == false &&
-			// ir_0_state > ir_0_threshold){   
-			
-			// tentacle_reflex_cycling = true;
-			// tentacle_reflex_phase_time = millis();  
-	
-		// }
-		// else if (tentacle_reflex_cycling == true){
-			// if ((curr_time - tentacle_reflex_phase_time) < 1500){
-				// analogWrite(sma_0_pin, sma_0_level);
-				// analogWrite(sma_1_pin, sma_1_level);
-			// }
-			// else if ((curr_time - tentacle_reflex_phase_time) < 5000)
-			// {
-				// analogWrite(sma_0_pin, 0);
-				// analogWrite(sma_1_pin, 0);
-			// }
-			// else{
-				// tentacle_reflex_cycling = false;
-				// analogWrite(sma_0_pin, 0);
-				// analogWrite(sma_1_pin, 0);
-			// }
-		// }
-		// if (ir_0_state > ir_1_threshold){
-			// analogWrite(reflex_0_pin, reflex_0_level);
-			// analogWrite(reflex_1_pin, reflex_1_level);
-		// }
-		// else{
-			// analogWrite(reflex_0_pin, 0);
-			// analogWrite(reflex_1_pin, 0);
-		// }
-               
-	// }
+void Behaviours::tentacle_reflex(uint32_t curr_time){
+
 }
 
 //--- sound module reflex ---
-void Behaviours::sound_module_reflex(unsigned long curr_time){
-	// if (sound_module_reflex_enabled){
-		
-		// sound_module_ir_state = analogRead(sound_module_ir_pin);
-		// //sound_detect_state = digitalRead(sound_detect_pin);
-		
-		// if (sound_module_cycling == false && 
-			// //sound_detect_state == true){
-			// sound_module_ir_state > 300){
-			// sound_module_cycling = true;
-			// sound_module_reflex_phase_time = millis();       
-		// }
-		// else if (sound_module_cycling == true){
-			// if ((curr_time - sound_module_reflex_phase_time) < 50){
-				// digitalWrite(sound_trigger_pin, 1);
-			// }
-			// else if ((curr_time - sound_module_reflex_phase_time) < 100){
-				// digitalWrite(sound_trigger_pin, 0);
-			// }
-			// else{
-				// sound_module_cycling = false;
-				// digitalWrite(sound_trigger_pin, 0);
-			// }
-		// }
-	// }
+void Behaviours::sound_module_reflex(uint32_t curr_time){
+
 }
 
 
