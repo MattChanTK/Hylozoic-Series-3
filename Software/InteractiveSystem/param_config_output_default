@@ -1,2 +1,2 @@
-indicator_led_on					True		bool		basic
-indicator_led_period 				180			int16 		basic
+indicator_led_on					bool		basic		True		
+indicator_led_period 				int16 		basic		180			
