@@ -63,7 +63,9 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_period[teensy_name] = 0
             indicator_led_on[teensy_name] = 0
 
-        while True:
+        loop = 0
+        num_loop = 1
+        while loop < num_loop:
             start_time = clock()
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
@@ -76,10 +78,16 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 # check if the thread is still alive
                 if Teensy_thread is not None:
 
-                    cmd_obj = command_object(teensy_name, 'basic')
+                    # cmd_obj = command_object(teensy_name, 'basic')
+                    #
+                    # cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
+                    # cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
 
-                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
+                    cmd_obj = command_object(teensy_name, 'wave')
+
+                    wave = '255_'*32
+                    cmd_obj.add_param_change('indicator_led_wave', wave)
+
 
                     self.enter_command(cmd_obj)
 
@@ -103,3 +111,5 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 indicator_led_period[teensy_name] %= 10
 
             print("Loop Time:", clock() - start_time)
+            loop += 1
+

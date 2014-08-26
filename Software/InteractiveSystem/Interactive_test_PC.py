@@ -3,7 +3,7 @@ from TeensyInterface import TeensyManager
 import cProfile
 from pstats import Stats
 
-behaviours_config = 0
+behaviours_config = 1
 
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
