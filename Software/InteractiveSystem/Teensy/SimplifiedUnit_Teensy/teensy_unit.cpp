@@ -42,11 +42,6 @@ TeensyUnit::~TeensyUnit(){
 
 }
 
-// test function
-void TeensyUnit::set_led_state(){
-	digitalWrite(indicator_led_pin, indicator_led_on);  
-}
-
 //===========================================================================
 //===== INITIALIZATION =====
 //===========================================================================
@@ -62,9 +57,7 @@ void TeensyUnit::init(){
 		break;
            }
 	}
-	//==== initial actuation ====	
-	//digitalWrite(indicator_led_pin, ledState);  
-	//indicator_led_blinkTimer.begin(blinkLED, indicator_led_blinkPeriod_0);
+
 }
 
 

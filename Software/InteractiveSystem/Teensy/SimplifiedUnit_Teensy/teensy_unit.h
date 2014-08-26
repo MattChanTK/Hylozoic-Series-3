@@ -104,10 +104,7 @@ class TeensyUnit{
 		//--- Constructor and destructor ---
 		TeensyUnit();
 		~TeensyUnit();
-		
-		// test function
-		void set_led_state();
-		
+
 		//--- Initialization ---
 		void init();
 		

@@ -30,12 +30,7 @@ class Behaviours : public TeensyUnit{
 		
 		
 	private:
-	
-		//---- wave function ----
-		bool wave_function_cycling = false;
-		uint32_t wave_function_phase_time = 0;
-		uint16_t step_duration = 0;
-		uint16_t step_count = 0;
+
 	
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
