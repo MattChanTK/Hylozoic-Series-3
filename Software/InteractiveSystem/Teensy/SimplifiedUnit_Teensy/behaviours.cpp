@@ -8,7 +8,6 @@
 Behaviours::Behaviours()
 {
 	
-	
 }
 
 Behaviours::~Behaviours(){
@@ -21,14 +20,38 @@ Behaviours::~Behaviours(){
 
 
 //--- Wave Table Synthesis ---
-//void wave_function(pin_num, wave_table, speed, amplitude){
-//
-//}
+void Behaviours::wave_function(const unsigned long curr_time, const unsigned short pin_num, 
+					wave_t (&Wave)[wave_size], const unsigned int duration, const unsigned short amplitude) {
+	
+	// starting a wave cycle
+	if (wave_function_cycling == false){
+
+		wave_function_cycling = true;
+		wave_function_phase_time = millis();
+		step_duration = duration/wave_size ;
+		step_count = 1;
+		
+		analogWrite(pin_num, Wave[0]);
+	}
+	else if (wave_function_cycling == true){
+	
+		// if reaches full time duration
+		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) > duration){
+			wave_function_cycling = false;
+		}
+		// if reaches one time step
+		if ((curr_time - wave_function_phase_time) > step_count*step_duration){
+			step_count++;
+			analogWrite(pin_num, Wave[step_count]*amplitude);
+		}
+	}
+	
+}
 
 
 //---- indicator LED -----
 
-void Behaviours::led_blink_behaviour(unsigned long curr_time){
+void Behaviours::led_blink_behaviour(unsigned long curr_time) {
 	if (indicator_led_on){
 		
 		// starting a blink cycle

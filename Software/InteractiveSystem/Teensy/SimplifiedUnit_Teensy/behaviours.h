@@ -4,6 +4,10 @@
 #include "Arduino.h"
 #include "teensy_unit.h"
 
+#define wave_size 256
+
+typedef prog_uchar PROGMEM const_wave_t;
+typedef uint8_t wave_t;
 
 class Behaviours : public TeensyUnit{
 
@@ -11,10 +15,33 @@ class Behaviours : public TeensyUnit{
 		
 		Behaviours();
 		~Behaviours();
-				
+		
+		
+		//--- Wave tables ----
+		wave_t indicator_led_wave[wave_size] = {
+			 128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  128,131,134,137,140,143,146,149,152,156,159,162,165,168,171,174,
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8, 
+			  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8,  
+			  9,  10, 12, 13, 15, 16, 18, 19, 21, 23, 25, 27, 29, 31, 33, 35, 
+			   0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8,  
+			   0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  5,  6,  7,  8,  
+		};
+	
+		void wave_function(const unsigned long curr_time, const unsigned short pin_num, 
+					wave_t (&Wave)[wave_size], const unsigned int duration, const unsigned short amplitude) ;
+
 		
 		//---- indicator LED -----
-		void blink_led(void);
 		void led_blink_behaviour(unsigned long curr_time);
 		
 		//----- Protocell reflex -----
@@ -27,7 +54,15 @@ class Behaviours : public TeensyUnit{
 		void sound_module_reflex(unsigned long curr_time);
 		
 		
+		
+		
 	private:
+	
+		//---- wave function ----
+		volatile bool wave_function_cycling = false;
+		volatile unsigned long wave_function_phase_time = 0;
+		unsigned int step_duration = 0;
+		unsigned int step_count = 0;
 	
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
@@ -49,6 +84,7 @@ class Behaviours : public TeensyUnit{
 		//--- sound module reflex ---
 		volatile bool sound_module_cycling = false;
 		volatile unsigned long sound_module_reflex_phase_time = 0;
+		
 
 			
 
