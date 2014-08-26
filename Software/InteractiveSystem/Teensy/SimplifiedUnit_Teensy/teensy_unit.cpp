@@ -108,7 +108,7 @@ void TeensyUnit::parse_msg(){
 	switch (request_type){
 		case 1: 
 			// byte 2 to 33 --- indicator LED wave 
-			for (short i = 0; i < 32; i++)
+			for (short i = 0; i < wave_size; i++)
 				indicator_led_wave[i] = recv_data_buff[i+2];
 			
 			break;
