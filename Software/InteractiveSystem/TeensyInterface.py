@@ -203,6 +203,7 @@ class TeensyInterface(threading.Thread):
         self.inputs_sampled_event = threading.Event()
 
         self.lock = threading.Lock()
+        self.lock_received_event = threading.Event()
 
         # start thread
         threading.Thread.__init__(self)
@@ -222,18 +223,16 @@ class TeensyInterface(threading.Thread):
         while True:
 
             if self.param_updated_event.wait(timeout=1):
-
                 self.param_updated_event.clear()
 
                 with self.lock:
+                    self.lock_received_event.set()
                     self.inputs_sampled_event.clear()
+                    self.print_to_term("Teensy thread: sampled event cleared")
 
-                self.print_to_term("Teensy thread: sampled event cleared")
-
-
-                # compose the data
-                out_msg, front_id, back_id = self.compose_msg()
-
+                    # compose the data
+                    out_msg, front_id, back_id = self.compose_msg()
+                self.lock_received_event.clear()
 
                 # sending the data
                 #start_time = clock()

@@ -99,7 +99,10 @@ class InteractiveCmd():
             return -1
 
         with teensy_thread.lock:
+
+            teensy_thread.lock_received = False
             teensy_thread.inputs_sampled_event.clear()
+
             request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
 
             #cmd_obj.print()
@@ -110,7 +113,10 @@ class InteractiveCmd():
                 elif y == -1:
                     print("Request Type ", request_type, " does not exist! Change request did not apply.")
             teensy_thread.param_updated_event.set()
-            #print(">>>>> sent command to Teensy #" + str(cmd_obj.teensy_id))
+            #print(">>>>> sent command to Teensy #" + cmd_obj.teensy_name)
+
+        if not teensy_thread.lock_received_event.wait(0.1):
+            print("Teensy thread ", cmd_obj.teensy_name, " is not responding.")
 
         return 0
 

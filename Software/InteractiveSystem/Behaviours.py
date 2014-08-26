@@ -3,6 +3,7 @@ from InteractiveCmd import command_object
 
 from copy import copy
 from time import clock
+import math
 
 class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
 
@@ -64,7 +65,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 0
 
         loop = 0
-        num_loop = 1
+        num_loop = 3
         while loop < num_loop:
             start_time = clock()
 
@@ -78,14 +79,20 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 # check if the thread is still alive
                 if Teensy_thread is not None:
 
-                    # cmd_obj = command_object(teensy_name, 'basic')
-                    #
-                    # cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-                    # cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
+                    cmd_obj = command_object(teensy_name, 'basic')
+
+                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
+                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
+
+                    self.enter_command(cmd_obj)
 
                     cmd_obj = command_object(teensy_name, 'wave')
 
-                    wave = '255_'*32
+                    wave = ""
+                    for i in range(32):
+                        pt = int(math.sin(i)*127+127)
+                        wave += (str(pt) + '_')
+                   # wave = '255_'*32
                     cmd_obj.add_param_change('indicator_led_wave', wave)
 
 
