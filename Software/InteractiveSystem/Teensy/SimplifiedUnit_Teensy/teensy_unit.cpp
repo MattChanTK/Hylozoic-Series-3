@@ -198,7 +198,12 @@ void TeensyUnit::sample_inputs(){
 void TeensyUnit::wave_function(const uint32_t curr_time, const uint8_t pin_num, 
 					const wave_t (&Wave)[wave_size], const uint16_t duration, const float amplitude) {
 	
-
+	//==== WAVE FUNCTION variables ====
+	static bool wave_function_cycling = false;
+	static int32_t wave_function_phase_time = 0;
+	static uint16_t step_duration = 0;
+	static uint16_t step_count = 0;
+	
 	// starting a wave cycle
 	if (wave_function_cycling == false){
 

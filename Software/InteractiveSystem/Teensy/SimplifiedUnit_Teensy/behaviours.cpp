@@ -5,8 +5,7 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours()
-{
+Behaviours::Behaviours(){
 	
 }
 
@@ -21,6 +20,15 @@ Behaviours::~Behaviours(){
 //---- indicator LED -----
 
 void Behaviours::led_blink_behaviour(uint32_t curr_time) {
+
+	//---- indicator LED blinking variables -----
+	//~~indicator LED on~~
+	static bool indicator_led_state = 0;
+	static bool indicator_led_on_0 = 1;
+	//~~indicator LED blink~~
+	static bool indicator_led_blink_cycling = false;
+	static uint32_t indicator_led_blink_phase_time= 0;
+
 	if (indicator_led_on){
 		
 		// starting a blink cycle
@@ -53,16 +61,24 @@ void Behaviours::led_blink_behaviour(uint32_t curr_time) {
 
 //----- Protocell reflex -----
 void Behaviours::protocell_reflex(uint32_t curr_time){
+	//----- Protocell reflex -----
+	static bool high_power_led_cycling = false;
+	static uint32_t protocell_reflex_phase_time= 0;
 
 }
 
 //--- Tentacle reflex ----
 void Behaviours::tentacle_reflex(uint32_t curr_time){
-
+	//--- Tentacle reflex ----
+	static bool tentacle_reflex_cycling = false;
+	static uint32_t tentacle_reflex_phase_time = 0;
 }
 
 //--- sound module reflex ---
 void Behaviours::sound_module_reflex(uint32_t curr_time){
+	//--- sound module reflex ---
+	static	bool sound_module_cycling = false;
+	static	uint32_t sound_module_reflex_phase_time = 0;
 
 }
 

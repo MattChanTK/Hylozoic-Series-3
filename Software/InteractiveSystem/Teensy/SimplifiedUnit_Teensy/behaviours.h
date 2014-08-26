@@ -28,18 +28,8 @@ class Behaviours : public TeensyUnit{
 		
 		
 		
-		
 	private:
 
-		//---- indicator LED blinking -----
-		//~~indicator LED on~~
-		bool indicator_led_state = 0;
-		bool indicator_led_on_0 = 1;
-		//~~indicator LED blink~~
-		bool indicator_led_blink_cycling = false;
-		uint32_t indicator_led_blink_phase_time= 0;
-		int indicator_led_blink_0 = 100;
-		
 		//----- Protocell reflex -----
 		bool high_power_led_cycling = false;
 		uint32_t protocell_reflex_phase_time= 0;

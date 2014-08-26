@@ -4,6 +4,7 @@
 #include "Arduino.h"
 
 #define wave_size 32
+#define packet_size 64
 
 typedef prog_uchar PROGMEM const_wave_t;
 typedef uint8_t wave_t;
@@ -125,22 +126,15 @@ class TeensyUnit{
 	private:
 		
 		//==== constants ====
-		const uint8_t num_outgoing_byte = 64;
-		const uint8_t num_incoming_byte = 64;
+		const uint8_t num_outgoing_byte = packet_size;
+		const uint8_t num_incoming_byte = packet_size;
 
 		
 		//==== COMMUNICATION variables =====
-		byte send_data_buff[64];
-		byte recv_data_buff[64];
+		byte send_data_buff[packet_size];
+		byte recv_data_buff[packet_size];
 		uint8_t request_type = 0;
-		
-
-		//==== WAVE FUNCTION variables ====
-		bool wave_function_cycling = false;
-		uint32_t wave_function_phase_time = 0;
-		uint16_t step_duration = 0;
-		uint16_t step_count = 0;
-
+	
 };
 
 
