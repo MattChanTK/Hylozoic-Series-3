@@ -106,15 +106,15 @@ September 3, 2014		| [_software_] Complete the Teensy level software
 September 5, 2014		| [_hardware_] Assembly a full set of electronics with fully functional testing code
 September 5, 2014		| [_software_] Specify the software architecture of the CBLA algorithm
 September 12, 2014		| [_hardware_] Complete PCB layout of the sound module
-September 12, 2014		| [_hardware_] ==Order final version of PCB==
 September 15, 2014		| Set up test bed hard with the mechanical systems
 September 30, 2014		| [_software_] Review simulation of CBLA algorithm with simplified model 
-September 30, 2014		| Confirm user study venue
-September 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
+~~September 30, 2014~~		| ~~Confirm user study venue~~
+October 3, 2014			| [_hardware_] ==Order final version of PCB==
 October 6, 2014			| Review ORE applicaiton form and experimental logistics proposal
 October 13, 2014		| [_software_] Review GUI for CBLA Test bed
 October 13, 2014		| Review proposal for the 1st round of user study
 October 15, 2014		| Submit initial ORE application form
+October 30, 2014		| [_hardware_] ==Complete assembly and testing of final test bed hardware==
 November 12, 2014		| [_software_] Review CBLA algorithm that will be used for user study
 November 19, 2014		| [_software_] ==Finalize CBLA algorithm for user study==
 November 25, 2014		| ==Core unit user study at PBAI==
