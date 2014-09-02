@@ -2,12 +2,9 @@
 #define _TEENSY_UNIT_H
 
 #include "Arduino.h"
+#include "wave_table.h"
 
-#define wave_size 32
 #define packet_size 64
-
-typedef prog_uchar PROGMEM const_wave_t;
-typedef uint8_t wave_t;
 
 class TeensyUnit{
 	
@@ -89,14 +86,8 @@ class TeensyUnit{
 		boolean sound_module_reflex_enabled = true;
 		
 		//--- Wave tables ----
-		//~~~ Indicator LED Wave ~~~~
-		wave_t indicator_led_wave[wave_size] = {
-			255,255,255,255,255,255,255,255,
-			128,128,128,128,128,128,128,128,
-			255,255,255,255,255,255,255,255,
-			0,  0,  0,  0,  0,  0,  0,  0,  
-		};
-		
+		//~~~ SMA 0 Wave ~~~~
+		WaveTable sma_0_wave;
 		
 		//===============================================
 		//==== Functions ====
@@ -118,10 +109,6 @@ class TeensyUnit{
 		//--- Input functions----
 		void sample_inputs();
 		
-		//--- Wave function ----
-		void wave_function(const uint32_t curr_time, const uint8_t pin_num, 
-						   const wave_t (&Wave)[wave_size], 
-						   const uint16_t duration, const float amplitude) ;
 		
 	private:
 		

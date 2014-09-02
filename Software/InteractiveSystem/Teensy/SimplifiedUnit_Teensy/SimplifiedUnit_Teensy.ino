@@ -13,6 +13,7 @@ void setup() {
 
 	//--- Teensy Unit ---
 	test_unit.init();
+	
 
 }
 
@@ -30,7 +31,7 @@ void loop() {
 	}
 	
 	volatile unsigned long curr_time = millis();
-	//test_unit.led_blink_behaviour(curr_time);
-	test_unit.wave_function(curr_time, test_unit.indicator_led_pin, test_unit.indicator_led_wave, 1000, 0.75);
-
+    test_unit.led_blink_behaviour(curr_time);
+	test_unit.led_wave_behaviour(curr_time);
+	
 }

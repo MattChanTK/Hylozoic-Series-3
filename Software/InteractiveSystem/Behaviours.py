@@ -92,8 +92,14 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     for i in range(32):
                         pt = int(math.sin(i)*127+127)
                         wave += (str(pt) + '_')
-                   # wave = '255_'*32
-                    cmd_obj.add_param_change('indicator_led_wave', wave)
+
+                    wave2 = ""
+                    pt = 0
+                    for i in range(32):
+                        pt += int(255/32)
+                        wave2 += (str(pt) + '_')
+                    print(wave2)
+                    cmd_obj.add_param_change('indicator_led_wave', wave2)
 
 
                     self.enter_command(cmd_obj)

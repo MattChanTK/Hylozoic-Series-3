@@ -59,6 +59,17 @@ void Behaviours::led_blink_behaviour(uint32_t curr_time) {
 	}
 }
 
+void Behaviours::led_wave_behaviour(uint32_t curr_time){
+	
+	
+	static WaveTable test_wave(5);
+	test_wave.set_duration(10000);
+	test_wave.set_amplitude(1.0);
+	test_wave.wave_function(curr_time);
+	
+
+}
+
 //----- Protocell reflex -----
 void Behaviours::protocell_reflex(uint32_t curr_time){
 	//----- Protocell reflex -----

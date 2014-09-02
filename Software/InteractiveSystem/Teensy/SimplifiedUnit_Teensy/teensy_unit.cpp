@@ -4,8 +4,10 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-TeensyUnit::TeensyUnit(){
+TeensyUnit::TeensyUnit()
+	:sma_0_wave(sma_0_pin) {
 	
+
 	//==== Teensy On-Board=====
 	//---- indicator led ----
 	pinMode(indicator_led_pin, OUTPUT);
@@ -36,6 +38,8 @@ TeensyUnit::TeensyUnit(){
 	pinMode(sound_module_led_1_pin, OUTPUT);
 	pinMode(sound_module_ir_pin, INPUT);
 	pinMode(vbatt_pin, INPUT);
+	
+	
 }
 
 TeensyUnit::~TeensyUnit(){
@@ -54,11 +58,12 @@ void TeensyUnit::init(){
 	    // this prevents the Teensy from being stuck in infinite loop
 	    clearing_counter++;
 	    if (clearing_counter>10000){
-		break;
-           }
+			break;
+        }
 	}
 
 }
+
 
 
 //===========================================================================
@@ -106,14 +111,13 @@ void TeensyUnit::parse_msg(){
 	request_type = recv_data_buff[1];
         
 	switch (request_type){
-		case 1: 
+		case 1: {
 			// byte 2 to 33 --- indicator LED wave 
 			for (short i = 0; i < wave_size; i++)
-				indicator_led_wave[i] = recv_data_buff[i+2];
-			
+				sma_0_wave.waveform[i] = recv_data_buff[i+2];
 			break;
-		
-		default:
+		}
+		default:{
 			// byte 2 --- indicator led on or off
 			indicator_led_on = recv_data_buff[2];
 
@@ -144,6 +148,7 @@ void TeensyUnit::parse_msg(){
 			// byte 11 --- Reflex 1 level
 			reflex_1_level = recv_data_buff[11];
 			break;
+		}
 	}
 
 }
@@ -194,38 +199,5 @@ void TeensyUnit::sample_inputs(){
 //====== Output functions ======
 //===========================================================================
 
-//--- Wave Table Synthesis ---
-void TeensyUnit::wave_function(const uint32_t curr_time, const uint8_t pin_num, 
-					const wave_t (&Wave)[wave_size], const uint16_t duration, const float amplitude) {
-	
-	//==== WAVE FUNCTION variables ====
-	static bool wave_function_cycling = false;
-	static int32_t wave_function_phase_time = 0;
-	static uint16_t step_duration = 0;
-	static uint16_t step_count = 0;
-	
-	// starting a wave cycle
-	if (wave_function_cycling == false){
 
-		wave_function_cycling = true;
-		wave_function_phase_time = millis();
-		step_duration = duration/wave_size ;
-		step_count = 1;
-		
-		analogWrite(pin_num, (uint8_t) Wave[0]*amplitude);
-	}
-	else if (wave_function_cycling == true){
-	
-		// if reaches full time duration
-		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) >= duration){
-			wave_function_cycling = false;
-		}
-		// if reaches one time step
-		if ((curr_time - wave_function_phase_time) > step_count*step_duration){
-			step_count++;
-			analogWrite(pin_num, (uint8_t) Wave[step_count]*amplitude);
-		}
-	}
-	
-}
 

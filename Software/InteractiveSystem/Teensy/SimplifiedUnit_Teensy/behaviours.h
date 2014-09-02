@@ -16,6 +16,7 @@ class Behaviours : public TeensyUnit{
 
 		//---- indicator LED -----
 		void led_blink_behaviour(uint32_t curr_time);
+		void led_wave_behaviour(uint32_t curr_time);
 		
 		//----- Protocell reflex -----
 		void protocell_reflex(uint32_t curr_time);
@@ -30,18 +31,10 @@ class Behaviours : public TeensyUnit{
 		
 	private:
 
-		//----- Protocell reflex -----
-		bool high_power_led_cycling = false;
-		uint32_t protocell_reflex_phase_time= 0;
 		
-		//--- Tentacle reflex ----
-		bool tentacle_reflex_cycling = false;
-		uint32_t tentacle_reflex_phase_time = 0;
+		
 
-		//--- sound module reflex ---
-		bool sound_module_cycling = false;
-		uint32_t sound_module_reflex_phase_time = 0;
-
+	
 };
 
 #endif
