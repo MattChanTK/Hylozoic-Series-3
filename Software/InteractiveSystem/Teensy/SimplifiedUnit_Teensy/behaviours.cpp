@@ -5,7 +5,7 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours():sma_0_wave(FPWM_pin[3]){
+Behaviours::Behaviours():test_wave(5){
 	
 }
 
@@ -24,7 +24,7 @@ void Behaviours::parse_msg(){
 		case 1: {
 			// byte 2 to 33 --- indicator LED wave 
 			for (short i = 0; i < wave_size; i++)
-				sma_0_wave.waveform[i] = recv_data_buff[i+2];
+				test_wave.waveform[i] = recv_data_buff[i+2];
 			break;
 		}
 		default:{
@@ -165,7 +165,6 @@ void Behaviours::led_wave_behaviour(uint32_t curr_time){
 	
 	
 	//static WaveTable test_wave(5);
-	static WaveTable &test_wave = sma_0_wave;
 	test_wave.set_duration(10000);
 	test_wave.set_amplitude(1.0);
 	test_wave.wave_function(curr_time);

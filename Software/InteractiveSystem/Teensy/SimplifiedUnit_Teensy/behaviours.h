@@ -90,7 +90,7 @@ class Behaviours : public TeensyUnit{
 		boolean sound_module_reflex_enabled = true;
 		
 		//--- test wave ----
-		WaveTable sma_0_wave;
+		WaveTable test_wave;
 		
 		
 		
