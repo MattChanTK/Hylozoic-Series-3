@@ -15,11 +15,11 @@ WaveTable::WaveTable(const uint8_t Pin_Num){
 	int8_t level_change = 0;
 	uint8_t gran_count = 0;
 	
-	//=== default wave ===
-	wave_t temp_wave[wave_size] = {127, 233, 242, 144, 30, 5, 91, 210, 252, 179, 57, 0, 58, 180, 252, 209, 90, 4, 31, 146, 242, 233, 125, 19, 11, 110, 223, 248, 161, 42, 1, 75};
+	//=== default sine wave ===
+	wave_t sine_wave[wave_size] = {127, 233, 242, 144, 30, 5, 91, 210, 252, 179, 57, 0, 58, 180, 252, 209, 90, 4, 31, 146, 242, 233, 125, 19, 11, 110, 223, 248, 161, 42, 1, 75};
 	//copy the waveform to the object
 	for (int i = 0; i < wave_size; i++){
-		waveform[i] = temp_wave[i];
+		waveform[i] = sine_wave[i];
 	}
 	
 }
@@ -107,7 +107,7 @@ wave_t* WaveTable::get_wave(){
 	return waveform;
 }
 		
-//--- Setts and getters for the configuration parameters ---
+//--- Setters and getters for the configuration parameters ---
 WaveTable& WaveTable::set_duration(const uint16_t Duration){
 	
 	duration = Duration;
