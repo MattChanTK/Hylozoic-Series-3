@@ -65,7 +65,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 0
 
         loop = 0
-        num_loop = 3
+        num_loop = 30000
         while loop < num_loop:
             start_time = clock()
 
@@ -96,9 +96,9 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     wave2 = ""
                     pt = 0
                     for i in range(32):
-                        pt += int(255/32)
+                        pt = 255#+= int(255/32)
                         wave2 += (str(pt) + '_')
-                    print(wave2)
+                 #   print(wave2)
                     cmd_obj.add_param_change('indicator_led_wave', wave2)
 
 
