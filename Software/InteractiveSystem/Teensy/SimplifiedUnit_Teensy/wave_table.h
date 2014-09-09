@@ -13,11 +13,14 @@ class WaveTable{
 	public:
 	
 		//--- Constructor and destructor ---
-		WaveTable(const uint8_t Pin_Num);
+		WaveTable(const uint8_t Pin_Num=13);
 		WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float Amplitude,
 					const wave_t Wave[wave_size]);
 		~WaveTable();
 
+		//--- Setter and getter for the pin number ---		
+		WaveTable& set_pin_num(const uint8_t Pin_Num);
+		uint8_t get_pin_num();
 		
 		//--- Wave function ----
 		void wave_function(const long curr_time);
@@ -44,7 +47,6 @@ class WaveTable{
 		
 		//--- Pin number ----
 		uint8_t pin_num;
-		
 		
 		//--- configuration parameters ---
 		uint16_t duration;

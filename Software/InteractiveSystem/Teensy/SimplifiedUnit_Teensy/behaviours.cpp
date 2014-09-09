@@ -5,7 +5,7 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours():test_wave(5){
+Behaviours::Behaviours(){
 	
 }
 
@@ -84,7 +84,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 		default:
 			// byte 1 and 2 --- analog 0
 			for (int i = 0; i < 2 ; i++)
-				send_data_buff[i+1] = indicator_led_on >> (8*i);
+				send_data_buff[i+1] = analog_0_state >> (8*i);
 
 			// byte 3 and 4 --- ambient light sensor
 			for (int i = 0; i < 2 ; i++)
@@ -109,7 +109,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 //--- Sampling function ---
 void Behaviours::sample_inputs(){
 
-	analog_0_state = analogRead(Analog_pin[10]);
+	analog_0_state = analogRead(Analog_pin[5][0]);
 	ambient_light_sensor_state = 0;
 	ir_0_state = 0;
 	ir_1_state = 0;
@@ -165,6 +165,8 @@ void Behaviours::led_wave_behaviour(uint32_t curr_time){
 	
 	
 	//static WaveTable test_wave(5);
+	test_wave.set_pin_num(tentacle_1.led_pins[1]);
+	//test_wave.set_pin_num(FPWM_pin[1][1]);
 	test_wave.set_duration(10000);
 	test_wave.set_amplitude(1.0);
 	test_wave.wave_function(curr_time);

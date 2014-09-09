@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "wave_table.h"
 #include "i2c_t3.h"
+#include "PWMDriver.h"
 
 #define packet_size 64
 
@@ -21,14 +22,23 @@ class TeensyUnit{
 		//--- Programming Pin ---
 		const uint8_t PGM_DO_pin = 7;
 		
-		//--- FPWM pins ---
-		//{FPWM_1_1, FPWM_1_2, FPWM_2_1, FPWM_2_2, FPWM_4_1, FPWM_4_2, FPWM_5_1, FPWWM_5_2}
-		const uint8_t FPWM_pin[8] = {3, 4, 6, 5, 20, 21, 25, 21};
+		//--- Fast PWM pins ---
+		const uint8_t FPWM_1_pin[2] = {3, 4};
+		const uint8_t FPWM_2_pin[2] = {6, 5};
+		const uint8_t FPWM_3_pin[0] = {};
+		const uint8_t FPWM_4_pin[2] = {20, 21};
+		const uint8_t FPWM_5_pin[2] = {25, 32};
+		const uint8_t FPWM_6_pin[0] = {};
+		const uint8_t* FPWM_pin[6];
 		
 		//--- Analogue pins ---
-		//{Analog_1_1, Analog_1_2, Analog_2_1, Analog_2_2, Analog_3_1, Analog_3_2, 
-		// Analog_4_1, Analog_4_2, Analog_5_1, Analog_5_2, Analog_6_1, Analog_6_2}
-		const uint8_t Analog_pin[12] = {A11, A13, A12, A15, A16, A17, A8, A9, A2, A3, A0, A1};
+		const uint8_t Analog_1_pin[2] = {A11, A13};
+		const uint8_t Analog_2_pin[2] = {A12, A15};
+		const uint8_t Analog_3_pin[2] = {A16, A17};
+		const uint8_t Analog_4_pin[2] = {A8, A9};
+		const uint8_t Analog_5_pin[2] = {A2, A3};
+		const uint8_t Analog_6_pin[2] = {A0, A1};
+		const uint8_t* Analog_pin[6];
 		
 		//--- Multiplexer pins ---
 		const uint8_t MUL_ADR_pin[3] = {2, 24, 33};
@@ -44,13 +54,14 @@ class TeensyUnit{
 		const uint8_t MISO = 12;	//not being used
 		const uint8_t SCK = 13;		//not being used
 		
-		
-		//===============================================
-		//==== Ports ====
-		//===============================================
-		
-		
-		
+		//--- Slow PWM pin ----
+		const uint8_t SPWM_1_pin[2] = {0, 1};
+		const uint8_t SPWM_2_pin[2] = {2, 3};
+		const uint8_t SPWM_3_pin[4] = {4, 5, 6, 7};
+		const uint8_t SPWM_4_pin[2] = {14, 15};
+		const uint8_t SPWM_5_pin[2] = {12, 13};
+		const uint8_t SPWM_6_pin[4] = {8, 9 , 10, 11};
+		const uint8_t* SPWM_pin[6];
 		
 		//===============================================
 		//==== Functions ====
@@ -68,7 +79,6 @@ class TeensyUnit{
 		void send_msg();
 		virtual void parse_msg() = 0;
 		virtual void compose_reply(byte front_signature, byte back_signature) = 0;
-		
 		
 		
 	protected:
@@ -89,22 +99,45 @@ class TeensyUnit{
 		class TentaclePort{
 		
 			public:
+			
+				//~~constructor and destructor~~
+				TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool All_Slow);
+				~TentaclePort();
 
 				//~~outputs~~
-				bool port_enabled = true;
-				uint8_t sma_level[2] = {0, 0}; 
-				uint8_t led_level[2] = {0, 0}; 
+				void set_sma_level(const uint8_t id, const uint8_t level);
+				void set_led_level(const uint8_t id, const uint8_t level);
 				
 				//~~inputs~~
-				uint16_t analog_state[2];  //{IR 0, IR 1}
-				uint16_t acc_state[3];  // {x, y, z}
+				uint16_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
+				uint16_t* read_acc_state();  // return array:{x, y, z}
+				
+				
+				//~~configurations~~
+				const uint8_t port_id;
+				const bool is_all_slow;
+				uint8_t sma_pins[2];
+				uint8_t led_pins[2];
+				uint8_t analog_pins[2];
+				uint8_t acc_pin;
 				
 			private:
-			
+				TeensyUnit& teensy_unit;
+				PWMDriver spwm;	
 				
-			
+				void spwm_init(uint16_t freq=1000);
 		};
-	
+		
+		
+		//===============================================
+		//==== Ports ====
+		//===============================================
+		
+		TentaclePort tentacle_0;
+		TentaclePort tentacle_1;
+		TentaclePort tentacle_2;
+		
+		
 };
 
 

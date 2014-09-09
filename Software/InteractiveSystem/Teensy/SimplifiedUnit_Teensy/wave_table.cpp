@@ -1,6 +1,7 @@
 #include "wave_table.h"
 
 //--- Constructor and destructor ---
+
 WaveTable::WaveTable(const uint8_t Pin_Num){
 	
 	duration = 1000;
@@ -21,7 +22,6 @@ WaveTable::WaveTable(const uint8_t Pin_Num){
 	for (int i = 0; i < wave_size; i++){
 		waveform[i] = sine_wave[i];
 	}
-	
 }
 
 WaveTable::WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float Amplitude, const wave_t Wave[wave_size]){
@@ -48,6 +48,17 @@ WaveTable::WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float
 
 WaveTable::~WaveTable(){
 
+}
+
+
+//--- Setter and getter for the pin number ---		
+WaveTable& WaveTable::set_pin_num(const uint8_t Pin_Num){
+
+	pin_num = Pin_Num;
+	return *this;
+}
+uint8_t WaveTable::get_pin_num(){
+	return pin_num;
 }
 
 //--- Wave Table Synthesis ---
@@ -92,6 +103,7 @@ void WaveTable::wave_function(const long curr_time) {
 	}
 	
 }
+
 
 //--- Setter and getter of the Waveform ---
 WaveTable& WaveTable::set_wave(const wave_t Wave[wave_size]){
