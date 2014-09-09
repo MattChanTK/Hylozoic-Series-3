@@ -2,6 +2,8 @@
 #ifndef _PWMDriver_H
 #define _PWMDriver_H
 
+#define TIMEOUT 100  //microsecond
+
 #if ARDUINO >= 100
  #include "Arduino.h"
 #else

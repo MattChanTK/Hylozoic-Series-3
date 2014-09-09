@@ -5,8 +5,11 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-Behaviours::Behaviours(){
-	
+Behaviours::Behaviours():
+		tentacle_ir_state{tentacle_0_ir_state, tentacle_1_ir_state, tentacle_2_ir_state},
+		tentacle_acc_state{tentacle_0_acc_state, tentacle_1_acc_state,tentacle_2_acc_state}
+{
+
 }
 
 Behaviours::~Behaviours(){
@@ -82,21 +85,35 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 	switch (request_type){
 	
 		default:
-			// byte 1 and 2 --- analog 0
-			for (int i = 0; i < 2 ; i++)
-				send_data_buff[i+1] = analog_0_state >> (8*i);
-
-			// byte 3 and 4 --- ambient light sensor
-			for (int i = 0; i < 2 ; i++)
-				send_data_buff[i+3] = ambient_light_sensor_state >> (8*i);
 			
-			// byte 5 and 6 --- IR 0 state
-			for (int i = 0; i < 2 ; i++)
-				send_data_buff[i+5] = ir_0_state >> (8*i);
+			// >>> protocell --- byte 1 to 10
+			
+			send_data_buff[1] = protocell_ambient_light_sensor_state;
+			
+			
+			// >>> tentacle_0 --- byte 11 to 20 
+			// >>> tentacle_1 --- byte 21 to 30 
+			// >>> tentacle_2 --- byte 31 to 40 
+			
+			for (uint8_t tentacle_id = 0; tentacle_id<3; tentacle_id++){
+			
+				// byte *1 and *2 --- ir 0 and ir 1
+				send_data_buff[10*tentacle_id + 11] = tentacle_ir_state[0][0];
+				send_data_buff[10*tentacle_id + 12] = tentacle_ir_state[0][1];
 				
-			// byte 7 and 8 --- IR 1 state
-			for (int i = 0; i < 2 ; i++)
-				send_data_buff[i+7] = ir_1_state >> (8*i);
+				// byte *3 and *4 --- acc x
+				for (uint8_t i = 0; i < 2 ; i++)
+					send_data_buff[10*tentacle_id+13+i] = tentacle_acc_state[tentacle_id][0] >> (8*i);
+					
+				for (uint8_t i = 0; i < 2 ; i++)
+				// byte *5 and *6 --- acc y
+					send_data_buff[10*tentacle_id+15+i] = tentacle_acc_state[tentacle_id][1] >> (8*i);
+					
+				// byte *7 and *8 --- acc z
+				for (uint8_t i = 0; i < 2 ; i++)
+					send_data_buff[10*tentacle_id+17+i] = tentacle_acc_state[tentacle_id][2] >> (8*i);
+
+			}
 		break;
 	}
 
@@ -109,11 +126,23 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 //--- Sampling function ---
 void Behaviours::sample_inputs(){
 
-	analog_0_state = analogRead(Analog_pin[5][0]);
-	ambient_light_sensor_state = protocell.read_analog_state();
-	ir_0_state = 0;
-	ir_1_state = 0;
+	//>>>protocell<<<
+	protocell_ambient_light_sensor_state = protocell.read_analog_state();
 	
+	//>>>tentacle<<<
+	
+	//~~IR sensors state~~
+	for (uint8_t i=0; i<3; i++){
+		tentacle_ir_state[0][i] = tentacle_0.read_analog_state(i);
+		tentacle_ir_state[1][i] = tentacle_1.read_analog_state(i);
+		tentacle_ir_state[2][i] = tentacle_2.read_analog_state(i);
+	}
+	
+	//~~accelerator~~
+	tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
+	tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
+	tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
+
 }
 
 //===========================================================================
@@ -124,13 +153,17 @@ void Behaviours::sample_inputs(){
 void Behaviours::test_behaviour(const uint32_t &curr_time) {
 	
 	//=== testing protocells =====
-	static ProtocellPort test_protocell_0(*this, 2, true);
-	uint16_t light_level = test_protocell_0.read_analog_state();
+	uint8_t light_level = protocell.read_analog_state();
 	
-	if (light_level < 100)
-		test_protocell_0.set_led_level(5);
+	if (light_level < 20)
+		protocell.set_led_level(5);
 	else
-		test_protocell_0.set_led_level(0);
+		protocell.set_led_level(0);
+		
+	//=== testing Tentacle ===
+	tentacle_0.set_led_level(0, 250);
+		
+	
 }
 
 
@@ -203,14 +236,6 @@ void Behaviours::tentacle_reflex(const uint32_t &curr_time){
 	//--- Tentacle reflex ----
 	static bool tentacle_reflex_cycling = false;
 	static uint32_t tentacle_reflex_phase_time = 0;
-}
-
-//--- sound module reflex ---
-void Behaviours::sound_module_reflex(const uint32_t &curr_time){
-	//--- sound module reflex ---
-	static	bool sound_module_cycling = false;
-	static	uint32_t sound_module_reflex_phase_time = 0;
-
 }
 
 

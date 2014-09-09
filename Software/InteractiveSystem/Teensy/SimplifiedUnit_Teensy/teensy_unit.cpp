@@ -13,12 +13,12 @@ TeensyUnit::TeensyUnit():
 	tentacle_2(*this, 2, true),
 	protocell(*this, 3, false)
 {
-	
 
+	
 	//===============================================
 	//==== pin initialization ====
 	//===============================================
-	
+
 	uint8_t num_ports = 0;
 	uint8_t num_pins = 0;
 	
@@ -46,13 +46,26 @@ TeensyUnit::TeensyUnit():
 		}	
 	}
 	
+	//--- Analogue settings ---
+	analogReadResolution(8);
+	analogReadAveraging(32);
+	analogWriteResolution(8);
+	analogWriteFrequency(0, 1600);
+	analogWriteFrequency(1, 1600);
+	analogWriteFrequency(2, 1600);
+	
+	//--- Slow PWM driver ----
+	spwm = PWMDriver(0x40);
+	
 	//--- Multiplexer pins ---
-	num_pins = sizeof(MUL_ADR_pin)/sizeof(MUL_ADR_pin[0]);
+	num_pins = sizeof(I2C_MUL_ADR_pin)/sizeof(I2C_MUL_ADR_pin[0]);
 	for (uint8_t i = 0; i<num_pins; i++){
-		pinMode(MUL_ADR_pin[i], OUTPUT);
+		pinMode(I2C_MUL_ADR_pin[i], OUTPUT);
 	}	
 	
-	
+
+	//--- I2C initialization ----
+	//Wire.begin(I2C_MASTER,0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
 	
 	
 }
@@ -67,6 +80,9 @@ TeensyUnit::~TeensyUnit(){
 
 void TeensyUnit::init(){
 
+	//----- Begin slow PWM driver ----
+	spwm_init(1000);
+	
 	//===== clear all existing messages ======
 	unsigned long clearing_counter = 0;
 	while (receive_msg()){
@@ -81,7 +97,12 @@ void TeensyUnit::init(){
 
 }
 
-
+void TeensyUnit::spwm_init(uint16_t freq){
+	//----- Begin slow PWM driver ----
+	spwm.begin();
+	spwm.setPWMFreq(freq);  // This is the maximum PWM frequency
+	
+}
 
 //===========================================================================
 //====== COMMUNICATION ======
@@ -133,7 +154,6 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 {
 	
 	//----- Pin assignment -----
-	spwm = PWMDriver(0x40);
 	sma_pins[0] = teensy_unit.SPWM_pin[port_id][0];
 	sma_pins[1] = teensy_unit.SPWM_pin[port_id][1];
 	
@@ -149,9 +169,25 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 	analog_pins[0] = teensy_unit.Analog_pin[port_id][0];
 	analog_pins[1] = teensy_unit.Analog_pin[port_id][1];
 	
+	acc_pin = teensy_unit.I2C_MUL_ADR[port_id];
 	
-	//----- Begin slow PWM driver ----
-	spwm_init(1000);
+
+
+	//---- initialize acceleromter ---
+	switchToAccel();
+
+
+
+	// writeToAccel(ACC_ACT_ADDR, ACC_ACT_VAL);  
+	// writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
+	// writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_SLEEP);
+	// writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_MEASURE);
+	// writeToAccel(ACC_INRPPT_ADDR, ACC_INRPPT_DISABLE);
+	// writeToAccel(ACC_DATAFORMAT_ADDR, ACC_DATAFORMAT_VALUE);
+	// writeToAccel(ACC_FIFO_ADDR, ACC_FIFO_VALUE);
+
+	
+	delay(100);
 	
 }
 
@@ -159,23 +195,17 @@ TeensyUnit::TentaclePort::~TentaclePort(){
 	
 }
 
-void TeensyUnit::TentaclePort::spwm_init(uint16_t freq){
-	//----- Begin slow PWM driver ----
-	spwm.begin();
-	spwm.setPWMFreq(freq);  // This is the maximum PWM frequency
-	
-}
 
 //~~outputs~~
 void TeensyUnit::TentaclePort::set_sma_level(const uint8_t id, const uint8_t level){
 
-	spwm.setPWMFast(sma_pins[id], 16*level);
+	teensy_unit.spwm.setPWMFast(sma_pins[id], 16*level);
 	
 }
 void TeensyUnit::TentaclePort::set_led_level(const uint8_t id, const uint8_t level){
 
 	if (is_all_slow){
-		spwm.setPWMFast(led_pins[id], 16*level);
+		teensy_unit.spwm.setPWMFast(led_pins[id], 16*level);
 	}
 	else{
 		analogWrite(led_pins[id], level);
@@ -183,13 +213,52 @@ void TeensyUnit::TentaclePort::set_led_level(const uint8_t id, const uint8_t lev
 }
 
 //~~inputs~~
-uint16_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
-	return (uint16_t) analogRead(analog_pins[id]);
+uint8_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
+	return (uint8_t) analogRead(analog_pins[id]);
 }
 
-uint16_t* TeensyUnit::TentaclePort::read_acc_state(){ // return array:{x, y, z}
+void TeensyUnit::TentaclePort::read_acc_state(uint16_t &accel_x, uint16_t &accel_y, uint16_t &accel_z){ // return array:{x, y, z}
+
+	// Wire.beginTransmission(ACCEL);
+	// Wire.write(ACC_X_LSB_ADDR);
+	// Wire.endTransmission(I2C_NOSTOP, I2C_TIMEOUT);
+	
+	
+	// Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
+	
+	// uint8_t i = 0;
+	// byte buffer[6];
+	// while(Wire.available() && i<6)
+	// {
+		// buffer[i] = Wire.read();
+		// i++;
+	// }
+
+	// accel_x = buffer[1] << 8 | buffer[0];
+	// accel_y = buffer[3] << 8 | buffer[2];
+	// accel_z = buffer[5] << 8 | buffer[4];
+}
+
+//~~accelerometer~~
+// switching to the proper accel
+void TeensyUnit::TentaclePort::switchToAccel() {
+  
+	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[0], (acc_pin & 1) > 0);
+	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[1], (acc_pin & 2) > 0);
+	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[2], (acc_pin & 4) > 0);
+  
+}
+
+// Write a value to address register on device
+void TeensyUnit::TentaclePort::writeToAccel(const byte address, const byte val) {
+
+	// Wire.beginTransmission(ACCEL); // start transmission to device 
+	// Wire.write(address);            // send register address
+	// Wire.write(val);                // send value to write
+	// Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);         // end transmission
 
 }
+
 
 //===========================================================================
 //====== Protocell Port ======
@@ -201,15 +270,13 @@ TeensyUnit::ProtocellPort::ProtocellPort(TeensyUnit& teensy_parent, const uint8_
 			is_slow(Slow)
 			
 {
+
 	
 	//----- Pin assignment -----
-	spwm = PWMDriver(0x40);
 	
 	if (is_slow){
 		led_pin = teensy_unit.SPWM_pin[port_id][0];
-		
-		//----- Begin slow PWM driver ----
-		spwm_init(1000);
+
 	}
 	else{
 		led_pin = teensy_unit.FPWM_pin[port_id][0];
@@ -223,18 +290,12 @@ TeensyUnit::ProtocellPort::~ProtocellPort(){
 	
 }
 
-void TeensyUnit::ProtocellPort::spwm_init(uint16_t freq){
-	//----- Begin slow PWM driver ----
-	spwm.begin();
-	spwm.setPWMFreq(freq);  // This is the maximum PWM frequency
-	
-}
 
 //~~outputs~~
 void TeensyUnit::ProtocellPort::set_led_level(const uint8_t level){
 
 	if (is_slow){
-		spwm.setPWMFast(led_pin, 16*level);
+		teensy_unit.spwm.setPWMFast(led_pin, 16*level);
 	}
 	else{
 		analogWrite(led_pin, level);
@@ -242,8 +303,8 @@ void TeensyUnit::ProtocellPort::set_led_level(const uint8_t level){
 }
 
 //~~inputs~~
-uint16_t TeensyUnit::ProtocellPort::read_analog_state(){  
-	return (uint16_t) analogRead(analog_pin);
+uint8_t TeensyUnit::ProtocellPort::read_analog_state(){  
+	return (uint8_t) analogRead(analog_pin);
 }
 
 

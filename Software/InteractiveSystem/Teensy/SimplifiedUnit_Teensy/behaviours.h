@@ -43,27 +43,31 @@ class Behaviours : public TeensyUnit{
 		
 		//--- Tentacle reflex ----
 		void tentacle_reflex(const uint32_t &curr_time);
-		
-		//--- sound module reflex ---
-		void sound_module_reflex(const uint32_t &curr_time);
-		
+	
 		
 		//===============================================
 		//==== BEHAVIOUR variables =====
 		//===============================================
 		
 		//--- Input Sampling ----
-		//~~Teensy on-board~~
-		uint16_t analog_0_state = 0;
-		//~~IR sensors state~~
-		uint16_t ir_0_state = 0;
-		uint16_t ir_1_state = 0;
-		//~~Ambient light sensor state~~
-		uint16_t ambient_light_sensor_state = 0;
-		//~~Sound module states~~
-		bool sound_detect_state = 0;
-		uint16_t sound_module_ir_state = 0;
 		
+		//>>>Tentacle<<<<
+		//~~IR sensors state~~
+		uint8_t tentacle_0_ir_state[2];
+		uint8_t tentacle_1_ir_state[2];
+		uint8_t tentacle_2_ir_state[2];
+		uint8_t* tentacle_ir_state[3];
+		
+		//~~Accelerometer state~~ 
+		uint16_t tentacle_0_acc_state[3]; // {x,y,z}
+		uint16_t tentacle_1_acc_state[3]; // {x,y,z}
+		uint16_t tentacle_2_acc_state[3]; // {x,y,z}
+		uint16_t* tentacle_acc_state[3];
+	
+		//>>>protocell<<<
+		//~~Ambient light sensor state~~
+		uint8_t protocell_ambient_light_sensor_state;
+
 		
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
@@ -88,9 +92,6 @@ class Behaviours : public TeensyUnit{
 		uint16_t ir_0_threshold = 150;
 		uint16_t ir_1_threshold = 150;
 		
-		//--- sound module reflex ---
-		//~~output~~
-		boolean sound_module_reflex_enabled = true;
 		
 		//--- test wave ----
 		WaveTable test_wave;

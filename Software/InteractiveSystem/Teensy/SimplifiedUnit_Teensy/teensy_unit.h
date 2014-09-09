@@ -7,6 +7,7 @@
 #include "PWMDriver.h"
 
 #define packet_size 64
+#define i2c_timeout 100 //microsecond
 
 class TeensyUnit{
 	
@@ -40,9 +41,6 @@ class TeensyUnit{
 		const uint8_t Analog_6_pin[2] = {A0, A1};
 		const uint8_t* Analog_pin[6];
 		
-		//--- Multiplexer pins ---
-		const uint8_t MUL_ADR_pin[3] = {2, 24, 33};
-		
 		//--- UART pins ---
 		const uint8_t RX1_pin = 0;  //not being used
 		const uint8_t TX1_pin = 1;  //not being used
@@ -63,6 +61,11 @@ class TeensyUnit{
 		const uint8_t SPWM_6_pin[4] = {8, 9 , 10, 11};
 		const uint8_t* SPWM_pin[6];
 		
+		//--- I2C Multiplexer pins ---
+		const uint8_t I2C_MUL_ADR_pin[3] = {2, 24, 33};
+		const uint8_t I2C_MUL_ADR[6] = {4, 6, 7, 2, 1, 0};
+		
+
 		
 		
 		//===============================================
@@ -91,9 +94,14 @@ class TeensyUnit{
 
 		
 		//==== COMMUNICATION variables =====
+		//==== COMMUNICATION variables =====
 		byte send_data_buff[packet_size];
 		byte recv_data_buff[packet_size];
 		uint8_t request_type = 0;
+		
+		//=== initialize slow pwm ===
+		PWMDriver spwm;	
+		void spwm_init(uint16_t freq=1000);
 		
 		//==== Port Classes ====
 		
@@ -111,8 +119,8 @@ class TeensyUnit{
 				void set_led_level(const uint8_t id, const uint8_t level);
 				
 				//~~inputs~~
-				uint16_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
-				uint16_t* read_acc_state();  // return array:{x, y, z}
+				uint8_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
+				void read_acc_state(uint16_t &accel_x, uint16_t &accel_y, uint16_t &accel_z);  // return array:{x, y, z}
 				
 				
 				//~~configurations~~
@@ -124,10 +132,42 @@ class TeensyUnit{
 				uint8_t acc_pin;
 				
 			private:
+			
 				TeensyUnit& teensy_unit;
-				PWMDriver spwm;	
 				
-				void spwm_init(uint16_t freq=1000);
+				
+				//~~accelerometer configurations~~
+					
+				const uint8_t ACCEL = 0x53; //Accel I2C Address    
+
+				const uint8_t  ACC_ACT_ADDR = 0x27; //ACC Activity/Inactivity control byte
+				const uint8_t  ACC_ACT_VAL = 0x00;
+
+				const uint8_t  ACC_BW_ADDR = 0x2C; //ACC BW control byte
+				const uint8_t  ACC_BW_VAL = 0x0D; 
+
+				const uint8_t  ACC_PWRCTRL_ADDR = 0x2D; //ACC Power control byte
+				const uint8_t  ACC_PWRCTRL_SLEEP = 0x00; 
+				const uint8_t  ACC_PWRCTRL_MEASURE = 0x08; 
+
+				const uint8_t  ACC_INRPPT_ADDR = 0x2E; //ACC Interupt control byte
+				const uint8_t  ACC_INRPPT_DISABLE = 0x00;  //disable interupt
+
+				const uint8_t  ACC_DATAFORMAT_ADDR = 0x31; //ACC data format byte
+				const uint8_t  ACC_DATAFORMAT_VALUE = 0x00;  //Set the range to +/- 16g and make the value right justified with sign extention
+
+				const uint8_t  ACC_FIFO_ADDR = 0x38; //ACC FIFO byte
+				const uint8_t  ACC_FIFO_VALUE = 0x00;  // Bypass FIFO
+
+				const uint8_t  ACC_X_LSB_ADDR = 0x32;// ACC X axis LSB byte
+				
+				const uint8_t I2C_TIMEOUT = 100;
+								
+				
+				void switchToAccel(); // switching to the correct accelerometer
+				void writeToAccel(const byte address, const byte val);
+				
+				
 		};
 	
 	
@@ -144,7 +184,7 @@ class TeensyUnit{
 				void set_led_level(const uint8_t level);
 				
 				//~~inputs~~
-				uint16_t read_analog_state(); 
+				uint8_t read_analog_state(); 
 				
 				
 				//~~configurations~~
@@ -155,9 +195,7 @@ class TeensyUnit{
 				
 			private:
 				TeensyUnit& teensy_unit;
-				PWMDriver spwm;	
-				
-				void spwm_init(uint16_t freq=1000);
+
 		
 		};
 		

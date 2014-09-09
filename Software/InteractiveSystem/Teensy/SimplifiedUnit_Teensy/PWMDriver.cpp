@@ -4,7 +4,7 @@
 #include "i2c_t3.h"
 
 #define WIRE Wire1
-#define TIMEOUT 100  //microsecond
+
 
 
 PWMDriver::PWMDriver(uint8_t addr) {
@@ -12,13 +12,15 @@ PWMDriver::PWMDriver(uint8_t addr) {
 }
 
 void PWMDriver::begin(void) {
- WIRE.begin(I2C_MASTER, 0x00, I2C_PINS_29_30, I2C_PULLUP_EXT, I2C_RATE_400);
+ WIRE.begin(I2C_MASTER, 0x00, I2C_PINS_29_30, I2C_PULLUP_EXT, I2C_RATE_400);		
  reset();
 }
 
 
 void PWMDriver::reset(void) {
+
  write8(PCA9685_MODE1, 0x0);
+
 }
 
 void PWMDriver::setPWMFreq(float freq) {
@@ -119,4 +121,5 @@ void PWMDriver::write8(uint8_t addr, uint8_t d) {
   WIRE.write(addr);
   WIRE.write(d);
   WIRE.endTransmission(I2C_STOP, TIMEOUT);
+ 
 }
