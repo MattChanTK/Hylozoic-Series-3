@@ -63,6 +63,8 @@ class TeensyUnit{
 		const uint8_t SPWM_6_pin[4] = {8, 9 , 10, 11};
 		const uint8_t* SPWM_pin[6];
 		
+		
+		
 		//===============================================
 		//==== Functions ====
 		//===============================================
@@ -127,6 +129,37 @@ class TeensyUnit{
 				
 				void spwm_init(uint16_t freq=1000);
 		};
+	
+	
+		//--- Protocell Port ---
+		class ProtocellPort{
+			
+			public:
+			
+				//~~constructor and destructor~~
+				ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool Slow);
+				~ProtocellPort();
+
+				//~~outputs~~
+				void set_led_level(const uint8_t level);
+				
+				//~~inputs~~
+				uint16_t read_analog_state(); 
+				
+				
+				//~~configurations~~
+				const uint8_t port_id;
+				const bool is_slow;
+				uint8_t led_pin;
+				uint8_t analog_pin;
+				
+			private:
+				TeensyUnit& teensy_unit;
+				PWMDriver spwm;	
+				
+				void spwm_init(uint16_t freq=1000);
+		
+		};
 		
 		
 		//===============================================
@@ -136,7 +169,7 @@ class TeensyUnit{
 		TentaclePort tentacle_0;
 		TentaclePort tentacle_1;
 		TentaclePort tentacle_2;
-		
+		ProtocellPort protocell;		
 		
 };
 

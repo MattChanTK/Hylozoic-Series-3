@@ -76,7 +76,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 	send_data_buff[num_outgoing_byte-1] = back_signature;
 	
 	// sample the sensors
-	sample_inputs();
+	this->sample_inputs();
 		
 
 	switch (request_type){
@@ -110,7 +110,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 void Behaviours::sample_inputs(){
 
 	analog_0_state = analogRead(Analog_pin[5][0]);
-	ambient_light_sensor_state = 0;
+	ambient_light_sensor_state = protocell.read_analog_state();
 	ir_0_state = 0;
 	ir_1_state = 0;
 	
@@ -120,9 +120,24 @@ void Behaviours::sample_inputs(){
 //============ BEHAVIOUR CODES =========
 //===========================================================================
 
+//---- test behaviour ----
+void Behaviours::test_behaviour(const uint32_t &curr_time) {
+	
+	//=== testing protocells =====
+	static ProtocellPort test_protocell_0(*this, 2, true);
+	uint16_t light_level = test_protocell_0.read_analog_state();
+	
+	if (light_level < 100)
+		test_protocell_0.set_led_level(5);
+	else
+		test_protocell_0.set_led_level(0);
+}
+
+
+
 //---- indicator LED -----
 
-void Behaviours::led_blink_behaviour(uint32_t curr_time) {
+void Behaviours::led_blink_behaviour(const uint32_t &curr_time) {
 
 	//---- indicator LED blinking variables -----
 	//~~indicator LED on~~
@@ -161,7 +176,7 @@ void Behaviours::led_blink_behaviour(uint32_t curr_time) {
 	}
 }
 
-void Behaviours::led_wave_behaviour(uint32_t curr_time){
+void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 	
 	
 	//static WaveTable test_wave(5);
@@ -170,12 +185,13 @@ void Behaviours::led_wave_behaviour(uint32_t curr_time){
 	test_wave.set_duration(10000);
 	test_wave.set_amplitude(1.0);
 	test_wave.wave_function(curr_time);
+	//tentacle_1.set_led_level(1, 255);
 	
 
 }
 
 //----- Protocell reflex -----
-void Behaviours::protocell_reflex(uint32_t curr_time){
+void Behaviours::protocell_reflex(const uint32_t &curr_time){
 	//----- Protocell reflex -----
 	static bool high_power_led_cycling = false;
 	static uint32_t protocell_reflex_phase_time= 0;
@@ -183,14 +199,14 @@ void Behaviours::protocell_reflex(uint32_t curr_time){
 }
 
 //--- Tentacle reflex ----
-void Behaviours::tentacle_reflex(uint32_t curr_time){
+void Behaviours::tentacle_reflex(const uint32_t &curr_time){
 	//--- Tentacle reflex ----
 	static bool tentacle_reflex_cycling = false;
 	static uint32_t tentacle_reflex_phase_time = 0;
 }
 
 //--- sound module reflex ---
-void Behaviours::sound_module_reflex(uint32_t curr_time){
+void Behaviours::sound_module_reflex(const uint32_t &curr_time){
 	//--- sound module reflex ---
 	static	bool sound_module_cycling = false;
 	static	uint32_t sound_module_reflex_phase_time = 0;

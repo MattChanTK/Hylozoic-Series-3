@@ -10,8 +10,8 @@ TeensyUnit::TeensyUnit():
 	Analog_pin {Analog_1_pin, Analog_2_pin, Analog_3_pin, Analog_4_pin, Analog_5_pin, Analog_6_pin},
 	tentacle_0(*this, 0, false), 
 	tentacle_1(*this, 1, false),
-	tentacle_2(*this, 2, true)
-	
+	tentacle_2(*this, 2, true),
+	protocell(*this, 3, false)
 {
 	
 
@@ -133,7 +133,7 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 {
 	
 	//----- Pin assignment -----
-	spwm = PWMDriver(0x40),
+	spwm = PWMDriver(0x40);
 	sma_pins[0] = teensy_unit.SPWM_pin[port_id][0];
 	sma_pins[1] = teensy_unit.SPWM_pin[port_id][1];
 	
@@ -190,4 +190,61 @@ uint16_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0
 uint16_t* TeensyUnit::TentaclePort::read_acc_state(){ // return array:{x, y, z}
 
 }
+
+//===========================================================================
+//====== Protocell Port ======
+//===========================================================================
+//~~constructor and destructor~~
+TeensyUnit::ProtocellPort::ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool Slow):
+			teensy_unit(teensy_parent),
+			port_id(Port_Id),
+			is_slow(Slow)
+			
+{
+	
+	//----- Pin assignment -----
+	spwm = PWMDriver(0x40);
+	
+	if (is_slow){
+		led_pin = teensy_unit.SPWM_pin[port_id][0];
+		
+		//----- Begin slow PWM driver ----
+		spwm_init(1000);
+	}
+	else{
+		led_pin = teensy_unit.FPWM_pin[port_id][0];
+	}
+	
+	analog_pin = teensy_unit.Analog_pin[port_id][0];
+
+}
+
+TeensyUnit::ProtocellPort::~ProtocellPort(){
+	
+}
+
+void TeensyUnit::ProtocellPort::spwm_init(uint16_t freq){
+	//----- Begin slow PWM driver ----
+	spwm.begin();
+	spwm.setPWMFreq(freq);  // This is the maximum PWM frequency
+	
+}
+
+//~~outputs~~
+void TeensyUnit::ProtocellPort::set_led_level(const uint8_t level){
+
+	if (is_slow){
+		spwm.setPWMFast(led_pin, 16*level);
+	}
+	else{
+		analogWrite(led_pin, level);
+	}
+}
+
+//~~inputs~~
+uint16_t TeensyUnit::ProtocellPort::read_analog_state(){  
+	return (uint16_t) analogRead(analog_pin);
+}
+
+
 				

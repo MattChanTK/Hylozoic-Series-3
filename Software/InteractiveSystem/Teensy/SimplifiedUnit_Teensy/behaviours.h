@@ -24,25 +24,28 @@ class Behaviours : public TeensyUnit{
 		void parse_msg();
 		void compose_reply(byte front_signature, byte back_signature);
 		
+		//--- Input functions----
+		void sample_inputs();
+		
 		//===============================================
 		//==== BEHAVIOUR functions =====
 		//===============================================
 		
-		//--- Input functions----
-		void sample_inputs();
+		//---- test behaviour ----
+		void test_behaviour(const uint32_t &curr_time);
 		
 		//---- indicator LED -----
-		void led_blink_behaviour(uint32_t curr_time);
-		void led_wave_behaviour(uint32_t curr_time);
+		void led_blink_behaviour(const uint32_t &curr_time);
+		void led_wave_behaviour(const uint32_t &curr_time);
 		
 		//----- Protocell reflex -----
-		void protocell_reflex(uint32_t curr_time);
+		void protocell_reflex(const uint32_t &curr_time);
 		
 		//--- Tentacle reflex ----
-		void tentacle_reflex(uint32_t curr_time);
+		void tentacle_reflex(const uint32_t &curr_time);
 		
 		//--- sound module reflex ---
-		void sound_module_reflex(uint32_t curr_time);
+		void sound_module_reflex(const uint32_t &curr_time);
 		
 		
 		//===============================================
