@@ -24,10 +24,20 @@ void Behaviours::parse_msg(){
 	request_type = recv_data_buff[1];
         
 	switch (request_type){
-		case 1: {
+		case 2: {
 			// byte 2 to 33 --- indicator LED wave 
 			for (short i = 0; i < wave_size; i++)
 				test_wave.waveform[i] = recv_data_buff[i+2];
+			break;
+		}
+		
+		//Teensy programming pin
+		case 1: {
+			bool program_teensy = recv_data_buff[2];
+			if (program_teensy) {
+				digitalWrite(PGM_DO_pin, 1);
+				digitalWrite(13, 1);
+			}
 			break;
 		}
 		default:{

@@ -65,7 +65,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 0
 
         loop = 0
-        num_loop = 3000
+        num_loop = 1
         while loop < num_loop:
             start_time = clock()
 
@@ -79,6 +79,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 # check if the thread is still alive
                 if Teensy_thread is not None:
 
+                    #=== "Basic" commands"
                     cmd_obj = command_object(teensy_name, 'basic')
 
                     cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
@@ -88,21 +89,23 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     cmd_obj = command_object(teensy_name, 'wave')
 
+                    #=== change wave command====
                     wave = ""
-                    for i in range(32):
-                        pt = int(math.sin(i)*127+127)
-                        wave += (str(pt) + '_')
-
-                    wave2 = ""
                     pt = 0
                     for i in range(32):
                         pt += int(255/32)
-                        wave2 += (str(pt) + '_')
-                 #   print(wave2)
-                    cmd_obj.add_param_change('indicator_led_wave', wave2)
+                        wave += (str(pt) + '_')
 
+                    cmd_obj.add_param_change('indicator_led_wave', wave)
+                    self.enter_command(cmd_obj)
+
+                    #=== programming command ===
+                    cmd_obj = command_object(teensy_name, 'prgm')
+                    cmd_obj.add_param_change('program_teensy', 0)
 
                     self.enter_command(cmd_obj)
+
+
 
             self.send_commands()
 

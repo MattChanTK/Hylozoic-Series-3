@@ -14,10 +14,12 @@ class SystemParameters():
         # ---defaults---
         self.output_param['indicator_led_on'] = True
         self.output_param['indicator_led_period'] = 100
+        # ---prgm---
+        self.output_param['program_teensy'] = False
 
         #~~~~ variable type ~~~~
         self.var_list = dict()
-        self.var_list["bool"] = set(('indicator_led_on',))
+        self.var_list["bool"] = set(('program_teensy', 'indicator_led_on',))
         self.var_list["int8"] = set()
         self.var_list["int16"] = set(('indicator_led_period',))
 
@@ -35,7 +37,8 @@ class SystemParameters():
         #=== request type ====
         self.request_types = dict()
         self.request_types['basic'] = set(('indicator_led_on', 'indicator_led_period'))
-        self.request_type_ids = enum_dict('basic', )
+        self.request_types['prgm'] = set(('program_teensy', ))
+        self.request_type_ids = enum_dict('basic', 'prgm')
         self.request_type = 'basic'
 
         # import parameters from files

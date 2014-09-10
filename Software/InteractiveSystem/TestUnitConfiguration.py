@@ -10,7 +10,7 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
 
     def additional_config_routine(self):
 
-        self.request_type_ids = enum_dict('basic', 'wave')
+        self.request_type_ids = enum_dict('basic', 'prgm', 'wave')
         self.var_encode_func["int8s"] = self.__set_int8_array
 
         # import parameters from files
@@ -85,6 +85,9 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
 
             # byte 11: Reflex 1 level
             content[9] = self.output_param['reflex_1_level']
+
+        elif self.request_type == 'prgm':
+            content[0] = self.output_param['program_teensy']
 
         elif self.request_type == 'wave':
 
