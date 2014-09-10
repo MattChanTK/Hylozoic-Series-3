@@ -161,7 +161,47 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		protocell.set_led_level(0);
 		
 	//=== testing Tentacle ===
-	tentacle_0.set_led_level(0, 250);
+	uint8_t ir_range = tentacle_0.read_analog_state(0);
+	if (ir_range < 100){
+		tentacle_0.set_led_level(0, 250);
+		tentacle_0.set_led_level(1, 250);
+		tentacle_0.set_sma_level(0, 250);
+		tentacle_0.set_sma_level(1, 250);
+	}
+	else{
+		tentacle_0.set_led_level(0, 0);
+		tentacle_0.set_led_level(1, 0);
+		tentacle_0.set_sma_level(0, 0);
+		tentacle_0.set_sma_level(1, 0);
+	}
+	
+	ir_range = tentacle_1.read_analog_state(0);
+	if (ir_range < 100) {
+		tentacle_1.set_led_level(0, 250);
+		tentacle_1.set_led_level(1, 250);
+		tentacle_1.set_sma_level(0, 250);
+		tentacle_1.set_sma_level(1, 250);
+	}
+	else {
+		tentacle_1.set_led_level(0, 0);
+		tentacle_1.set_led_level(1, 0);
+		tentacle_1.set_sma_level(0, 0);
+		tentacle_1.set_sma_level(1, 0);
+	}
+		
+	ir_range = tentacle_2.read_analog_state(0);
+	if (ir_range < 100) {
+		tentacle_2.set_led_level(0, 250);
+		tentacle_2.set_led_level(1, 250);
+		tentacle_2.set_sma_level(0, 250);
+		tentacle_2.set_sma_level(1, 250);
+	}
+	else {
+		tentacle_2.set_led_level(0, 0);
+		tentacle_2.set_led_level(1, 0);
+		tentacle_2.set_sma_level(0, 0);
+		tentacle_2.set_sma_level(1, 0);
+	}
 		
 	
 }
