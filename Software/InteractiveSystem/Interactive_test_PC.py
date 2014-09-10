@@ -20,7 +20,6 @@ packet_size_out = 64
 
 
 
-
 def main():
     # change priority of the the Python process to HIGH
     changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)

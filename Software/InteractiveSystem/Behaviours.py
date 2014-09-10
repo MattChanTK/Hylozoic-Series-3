@@ -3,6 +3,7 @@ from InteractiveCmd import command_object
 
 from copy import copy
 from time import clock
+from time import sleep
 import math
 
 class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
@@ -100,7 +101,7 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
             Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
             # check if the thread is still alive
-            if Teensy_thread is not None:
+            while Teensy_thread is not None:
 
                 #=== programming command ===
                 cmd_obj = command_object(teensy_name, 'prgm')
@@ -108,6 +109,8 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 
                 self.enter_command(cmd_obj)
 
-        self.send_commands()
+                self.send_commands()
 
+                Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
+            sleep(3)
