@@ -8,9 +8,9 @@ behaviours_config = 1
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
 elif behaviours_config == 1:
-    from Behaviours import Test_Behaviours as cmd
+    from Behaviours import ProgrammUpload as cmd
 elif behaviours_config == 2:
-    from Behaviours import Hardcoded_Behaviours as cmd
+    from Behaviours import Test_Behaviours as cmd
 else:
     from InteractiveCmd import InteractiveCmd as cmd
 

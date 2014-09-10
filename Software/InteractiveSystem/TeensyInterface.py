@@ -207,7 +207,7 @@ class TeensyInterface(threading.Thread):
 
         # start thread
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.daemon = False
         self.start()
 
 
@@ -229,7 +229,6 @@ class TeensyInterface(threading.Thread):
                     self.lock_received_event.set()
                     self.inputs_sampled_event.clear()
                     self.print_to_term("Teensy thread: sampled event cleared")
-
                     # compose the data
                     out_msg, front_id, back_id = self.compose_msg()
                 self.lock_received_event.clear()

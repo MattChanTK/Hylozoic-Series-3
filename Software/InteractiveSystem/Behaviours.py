@@ -8,48 +8,7 @@ import math
 class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
 
     def run(self):
-
-        teensy_names = self.teensy_manager.get_teensy_name_list()
-
-        indicator_led_on = dict()
-        for teensy_name in teensy_names:
-            indicator_led_on[teensy_name] = 1
-
-        while True:
-            #start_time = clock()
-
-            if self.teensy_manager.get_num_teensy_thread() == 0:
-                return
-
-            for teensy_name in list(teensy_names):
-
-                Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
-
-                # check if the thread is still alive
-                if Teensy_thread is not None:
-
-                    cmd_obj = command_object(teensy_name, 'basic')
-
-                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-
-                    self.enter_command(cmd_obj)
-
-            self.send_commands()
-
-            all_input_states = self.get_input_states(teensy_names, input_types=('analog_0_state', 'ir_0_state' ))
-            for teensy_name, input_states in all_input_states.items():
-                sample = input_states[0]
-                is_new_update = input_states[1]
-
-                if is_new_update:
-                    if sample['analog_0_state'] > 850:
-                        indicator_led_on[teensy_name] = 0
-                    else:
-                        indicator_led_on[teensy_name] = 1
-
-                print(teensy_name, ": ", sample)
-
-            #print("Loop Time:", clock() - start_time)
+        pass
 
 
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
@@ -87,9 +46,9 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     self.enter_command(cmd_obj)
 
+                   #=== change wave command====
                     cmd_obj = command_object(teensy_name, 'wave')
 
-                    #=== change wave command====
                     wave = ""
                     pt = 0
                     for i in range(32):
@@ -99,12 +58,11 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     cmd_obj.add_param_change('indicator_led_wave', wave)
                     self.enter_command(cmd_obj)
 
-                    #=== programming command ===
+                     #=== programming command ===
                     cmd_obj = command_object(teensy_name, 'prgm')
-                    cmd_obj.add_param_change('program_teensy', 0)
+                    cmd_obj.add_param_change('program_teensy', 1)
 
                     self.enter_command(cmd_obj)
-
 
 
             self.send_commands()
@@ -128,4 +86,28 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
             print("Loop Time:", clock() - start_time)
             loop += 1
+
+class ProgrammUpload(InteractiveCmd.InteractiveCmd):
+
+    def run(self):
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        if self.teensy_manager.get_num_teensy_thread() == 0:
+            return
+
+        for teensy_name in list(teensy_names):
+
+            Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
+
+            # check if the thread is still alive
+            if Teensy_thread is not None:
+
+                #=== programming command ===
+                cmd_obj = command_object(teensy_name, 'prgm')
+                cmd_obj.add_param_change('program_teensy', 1)
+
+                self.enter_command(cmd_obj)
+
+        self.send_commands()
+
 
