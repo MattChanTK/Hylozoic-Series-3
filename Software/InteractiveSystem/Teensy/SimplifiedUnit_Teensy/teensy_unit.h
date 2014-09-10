@@ -94,7 +94,6 @@ class TeensyUnit{
 
 		
 		//==== COMMUNICATION variables =====
-		//==== COMMUNICATION variables =====
 		byte send_data_buff[packet_size];
 		byte recv_data_buff[packet_size];
 		uint8_t request_type = 0;
@@ -111,7 +110,7 @@ class TeensyUnit{
 			public:
 			
 				//~~constructor and destructor~~
-				TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool All_Slow);
+				TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id);
 				~TentaclePort();
 
 				//~~outputs~~
@@ -177,7 +176,7 @@ class TeensyUnit{
 			public:
 			
 				//~~constructor and destructor~~
-				ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool Slow);
+				ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id);
 				~ProtocellPort();
 
 				//~~outputs~~

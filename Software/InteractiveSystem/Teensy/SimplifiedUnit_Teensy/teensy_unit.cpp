@@ -8,10 +8,10 @@ TeensyUnit::TeensyUnit():
 	FPWM_pin {FPWM_1_pin, FPWM_2_pin, FPWM_3_pin, FPWM_4_pin, FPWM_5_pin, FPWM_6_pin},
 	SPWM_pin {SPWM_1_pin, SPWM_2_pin, SPWM_3_pin, SPWM_4_pin, SPWM_5_pin, SPWM_6_pin}, 
 	Analog_pin {Analog_1_pin, Analog_2_pin, Analog_3_pin, Analog_4_pin, Analog_5_pin, Analog_6_pin},
-	tentacle_0(*this, 0, false), 
-	tentacle_1(*this, 1, false),
-	tentacle_2(*this, 2, true),
-	protocell(*this, 3, false)
+	tentacle_0(*this, 0), 
+	tentacle_1(*this, 1),
+	tentacle_2(*this, 2),
+	protocell(*this, 3)
 {
 
 	
@@ -65,7 +65,7 @@ TeensyUnit::TeensyUnit():
 	
 
 	//--- I2C initialization ----
-	//Wire.begin(I2C_MASTER,0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
+	Wire.begin(I2C_MASTER,0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
 	
 	
 }
@@ -146,26 +146,30 @@ void TeensyUnit::send_msg(){
 //====== Tentacle Port ======
 //===========================================================================
 //~~constructor and destructor~~
-TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool All_Slow):
+TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id):
 			teensy_unit(teensy_parent),
 			port_id(Port_Id),
-			is_all_slow(All_Slow)
+			is_all_slow(Port_Id==2 || Port_Id==5)
 			
 {
 	
 	//----- Pin assignment -----
-	sma_pins[0] = teensy_unit.SPWM_pin[port_id][0];
-	sma_pins[1] = teensy_unit.SPWM_pin[port_id][1];
+
 	
 	if (is_all_slow){
-		led_pins[0] = teensy_unit.SPWM_pin[port_id][2];
-		led_pins[1] = teensy_unit.SPWM_pin[port_id][3];
+		led_pins[0] = teensy_unit.SPWM_pin[port_id][0];
+		led_pins[1] = teensy_unit.SPWM_pin[port_id][1];
+		sma_pins[0] = teensy_unit.SPWM_pin[port_id][2];
+		sma_pins[1] = teensy_unit.SPWM_pin[port_id][3];
 	}
 	else{
 		led_pins[0] = teensy_unit.FPWM_pin[port_id][0];
 		led_pins[1] = teensy_unit.FPWM_pin[port_id][1];
+		sma_pins[0] = teensy_unit.SPWM_pin[port_id][0];
+		sma_pins[1] = teensy_unit.SPWM_pin[port_id][1];
 	}
 	
+
 	analog_pins[0] = teensy_unit.Analog_pin[port_id][0];
 	analog_pins[1] = teensy_unit.Analog_pin[port_id][1];
 	
@@ -178,13 +182,13 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 
 
 
-	// writeToAccel(ACC_ACT_ADDR, ACC_ACT_VAL);  
-	// writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
-	// writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_SLEEP);
-	// writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_MEASURE);
-	// writeToAccel(ACC_INRPPT_ADDR, ACC_INRPPT_DISABLE);
-	// writeToAccel(ACC_DATAFORMAT_ADDR, ACC_DATAFORMAT_VALUE);
-	// writeToAccel(ACC_FIFO_ADDR, ACC_FIFO_VALUE);
+	writeToAccel(ACC_ACT_ADDR, ACC_ACT_VAL);  
+	writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
+	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_SLEEP);
+	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_MEASURE);
+	writeToAccel(ACC_INRPPT_ADDR, ACC_INRPPT_DISABLE);
+	writeToAccel(ACC_DATAFORMAT_ADDR, ACC_DATAFORMAT_VALUE);
+	writeToAccel(ACC_FIFO_ADDR, ACC_FIFO_VALUE);
 
 	
 	delay(100);
@@ -252,10 +256,10 @@ void TeensyUnit::TentaclePort::switchToAccel() {
 // Write a value to address register on device
 void TeensyUnit::TentaclePort::writeToAccel(const byte address, const byte val) {
 
-	// Wire.beginTransmission(ACCEL); // start transmission to device 
-	// Wire.write(address);            // send register address
-	// Wire.write(val);                // send value to write
-	// Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);         // end transmission
+	Wire.beginTransmission(ACCEL); // start transmission to device 
+	Wire.write(address);            // send register address
+	Wire.write(val);                // send value to write
+	//Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);         // end transmission
 
 }
 
@@ -264,14 +268,13 @@ void TeensyUnit::TentaclePort::writeToAccel(const byte address, const byte val) 
 //====== Protocell Port ======
 //===========================================================================
 //~~constructor and destructor~~
-TeensyUnit::ProtocellPort::ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id, const bool Slow):
+TeensyUnit::ProtocellPort::ProtocellPort(TeensyUnit& teensy_parent, const uint8_t Port_Id):
 			teensy_unit(teensy_parent),
 			port_id(Port_Id),
-			is_slow(Slow)
+			is_slow(Port_Id==2 || Port_Id==5)
 			
 {
 
-	
 	//----- Pin assignment -----
 	
 	if (is_slow){
