@@ -13,26 +13,25 @@ class WaveTable{
 	public:
 	
 		//--- Constructor and destructor ---
-		WaveTable(const uint8_t Pin_Num=13);
-		WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float Amplitude,
-					const wave_t Wave[wave_size]);
+		WaveTable();
+		WaveTable(const uint16_t Duration, const float Amplitude, const wave_t Wave[wave_size]);
 		~WaveTable();
 
-		//--- Setter and getter for the pin number ---		
-		WaveTable& set_pin_num(const uint8_t Pin_Num);
-		uint8_t get_pin_num();
-		
+
 		//--- Wave function ----
-		void wave_function(const long curr_time);
+		uint8_t wave_function(const long curr_time);
 		
 		//--- Wave tables waveform ----
 		wave_t waveform[wave_size];
+		
+		//--- Getter of pwm output ----
+		uint8_t get_pwm_output();
 		
 		//--- Setter and getter of the Waveform ---
 		WaveTable& set_wave(const wave_t Wave[wave_size]);
 		wave_t* get_wave();
 		
-		//--- Setts and getters for the configuration parameters ---
+		//--- Setters and getters for the configuration parameters ---
 		WaveTable& set_duration(const uint16_t Duration);
 		uint16_t get_duration() const;
 		
@@ -45,9 +44,6 @@ class WaveTable{
 		//--- Granularity ---
 		const uint8_t granularity = 15;
 		
-		//--- Pin number ----
-		uint8_t pin_num;
-		
 		//--- configuration parameters ---
 		uint16_t duration;
 		float amplitude;
@@ -59,6 +55,8 @@ class WaveTable{
 		uint16_t step_count;
 		int8_t level_change;
 		uint8_t gran_count;
+		
+		uint8_t pwm_output = 0; //assumes 8-bit
 	
 		
 		

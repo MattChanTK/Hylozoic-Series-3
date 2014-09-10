@@ -253,12 +253,11 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 	
 	
 	//static WaveTable test_wave(5);
-	test_wave.set_pin_num(tentacle_1.led_pins[1]);
-	//test_wave.set_pin_num(FPWM_pin[1][1]);
 	test_wave.set_duration(10000);
 	test_wave.set_amplitude(1.0);
-	test_wave.wave_function(curr_time);
-	//tentacle_1.set_led_level(1, 255);
+	uint8_t led_level = test_wave.wave_function(curr_time);
+	//protocell.set_led_level(led_level);
+	analogWrite(13, led_level);
 	
 
 }

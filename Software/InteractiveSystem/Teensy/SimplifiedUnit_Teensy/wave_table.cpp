@@ -2,11 +2,10 @@
 
 //--- Constructor and destructor ---
 
-WaveTable::WaveTable(const uint8_t Pin_Num){
+WaveTable::WaveTable(){
 	
 	duration = 1000;
 	amplitude = 1.0;
-	pin_num = Pin_Num;
 	
 	//==== WAVE FUNCTION variables ====
 	bool wave_function_cycling = false;
@@ -24,7 +23,7 @@ WaveTable::WaveTable(const uint8_t Pin_Num){
 	}
 }
 
-WaveTable::WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float Amplitude, const wave_t Wave[wave_size]){
+WaveTable::WaveTable(const uint16_t Duration, const float Amplitude, const wave_t Wave[wave_size]){
 			 
 	//copy the waveform to the object
 	for (int i = 0; i < wave_size; i++){
@@ -34,7 +33,6 @@ WaveTable::WaveTable(const uint8_t Pin_Num, const uint16_t Duration, const float
 	//copy the parameters over
 	duration = Duration;
 	amplitude = Amplitude;
-	pin_num = Pin_Num;
 	
 	//==== WAVE FUNCTION variables ====
 	bool wave_function_cycling = false;
@@ -51,18 +49,8 @@ WaveTable::~WaveTable(){
 }
 
 
-//--- Setter and getter for the pin number ---		
-WaveTable& WaveTable::set_pin_num(const uint8_t Pin_Num){
-
-	pin_num = Pin_Num;
-	return *this;
-}
-uint8_t WaveTable::get_pin_num(){
-	return pin_num;
-}
-
 //--- Wave Table Synthesis ---
-void WaveTable::wave_function(const long curr_time) {
+uint8_t WaveTable::wave_function(const long curr_time) {
 
 	// starting a wave cycle
 	if (wave_function_cycling == false){
@@ -72,36 +60,42 @@ void WaveTable::wave_function(const long curr_time) {
 		step_duration = duration/(wave_size-1) ;
 		step_count = 1;
 		level_change = (waveform[1] - waveform[0])/granularity;
-				
-		analogWrite(pin_num, (uint8_t) waveform[0]*amplitude);
-	}
-	else if (wave_function_cycling == true){
+			
 		
+		pwm_output = (uint8_t) waveform[0]*amplitude;
+	}
+	else{	
+	
 		// if reaches full time duration
 		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) >= duration){
 			wave_function_cycling = false;
 		}
 		// if reaches one time step
 		else if ((curr_time - wave_function_phase_time) > step_count*step_duration){
-			analogWrite(pin_num, (uint8_t) (waveform[step_count]*amplitude));
+			pwm_output = (uint8_t) (waveform[step_count]*amplitude);
 			step_count++;
 			level_change = (waveform[step_count] - waveform[step_count-1])/granularity;
 			gran_count = 1;
-			
 		}
 		// if reaches a interpolated step
 		else if ((curr_time - wave_function_phase_time) > ((step_count-1)*step_duration + (gran_count*step_duration)/granularity)){
-			analogWrite(pin_num, (uint8_t) (waveform[step_count-1] + gran_count*level_change)*amplitude);
+			pwm_output = (uint8_t) (waveform[step_count-1] + gran_count*level_change)*amplitude;
 			gran_count++;
 			
 		}
 		// during the step
 		else{		
-			
 		
 		}
 	}
 	
+	return pwm_output;
+}
+
+//--- getter for pwm output ----
+uint8_t WaveTable::get_pwm_output(){
+
+	return pwm_output;
 }
 
 
