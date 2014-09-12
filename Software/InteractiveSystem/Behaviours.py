@@ -73,7 +73,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     else:
                         indicator_led_on[teensy_name] = 1
 
-                #print(teensy_name, ": ", sample)
+                print(teensy_name, ": ", sample['tentacle_2_ir_1_state'])
                 print(teensy_name, ": ", sample['tentacle_0_acc_x_state'], ', ', sample['tentacle_0_acc_y_state'], ', ', sample['tentacle_0_acc_z_state'])
                 print(teensy_name, ": ", sample['tentacle_1_acc_x_state'], ', ', sample['tentacle_1_acc_y_state'], ', ', sample['tentacle_1_acc_z_state'])
                 print(teensy_name, ": ", sample['tentacle_2_acc_x_state'], ', ', sample['tentacle_2_acc_y_state'], ', ', sample['tentacle_2_acc_z_state'])

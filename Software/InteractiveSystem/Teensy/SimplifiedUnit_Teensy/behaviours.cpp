@@ -108,8 +108,8 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			for (uint8_t tentacle_id = 0; tentacle_id<3; tentacle_id++){
 			
 				// byte *1 and *2 --- ir 0 and ir 1
-				send_data_buff[10*tentacle_id + 11] = tentacle_ir_state[0][0];
-				send_data_buff[10*tentacle_id + 12] = tentacle_ir_state[0][1];
+				send_data_buff[10*tentacle_id + 11] = tentacle_ir_state[tentacle_id][0];
+				send_data_buff[10*tentacle_id + 12] = tentacle_ir_state[tentacle_id][1];
 				
 				// byte *3 and *4 --- acc x
 				for (uint8_t i = 0; i < 2 ; i++)
@@ -154,7 +154,8 @@ void Behaviours::sample_inputs(){
 	tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
 
 	if (Wire.frozen){
-		digitalWrite(PGM_DO_pin, 1);
+		//digitalWrite(PGM_DO_pin, 1);
+		digitalWrite(13, 1);
 	}
 }
 

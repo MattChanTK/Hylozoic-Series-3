@@ -233,7 +233,7 @@ void TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 	teensy_unit.Wire.write(ACC_X_LSB_ADDR);
 	teensy_unit.Wire.endTransmission(I2C_STOP, i2c_timeout);
 	
-	teensy_unit.Wire.requestFrom(ACCEL, (size_t) 6, I2C_NOSTOP, i2c_timeout); // Read 6 bytes      
+	teensy_unit.Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, i2c_timeout); // Read 6 bytes      
 	
 	uint8_t i = 0;
 	byte buffer[6] = {0};
