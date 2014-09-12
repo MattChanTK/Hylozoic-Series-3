@@ -388,7 +388,7 @@ void i2c_t3::beginTransmission(uint8_t address)
 //
 uint8_t i2c_t3::endTransmission(i2c_stop sendStop, uint32_t timeout)
 {
-    sendTransmission_(i2c, sendStop, 50);
+    frozen = sendTransmission_(i2c, sendStop, 50);
 
     // wait for completion or timeout
     finish_(i2c, timeout);
@@ -405,8 +405,9 @@ uint8_t i2c_t3::endTransmission(i2c_stop sendStop, uint32_t timeout)
 // parameters:
 //      i2c_stop = I2C_NOSTOP, I2C_STOP
 //
-void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout)
+bool i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout)
 {
+	bool frozen = false;
 
     if(i2c->txBufferLength)
     {
@@ -427,9 +428,10 @@ void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_
 
             // we are not currently the bus master, so wait for bus ready or timeout
             while(*(i2c->S) & I2C_S_BUSY && (timeout == 0 || deltaT < timeout)){
-				digitalWrite(13, 1);
+				frozen = true;
+			//	digitalWrite(13, 1);
 			}
-			digitalWrite(13, 0);
+			//digitalWrite(13, 0);
 			
             // become the bus master in transmit mode (send start)
             I2C_DEBUG_STR("START"); // START
@@ -444,7 +446,10 @@ void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_
         *(i2c->C1) = I2C_C1_IICEN | I2C_C1_IICIE | I2C_C1_MST | I2C_C1_TX; // enable intr
         I2C_DEBUG_STR("T:"); I2C_DEBUG_HEX(i2c->txBuffer[i2c->txBufferIndex]); I2C_DEBUG_STRB("\n"); // target addr
         *(i2c->D) = i2c->txBuffer[i2c->txBufferIndex];
+		
+		
     }
+	return frozen;
 }
 
 
@@ -508,10 +513,8 @@ void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_s
     {	
 		elapsedMicros deltaT;
         // we are not currently the bus master, so wait for bus ready
-        while(*(i2c->S) & I2C_S_BUSY && (timeout == 0 || deltaT < timeout)){
-			digitalWrite(13, 1);
-		}
-		digitalWrite(13, 0);
+        while(*(i2c->S) & I2C_S_BUSY && (timeout == 0 || deltaT < timeout));
+		
         // become the bus master in transmit mode (send start)
         I2C_DEBUG_STR("START"); // START
         i2c->currentMode = I2C_MASTER;

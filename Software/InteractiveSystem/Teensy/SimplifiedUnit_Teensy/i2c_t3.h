@@ -466,7 +466,7 @@ private:
 public:
     i2c_t3(uint8_t i2c_bus);
     ~i2c_t3();
-
+	bool frozen = false;
     // ------------------------------------------------------------------------------------------------------
     // Initialize I2C (base routine)
     //
@@ -564,7 +564,7 @@ public:
     // ------------------------------------------------------------------------------------------------------
     // Send Master Transmit (base routine)
     //
-    static void sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout);
+    static bool sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout);
     //
     // Send Master Transmit - non-blocking routine, starts transmit of Tx buffer to slave. i2c_stop parameter can be
     //                        used to indicate if command should end with a STOP (I2C_STOP) or not (I2C_NOSTOP). Use
@@ -573,7 +573,7 @@ public:
     // parameters:
     //      i2c_stop = I2C_NOSTOP, I2C_STOP
     //
-    inline void sendTransmission(i2c_stop sendStop) { sendTransmission_(i2c, sendStop, 50); }
+    inline void sendTransmission(i2c_stop sendStop) { frozen = sendTransmission_(i2c, sendStop, 50); }
 
     // ------------------------------------------------------------------------------------------------------
     // Master Receive (base routine)
@@ -771,6 +771,7 @@ public:
     inline void send(int n)                 { write((uint8_t)n); }
     inline void send(char* s)               { write(s); }
     inline uint8_t receive(void)            { int c = read(); return (c<0) ? 0 : c; }
+
 };
 
 // extern i2c_t3 Wire;

@@ -86,8 +86,8 @@ void TeensyUnit::init(){
 
 	//---- initialize I2C accelerometer on Tentacle module ---
 	//tentacle_0.init();
-	tentacle_1.init();
-	//tentacle_2.init();
+	//tentacle_1.init();
+	tentacle_2.init();
 
 	
 	//===== clear all existing messages ======
@@ -182,10 +182,6 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 	analog_pins[1] = teensy_unit.Analog_pin[port_id][1];
 	
 	acc_pin = teensy_unit.I2C_MUL_ADR[port_id];
-	
-
-
-	
 	
 }
 
