@@ -2,6 +2,8 @@
 #ifndef _PWMDriver_H
 #define _PWMDriver_H
 
+#include "i2c_t3.h"
+
 #define TIMEOUT 100  //microsecond
 
 #if ARDUINO >= 100
@@ -46,6 +48,7 @@ class PWMDriver {
 
   uint8_t read8(uint8_t addr);
   void write8(uint8_t addr, uint8_t d);
+  i2c_t3 Wire1;
 };
 
 #endif

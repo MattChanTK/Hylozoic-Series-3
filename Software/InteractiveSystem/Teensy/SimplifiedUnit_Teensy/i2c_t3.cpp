@@ -287,6 +287,8 @@ void i2c_t3::begin_(struct i2cStruct* i2c, uint8_t bus, i2c_mode mode, uint8_t a
         if(!Serial) Serial.begin(115200);
         i2cDebugTimer.begin(printI2CDebug, 500); // 500us period, 2kHz timer
     #endif
+	
+
 }
 
 
@@ -390,9 +392,8 @@ uint8_t i2c_t3::endTransmission(i2c_stop sendStop, uint32_t timeout)
 
     // wait for completion or timeout
     finish_(i2c, timeout);
-	
+
     return getError();
-	
 }
 
 
@@ -412,20 +413,16 @@ void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop)
         *(i2c->S) = I2C_S_IICIF | I2C_S_ARBL;
 
         // now take control of the bus...
-        if(*(i2c->C1)  & I2C_C1_MST)
+        if(*(i2c->C1) & I2C_C1_MST)
         {
-
             // we are already the bus master, so send a repeated start
             I2C_DEBUG_STR("RSTART"); // Repeated START
             *(i2c->C1) = I2C_C1_IICEN | I2C_C1_MST | I2C_C1_RSTA | I2C_C1_TX;
         }
         else
         {
-
-			//elapsedMicros deltaT;
             // we are not currently the bus master, so wait for bus ready
             while(*(i2c->S) & I2C_S_BUSY);
-	
             // become the bus master in transmit mode (send start)
             I2C_DEBUG_STR("START"); // START
             i2c->currentMode = I2C_MASTER;
@@ -439,7 +436,6 @@ void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop)
         *(i2c->C1) = I2C_C1_IICEN | I2C_C1_IICIE | I2C_C1_MST | I2C_C1_TX; // enable intr
         I2C_DEBUG_STR("T:"); I2C_DEBUG_HEX(i2c->txBuffer[i2c->txBufferIndex]); I2C_DEBUG_STRB("\n"); // target addr
         *(i2c->D) = i2c->txBuffer[i2c->txBufferIndex];
-								
     }
 }
 
@@ -500,15 +496,15 @@ void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_s
         I2C_DEBUG_STR("RSTART"); // Repeated START
         *(i2c->C1) = I2C_C1_IICEN | I2C_C1_MST | I2C_C1_RSTA | I2C_C1_TX;
     }
-    // else
-    // {
-        // // we are not currently the bus master, so wait for bus ready
-        // while(*(i2c->S) & I2C_S_BUSY);
-        // // become the bus master in transmit mode (send start)
-        // I2C_DEBUG_STR("START"); // START
-        // i2c->currentMode = I2C_MASTER;
-        // *(i2c->C1) = I2C_C1_IICEN | I2C_C1_MST | I2C_C1_TX;
-    // }
+    else
+    {
+        // we are not currently the bus master, so wait for bus ready
+        while(*(i2c->S) & I2C_S_BUSY);
+        // become the bus master in transmit mode (send start)
+        I2C_DEBUG_STR("START"); // START
+        i2c->currentMode = I2C_MASTER;
+        *(i2c->C1) = I2C_C1_IICEN | I2C_C1_MST | I2C_C1_TX;
+    }
 
     // send 1st data and enable interrupts
     i2c->currentStatus = I2C_SEND_ADDR;
@@ -527,21 +523,16 @@ void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_s
 //
 uint8_t i2c_t3::getError(void)
 {
-
     // convert status to Arduino return values (give these a higher priority than buf overflow error)
     switch(i2c->currentStatus)
     {
-	
     case I2C_ADDR_NAK: return 2;
     case I2C_DATA_NAK: return 3;
     case I2C_ARB_LOST: return 4;
-    case I2C_TIMEOUT: return 4;
+    case I2C_TIMEOUT:  return 4;
     default: break;
     }
-	
-
     if(getWriteError()) return 1; // if write_error was set then flag as buffer overflow
-
     return 0; // no errors
 }
 
@@ -576,14 +567,12 @@ uint8_t i2c_t3::finish_(struct i2cStruct* i2c, uint32_t timeout)
     if(i2c->currentStatus == I2C_SENDING ||
        i2c->currentStatus == I2C_SEND_ADDR ||
        i2c->currentStatus == I2C_RECEIVING)
-	   
         i2c->currentStatus = I2C_TIMEOUT; // set to timeout state
 
     // delay to allow bus to settle (eg. allow STOP to complete and be recognized,
     //                               not just on our side, but on slave side also)
     delayMicroseconds(10);
     if(i2c->currentStatus == I2C_WAITING) return 1;
-
     return 0;
 }
 
@@ -1078,9 +1067,10 @@ void i2c_t3::sda_rising_isr_handler(struct i2cStruct* i2c, uint8_t bus)
 // ------------------------------------------------------------------------------------------------------
 // Instantiate
 //
-i2c_t3 Wire  = i2c_t3(0);       // I2C0
-#if I2C_BUS_NUM >= 2
-    i2c_t3 Wire1 = i2c_t3(1);   // I2C1
-#endif
+
+// i2c_t3 Wire  = i2c_t3(0);       // I2C0
+// #if I2C_BUS_NUM >= 2
+    // i2c_t3 Wire1 = i2c_t3(1);   // I2C1
+// #endif
 
 #endif // __MK20DX128__ || __MK20DX256__

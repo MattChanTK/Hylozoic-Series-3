@@ -1,18 +1,14 @@
 
 
 #include "PWMDriver.h"
-#include "i2c_t3.h"
-
-#define WIRE Wire1
 
 
-
-PWMDriver::PWMDriver(uint8_t addr) {
+PWMDriver::PWMDriver(uint8_t addr):Wire1(1) {
   _i2caddr = addr;
 }
 
 void PWMDriver::begin(void) {
- WIRE.begin(I2C_MASTER, 0x00, I2C_PINS_29_30, I2C_PULLUP_EXT, I2C_RATE_400);		
+ Wire1.begin(I2C_MASTER, 0x00, I2C_PINS_29_30, I2C_PULLUP_EXT, I2C_RATE_400);		
  reset();
 }
 
@@ -44,13 +40,13 @@ void PWMDriver::setPWMFreq(float freq) {
 
 void PWMDriver::setPWM(uint8_t num, uint16_t on, uint16_t off) {
 
-  WIRE.beginTransmission(_i2caddr);
-  WIRE.write(LED0_ON_L+4*num);
-  WIRE.write(on);
-  WIRE.write(on>>8);
-  WIRE.write(off);
-  WIRE.write(off>>8);
-  WIRE.endTransmission(I2C_STOP, TIMEOUT);
+  Wire1.beginTransmission(_i2caddr);
+  Wire1.write(LED0_ON_L+4*num);
+  Wire1.write(on);
+  Wire1.write(on>>8);
+  Wire1.write(off);
+  Wire1.write(off>>8);
+  Wire1.endTransmission(I2C_STOP, TIMEOUT);
 }
 
 // Sets pin without having to deal with on/off tick placement and properly handles
@@ -90,36 +86,35 @@ void PWMDriver::setPin(uint8_t num, uint16_t val, bool invert)
 
 void PWMDriver::setZeroDelay(uint8_t num) {
 
-  WIRE.beginTransmission(_i2caddr);
-  WIRE.write(LED0_ON_L+4*num);
-  WIRE.write(0x0);
-  WIRE.write(0x0);
-  WIRE.endTransmission(I2C_STOP, TIMEOUT);
+  Wire1.beginTransmission(_i2caddr);
+  Wire1.write(LED0_ON_L+4*num);
+  Wire1.write(0x0);
+  Wire1.write(0x0);
+  Wire1.endTransmission(I2C_STOP, TIMEOUT);
 }
 
 void PWMDriver::setPWMFast(uint8_t num, uint16_t off) {
 
-  WIRE.beginTransmission(_i2caddr);
-  WIRE.write(LED0_OFF_L+4*num);
-  WIRE.write(off);
-  WIRE.write(off>>8);
-  WIRE.endTransmission(I2C_STOP, TIMEOUT);
+  Wire1.beginTransmission(_i2caddr);
+  Wire1.write(LED0_OFF_L+4*num);
+  Wire1.write(off);
+  Wire1.write(off>>8);
+  Wire1.endTransmission(I2C_STOP, TIMEOUT);
 }
 
 uint8_t PWMDriver::read8(uint8_t addr) {
-  WIRE.beginTransmission(_i2caddr);
-  WIRE.write(addr);
-  WIRE.endTransmission(I2C_STOP, TIMEOUT);
+  Wire1.beginTransmission(_i2caddr);
+  Wire1.write(addr);
+  Wire1.endTransmission(I2C_STOP, TIMEOUT);
 
-   WIRE.requestFrom((uint8_t)_i2caddr, (size_t)1, I2C_STOP, TIMEOUT);
-  // return WIRE.read();
-  return 0;
+   Wire1.requestFrom((uint8_t)_i2caddr, (size_t)1, I2C_STOP, TIMEOUT);
+  return Wire1.read();
 }
 
 void PWMDriver::write8(uint8_t addr, uint8_t d) {
-  WIRE.beginTransmission(_i2caddr);
-  WIRE.write(addr);
-  WIRE.write(d);
-  WIRE.endTransmission(I2C_STOP, TIMEOUT);
+  Wire1.beginTransmission(_i2caddr);
+  Wire1.write(addr);
+  Wire1.write(d);
+  Wire1.endTransmission(I2C_STOP, TIMEOUT);
  
 }

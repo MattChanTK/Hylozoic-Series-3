@@ -1,13 +1,14 @@
 #ifndef _TEENSY_UNIT_H
 #define _TEENSY_UNIT_H
 
-#include "Arduino.h"
+
 #include "wave_table.h"
 #include "i2c_t3.h"
 #include "PWMDriver.h"
+#include "Arduino.h"
 
 #define packet_size 64
-#define i2c_timeout 100 //microsecond
+#define i2c_timeout 10000 //microsecond
 
 class TeensyUnit{
 	
@@ -66,6 +67,7 @@ class TeensyUnit{
 		const uint8_t I2C_MUL_ADR[6] = {4, 6, 7, 2, 1, 0};
 		
 
+
 		
 		
 		//===============================================
@@ -91,7 +93,8 @@ class TeensyUnit{
 		//==== constants ====
 		const uint8_t num_outgoing_byte = packet_size;
 		const uint8_t num_incoming_byte = packet_size;
-
+		
+		i2c_t3 Wire;
 		
 		//==== COMMUNICATION variables =====
 		byte send_data_buff[packet_size];
@@ -112,6 +115,7 @@ class TeensyUnit{
 				//~~constructor and destructor~~
 				TentaclePort(TeensyUnit& teensy_parent, const uint8_t Port_Id);
 				~TentaclePort();
+				void init();
 
 				//~~outputs~~
 				void set_sma_level(const uint8_t id, const uint8_t level);
@@ -159,8 +163,6 @@ class TeensyUnit{
 				const uint8_t  ACC_FIFO_VALUE = 0x00;  // Bypass FIFO
 
 				const uint8_t  ACC_X_LSB_ADDR = 0x32;// ACC X axis LSB byte
-				
-				const uint8_t I2C_TIMEOUT = 100;
 								
 				
 				void switchToAccel(); // switching to the correct accelerometer
@@ -194,7 +196,7 @@ class TeensyUnit{
 				
 			private:
 				TeensyUnit& teensy_unit;
-
+			
 		
 		};
 		
@@ -207,8 +209,5 @@ class TeensyUnit{
 		TentaclePort tentacle_1;
 		TentaclePort tentacle_2;
 		ProtocellPort protocell;		
-		
 };
-
-
 #endif

@@ -21,7 +21,7 @@ class TeensyManager():
 
         # configuration of the Teensy threads
         self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
-        self.print_to_term_default = True
+        self.print_to_term_default = False
         self.import_config = import_config
 
         self.create_teensy_threads()
@@ -235,7 +235,8 @@ class TeensyInterface(threading.Thread):
 
                 # sending the data
                 #start_time = clock()
-                self.talk_to_Teensy(out_msg, timeout=0)
+
+                self.talk_to_Teensy(out_msg, timeout=10)
                 self.print_to_term("\n---Sent---")
                 self.print_data(out_msg, raw_dec=True)
                 #print("Talk time: ", clock()-start_time)
@@ -289,7 +290,6 @@ class TeensyInterface(threading.Thread):
                         else:
                             print("Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter))
 
-
                 # print(self.serial_number, " - Echo time: ", clock() - start_time)
 
 
@@ -338,8 +338,8 @@ class TeensyInterface(threading.Thread):
         try:
             self.ep_out.write(out_msg, timeout)
         except usb.core.USBError:
+            print("Timeout! Couldn't write")
             pass
-            #print("Timeout! Couldn't write")
 
     def print_data(self, data, raw_dec=False):
         if data and self.print_to_term_enabled:

@@ -2,6 +2,7 @@
 #include "behaviours.h"
 #include "teensy_unit.h"
 
+
 //===========================================================================
 //===========================================================================
 
@@ -35,5 +36,5 @@ void loop() {
 	//test_unit.sample_inputs();
     //test_unit.led_blink_behaviour(curr_time);
 	//test_unit.led_wave_behaviour(curr_time);
-	//test_unit.test_behaviour((const uint32_t) curr_time);
+	test_unit.test_behaviour((const uint32_t) curr_time);
 }

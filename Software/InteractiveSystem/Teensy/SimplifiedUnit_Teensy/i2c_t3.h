@@ -73,7 +73,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#if !defined(I2C_T3_H) && (defined(__MK20DX128__) || defined(__MK20DX256__))
+#if !defined(I2C_T3_H) //&& (defined(__MK20DX128__) || defined(__MK20DX256__))
 #define I2C_T3_H
 
 #include <inttypes.h>
@@ -771,12 +771,11 @@ public:
     inline void send(int n)                 { write((uint8_t)n); }
     inline void send(char* s)               { write(s); }
     inline uint8_t receive(void)            { int c = read(); return (c<0) ? 0 : c; }
-
 };
 
-extern i2c_t3 Wire;
-#if I2C_BUS_NUM >= 2
-    extern i2c_t3 Wire1;
-#endif
+// extern i2c_t3 Wire;
+// #if I2C_BUS_NUM >= 2
+    // extern i2c_t3 Wire1;
+// #endif
 
 #endif // I2C_T3_H

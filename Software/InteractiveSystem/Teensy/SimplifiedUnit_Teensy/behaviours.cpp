@@ -147,11 +147,11 @@ void Behaviours::sample_inputs(){
 		tentacle_ir_state[1][i] = tentacle_1.read_analog_state(i);
 		tentacle_ir_state[2][i] = tentacle_2.read_analog_state(i);
 	}
-	
+
 	//~~accelerator~~
-	tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
+	//tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
 	tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
-	tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
+	//tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
 
 }
 
@@ -171,7 +171,7 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		protocell.set_led_level(0);
 		
 	//=== testing Tentacle ===
-	uint8_t ir_range = tentacle_0.read_analog_state(0);
+	uint8_t ir_range = tentacle_0.read_analog_state(1);
 	if (ir_range < 100){
 		tentacle_0.set_led_level(0, 250);
 		tentacle_0.set_led_level(1, 250);
@@ -185,7 +185,7 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		tentacle_0.set_sma_level(1, 0);
 	}
 	
-	ir_range = tentacle_1.read_analog_state(0);
+	ir_range = tentacle_1.read_analog_state(1);
 	if (ir_range < 100) {
 		tentacle_1.set_led_level(0, 250);
 		tentacle_1.set_led_level(1, 250);
@@ -199,7 +199,7 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		tentacle_1.set_sma_level(1, 0);
 	}
 		
-	ir_range = tentacle_2.read_analog_state(0);
+	ir_range = tentacle_2.read_analog_state(1);
 	if (ir_range < 100) {
 		tentacle_2.set_led_level(0, 250);
 		tentacle_2.set_led_level(1, 250);
@@ -267,7 +267,7 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 	test_wave.set_amplitude(1.0);
 	uint8_t led_level = test_wave.wave_function(curr_time);
 	//protocell.set_led_level(led_level);
-	analogWrite(13, led_level);
+	analogWrite(5, led_level);
 	
 
 }

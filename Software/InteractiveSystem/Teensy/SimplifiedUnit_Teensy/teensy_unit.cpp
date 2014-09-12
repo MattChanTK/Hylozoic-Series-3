@@ -1,10 +1,11 @@
 #include "teensy_unit.h"
 
+
 //===========================================================================
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-TeensyUnit::TeensyUnit():
+TeensyUnit::TeensyUnit(): Wire(0),
 	FPWM_pin {FPWM_1_pin, FPWM_2_pin, FPWM_3_pin, FPWM_4_pin, FPWM_5_pin, FPWM_6_pin},
 	SPWM_pin {SPWM_1_pin, SPWM_2_pin, SPWM_3_pin, SPWM_4_pin, SPWM_5_pin, SPWM_6_pin}, 
 	Analog_pin {Analog_1_pin, Analog_2_pin, Analog_3_pin, Analog_4_pin, Analog_5_pin, Analog_6_pin},
@@ -56,18 +57,19 @@ TeensyUnit::TeensyUnit():
 	
 	//--- Slow PWM driver ----
 	spwm = PWMDriver(0x40);
-	
+
 	//--- Multiplexer pins ---
 	num_pins = sizeof(I2C_MUL_ADR_pin)/sizeof(I2C_MUL_ADR_pin[0]);
 	for (uint8_t i = 0; i<num_pins; i++){
 		pinMode(I2C_MUL_ADR_pin[i], OUTPUT);
 	}	
-	
 
 	//--- I2C initialization ----
 	Wire.begin(I2C_MASTER,0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-	
-	
+	tentacle_0.init();
+	tentacle_1.init();
+	tentacle_2.init();
+
 }
 
 TeensyUnit::~TeensyUnit(){
@@ -177,21 +179,7 @@ TeensyUnit::TentaclePort::TentaclePort(TeensyUnit& teensy_parent, const uint8_t 
 	
 
 
-	//---- initialize acceleromter ---
-	switchToAccel();
-
-
-
-	writeToAccel(ACC_ACT_ADDR, ACC_ACT_VAL);  
-	writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
-	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_SLEEP);
-	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_MEASURE);
-	writeToAccel(ACC_INRPPT_ADDR, ACC_INRPPT_DISABLE);
-	writeToAccel(ACC_DATAFORMAT_ADDR, ACC_DATAFORMAT_VALUE);
-	writeToAccel(ACC_FIFO_ADDR, ACC_FIFO_VALUE);
-
 	
-	delay(100);
 	
 }
 
@@ -199,7 +187,22 @@ TeensyUnit::TentaclePort::~TentaclePort(){
 	
 }
 
+void TeensyUnit::TentaclePort::init(){
 
+	//---- initialize acceleromter ---
+	writeToAccel(ACC_ACT_ADDR, ACC_ACT_VAL);  
+	writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
+	writeToAccel(ACC_BW_ADDR, ACC_BW_VAL);
+	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_SLEEP);
+	writeToAccel(ACC_PWRCTRL_ADDR, ACC_PWRCTRL_MEASURE);
+	writeToAccel(ACC_INRPPT_ADDR, ACC_INRPPT_DISABLE);
+	writeToAccel(ACC_DATAFORMAT_ADDR, ACC_DATAFORMAT_VALUE);
+	writeToAccel(ACC_FIFO_ADDR, ACC_FIFO_VALUE);
+
+	delay(5);
+
+
+}
 //~~outputs~~
 void TeensyUnit::TentaclePort::set_sma_level(const uint8_t id, const uint8_t level){
 
@@ -223,24 +226,28 @@ uint8_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0,
 
 void TeensyUnit::TentaclePort::read_acc_state(uint16_t &accel_x, uint16_t &accel_y, uint16_t &accel_z){ // return array:{x, y, z}
 
-	// Wire.beginTransmission(ACCEL);
-	// Wire.write(ACC_X_LSB_ADDR);
-	// Wire.endTransmission(I2C_NOSTOP, I2C_TIMEOUT);
-	
-	
-	// Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
-	
-	// uint8_t i = 0;
-	// byte buffer[6];
-	// while(Wire.available() && i<6)
-	// {
-		// buffer[i] = Wire.read();
-		// i++;
-	// }
+	switchToAccel();
 
-	// accel_x = buffer[1] << 8 | buffer[0];
-	// accel_y = buffer[3] << 8 | buffer[2];
-	// accel_z = buffer[5] << 8 | buffer[4];
+	teensy_unit.Wire.beginTransmission(ACCEL);
+	teensy_unit.Wire.write(ACC_X_LSB_ADDR);
+	teensy_unit.Wire.endTransmission(I2C_NOSTOP, I2C_TIMEOUT);
+
+	
+	teensy_unit.Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, i2c_timeout); // Read 6 bytes      
+	
+	uint8_t i = 0;
+	byte buffer[6] = {0};
+	
+	delay(5);
+	while(teensy_unit.Wire.available() && i<6)
+	{
+		buffer[i] = teensy_unit.Wire.read();
+		i++;
+	}
+
+	accel_x = buffer[1] << 8 | buffer[0];
+	accel_y = buffer[3] << 8 | buffer[2];
+	accel_z = buffer[5] << 8 | buffer[4];
 }
 
 //~~accelerometer~~
@@ -256,10 +263,11 @@ void TeensyUnit::TentaclePort::switchToAccel() {
 // Write a value to address register on device
 void TeensyUnit::TentaclePort::writeToAccel(const byte address, const byte val) {
 
-	Wire.beginTransmission(ACCEL); // start transmission to device 
-	Wire.write(address);            // send register address
-	Wire.write(val);                // send value to write
-	//Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);         // end transmission
+	switchToAccel();
+	teensy_unit.Wire.beginTransmission(ACCEL); // start transmission to device 
+	teensy_unit.Wire.write(address);            // send register address
+	teensy_unit.Wire.write(val);                // send value to write
+	teensy_unit.Wire.endTransmission(I2C_STOP, i2c_timeout);         // end transmission
 
 }
 
