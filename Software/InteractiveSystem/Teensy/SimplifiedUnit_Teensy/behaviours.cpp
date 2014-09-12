@@ -153,6 +153,7 @@ void Behaviours::sample_inputs(){
 	tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
 	//tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
 
+
 }
 
 //===========================================================================

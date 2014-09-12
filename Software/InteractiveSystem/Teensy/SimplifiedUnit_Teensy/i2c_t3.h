@@ -564,7 +564,7 @@ public:
     // ------------------------------------------------------------------------------------------------------
     // Send Master Transmit (base routine)
     //
-    static void sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop);
+    static void sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout);
     //
     // Send Master Transmit - non-blocking routine, starts transmit of Tx buffer to slave. i2c_stop parameter can be
     //                        used to indicate if command should end with a STOP (I2C_STOP) or not (I2C_NOSTOP). Use
@@ -573,7 +573,7 @@ public:
     // parameters:
     //      i2c_stop = I2C_NOSTOP, I2C_STOP
     //
-    inline void sendTransmission(i2c_stop sendStop) { sendTransmission_(i2c, sendStop); }
+    inline void sendTransmission(i2c_stop sendStop) { sendTransmission_(i2c, sendStop, 50); }
 
     // ------------------------------------------------------------------------------------------------------
     // Master Receive (base routine)
@@ -620,7 +620,7 @@ public:
     // ------------------------------------------------------------------------------------------------------
     // Start Master Receive (base routine)
     //
-    static void sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_stop sendStop);
+    static void sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_stop sendStop, uint32_t timeout);
     //
     // Start Master Receive - non-blocking routine, starts request for length bytes from slave at address. Receive
     //                        data will be placed in the Rx buffer. i2c_stop parameter can be used to indicate if
@@ -632,7 +632,7 @@ public:
     //      length = number of bytes requested
     //      i2c_stop = I2C_NOSTOP, I2C_STOP
     //
-    inline void sendRequest(uint8_t addr, size_t len, i2c_stop sendStop) { sendRequest_(i2c, addr, len, sendStop); }
+    inline void sendRequest(uint8_t addr, size_t len, i2c_stop sendStop) { sendRequest_(i2c, addr, len, sendStop, 50); }
 
     // ------------------------------------------------------------------------------------------------------
     // Get Wire Error - returns "Wire" error code from a failed Tx/Rx command

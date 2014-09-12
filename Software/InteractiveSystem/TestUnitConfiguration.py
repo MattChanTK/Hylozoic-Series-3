@@ -29,23 +29,23 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
         # byte 11 to 18: tentacle_0
         self.input_state['tentacle_0_ir_0_state'] = msg[11]
         self.input_state['tentacle_0_ir_1_state'] = msg[12]
-        self.input_state['tentacle_0_acc_x_state'] = struct.unpack_from('H', msg[13:15])[0]
-        self.input_state['tentacle_0_acc_y_state'] = struct.unpack_from('H', msg[15:17])[0]
-        self.input_state['tentacle_0_acc_z_state'] = struct.unpack_from('H', msg[17:19])[0]
+        self.input_state['tentacle_0_acc_x_state'] = struct.unpack_from('h', msg[13:15])[0]
+        self.input_state['tentacle_0_acc_y_state'] = struct.unpack_from('h', msg[15:17])[0]
+        self.input_state['tentacle_0_acc_z_state'] = struct.unpack_from('h', msg[17:19])[0]
 
         # byte 21 to 28: tentacle_0
         self.input_state['tentacle_1_ir_0_state'] = msg[21]
         self.input_state['tentacle_1_ir_1_state'] = msg[22]
-        self.input_state['tentacle_1_acc_x_state'] = struct.unpack_from('H', msg[23:25])[0]
-        self.input_state['tentacle_1_acc_y_state'] = struct.unpack_from('H', msg[25:27])[0]
-        self.input_state['tentacle_1_acc_z_state'] = struct.unpack_from('H', msg[27:29])[0]
+        self.input_state['tentacle_1_acc_x_state'] = struct.unpack_from('h', msg[23:25])[0]
+        self.input_state['tentacle_1_acc_y_state'] = struct.unpack_from('h', msg[25:27])[0]
+        self.input_state['tentacle_1_acc_z_state'] = struct.unpack_from('h', msg[27:29])[0]
 
         # byte 31 to 38: tentacle_0
         self.input_state['tentacle_2_ir_0_state'] = msg[31]
         self.input_state['tentacle_2_ir_1_state'] = msg[32]
-        self.input_state['tentacle_2_acc_x_state'] = struct.unpack_from('H', msg[33:35])[0]
-        self.input_state['tentacle_2_acc_y_state'] = struct.unpack_from('H', msg[35:37])[0]
-        self.input_state['tentacle_2_acc_z_state'] = struct.unpack_from('H', msg[37:39])[0]
+        self.input_state['tentacle_2_acc_x_state'] = struct.unpack_from('h', msg[33:35])[0]
+        self.input_state['tentacle_2_acc_y_state'] = struct.unpack_from('h', msg[35:37])[0]
+        self.input_state['tentacle_2_acc_z_state'] = struct.unpack_from('h', msg[37:39])[0]
 
         # # byte 1 and 2: analog 0 state
         # self.input_state['analog_0_state'] = struct.unpack_from('H', msg[1:3])[0]

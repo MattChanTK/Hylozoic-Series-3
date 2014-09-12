@@ -73,8 +73,8 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     else:
                         indicator_led_on[teensy_name] = 1
 
-                print(teensy_name, ": ", sample)
-
+                #print(teensy_name, ": ", sample)
+                print(teensy_name, ": ", sample['tentacle_1_acc_x_state'], ', ', sample['tentacle_1_acc_y_state'], ', ', sample['tentacle_1_acc_z_state'])
                 # new blink period
                 indicator_led_period[teensy_name] += 0.002
                 indicator_led_period[teensy_name] %= 10

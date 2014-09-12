@@ -59,10 +59,10 @@ class Behaviours : public TeensyUnit{
 		uint8_t* tentacle_ir_state[3];
 		
 		//~~Accelerometer state~~ 
-		uint16_t tentacle_0_acc_state[3]; // {x,y,z}
-		uint16_t tentacle_1_acc_state[3]; // {x,y,z}
-		uint16_t tentacle_2_acc_state[3]; // {x,y,z}
-		uint16_t* tentacle_acc_state[3];
+		int16_t tentacle_0_acc_state[3]; // {x,y,z}
+		int16_t tentacle_1_acc_state[3]; // {x,y,z}
+		int16_t tentacle_2_acc_state[3]; // {x,y,z}
+		int16_t* tentacle_acc_state[3];
 	
 		//>>>protocell<<<
 		//~~Ambient light sensor state~~

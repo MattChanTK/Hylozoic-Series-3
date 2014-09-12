@@ -107,7 +107,7 @@ uint8_t PWMDriver::read8(uint8_t addr) {
   Wire1.write(addr);
   Wire1.endTransmission(I2C_STOP, TIMEOUT);
 
-   Wire1.requestFrom((uint8_t)_i2caddr, (size_t)1, I2C_STOP, TIMEOUT);
+  Wire1.requestFrom((uint8_t)_i2caddr, (size_t)1, I2C_STOP, TIMEOUT);
   return Wire1.read();
 }
 

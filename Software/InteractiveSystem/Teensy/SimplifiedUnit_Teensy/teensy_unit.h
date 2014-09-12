@@ -8,7 +8,7 @@
 #include "Arduino.h"
 
 #define packet_size 64
-#define i2c_timeout 10000 //microsecond
+#define i2c_timeout 1000 //microsecond
 
 class TeensyUnit{
 	
@@ -123,7 +123,7 @@ class TeensyUnit{
 				
 				//~~inputs~~
 				uint8_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
-				void read_acc_state(uint16_t &accel_x, uint16_t &accel_y, uint16_t &accel_z);  // return array:{x, y, z}
+				void read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z);  // return array:{x, y, z}
 				
 				
 				//~~configurations~~

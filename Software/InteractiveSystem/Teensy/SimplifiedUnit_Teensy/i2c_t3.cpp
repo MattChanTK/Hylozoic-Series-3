@@ -388,7 +388,7 @@ void i2c_t3::beginTransmission(uint8_t address)
 //
 uint8_t i2c_t3::endTransmission(i2c_stop sendStop, uint32_t timeout)
 {
-    sendTransmission_(i2c, sendStop);
+    sendTransmission_(i2c, sendStop, 50);
 
     // wait for completion or timeout
     finish_(i2c, timeout);
@@ -405,8 +405,9 @@ uint8_t i2c_t3::endTransmission(i2c_stop sendStop, uint32_t timeout)
 // parameters:
 //      i2c_stop = I2C_NOSTOP, I2C_STOP
 //
-void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop)
+void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop, uint32_t timeout)
 {
+
     if(i2c->txBufferLength)
     {
         // clear the status flags
@@ -421,8 +422,15 @@ void i2c_t3::sendTransmission_(struct i2cStruct* i2c, i2c_stop sendStop)
         }
         else
         {
-            // we are not currently the bus master, so wait for bus ready
-            while(*(i2c->S) & I2C_S_BUSY);
+		
+			elapsedMicros deltaT;
+
+            // we are not currently the bus master, so wait for bus ready or timeout
+            while(*(i2c->S) & I2C_S_BUSY && (timeout == 0 || deltaT < timeout)){
+				digitalWrite(13, 1);
+			}
+			digitalWrite(13, 0);
+			
             // become the bus master in transmit mode (send start)
             I2C_DEBUG_STR("START"); // START
             i2c->currentMode = I2C_MASTER;
@@ -456,7 +464,7 @@ size_t i2c_t3::requestFrom_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c
     // exit immediately if request for 0 bytes
     if(len == 0) return 0;
 
-    sendRequest_(i2c, addr, len, sendStop);
+    sendRequest_(i2c, addr, len, sendStop, 50);
 
     // wait for completion or timeout
     if(finish_(i2c, timeout))
@@ -477,7 +485,7 @@ size_t i2c_t3::requestFrom_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c
 //      length = number of bytes requested
 //      i2c_stop = I2C_NOSTOP, I2C_STOP
 //
-void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_stop sendStop)
+void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_stop sendStop, uint32_t timeout)
 {
     // exit immediately if request for 0 bytes
     if(len == 0) return;
@@ -497,9 +505,13 @@ void i2c_t3::sendRequest_(struct i2cStruct* i2c, uint8_t addr, size_t len, i2c_s
         *(i2c->C1) = I2C_C1_IICEN | I2C_C1_MST | I2C_C1_RSTA | I2C_C1_TX;
     }
     else
-    {
+    {	
+		elapsedMicros deltaT;
         // we are not currently the bus master, so wait for bus ready
-        while(*(i2c->S) & I2C_S_BUSY);
+        while(*(i2c->S) & I2C_S_BUSY && (timeout == 0 || deltaT < timeout)){
+			digitalWrite(13, 1);
+		}
+		digitalWrite(13, 0);
         // become the bus master in transmit mode (send start)
         I2C_DEBUG_STR("START"); // START
         i2c->currentMode = I2C_MASTER;

@@ -236,7 +236,7 @@ class TeensyInterface(threading.Thread):
                 # sending the data
                 #start_time = clock()
 
-                self.talk_to_Teensy(out_msg, timeout=10)
+                self.talk_to_Teensy(out_msg, timeout=100)
                 self.print_to_term("\n---Sent---")
                 self.print_data(out_msg, raw_dec=True)
                 #print("Talk time: ", clock()-start_time)
