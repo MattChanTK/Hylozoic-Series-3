@@ -98,8 +98,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			
 			// >>> protocell --- byte 1 to 10
 			
-			send_data_buff[1] = protocell_ambient_light_sensor_state;
-			
+			send_data_buff[1] =  protocell_ambient_light_sensor_state;
 			
 			// >>> tentacle_0 --- byte 11 to 20 
 			// >>> tentacle_1 --- byte 21 to 30 
@@ -142,15 +141,21 @@ void Behaviours::sample_inputs(){
 	//>>>tentacle<<<
 	
 	//~~IR sensors state~~
-	for (uint8_t i=0; i<3; i++){
+	for (uint8_t i=0; i<2; i++){
 		tentacle_ir_state[0][i] = tentacle_0.read_analog_state(i);
 		tentacle_ir_state[1][i] = tentacle_1.read_analog_state(i);
 		tentacle_ir_state[2][i] = tentacle_2.read_analog_state(i);
+		
 	}
+	
+
+		
+	if ((tentacle_ir_state[0]) ==  (tentacle_ir_state[1]))
+		digitalWrite(13, 1);
 
 	//~~accelerator~~
-	//tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
-	//tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
+	tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
+	tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
 	tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
 
 	if (Wire.frozen){

@@ -53,9 +53,9 @@ class Behaviours : public TeensyUnit{
 		
 		//>>>Tentacle<<<<
 		//~~IR sensors state~~
-		uint8_t tentacle_0_ir_state[2];
-		uint8_t tentacle_1_ir_state[2];
-		uint8_t tentacle_2_ir_state[2];
+		uint8_t tentacle_0_ir_state[2] = {0, 0};
+		uint8_t tentacle_1_ir_state[2] = {0, 0};
+		uint8_t tentacle_2_ir_state[2] = {0, 0};
 		uint8_t* tentacle_ir_state[3];
 		
 		//~~Accelerometer state~~ 

@@ -85,8 +85,8 @@ void TeensyUnit::init(){
 
 
 	//---- initialize I2C accelerometer on Tentacle module ---
-	//tentacle_0.init();
-	//tentacle_1.init();
+	tentacle_0.init();
+	tentacle_1.init();
 	tentacle_2.init();
 
 	
