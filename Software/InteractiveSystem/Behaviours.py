@@ -49,17 +49,17 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     self.enter_command(cmd_obj)
 
-                   #=== change wave command====
-                    cmd_obj = command_object(teensy_name, 'wave')
-
-                    wave = ""
-                    pt = 0
-                    for i in range(32):
-                        pt += int(255/32)
-                        wave += (str(pt) + '_')
-
-                    cmd_obj.add_param_change('indicator_led_wave', wave)
-                    self.enter_command(cmd_obj)
+                   # #=== change wave command====
+                   #  cmd_obj = command_object(teensy_name, 'wave')
+                   #
+                   #  wave = ""
+                   #  pt = 0
+                   #  for i in range(32):
+                   #      pt += int(255/32)
+                   #      wave += (str(pt) + '_')
+                   #
+                   #  cmd_obj.add_param_change('indicator_led_wave', wave)
+                   #  self.enter_command(cmd_obj)
 
 
             self.send_commands()
@@ -96,19 +96,19 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 indicator_led_period[teensy_name] += 0.002
                 indicator_led_period[teensy_name] %= 10
 
-                if sample['tentacle_2_acc_x_state'] == 0:
-                    crash_count += 1
-                else:
-                    crash_count = 0
-
-            if crash_count > 20:
-                break
+            #     if sample['tentacle_2_acc_x_state'] == 0:
+            #         crash_count += 1
+            #     else:
+            #         crash_count = 0
+            #
+            # if crash_count > 20:
+            #     break
 
             print("Loop Time:", clock() - start_time)
             loop += 1
            # sleep(0.5)
 
-        print("Crash Time: ", clock() - test_start_time)
+       # print("Crash Time: ", clock() - test_start_time)
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 

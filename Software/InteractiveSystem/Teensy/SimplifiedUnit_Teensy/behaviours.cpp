@@ -155,13 +155,24 @@ void Behaviours::sample_inputs(){
 
 	//~~accelerator~~
 	tentacle_0.read_acc_state(tentacle_acc_state[0][0], tentacle_acc_state[0][1], tentacle_acc_state[0][2]);
+	if (tentacle_acc_state[0][0] == 0 && tentacle_acc_state[0][1] == 0 && tentacle_acc_state[0][2] == 0)
+		tentacle_0.init();
+	
 	tentacle_1.read_acc_state(tentacle_acc_state[1][0], tentacle_acc_state[1][1], tentacle_acc_state[1][2]);
+	if (tentacle_acc_state[1][0] == 0 && tentacle_acc_state[1][1] == 0 && tentacle_acc_state[1][2] == 0)
+		tentacle_1.init();
+
 	tentacle_2.read_acc_state(tentacle_acc_state[2][0], tentacle_acc_state[2][1], tentacle_acc_state[2][2]);
+	if (tentacle_acc_state[2][0] == 0 && tentacle_acc_state[2][1] == 0 && tentacle_acc_state[2][2] == 0)
+		tentacle_2.init();
 
 	if (Wire.frozen){
 		//digitalWrite(PGM_DO_pin, 1);
 		digitalWrite(13, 1);
 	}
+		
+
+
 }
 
 //===========================================================================

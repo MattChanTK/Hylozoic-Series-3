@@ -225,7 +225,7 @@ uint8_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0,
 	return (uint8_t) analogRead(analog_pins[id]);
 }
 
-void TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}
+bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}
 
 	switchToAccel();
 
@@ -239,6 +239,7 @@ void TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 	byte buffer[6] = {0};
 	
 	delay(5);
+
 	while(teensy_unit.Wire.available() && i<6)
 	{
 		buffer[i] = teensy_unit.Wire.read();
@@ -248,6 +249,11 @@ void TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 	accel_x = buffer[1] << 8 | buffer[0];
 	accel_y = buffer[3] << 8 | buffer[2];
 	accel_z = buffer[5] << 8 | buffer[4];
+	
+	if (i >=5)
+		return true;
+	else
+		return false;
 }
 
 //~~accelerometer~~
