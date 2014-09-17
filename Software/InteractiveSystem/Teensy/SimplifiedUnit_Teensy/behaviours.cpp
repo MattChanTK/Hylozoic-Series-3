@@ -290,10 +290,13 @@ void Behaviours::protocell_reflex(const uint32_t &curr_time){
 }
 
 //--- Tentacle reflex ----
-void Behaviours::tentacle_reflex(const uint32_t &curr_time){
+void Behaviours::tentacle_reflex(const uint32_t &curr_time, const uint8_t tentacle_id){
 	//--- Tentacle reflex ----
-	static bool tentacle_reflex_cycling = false;
-	static uint32_t tentacle_reflex_phase_time = 0;
+	static bool tentacle_reflex_cycling[3] = {false, false, false};
+	static uint32_t tentacle_reflex_phase_time[3] = {0, 0, 0};
+	
+	
+	
 }
 
 

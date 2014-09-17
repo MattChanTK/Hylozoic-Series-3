@@ -42,7 +42,7 @@ class Behaviours : public TeensyUnit{
 		void protocell_reflex(const uint32_t &curr_time);
 		
 		//--- Tentacle reflex ----
-		void tentacle_reflex(const uint32_t &curr_time);
+		void tentacle_reflex(const uint32_t &curr_time, const uint8_t tentacle_id);
 	
 		
 		//===============================================

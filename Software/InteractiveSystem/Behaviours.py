@@ -6,6 +6,7 @@ from time import clock
 from time import sleep
 import math
 
+test_start_time = clock()
 class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
 
     def run(self):
@@ -25,8 +26,9 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 0
 
         loop = 0
+        crash_count = 0
         num_loop = 20000
-        while loop < num_loop:
+        while (1): #loop < num_loop:
             start_time = clock()
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
@@ -94,8 +96,19 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 indicator_led_period[teensy_name] += 0.002
                 indicator_led_period[teensy_name] %= 10
 
+                if sample['tentacle_2_acc_x_state'] == 0:
+                    crash_count += 1
+                else:
+                    crash_count = 0
+
+            if crash_count > 20:
+                break
+
             print("Loop Time:", clock() - start_time)
             loop += 1
+           # sleep(0.5)
+
+        print("Crash Time: ", clock() - test_start_time)
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 
