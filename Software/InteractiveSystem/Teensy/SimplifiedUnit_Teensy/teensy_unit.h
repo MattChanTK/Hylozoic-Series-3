@@ -208,6 +208,10 @@ class TeensyUnit{
 		TentaclePort tentacle_0;
 		TentaclePort tentacle_1;
 		TentaclePort tentacle_2;
-		ProtocellPort protocell;		
+		TentaclePort tentacle[3];
+		ProtocellPort protocell_0;
+		ProtocellPort protocell_1;
+		ProtocellPort protocell[2];
+		
 };
 #endif

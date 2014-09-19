@@ -7,7 +7,10 @@
 
 Behaviours::Behaviours():
 		tentacle_ir_state{tentacle_0_ir_state, tentacle_1_ir_state, tentacle_2_ir_state},
-		tentacle_acc_state{tentacle_0_acc_state, tentacle_1_acc_state,tentacle_2_acc_state}
+		tentacle_acc_state{tentacle_0_acc_state, tentacle_1_acc_state,tentacle_2_acc_state},
+		tentacle_ir_threshold{tentacle_0_ir_threshold, tentacle_1_ir_threshold, tentacle_2_ir_threshold},
+		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period },
+		protocell_ambient_light_sensor_state{protocell_0_ambient_light_sensor_state, protocell_1_ambient_light_sensor_state}
 {
 
 }
@@ -48,28 +51,28 @@ void Behaviours::parse_msg(){
 			val = 0;
 			for (short i = 0; i < 2 ; i++)
 			  val += recv_data_buff[i+3] << (8*i);
-			indicator_led_blink_period = val;
+			//indicator_led_blink_period = val;
 
 			// byte 5 --- high power LED level
-			high_power_led_level = recv_data_buff[5];
+		//	high_power_led_level = recv_data_buff[5];
 				
 			// byte 6 and byte 7 --- high power LED reflex threshold
 			val = 0;
 			for (short i = 0; i < 2 ; i++)
 			  val += recv_data_buff[i+6] << (8*i);
-			high_power_led_reflex_threshold = val;
+			//high_power_led_reflex_threshold = val;
 			
 			// byte 8 --- SMA 0 level
-			sma_0_level = recv_data_buff[8];
+			//sma_0_level = recv_data_buff[8];
 			
 			// byte 9 --- SMA 1 level
-			sma_1_level = recv_data_buff[9];
+			//sma_1_level = recv_data_buff[9];
 			
 			// byte 10 --- Reflex 0 level
-			reflex_0_level = recv_data_buff[10];
+			//reflex_0_level = recv_data_buff[10];
 			
 			// byte 11 --- Reflex 1 level
-			reflex_1_level = recv_data_buff[11];
+			//reflex_1_level = recv_data_buff[11];
 			break;
 		}
 	}
@@ -98,7 +101,8 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			
 			// >>> protocell --- byte 1 to 10
 			
-			send_data_buff[1] =  protocell_ambient_light_sensor_state;
+			send_data_buff[1] =  protocell_ambient_light_sensor_state[0][0];
+			send_data_buff[2] =  protocell_ambient_light_sensor_state[1][0];
 			
 			// >>> tentacle_0 --- byte 11 to 20 
 			// >>> tentacle_1 --- byte 21 to 30 
@@ -136,7 +140,8 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 void Behaviours::sample_inputs(){
 
 	//>>>protocell<<<
-	protocell_ambient_light_sensor_state = protocell.read_analog_state();
+	protocell_ambient_light_sensor_state[0][0] = protocell[0].read_analog_state();
+	protocell_ambient_light_sensor_state[1][0] = protocell[1].read_analog_state();
 	
 	//>>>tentacle<<<
 	
@@ -145,10 +150,7 @@ void Behaviours::sample_inputs(){
 		tentacle_ir_state[0][i] = tentacle_0.read_analog_state(i);
 		tentacle_ir_state[1][i] = tentacle_1.read_analog_state(i);
 		tentacle_ir_state[2][i] = tentacle_2.read_analog_state(i);
-		
 	}
-	
-
 		
 	if ((tentacle_ir_state[0]) ==  (tentacle_ir_state[1]))
 		digitalWrite(13, 1);
@@ -183,56 +185,37 @@ void Behaviours::sample_inputs(){
 void Behaviours::test_behaviour(const uint32_t &curr_time) {
 	
 	//=== testing protocells =====
-	uint8_t light_level = protocell.read_analog_state();
-	
-	if (light_level < 20)
-		protocell.set_led_level(5);
-	else
-		protocell.set_led_level(0);
+	for (uint8_t i=0; i<2; i++){
+		uint8_t light_level = protocell[i].read_analog_state();
 		
+		if (light_level < 50)
+			protocell[i].set_led_level(50);
+		else
+			protocell[i].set_led_level(0);
+	}
 	//=== testing Tentacle ===
-	uint8_t ir_range = tentacle_0.read_analog_state(1);
-	if (ir_range < 100){
-		tentacle_0.set_led_level(0, 250);
-		tentacle_0.set_led_level(1, 250);
-		tentacle_0.set_sma_level(0, 250);
-		tentacle_0.set_sma_level(1, 250);
-	}
-	else{
-		tentacle_0.set_led_level(0, 0);
-		tentacle_0.set_led_level(1, 0);
-		tentacle_0.set_sma_level(0, 0);
-		tentacle_0.set_sma_level(1, 0);
-	}
-	
-	ir_range = tentacle_1.read_analog_state(1);
-	if (ir_range < 100) {
-		tentacle_1.set_led_level(0, 250);
-		tentacle_1.set_led_level(1, 250);
-		tentacle_1.set_sma_level(0, 250);
-		tentacle_1.set_sma_level(1, 250);
-	}
-	else {
-		tentacle_1.set_led_level(0, 0);
-		tentacle_1.set_led_level(1, 0);
-		tentacle_1.set_sma_level(0, 0);
-		tentacle_1.set_sma_level(1, 0);
-	}
+	for (uint8_t i=0; i<3; i++){
+		uint8_t ir_range = tentacle[i].read_analog_state(0);
+		if (ir_range > 100){
+			tentacle[i].set_led_level(0, 250);
+			tentacle[i].set_led_level(1, 250);
+		}
+		else{
+			tentacle[i].set_led_level(0, 0);
+			tentacle[i].set_led_level(1, 0);
+		}
 		
-	ir_range = tentacle_2.read_analog_state(1);
-	if (ir_range < 100) {
-		tentacle_2.set_led_level(0, 250);
-		tentacle_2.set_led_level(1, 250);
-		tentacle_2.set_sma_level(0, 250);
-		tentacle_2.set_sma_level(1, 250);
-	}
-	else {
-		tentacle_2.set_led_level(0, 0);
-		tentacle_2.set_led_level(1, 0);
-		tentacle_2.set_sma_level(0, 0);
-		tentacle_2.set_sma_level(1, 0);
-	}
+		ir_range = tentacle[i].read_analog_state(1);
 		
+		if (ir_range > 100){
+			tentacle[i].set_sma_level(0, 250);
+			tentacle[i].set_sma_level(1, 250);
+		}
+		else{
+			tentacle[i].set_sma_level(0, 0);
+			tentacle[i].set_sma_level(1, 0);
+		}
+	}		
 	
 }
 
@@ -292,24 +275,141 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 
 }
 
-//----- Protocell reflex -----
-void Behaviours::protocell_reflex(const uint32_t &curr_time){
-	//----- Protocell reflex -----
-	static bool high_power_led_cycling = false;
-	static uint32_t protocell_reflex_phase_time= 0;
 
+//---- Tip IR primary action -----
+void Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time){
+	
+	
+	//---- Tentacle cycling variables -----
+	static bool tentacle_cycling[3] = {false, false, false};
+	static uint32_t tentacle_phase_time[3] = {0, 0, 0};
+	bool tentacle_on[3] = {false, false, false};
+
+	//~~read IR sensors state~~
+	for (uint8_t i=0; i<3; i++){
+		tentacle_ir_state[i][1] = tentacle[i].read_analog_state(1);
+	}
+	
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t i=0; i<3; i++){
+	
+		if (tentacle_ir_state[i][1] > tentacle_ir_threshold[i][1]){
+			tentacle_on[i] = true;
+		}
+		else{
+
+			tentacle_on[i] = false;
+		}
+		
+		if (tentacle_on[i]){
+			
+			// starting a cycle
+			if (tentacle_cycling[i] == false){
+				tentacle_cycling[i] = true;
+				tentacle_phase_time[i] = millis();  
+				tentacle[i].set_sma_level(0, 255);
+				tentacle[i].set_sma_level(1, 255);					
+			}
+			else if (tentacle_cycling[i] == true){
+				
+				// if reaches the full period, restart cycle
+				if ((curr_time - tentacle_phase_time[i]) > tentacle_cycle_period[i][1]*1000){
+					tentacle_cycling[i]  = false;
+				}
+				// if reaches half the period, turn it off
+				else if ((curr_time - tentacle_phase_time[i]) > tentacle_cycle_period[i][0]*1000){
+					tentacle[i].set_sma_level(0, 0);
+					tentacle[i].set_sma_level(1, 0);
+				}	
+			}
+		}
+		else{
+		
+			// if stopped in the middle of a cycle
+			if (tentacle_cycling[i]){
+				tentacle_cycling[i] = false;
+				tentacle[i].set_sma_level(0, 0);
+				tentacle[i].set_sma_level(1, 0);
+			}
+		}
+	
+	}
 }
 
-//--- Tentacle reflex ----
-void Behaviours::tentacle_reflex(const uint32_t &curr_time, const uint8_t tentacle_id){
-	//--- Tentacle reflex ----
-	static bool tentacle_reflex_cycling[3] = {false, false, false};
-	static uint32_t tentacle_reflex_phase_time[3] = {0, 0, 0};
+//---- bottom IR primary action -----
+void Behaviours::tentacle_bottom_ir_primary_action(const uint32_t &curr_time){
+
+
+	//---- Tentacle cycling variables -----
+	static bool protocell_cycling[3] = {false, false, false};
+	static uint32_t protocell_phase_time[3] = {0, 0, 0};
+	bool protocell_burst_on[3] = {false, false, false};
+	bool protocell_cycle_on[3]  = {false, false, false};
+	uint16_t protocell_cycle_period[3] = {1000, 1000, 1000};
+	
+	//~~read IR sensors state~~
+	for (uint8_t i=0; i<3; i++){
+		tentacle_ir_state[i][0] = tentacle[i].read_analog_state(0);
+		if (tentacle_ir_state[i][0] < 25)
+			protocell_cycle_on[i] = false;
+		else
+			protocell_cycle_on[i] = true;
+		
+		if (tentacle_ir_state[i][0] < 80)
+			protocell_cycle_period[i] = 10*(255-tentacle_ir_state[i][0]);
+		else
+			protocell_cycle_period[i] = 20*(255-80-tentacle_ir_state[i][0]) + 80*10;
+		if (protocell_cycle_period[i] < 60)
+			protocell_cycle_period[i] = 60;
+		
+	}
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t i=0; i<2; i++){
+	
+		if (tentacle_ir_state[i][0] > tentacle_ir_threshold[i][0]){
+			protocell_burst_on[i] = true;
+		}
+		else{
+
+			protocell_burst_on[i] = false;
+		}
+		
+		if (!protocell_burst_on[i] && protocell_cycle_on[i]){
+			
+			// starting a cycle
+			if (protocell_cycling[i] == false){
+				protocell_cycling[i] = true;
+				protocell_phase_time[i] = millis();  
+				protocell[i].set_led_level(50);	
+			}
+			else if (protocell_cycling[i] == true){
+				
+				// if reaches the full period, restart cycle
+				if ((curr_time - protocell_phase_time[i]) > protocell_cycle_period[i]){
+					protocell_cycling[i]  = false;
+				}
+				// if reaches half the period, turn it off
+				else if ((curr_time - protocell_phase_time[i]) > protocell_cycle_period[i]>>1){
+					protocell[i].set_led_level(0);
+				}	
+			}
+		}
+		else{
+		
+			// if stopped in the middle of a cycle
+			if (protocell_cycling[i]){
+				protocell_cycling[i] = false;
+					if (protocell_cycle_on[i])
+						protocell[i].set_led_level(200);
+					else
+						protocell[i].set_led_level(0);
+			}
+		}
+	
+	}
 	
 	
 	
 }
-
-
-
-

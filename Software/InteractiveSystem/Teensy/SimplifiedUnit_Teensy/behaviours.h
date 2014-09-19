@@ -38,12 +38,9 @@ class Behaviours : public TeensyUnit{
 		void led_blink_behaviour(const uint32_t &curr_time);
 		void led_wave_behaviour(const uint32_t &curr_time);
 		
-		//----- Protocell reflex -----
-		void protocell_reflex(const uint32_t &curr_time);
-		
-		//--- Tentacle reflex ----
-		void tentacle_reflex(const uint32_t &curr_time, const uint8_t tentacle_id);
-	
+		//----- tentacle primary action -----
+		void tentacle_tip_ir_primary_action(const uint32_t &curr_time);
+		void tentacle_bottom_ir_primary_action(const uint32_t &curr_time);
 		
 		//===============================================
 		//==== BEHAVIOUR variables =====
@@ -66,8 +63,9 @@ class Behaviours : public TeensyUnit{
 	
 		//>>>protocell<<<
 		//~~Ambient light sensor state~~
-		uint8_t protocell_ambient_light_sensor_state;
-
+		uint8_t protocell_0_ambient_light_sensor_state[1] = {0};
+		uint8_t protocell_1_ambient_light_sensor_state[1] = {0};
+		uint8_t* protocell_ambient_light_sensor_state[2];
 		
 		//---- indicator LED blinking -----
 		//~~indicator LED on~~
@@ -75,22 +73,22 @@ class Behaviours : public TeensyUnit{
 		//~~indicator LED blink~~
 		int16_t indicator_led_blink_period = 5000; //exposed
 				
-		//----- Protocell reflex -----
-		//~~output~~
-		uint8_t high_power_led_level = 0;  //exposed
-		bool high_power_led_reflex_enabled = false;
-		uint8_t high_power_led_level_max = 125;
-		uint16_t high_power_led_reflex_threshold = 50;
 		
-		//--- Tentacle reflex ----
+		//>>>Tentacle<<<<
+		
+		//--- Tentacle tip primary action ----
 		//~~output~~
-		bool tentacle_reflex_enabled = true;
-		uint8_t sma_0_level = 0; //exposed
-		uint8_t sma_1_level = 0; //exposed
-		uint8_t reflex_0_level = 0; //exposed
-		uint8_t reflex_1_level = 0; //exposed
-		uint16_t ir_0_threshold = 150;
-		uint16_t ir_1_threshold = 150;
+
+		uint8_t tentacle_0_ir_threshold[2] = {240, 100};
+		uint8_t tentacle_1_ir_threshold[2] = {240, 100};
+		uint8_t tentacle_2_ir_threshold[2] = {240, 100};
+		uint8_t* tentacle_ir_threshold[3];
+		
+		uint8_t tentacle_0_cycle_period[2] = {2, 8};
+		uint8_t tentacle_1_cycle_period[2] = {2, 8};
+		uint8_t tentacle_2_cycle_period[2] = {2, 8};
+		uint8_t* tentacle_cycle_period[3];
+		
 		
 		
 		//--- test wave ----
