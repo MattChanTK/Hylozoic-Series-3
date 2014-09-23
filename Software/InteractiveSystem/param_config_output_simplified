@@ -6,4 +6,4 @@ sma_0_level							int8		basic		100
 sma_1_level							int8		basic		100
 reflex_0_level						int8		basic		100
 reflex_1_level						int8		basic		100
-indicator_led_wave					int8s		wave		127_233_242_144_30_5_91_210_252_179_57_0_58_180_252_209_90_4_31_146_242_233_125_19_11_110_223_248_161_42_1_75
+indicator_led_wave					int8s		wave		0_2_9_21_37_56_78_102_127_151_175_197_216_232_244_251_254_251_244_232_216_197_175_151_127_102_78_56_37_21_9_2
