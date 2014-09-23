@@ -89,7 +89,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 print("Accel (", sample['tentacle_2_acc_x_state'], ', ', sample['tentacle_2_acc_y_state'], ', ', sample['tentacle_2_acc_z_state'], ")" )
 
                 print("Protocell", end=" ---\t")
-                print("ALS (", sample['protocell_ambient_light_sensor_state'], ")")
+                print("ALS (", sample['protocell_0_ambient_light_sensor_state'], ", ", sample['protocell_1_ambient_light_sensor_state'], ")")
                 print('')
 
                 # new blink period
