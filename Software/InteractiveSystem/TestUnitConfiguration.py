@@ -24,7 +24,8 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
         # byte 0 and byte 63: the msg signature; can ignore
 
         # byte 1:  protocell
-        self.input_state['protocell_ambient_light_sensor_state'] = msg[1]
+        self.input_state['protocell_0_ambient_light_sensor_state'] = msg[1]
+        self.input_state['protocell_1_ambient_light_sensor_state'] = msg[2]
 
         # byte 11 to 18: tentacle_0
         self.input_state['tentacle_0_ir_0_state'] = msg[11]
