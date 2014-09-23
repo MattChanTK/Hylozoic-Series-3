@@ -2,28 +2,18 @@
 
 //--- Constructor and destructor ---
 
-WaveTable::WaveTable(){
-	
-	duration = 1000;
-	amplitude = 1.0;
-	
-	//==== WAVE FUNCTION variables ====
-	bool wave_function_cycling = false;
-	int32_t wave_function_phase_time = 0;
-	uint16_t step_duration = 0;
-	uint16_t step_count = 0;
-	int8_t level_change = 0;
-	uint8_t gran_count = 0;
-	
-	//=== default sine wave ===
-	wave_t sine_wave[wave_size] = {127, 233, 242, 144, 30, 5, 91, 210, 252, 179, 57, 0, 58, 180, 252, 209, 90, 4, 31, 146, 242, 233, 125, 19, 11, 110, 223, 248, 161, 42, 1, 75};
-	//copy the waveform to the object
-	for (int i = 0; i < wave_size; i++){
-		waveform[i] = sine_wave[i];
-	}
+WaveTable::WaveTable():
+	waveform{0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2}
+{
+	duration = 10000;
+}
+WaveTable::WaveTable(uint16_t Duration):
+	waveform{0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2}
+{
+	duration = Duration;
 }
 
-WaveTable::WaveTable(const uint16_t Duration, const float Amplitude, const wave_t Wave[wave_size]){
+WaveTable::WaveTable(const uint16_t Duration, const wave_t Wave[wave_size]){
 			 
 	//copy the waveform to the object
 	for (int i = 0; i < wave_size; i++){
@@ -32,16 +22,7 @@ WaveTable::WaveTable(const uint16_t Duration, const float Amplitude, const wave_
 	
 	//copy the parameters over
 	duration = Duration;
-	amplitude = Amplitude;
-	
-	//==== WAVE FUNCTION variables ====
-	bool wave_function_cycling = false;
-	int32_t wave_function_phase_time = 0;
-	uint16_t step_duration = 0;
-	uint16_t step_count = 0;
-	int8_t level_change = 0;
-	uint8_t gran_count = 0;
-			  
+		  
 }
 
 WaveTable::~WaveTable(){
@@ -50,38 +31,41 @@ WaveTable::~WaveTable(){
 
 
 //--- Wave Table Synthesis ---
-uint8_t WaveTable::wave_function(const long curr_time) {
+uint8_t WaveTable::wave_function(const uint32_t& curr_time) {
 
 	// starting a wave cycle
 	if (wave_function_cycling == false){
-
 		wave_function_cycling = true;
 		wave_function_phase_time = millis();
-		step_duration = duration/(wave_size-1) ;
+		step_duration_100 = duration*100/(wave_size) ;
 		step_count = 1;
-		level_change = (waveform[1] - waveform[0])/granularity;
+		level_change_1000 = (waveform[1] - waveform[0])*1000/granularity;
 			
-		
-		pwm_output = (uint8_t) waveform[0]*amplitude;
+		pwm_output = (uint8_t) waveform[0];
+
 	}
 	else{	
 	
 		// if reaches full time duration
 		if (step_count >= wave_size  || (curr_time - wave_function_phase_time) >= duration){
 			wave_function_cycling = false;
+			
 		}
 		// if reaches one time step
-		else if ((curr_time - wave_function_phase_time) > step_count*step_duration){
-			pwm_output = (uint8_t) (waveform[step_count]*amplitude);
+		else if ((curr_time - wave_function_phase_time) > step_count*step_duration_100/100){
+			pwm_output = (uint8_t) (waveform[step_count]);
 			step_count++;
-			level_change = (waveform[step_count] - waveform[step_count-1])/granularity;
+			if (step_count >= wave_size)
+				level_change_1000 = (waveform[0] - waveform[wave_size-1])*1000/granularity;
+			else
+				level_change_1000 = (waveform[step_count] - waveform[step_count-1])*1000/granularity;
 			gran_count = 1;
 		}
 		// if reaches a interpolated step
-		else if ((curr_time - wave_function_phase_time) > ((step_count-1)*step_duration + (gran_count*step_duration)/granularity)){
-			pwm_output = (uint8_t) (waveform[step_count-1] + gran_count*level_change)*amplitude;
-			gran_count++;
+		else if ((curr_time - wave_function_phase_time) > ((step_count-1)*step_duration_100/100 + (gran_count*step_duration_100/100)/granularity)){
+			pwm_output = (uint8_t) (waveform[step_count-1] + gran_count*level_change_1000/1000);
 			
+			gran_count++;
 		}
 		// during the step
 		else{		
@@ -126,14 +110,3 @@ uint16_t WaveTable::get_duration() const{
 	return duration;
 }
 		
-WaveTable& WaveTable::set_amplitude(const float Amplitude){
-
-	amplitude = Amplitude;
-	
-	return *this;
-}
-
-float WaveTable::get_amplitude() const{
-	
-	return amplitude;
-}
