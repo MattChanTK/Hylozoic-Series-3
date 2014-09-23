@@ -267,7 +267,6 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 	
 	//static WaveTable test_wave(5);
 	test_wave.set_duration(10000);
-	test_wave.set_amplitude(1.0);
 	uint8_t led_level = test_wave.wave_function(curr_time);
 	//protocell.set_led_level(led_level);
 	analogWrite(5, led_level);
@@ -411,5 +410,70 @@ void Behaviours::tentacle_bottom_ir_primary_action(const uint32_t &curr_time){
 	}
 	
 	
+	
+}
+
+//---- bottom IR primary action (soft) -----
+void Behaviours::tentacle_bottom_ir_primary_action_soft(const uint32_t &curr_time){
+
+
+	//---- Tentacle cycling variables -----
+	uint16_t protocell_cycle_period = 10000;
+
+	static wave_t sine_wave1 [32] = {0, 12, 23, 31, 36, 40, 43, 46, 48, 50, 51, 52, 53, 54, 55, 55, 55, 55, 55, 54, 53, 52, 51, 50, 48, 46, 43, 40, 36, 31, 23, 12};
+	static wave_t sine_wave2 [32] = {48, 50, 51, 52, 53, 54, 55, 55, 55, 55, 55, 54, 53, 52, 51, 50, 48, 46, 43, 40, 36, 31, 23, 12, 0, 12, 23, 31, 36, 40, 43, 46};
+	static WaveTable bot_ir_sine_wave(10000, sine_wave1);
+	static WaveTable bot_ir_cosine_wave(10000, sine_wave2);
+	
+	//~~read IR sensors state~~
+	// for (uint8_t i=0; i<3; i++){
+		// tentacle_ir_state[i][0] = (uint8_t) tentacle[i].read_analog_state(0);
+	// }
+	
+	uint8_t closest_ir = 0;
+	for (uint8_t i=0; i<3; i++){
+		if (tentacle_ir_state[i][0] > closest_ir)
+			closest_ir = tentacle_ir_state[i][0];
+	}
+	
+
+	//if the object is very close
+	if (closest_ir > tentacle_ir_threshold[0][0]){
+		for (uint8_t i = 0; i<2; i++)
+			protocell[i].set_led_level(200);
+
+		return;	
+	}
+	
+	uint8_t level_divider = 2;
+	// if there is no object detected
+	if (closest_ir < 80){
+		protocell_cycle_period = 10000;
+		//level_divider = 10;
+		// for (uint8_t i = 0; i<2; i++)
+			// protocell[i].set_led_level(0);
+		// return;
+	}
+	//otherwise, set the cycle period depending on distance
+	else if (closest_ir < 120)
+		protocell_cycle_period = 10*(255-closest_ir);
+	else
+		protocell_cycle_period = 10*(255-closest_ir);
+		
+	if (protocell_cycle_period < 100)
+		protocell_cycle_period = 100;
+
+	
+	bot_ir_sine_wave.set_duration(protocell_cycle_period);
+	bot_ir_cosine_wave.set_duration(protocell_cycle_period);
+	
+	
+	//~~~ tentacle cycle~~~~	
+	uint8_t led_level[2];
+	led_level[0] = bot_ir_cosine_wave.wave_function(curr_time) / level_divider;
+	led_level[1] = bot_ir_sine_wave.wave_function(curr_time) / level_divider;
+	for (uint8_t i = 0; i<2; i++){
+		protocell[i].set_led_level(led_level[i]);
+	}
 	
 }

@@ -41,6 +41,7 @@ class Behaviours : public TeensyUnit{
 		//----- tentacle primary action -----
 		void tentacle_tip_ir_primary_action(const uint32_t &curr_time);
 		void tentacle_bottom_ir_primary_action(const uint32_t &curr_time);
+		void tentacle_bottom_ir_primary_action_soft(const uint32_t &curr_time);
 		
 		//===============================================
 		//==== BEHAVIOUR variables =====
@@ -88,7 +89,6 @@ class Behaviours : public TeensyUnit{
 		uint8_t tentacle_1_cycle_period[2] = {2, 8};
 		uint8_t tentacle_2_cycle_period[2] = {2, 8};
 		uint8_t* tentacle_cycle_period[3];
-		
 		
 		
 		//--- test wave ----
