@@ -12,7 +12,7 @@ Behaviours::Behaviours():
 		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period },
 		protocell_ambient_light_sensor_state{protocell_0_ambient_light_sensor_state, protocell_1_ambient_light_sensor_state}
 {
-
+	
 }
 
 Behaviours::~Behaviours(){
@@ -219,6 +219,54 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 	
 }
 
+void Behaviours::stress_test_behaviour(const uint32_t &curr_time)
+{
+
+	// LED stress test
+	static wave_t sine_wave [32] = {127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102};
+	static WaveTable led_wave(5000, sine_wave);
+	
+	uint8_t led_level = led_wave.wave_function(curr_time);
+	for (uint8_t i = 0; i< 2; i++){
+		protocell[i].set_led_level(led_level);
+	}
+	
+	//vibration stress test
+	for (uint8_t i = 0; i< 3; i++){
+		tentacle[i].set_led_level(0, led_level);
+		tentacle[i].set_led_level(1, led_level);
+	}
+	
+	// SMA stress test
+	//---- Tentacle cycling variables -----
+	static bool tentacle_cycling[3] = {false, false, false};
+	static uint32_t tentacle_phase_time[3] = {0, 0, 0};
+	bool tentacle_on[3] = {false, false, false};
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t i=0; i<3; i++){
+		
+		// starting a cycle
+		if (tentacle_cycling[i] == false){
+			tentacle_cycling[i] = true;
+			tentacle_phase_time[i] = millis();  
+			tentacle[i].set_sma_level(0, 255);
+			tentacle[i].set_sma_level(1, 255);					
+		}
+		else if (tentacle_cycling[i] == true){
+			
+			// if reaches the full period, restart cycle
+			if ((curr_time - tentacle_phase_time[i]) > tentacle_cycle_period[i][1]*1000){
+				tentacle_cycling[i]  = false;
+			}
+			// if reaches half the period, turn it off
+			else if ((curr_time - tentacle_phase_time[i]) > tentacle_cycle_period[i][0]*1000){
+				tentacle[i].set_sma_level(0, 0);
+				tentacle[i].set_sma_level(1, 0);
+			}	
+		}
+	}
+}
 
 
 //---- indicator LED -----

@@ -3,7 +3,7 @@ from TeensyInterface import TeensyManager
 import cProfile
 from pstats import Stats
 
-behaviours_config = 1
+behaviours_config = 2
 
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
@@ -17,7 +17,6 @@ else:
 
 packet_size_in = 64
 packet_size_out = 64
-
 
 
 def main():

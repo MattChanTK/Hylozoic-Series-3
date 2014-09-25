@@ -48,17 +48,6 @@ class SimplifiedTestUnit(SysParam.SystemParameters):
         self.input_state['tentacle_2_acc_y_state'] = struct.unpack_from('h', msg[35:37])[0]
         self.input_state['tentacle_2_acc_z_state'] = struct.unpack_from('h', msg[37:39])[0]
 
-        # # byte 1 and 2: analog 0 state
-        # self.input_state['analog_0_state'] = struct.unpack_from('H', msg[1:3])[0]
-        # # byte 3 and 4: ambient light sensor state
-        # self.input_state['ambient_light_state'] = struct.unpack_from('H', msg[3:5])[0]
-        #
-        # # byte 5 and 6: ir sensor 0 state
-        # self.input_state['ir_0_state'] = struct.unpack_from('H', msg[5:7])[0]
-        #
-        # # byte 7 and 8: ir sensor 1 state
-        # self.input_state['ir_1_state'] = struct.unpack_from('H', msg[7:9])[0]
-
     def _compose_outgoing_msg(self, content):
 
         if self.request_type == 'basic':

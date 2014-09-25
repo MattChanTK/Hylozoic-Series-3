@@ -33,6 +33,7 @@ class Behaviours : public TeensyUnit{
 		
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
+		void stress_test_behaviour(const uint32_t &curr_time);
 		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);
