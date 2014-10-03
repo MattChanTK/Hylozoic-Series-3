@@ -40,7 +40,7 @@ class WaveTable{
 	private:
 	
 		//--- Granularity ---
-		const uint16_t granularity = 20;
+		const uint16_t granularity = 5;
 		
 		//--- configuration parameters ---
 		uint16_t duration;

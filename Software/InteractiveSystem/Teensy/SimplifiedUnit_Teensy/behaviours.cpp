@@ -224,7 +224,7 @@ void Behaviours::stress_test_behaviour(const uint32_t &curr_time)
 
 	// LED stress test
 	static wave_t sine_wave [32] = {127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102};
-	static WaveTable led_wave(5000, sine_wave);
+	static WaveTable led_wave(1000, sine_wave);
 	
 	uint8_t led_level = led_wave.wave_function(curr_time);
 	for (uint8_t i = 0; i< 2; i++){

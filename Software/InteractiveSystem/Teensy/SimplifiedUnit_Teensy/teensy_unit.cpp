@@ -9,12 +9,12 @@ TeensyUnit::TeensyUnit(): Wire(0),
 	FPWM_pin {FPWM_1_pin, FPWM_2_pin, FPWM_3_pin, FPWM_4_pin, FPWM_5_pin, FPWM_6_pin},
 	SPWM_pin {SPWM_1_pin, SPWM_2_pin, SPWM_3_pin, SPWM_4_pin, SPWM_5_pin, SPWM_6_pin}, 
 	Analog_pin {Analog_1_pin, Analog_2_pin, Analog_3_pin, Analog_4_pin, Analog_5_pin, Analog_6_pin},
-	tentacle_0(*this, 0), 
-	tentacle_1(*this, 1),
-	tentacle_2(*this, 2),
+	tentacle_0(*this, 5), 
+	tentacle_1(*this, 4),
+	tentacle_2(*this, 3),
 	tentacle{tentacle_0, tentacle_1, tentacle_2},
-	protocell_0(*this, 3),
-	protocell_1(*this, 4),
+	protocell_0(*this, 1),
+	protocell_1(*this, 0),
 	protocell{protocell_0, protocell_1}
 {
 
