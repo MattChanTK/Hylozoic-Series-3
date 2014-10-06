@@ -3,12 +3,12 @@
 "1";"";"JP2E";"JP2";"JP1";"JUMPER";"";"";"";"";
 "1";"";"LEDSML1206";"SML1206";"LED1";"LED";"";"";"";"";
 "1";"";"NTD5867NLT4G";"DPACK";"T1";"MOS FET";"";"";"";"";
-"2";"";"PINHD-1X2/90";"1X02/90";"X4, X5";"PIN HEADER";"";"";"";"";
-"2";"";"PINHD-1X3/90";"1X03/90";"X2, X7";"PIN HEADER";"";"";"";"";
-"1";"";"R-US_R0603";"R0603";"R2";"RESISTOR, American symbol";"";"";"";"";
+"1";"";"PINHD-1X2";"1X02";"X4";"PIN HEADER";"";"";"";"";
+"1";"";"PINHD-1X3";"1X03";"X7";"PIN HEADER";"";"";"";"";
 "1";"";"W237-04P";"W237-4P";"X1";"WAGO SREW CLAMP";"";"";"unknown";"unknown";
 "1";"";"W237-102";"W237-102";"X6";"WAGO SCREW CLAMP";"";"237-102";"unknown";"70K9898";
 "2";"1uF";"C-USC0603";"C0603";"C2, C3";"CAPACITOR, American symbol";"";"";"";"";
+"1";"4.7k";"R-US_R0603";"R0603";"R2";"RESISTOR, American symbol";"";"";"";"";
 "1";"470";"R-US_R0603";"R0603";"R1";"RESISTOR, American symbol";"";"";"";"";
 "1";"470uF";"CPOL-USE5-10.5";"E5-10,5";"C1";"POLARIZED CAPACITOR, American symbol";"";"";"";"";
 "1";"5.6";"SQP500JB-5R6";"YAGEO_SQP500JB";"R3";"";"";"";"";"";

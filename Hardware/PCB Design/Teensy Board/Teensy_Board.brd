@@ -2424,8 +2424,8 @@ design rules under a new name.</description>
 <attribute name="OC_FARNELL" value="unknown" x="96.52" y="27.94" size="1.778" layer="27" rot="R90" display="off"/>
 </element>
 <element name="X8" library="CBLA_Test_bed_Library" package="1X02" value="UART" x="37.338" y="76.2" rot="R90"/>
-<element name="R7" library="CBLA_Test_bed_Library" package="R0603" value="" x="39.37" y="33.782" rot="R270"/>
-<element name="R8" library="CBLA_Test_bed_Library" package="R0603" value="" x="58.928" y="43.18" rot="R270"/>
+<element name="R7" library="CBLA_Test_bed_Library" package="R0603" value="2.2k" x="39.37" y="33.782" rot="R270"/>
+<element name="R8" library="CBLA_Test_bed_Library" package="R0603" value="2.2k" x="58.928" y="43.18" rot="R270"/>
 <element name="X7" library="con-wago-508" package="W237-4P" value="" x="74.676" y="5.334">
 <attribute name="OC_NEWARK" value="unknown" x="74.676" y="5.334" size="1.778" layer="27" display="off"/>
 <attribute name="MPN" value="" x="74.676" y="5.334" size="1.778" layer="27" display="off"/>
