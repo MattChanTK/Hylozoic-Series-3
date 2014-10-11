@@ -1,6 +1,8 @@
 __author__ = 'Matthew'
 
 import math
+import random
+from copy import copy
 
 class Expert():
 
@@ -27,13 +29,14 @@ class Expert():
         # histroical reward history
         self.rewards_history = [0]
 
-    def append(self, SM, S1):
+    def append(self, SM, S1, S1_predicted=None):
 
         if not isinstance(SM, tuple):
             raise(TypeError, "SM must be a tuple")
-
         if not isinstance(S1, tuple):
             raise(TypeError, "S1 must be a tuple")
+        if S1_predicted is not None and not isinstance(S1_predicted, tuple):
+            raise(TypeError, "S1_predicted must be a tuple")
 
         if self.left is None and self.right is None:
             self.training_data.append(SM)
@@ -43,17 +46,19 @@ class Expert():
             self.train()
 
             # update the KGA
-            self.kga.append_error(SM[0:len(S1)], S1)
-            self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
-            self.rewards_history.append(self.kga.calc_reward())
+            if S1_predicted is not None:
+                self.kga.append_error(S1, S1_predicted)
+                self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
+                self.rewards_history.append(self.kga.calc_reward())
+
 
         # TODO: add cases when only one of the child is NONE
 
         # delegate to child nodes
         elif self.region_splitter.classify(SM):
-            self.right.append(SM, S1)
+            self.right.append(SM, S1, S1_predicted)
         else:
-            self.left.append(SM, S1)
+            self.left.append(SM, S1, S1_predicted)
 
     def train(self):
         pass
@@ -79,7 +84,7 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = 5
+        split_threshold = 100
         if len(self.training_data) > split_threshold:
             return True
         return False
@@ -88,8 +93,10 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            if self.is_splitting():
+            print("Mean Error", self.mean_error)
 
+            if self.is_splitting():
+                print("It's splitting")
                 # instantiate the splitter
                 self.region_splitter = RegionSplitter(self.training_data, self.training_label)
 
@@ -97,7 +104,14 @@ class Expert():
                 self.right = Expert()
                 self.left = Expert()
 
+                # TODO: should the knowledge gain (i.e. rewards history) be transferred to child?
+                self.right.mean_error = self.mean_error
+                self.right.rewards_history = copy(self.rewards_history)
+                self.left.mean_error = self.mean_error
+                self.left.rewards_history = copy(self.rewards_history)
+
                 # split the data to the correct region
+
                 for i in range(len(self.training_data)):
                     if self.region_splitter.classify(self.training_data[i]):
                         self.right.append(self.training_data[i], self.training_label[i])
@@ -124,7 +138,7 @@ class Expert():
 
         # TODO: add cases when only one of the child is NONE
 
-    def get_expected_reward(self, S1):
+    def get_next_action(self, S1):
 
         if not isinstance(S1, tuple):
             raise(TypeError, "S1 must be a tuple")
@@ -132,6 +146,10 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             # TODO: deal cases when there's no training data
+            if len(self.training_data) == 0:
+                M1 = (random.randrange(-100, 100),)
+                expected_reward = 0
+                return (M1, expected_reward)
 
             # find out the indices of M data
             M_index = (len(self.training_data[0]) - len(S1), len(self.training_data[0]))
@@ -149,18 +167,18 @@ class Expert():
             else:
                 expected_reward = -9999999999.999
 
-            return (expected_reward, M1)
+            return (M1, expected_reward)
 
         # TODO: add cases when only one of the child is NONE
 
         # return the child node with the largest reward
-        expected_reward_L = self.left.get_expected_reward(S1)
-        expected_reward_R = self.right.get_expected_reward(S1)
+        next_action_L = self.left.get_next_action(S1)
+        next_action_R = self.right.get_next_action(S1)
 
-        if expected_reward_L[0] > expected_reward_R[0]:
-            return expected_reward_L
+        if next_action_L[1] > next_action_R[1]:
+            return next_action_L
         else:
-            return expected_reward_R
+            return next_action_R
 
     def is_possible(self, S1, M1):
         # Todo: figure out how to tell if an action is possible given a state
@@ -205,7 +223,7 @@ class RegionSplitter():
 
     def classify(self, data):
         if not isinstance(data, tuple):
-            raise(TypeError, "S must be a tuple")
+            raise(TypeError, "data must be a tuple")
 
         return data[self.cut_dim] > self.cut_val
 
@@ -218,10 +236,10 @@ class KGA():
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 5
+        self.delta = 5.0
 
         # time window
-        self.tau = 4
+        self.tau = 4.0
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):
@@ -233,21 +251,33 @@ class KGA():
         for i in range(len(S_actual)):
             error += (S_actual[i] - S_predicted[i])**2
 
+        print("Prediction Error: ", error)
         self.errors.append(error)
 
     def calc_mean_error(self):
 
-        mean_error = math.fsum(self.errors[-self.delta:])/self.delta
+        # if there aren't enough error in the history yet
+        if len(self.errors) == 0:
+            mean_error = 999999999.9999
+        else:
+            mean_error = math.fsum(self.errors[-int(self.delta):])/self.delta
         return mean_error
 
     def metaM(self):
 
-        mean_error_predicted = math.fsum(self.errors[-(self.delta+self.tau):-(self.tau)])/self.delta
+        # if there aren't enough error in the history yet
+        if len(self.errors) == 0:
+            mean_error_predicted = 999999999.9999
+        elif len(self.errors) < self.delta:
+            mean_error_predicted = self.errors[0]
+        else:
+            mean_error_predicted = math.fsum(self.errors[-int(self.delta+self.tau):-int(self.tau)])/self.delta
         return mean_error_predicted
 
     def calc_reward(self):
 
         return self.metaM() - self.calc_mean_error()
+
 
 if __name__ == "__main__":
 
@@ -258,22 +288,32 @@ if __name__ == "__main__":
                     (math.floor(100*math.sin(math.pi*i/3)),),
                     (math.floor(100*math.sin(math.pi*i/2)),))
         exemplars.append(exemplar)
-
-    print("Generated exemplars", exemplars)
+    print("Generated exemplars: ", exemplars)
 
     # instantiate an Expert
     expert = Expert()
-    for data in exemplars:
-        expert.append(data[0] + data[1], data[1])
-        expert.split()
 
-    S = (70,)
-    M = (90,)
-    print(expert.predict(S, M))
-    S1 = (40,)
-    expert.append(S+M, S1)
-    expert.split()
+    # appending data to expert
+    for exemplar in exemplars:
+
+        S = exemplar[0]
+        M = exemplar[1]
+        S1 = exemplar[2]
+        print("\n Test case ", S, M, S1)
+
+        # have the expert make prediction
+        S1_predicted = expert.predict(S, M)
+        print(S1_predicted)
+
+        # do action
+
+
+        # add exemplar to expert
+        expert.append(S + M, S1, S1_predicted)
+        expert.split()  # won't actually split if the condition is not met
+
+        M1, L = expert.get_next_action(S1)
+        print("Expected Reward", L)
+        print("Next Action", M1)
+
     expert.print()
-
-    print("Expected Reward", expert.get_expected_reward(S1))
-    print("Errors", expert.kga.errors)

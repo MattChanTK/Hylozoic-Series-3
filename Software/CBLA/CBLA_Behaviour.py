@@ -1,42 +1,63 @@
 
 import math
+import random
 from RegionsManager import Expert
+from SimSystem import SimpleFunction as Robot
+
 
 if __name__ == "__main__":
 
-    # generating exemplars
-    exemplars = []
-    for i in range(1,15):
-        exemplar = ((math.floor(100*math.sin(math.pi*i/4)),),
-                    (math.floor(100*math.sin(math.pi*i/3)),),
-                    (math.floor(100*math.sin(math.pi*i/2)),))
-        exemplars.append(exemplar)
-    print("Generated exemplars: ", exemplars)
+    # number of time step
+    sim_duration = 200
 
     # instantiate an Expert
     expert = Expert()
 
-    # appending data to expert
-    for exemplar in exemplars:
+    # instantiate a Robot
+    robot = Robot()
 
-        S = exemplar[0]
-        M = exemplar[1]
-        S1 = exemplar[2]
-        print("\n Test case ", S, M, S1)
+    # initial conditions
+    t = 0
+    S = (50,)
+    M = (60,)
+    M1_exploit = []
+    M1_explore = []
+    while t < sim_duration:
+        t += 1
+
+        print("\nTest case ", S, M)
 
         # have the expert make prediction
         S1_predicted = expert.predict(S, M)
-        print(S1_predicted)
+        print("Predicted S1: ", S1_predicted)
 
         # do action
+        robot.actuate(M)
+
+        # read sensor
+        S1 = robot.report()
 
         # add exemplar to expert
-        expert.append(S + M, S1)
+        expert.append(S + M, S1, S1_predicted)
         expert.split()  # won't actually split if the condition is not met
 
-        L, M1 = expert.get_expected_reward(S1)
-        print("Expected Reward", L)
+
+        # random action or the best action
+        dice = random.random()
+        if dice < 0.5:
+            M1 = (random.randrange(-100, 100),)
+            M1_explore.append(M1)
+        else:
+            M1, L = expert.get_next_action(S1)
+            M1_exploit.append(M1)
+            print("Expected Reward", L)
         print("Next Action", M1)
+
+        # set to current state
+        S = S1
+        M = M1
 
     expert.print()
 
+    print("Explore: ", M1_explore)
+    print("Exploit: ", M1_exploit)
