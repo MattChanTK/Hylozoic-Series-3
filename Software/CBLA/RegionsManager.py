@@ -7,6 +7,7 @@ from sklearn import linear_model
 
 class Expert():
 
+    max_training_data_num = 2000
 
     def __init__(self):
 
@@ -46,6 +47,10 @@ class Expert():
             self.training_data.append(SM)
             self.training_label.append(S1)
 
+            if len(self.training_data) > Expert.max_training_data_num:
+                self.training_data.pop(0)
+                self.training_label.pop(0)
+
             # update prediction model
             self.train()
 
@@ -54,6 +59,7 @@ class Expert():
                 self.kga.append_error(S1, S1_predicted)
                 self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
                 self.rewards_history.append(self.kga.calc_reward())
+                self.rewards_history = self.rewards_history[-1:]
 
         # Cases when only one of the child is NONE
         elif self.left is None or self.right is None:
@@ -66,7 +72,10 @@ class Expert():
             self.left.append(SM, S1, S1_predicted)
 
     def train(self):
-        self.predict_model.fit(self.training_data, self.training_label)
+        try:
+            self.predict_model.fit(self.training_data, self.training_label)
+        except ValueError:
+            pass
 
     def predict(self, S, M):
 
@@ -94,7 +103,7 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = 250
+        split_threshold = 500
         mean_error_threshold = 100
         if len(self.training_data) > split_threshold and self.mean_error > mean_error_threshold:
             return True
@@ -104,7 +113,6 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            print("Mean Error", self.mean_error)
 
             if self.is_splitting():
                 print("It's splitting")
@@ -141,7 +149,6 @@ class Expert():
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
                 self.training_label = []
-
                 # clear everything as they are not needed any more
                 self.mean_error = None
                 self.predict_model = None
@@ -164,6 +171,7 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
+            #print("Mean Error", self.mean_error)
 
             if len(self.training_data) == 0:
                 raise(Exception, "This node has no training data!")
@@ -183,6 +191,7 @@ class Expert():
 
             # take the average of the M1 in each dimension
             M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
+
 
             return (M1, expected_reward)
 
@@ -217,7 +226,8 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            print(len(self.training_data), " --", self.training_data)
+            mean_error_string = '%.*f' % (2, self.mean_error)
+            print(len(self.training_data), "(err =", mean_error_string, ") --", self.training_data)
 
         else:
             print(" L ** ", end="")
@@ -304,8 +314,10 @@ class KGA():
         return mean_error_predicted
 
     def calc_reward(self):
+        #remove old histories that are not needed
+        self.errors = self.errors[-int(self.delta+self.tau):]
         reward = self.metaM() - self.calc_mean_error()
-        if reward == float("nan"): # happens when it's inf - inf
+        if math.isnan(reward): # happens when it's inf - inf
             reward = 0
         return reward
 
