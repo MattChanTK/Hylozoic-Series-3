@@ -3,6 +3,7 @@ __author__ = 'Matthew'
 import math
 import random
 from copy import copy
+from sklearn import linear_model
 
 class Expert():
 
@@ -19,6 +20,9 @@ class Expert():
         # memory
         self.training_data = []
         self.training_label = []
+
+        # prediction model
+        self.predict_model = linear_model.LinearRegression()
 
         # error is max at first
         self.mean_error = float("inf")
@@ -62,7 +66,7 @@ class Expert():
             self.left.append(SM, S1, S1_predicted)
 
     def train(self):
-        pass
+        self.predict_model.fit(self.training_data, self.training_label)
 
     def predict(self, S, M):
 
@@ -73,8 +77,11 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            # Todo: need a real regressor
-            return S
+            try:
+                S1 = tuple(self.predict_model.predict(S+M))
+            except AttributeError:
+                S1 = S
+            return S1
 
         # Cases when only one of the child is NONE
         elif self.left is None or self.right is None:
@@ -87,8 +94,9 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = 100
-        if len(self.training_data) > split_threshold:
+        split_threshold = 250
+        mean_error_threshold = 100
+        if len(self.training_data) > split_threshold and self.mean_error > mean_error_threshold:
             return True
         return False
 
@@ -97,8 +105,6 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             print("Mean Error", self.mean_error)
-            if self.mean_error == float("inf"):
-                pass
 
             if self.is_splitting():
                 print("It's splitting")
@@ -109,16 +115,7 @@ class Expert():
                 self.right = Expert()
                 self.left = Expert()
 
-                # TODO: should the knowledge gain (i.e. rewards history) be transferred to child?
-                self.right.mean_error = self.mean_error
-                self.right.rewards_history = copy(self.rewards_history)
-                self.right.kga.errors = copy(self.kga.errors)
-                self.left.mean_error = self.mean_error
-                self.left.rewards_history = copy(self.rewards_history)
-                self.left.kga.errors = copy(self.kga.errors)
-
                 # split the data to the correct region
-
                 for i in range(len(self.training_data)):
                     if self.region_splitter.classify(self.training_data[i]):
                         self.right.append(self.training_data[i], self.training_label[i])
@@ -133,18 +130,24 @@ class Expert():
                     self.region_splitter = None
                     return
 
+                # transferring "knowledge" to child nodes
+                self.right.mean_error = self.mean_error
+                self.right.rewards_history = copy(self.rewards_history)
+                self.right.kga.errors = copy(self.kga.errors)
+                self.left.mean_error = self.mean_error
+                self.left.rewards_history = copy(self.rewards_history)
+                self.left.kga.errors = copy(self.kga.errors)
+
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
                 self.training_label = []
 
                 # clear everything as they are not needed any more
                 self.mean_error = None
-
-                # knowledge gain assessor
+                self.predict_model = None
                 self.kga = None
-
-                # histroical reward history
                 self.rewards_history = None
+
         # Cases when only one of the child is NONE
         elif self.left is None and self.right is None:
             raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
@@ -181,8 +184,6 @@ class Expert():
             # take the average of the M1 in each dimension
             M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
 
-
-
             return (M1, expected_reward)
 
         # Cases when only one of the child is NONE
@@ -203,7 +204,6 @@ class Expert():
 
     def is_possible(self, S1):
 
-        # TODO: figure out how to tell if an action is possible given a state
         # check if the S1 is within the min and max range of all existing data points
         data_transpose = list(zip(*self.training_data))
         for i in range(len(S1)):
@@ -217,7 +217,7 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            print("--", self.training_data)
+            print(len(self.training_data), " --", self.training_data)
 
         else:
             print(" L ** ", end="")
@@ -237,7 +237,7 @@ class RegionSplitter():
         sample_num = len(data)
         dim_num = len(data[0])
 
-        # combina the data and the label for sorting purposes
+        # combine the data and the label for sorting purposes
         exemplars = [(data[i], label[i]) for i in range(sample_num)]
 
         # sort in each dimension
@@ -304,8 +304,10 @@ class KGA():
         return mean_error_predicted
 
     def calc_reward(self):
-
-        return self.metaM() - self.calc_mean_error()
+        reward = self.metaM() - self.calc_mean_error()
+        if reward == float("nan"): # happens when it's inf - inf
+            reward = 0
+        return reward
 
 
 if __name__ == "__main__":

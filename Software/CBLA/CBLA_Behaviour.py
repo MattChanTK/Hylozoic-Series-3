@@ -8,7 +8,7 @@ from SimSystem import SimpleFunction as Robot
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 200
+    sim_duration = 5000
 
     # instantiate an Expert
     expert = Expert()
@@ -20,8 +20,7 @@ if __name__ == "__main__":
     t = 0
     S = (50,)
     M = (60,)
-    M1_exploit = []
-    M1_explore = []
+
     while t < sim_duration:
         t += 1
 
@@ -38,26 +37,17 @@ if __name__ == "__main__":
         S1 = robot.report()
 
         # add exemplar to expert
-        try:
-            print(expert.right.mean_error)
-        except Exception:
-            pass
         expert.append(S + M, S1, S1_predicted)
-        try:
-            print(expert.right.mean_error)
-        except Exception:
-            pass
+
         expert.split()  # won't actually split if the condition is not met
 
 
         # random action or the best action
         dice = random.random()
-        if dice < 0.5:
+        if dice < 0.2:
             M1 = (random.randrange(-100, 100),)
-            M1_explore.append(M1)
         else:
             M1, L = expert.get_next_action(S1)
-            M1_exploit.append(M1)
             print("Expected Reward", L)
         print("Next Action", M1)
 
@@ -67,5 +57,3 @@ if __name__ == "__main__":
 
     expert.print()
 
-    print("Explore: ", M1_explore)
-    print("Exploit: ", M1_exploit)
