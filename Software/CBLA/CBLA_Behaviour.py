@@ -38,7 +38,15 @@ if __name__ == "__main__":
         S1 = robot.report()
 
         # add exemplar to expert
+        try:
+            print(expert.right.mean_error)
+        except Exception:
+            pass
         expert.append(S + M, S1, S1_predicted)
+        try:
+            print(expert.right.mean_error)
+        except Exception:
+            pass
         expert.split()  # won't actually split if the condition is not met
 
 

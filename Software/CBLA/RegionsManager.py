@@ -21,7 +21,7 @@ class Expert():
         self.training_label = []
 
         # error is max at first
-        self.mean_error = 99999999999.9
+        self.mean_error = float("inf")
 
         # knowledge gain assessor
         self.kga = KGA(self.mean_error)
@@ -51,8 +51,9 @@ class Expert():
                 self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
                 self.rewards_history.append(self.kga.calc_reward())
 
-
-        # TODO: add cases when only one of the child is NONE
+        # Cases when only one of the child is NONE
+        elif self.left is None or self.right is None:
+            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
         # delegate to child nodes
         elif self.region_splitter.classify(SM):
@@ -75,7 +76,9 @@ class Expert():
             # Todo: need a real regressor
             return S
 
-        # TODO: add cases when only one of the child is NONE
+        # Cases when only one of the child is NONE
+        elif self.left is None or self.right is None:
+            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
         # delegate to child nodes
         if self.region_splitter.classify(S+M):
@@ -94,6 +97,8 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             print("Mean Error", self.mean_error)
+            if self.mean_error == float("inf"):
+                pass
 
             if self.is_splitting():
                 print("It's splitting")
@@ -107,8 +112,10 @@ class Expert():
                 # TODO: should the knowledge gain (i.e. rewards history) be transferred to child?
                 self.right.mean_error = self.mean_error
                 self.right.rewards_history = copy(self.rewards_history)
+                self.right.kga.errors = copy(self.kga.errors)
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
+                self.left.kga.errors = copy(self.kga.errors)
 
                 # split the data to the correct region
 
@@ -117,6 +124,14 @@ class Expert():
                         self.right.append(self.training_data[i], self.training_label[i])
                     else:
                         self.left.append(self.training_data[i], self.training_label[i])
+
+                # if either of them is empty
+                if len(self.left.training_data) == 0 or len(self.right.training_data) == 0:
+                    # do not split
+                    self.right = None
+                    self.left = None
+                    self.region_splitter = None
+                    return
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
@@ -130,13 +145,14 @@ class Expert():
 
                 # histroical reward history
                 self.rewards_history = None
+        # Cases when only one of the child is NONE
+        elif self.left is None and self.right is None:
+            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
         else:
             # delegate to child nodes
             self.right.split()
             self.left.split()
-
-        # TODO: add cases when only one of the child is NONE
 
     def get_next_action(self, S1):
 
@@ -145,11 +161,15 @@ class Expert():
 
         # this is leaf node
         if self.left is None and self.right is None:
-            # TODO: deal cases when there's no training data
+
             if len(self.training_data) == 0:
-                M1 = (random.randrange(-100, 100),)
-                expected_reward = 0
-                return (M1, expected_reward)
+                raise(Exception, "This node has no training data!")
+
+            if self.is_possible(S1):
+                # reward is just the reward in the most recent time region
+                expected_reward = self.rewards_history[-1]
+            else:
+                expected_reward = -float("inf")
 
             # find out the indices of M data
             M_index = (len(self.training_data[0]) - len(S1), len(self.training_data[0]))
@@ -161,27 +181,36 @@ class Expert():
             # take the average of the M1 in each dimension
             M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
 
-            if self.is_possible(S1, M1):
-                # reward is just the reward in the most recent time region
-                expected_reward = self.rewards_history[-1]
-            else:
-                expected_reward = -9999999999.999
+
 
             return (M1, expected_reward)
 
-        # TODO: add cases when only one of the child is NONE
+        # Cases when only one of the child is NONE
+        elif self.left is None and self.right is None:
+            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
-        # return the child node with the largest reward
-        next_action_L = self.left.get_next_action(S1)
-        next_action_R = self.right.get_next_action(S1)
-
-        if next_action_L[1] > next_action_R[1]:
-            return next_action_L
         else:
-            return next_action_R
 
-    def is_possible(self, S1, M1):
-        # Todo: figure out how to tell if an action is possible given a state
+
+            # return the child node with the largest reward
+            next_action_L = self.left.get_next_action(S1)
+            next_action_R = self.right.get_next_action(S1)
+
+            if next_action_L[1] > next_action_R[1]:
+                return next_action_L
+            else:
+                return next_action_R
+
+    def is_possible(self, S1):
+
+        # TODO: figure out how to tell if an action is possible given a state
+        # check if the S1 is within the min and max range of all existing data points
+        data_transpose = list(zip(*self.training_data))
+        for i in range(len(S1)):
+            min_S = min(data_transpose[i])
+            max_S = max(data_transpose[i])
+            if min_S > S1[i] or max_S < S1[i]:
+                return False
         return True
 
     def print(self, level=0):
@@ -203,7 +232,7 @@ class RegionSplitter():
         self.cut_dim = 0
         self.cut_val = 0
 
-        # Todo: need proper clustering
+        # TODO: need proper clustering
 
         sample_num = len(data)
         dim_num = len(data[0])
@@ -258,7 +287,7 @@ class KGA():
 
         # if there aren't enough error in the history yet
         if len(self.errors) == 0:
-            mean_error = 999999999.9999
+            mean_error = float("inf")
         else:
             mean_error = math.fsum(self.errors[-int(self.delta):])/self.delta
         return mean_error
@@ -267,7 +296,7 @@ class KGA():
 
         # if there aren't enough error in the history yet
         if len(self.errors) == 0:
-            mean_error_predicted = 999999999.9999
+            mean_error_predicted = float("inf")
         elif len(self.errors) < self.delta:
             mean_error_predicted = self.errors[0]
         else:
