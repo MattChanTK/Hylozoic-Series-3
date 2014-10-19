@@ -5,6 +5,7 @@ from pstats import Stats
 
 behaviours_config = 2
 
+
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
 elif behaviours_config == 1:
