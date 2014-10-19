@@ -163,6 +163,8 @@ class Expert():
             # delegate to child nodes
             self.right.split()
             self.left.split()
+    def calc_expected_reward(self):
+        return self.rewards_history[-1]
 
     def get_next_action(self, S1):
 
@@ -178,7 +180,7 @@ class Expert():
 
             if self.is_possible(S1):
                 # reward is just the reward in the most recent time region
-                expected_reward = self.rewards_history[-1]
+                expected_reward = self.calc_expected_reward()
             else:
                 expected_reward = -float("inf")
 
