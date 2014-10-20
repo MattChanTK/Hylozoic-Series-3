@@ -14,9 +14,9 @@ class SimpleFunction():
         S = M[0]*1.5
 
         if 25 > M[0] > 10:
-            S += random.uniform(-5, 5)
+            S += random.uniform(-0.1, 0.1)
         elif -10 > M[0] > -25:
-            S += random.uniform(-1, 1)
+            S += random.uniform(-0.1, 0.1)
         elif -10 <= M[0] <= 10:
             S += math.sin(M[0])*10
         else:

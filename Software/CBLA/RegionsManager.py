@@ -4,6 +4,7 @@ import math
 import random
 from copy import copy
 from sklearn import linear_model
+from sklearn.cluster import KMeans
 
 class Expert():
 
@@ -108,8 +109,8 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 10
-        expected_reward_threshold = float("-inf")
+        mean_error_threshold = 1
+        expected_reward_threshold = -float("inf")
 
         if len(self.training_data) > split_threshold and \
             (self.mean_error > mean_error_threshold or self.calc_expected_reward() < expected_reward_threshold):
@@ -190,6 +191,8 @@ class Expert():
             if self.is_possible(S1):
                 # reward is just the reward in the most recent time region
                 expected_reward = self.calc_expected_reward()
+                # have to go back to zero over time
+                expected_reward -= math.copysign(expected_reward, 1.0)
             else:
                 expected_reward = -float("inf")
 
@@ -252,6 +255,7 @@ class Expert():
 
         return M1
 
+
     def print(self, level=0):
 
         # this is leaf node
@@ -273,7 +277,7 @@ class RegionSplitter():
         self.cut_dim = 0
         self.cut_val = 0
 
-        # TODO: need proper clustering
+
 
         sample_num = len(data)
         dim_num = len(data[0])
@@ -289,13 +293,24 @@ class RegionSplitter():
             if dim_max_range < exemplars[-1][0][i] - exemplars[0][0][i]:
                 self.cut_dim = i
 
-        self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+         # TODO: need proper clustering
+        # k-mean
+        self.clusterer = KMeans(n_clusters=2, init='k-means++')
+        data = list(zip(list(zip(*data))[self.cut_dim]))
+        self.clusterer.fit(data)
+
+        # just cut in half
+        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
 
     def classify(self, data):
         if not isinstance(data, tuple):
             raise(TypeError, "data must be a tuple")
 
-        return data[self.cut_dim] > self.cut_val
+        data = data[self.cut_dim]
+        group = self.clusterer.predict(data)
+
+        return group == 0
+        # data[self.cut_dim] > self.cut_val
 
 
 class KGA():
@@ -306,10 +321,10 @@ class KGA():
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 5
+        self.delta = 500
 
         # time window
-        self.tau = 5
+        self.tau = 50
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):
@@ -320,7 +335,7 @@ class KGA():
         error = 0
         for i in range(len(S_actual)):
             error += (S_actual[i] - S_predicted[i])**2
-
+        error /= len(S_actual)
         print("Prediction Error: ", error)
         self.errors.append(error)
 
@@ -349,10 +364,6 @@ class KGA():
     def calc_reward(self):
         #remove old histories that are not needed
         self.errors = self.errors[-int(self.delta+self.tau):]
-        # print("metaM = ", self.metaM(), " mean_error = ", self.calc_mean_error())
-        # print(self.errors)
-        # print(self.errors[-int(self.delta+self.tau):-int(self.tau)])
-        # print(self.errors[-int(self.delta):])
         reward = round(self.metaM() - self.calc_mean_error(), 2)
         if math.isnan(reward):  # happens when it's inf - inf
             reward = 0

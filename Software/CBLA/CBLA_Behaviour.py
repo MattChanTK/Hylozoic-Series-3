@@ -13,7 +13,7 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 3000
+    sim_duration = 5000
 
     # use saved expert
     is_using_saved_expert = 1
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     t = 0
     S = (0,)
     M = Mi[0]
-    learning_rate = 0.2
+    exploring_rate = 0.2
 
     while t < sim_duration:
         t += 1
@@ -70,7 +70,8 @@ if __name__ == "__main__":
 
 
         # random action or the best action
-        is_exploring = (random.random() < learning_rate)
+        print("Exploring Rate: ", exploring_rate)
+        is_exploring = (random.random() < exploring_rate)
 
         M1, L = expert.get_next_action(S1, is_exploring)
 
@@ -87,11 +88,11 @@ if __name__ == "__main__":
 
         # update learning rate based on reward
         if L < 0.01:
-            learning_rate = 0.7
+            exploring_rate = 0.7
         if L > 10:
-            learning_rate = 0.2
+            exploring_rate = 0.2
         else:
-            learning_rate = -0.05*L + 0.7
+            exploring_rate = -0.05*L + 0.7
 
         if t % 1000 == 0:
             with open('expert_backup.pkl', 'wb') as output:
