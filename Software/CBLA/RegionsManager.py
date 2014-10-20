@@ -7,7 +7,7 @@ from sklearn import linear_model
 
 class Expert():
 
-    max_training_data_num = 2000
+    max_training_data_num = 5000
 
     def __init__(self):
 
@@ -31,8 +31,11 @@ class Expert():
         # knowledge gain assessor
         self.kga = KGA(self.mean_error)
 
-        # histroical reward history
+        # historical reward history
         self.rewards_history = [0]
+
+        # number of re-training
+        self.training_count = 0
 
     def append(self, SM, S1, S1_predicted=None):
 
@@ -43,6 +46,7 @@ class Expert():
         if S1_predicted is not None and not isinstance(S1_predicted, tuple):
             raise(TypeError, "S1_predicted must be a tuple")
 
+        self.training_count += 1
         if self.left is None and self.right is None:
             self.training_data.append(SM)
             self.training_label.append(S1)
@@ -104,8 +108,11 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 100
-        if len(self.training_data) > split_threshold and self.mean_error > mean_error_threshold:
+        mean_error_threshold = 10
+        expected_reward_threshold = float("-inf")
+
+        if len(self.training_data) > split_threshold and \
+            (self.mean_error > mean_error_threshold or self.calc_expected_reward() < expected_reward_threshold):
             return True
         return False
 
@@ -142,9 +149,11 @@ class Expert():
                 self.right.mean_error = self.mean_error
                 self.right.rewards_history = copy(self.rewards_history)
                 self.right.kga.errors = copy(self.kga.errors)
+                self.right.training_count = 0
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
                 self.left.kga.errors = copy(self.kga.errors)
+                self.left.training_count = 0
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
@@ -166,7 +175,7 @@ class Expert():
     def calc_expected_reward(self):
         return self.rewards_history[-1]
 
-    def get_next_action(self, S1):
+    def get_next_action(self, S1, is_exploring=False):
 
         if not isinstance(S1, tuple):
             raise(TypeError, "S1 must be a tuple")
@@ -184,16 +193,7 @@ class Expert():
             else:
                 expected_reward = -float("inf")
 
-            # find out the indices of M data
-            M_index = (len(self.training_data[0]) - len(S1), len(self.training_data[0]))
-
-            # extract the M part of the data out
-            M1 = zip(*self.training_data)
-            M1 = tuple(M1)[M_index[0]:M_index[1]]
-
-            # take the average of the M1 in each dimension
-            M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
-
+            M1 = self.get_possible_action(S1, is_exploring)
 
             return (M1, expected_reward)
 
@@ -202,19 +202,22 @@ class Expert():
             raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
         else:
-
-
             # return the child node with the largest reward
             next_action_L = self.left.get_next_action(S1)
             next_action_R = self.right.get_next_action(S1)
 
+            if is_exploring and next_action_L[1] > -float("inf") and next_action_R[1] > -float("inf"):
+                if random.random() < 0.5:
+                    return next_action_L
+                else:
+                    return next_action_R
             if next_action_L[1] > next_action_R[1]:
                 return next_action_L
             else:
                 return next_action_R
 
     def is_possible(self, S1):
-
+        #TODO how to know if the state is associated with the region
         # check if the S1 is within the min and max range of all existing data points
         data_transpose = list(zip(*self.training_data))
         for i in range(len(S1)):
@@ -224,18 +227,44 @@ class Expert():
                 return False
         return True
 
+    def get_possible_action(self, S1, is_exploring=False):
+        # TODO need a proper way to figure out what are the possible action
+
+        # find out the indices of M data
+        M_index = (len(S1), len(self.training_data[0]))
+
+        # extract the M part of the data out
+        M = zip(*self.training_data)
+        M = tuple(M)[M_index[0]:M_index[1]]
+
+        # take random number that falls within range method
+        M1 = []
+        for i in range(len(M)):
+            # find the max and min in each dimension
+            min_M = min(M[i])
+            max_M = max(M[i])
+            # take a random number within the range
+            M1.append(random.uniform(min_M, max_M))
+        M1 = tuple(M1)
+
+        # take the average of the M1 in each dimension method
+        #M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
+
+        return M1
+
     def print(self, level=0):
 
         # this is leaf node
         if self.left is None and self.right is None:
             mean_error_string = '%.*f' % (2, self.mean_error)
-            print(len(self.training_data), "(err =", mean_error_string, ") --", self.training_data)
+            print(len(self.training_data), "#", str(self.training_count), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
 
         else:
             print(" L ** ", end="")
             self.left.print(level+1)
-            print("      " * level, "R ** ", end="")
+            print(("      ")*level, "R ** ", end="")
             self.right.print(level+1)
+
 
 class RegionSplitter():
 
@@ -277,10 +306,10 @@ class KGA():
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 5.0
+        self.delta = 5
 
         # time window
-        self.tau = 4.0
+        self.tau = 5
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):
@@ -301,7 +330,8 @@ class KGA():
         if len(self.errors) == 0:
             mean_error = float("inf")
         else:
-            mean_error = math.fsum(self.errors[-int(self.delta):])/self.delta
+            errors = self.errors[-int(self.delta):]
+            mean_error = math.fsum(errors)/len(errors)
         return mean_error
 
     def metaM(self):
@@ -309,17 +339,22 @@ class KGA():
         # if there aren't enough error in the history yet
         if len(self.errors) == 0:
             mean_error_predicted = float("inf")
-        elif len(self.errors) < self.delta:
+        elif len(self.errors) <= self.tau:
             mean_error_predicted = self.errors[0]
         else:
-            mean_error_predicted = math.fsum(self.errors[-int(self.delta+self.tau):-int(self.tau)])/self.delta
+            errors = self.errors[-int(self.delta+self.tau):-int(self.tau)]
+            mean_error_predicted = math.fsum(errors)/len(errors)
         return mean_error_predicted
 
     def calc_reward(self):
         #remove old histories that are not needed
         self.errors = self.errors[-int(self.delta+self.tau):]
-        reward = self.metaM() - self.calc_mean_error()
-        if math.isnan(reward): # happens when it's inf - inf
+        # print("metaM = ", self.metaM(), " mean_error = ", self.calc_mean_error())
+        # print(self.errors)
+        # print(self.errors[-int(self.delta+self.tau):-int(self.tau)])
+        # print(self.errors[-int(self.delta):])
+        reward = round(self.metaM() - self.calc_mean_error(), 2)
+        if math.isnan(reward):  # happens when it's inf - inf
             reward = 0
         return reward
 

@@ -1,5 +1,6 @@
 __author__ = 'Matthew'
 import math
+import random
 
 class SimpleFunction():
 
@@ -9,12 +10,21 @@ class SimpleFunction():
     def actuate(self, M):
         if not isinstance(M, tuple):
             raise(TypeError, "M must be a tuple")
-        if M[0] < -30:
-            self.S = (100*math.sin(M[0]*0.005),)
-        elif M[0] > 30:
-            self.S = (100*math.sin(M[0]*0.5),)
+
+        S = M[0]*1.5
+
+        if 25 > M[0] > 10:
+            S += random.uniform(-5, 5)
+        elif -10 > M[0] > -25:
+            S += random.uniform(-1, 1)
+        elif -10 <= M[0] <= 10:
+            S += math.sin(M[0])*10
         else:
-            self.S = (100*math.sin(M[0]*0.05),)
+            S += random.uniform(-M[0], M[0])
+
+
+
+        self.S = (S,)
 
     def report(self):
         return self.S

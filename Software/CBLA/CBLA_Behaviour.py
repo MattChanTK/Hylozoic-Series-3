@@ -1,10 +1,14 @@
-
 import math
 import random
 from RegionsManager import Expert
 from SimSystem import SimpleFunction as Robot
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import pickle
+import numpy as np
+
+import Visualization as Viz
+
 
 if __name__ == "__main__":
 
@@ -13,6 +17,8 @@ if __name__ == "__main__":
 
     # use saved expert
     is_using_saved_expert = 1
+    # initial actions
+    Mi = ((0,),)
 
     # instantiate an Expert
     if is_using_saved_expert:
@@ -24,26 +30,34 @@ if __name__ == "__main__":
         expert = Expert()
         action_history = []
 
+        # initial training action
+        Mi = []
+        for i in range(-70, 70):
+            Mi.append((i,))
+        Mi = tuple(Mi)
+
+
     # instantiate a Robot
     robot = Robot()
+
 
     # initial conditions
     t = 0
     S = (0,)
-    M = (0,)
-
-
+    M = Mi[0]
+    learning_rate = 0.2
 
     while t < sim_duration:
         t += 1
 
-        print("\nTest case t =",t, " -- ", S, M)
+        print("\nTest case t =", t, " -- ", S, M)
 
         # have the expert make prediction
         S1_predicted = expert.predict(S, M)
         print("Predicted S1: ", S1_predicted)
 
         # do action
+        action_history.append(M)
         robot.actuate(M)
 
         # read sensor
@@ -56,18 +70,28 @@ if __name__ == "__main__":
 
 
         # random action or the best action
-        dice = random.random()
-        if dice < 0.2:
-            M1 = (random.randrange(-100, 100),)
-        else:
-            M1, L = expert.get_next_action(S1)
-            action_history.append(M1)
-            print("Expected Reward", L)
+        is_exploring = (random.random() < learning_rate)
+
+        M1, L = expert.get_next_action(S1, is_exploring)
+
+        print("Expected Reward", L)
         print("Next Action", M1)
 
         # set to current state
+
         S = S1
-        M = M1
+        if t < len(Mi):
+            M = Mi[t]
+        else:
+            M = M1
+
+        # update learning rate based on reward
+        if L < 0.01:
+            learning_rate = 0.7
+        if L > 10:
+            learning_rate = 0.2
+        else:
+            learning_rate = -0.05*L + 0.7
 
         if t % 1000 == 0:
             with open('expert_backup.pkl', 'wb') as output:
@@ -76,8 +100,16 @@ if __name__ == "__main__":
             with open('action_history_backup.pkl', 'wb') as output:
                 pickle.dump(action_history, output, pickle.HIGHEST_PROTOCOL)
 
+    with open('expert_backup.pkl', 'wb') as output:
+        pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)
+
+    with open('action_history_backup.pkl', 'wb') as output:
+        pickle.dump(action_history, output, pickle.HIGHEST_PROTOCOL)
 
     expert.print()
-    plt.plot(action_history, 'b.')
+
+    Viz.plot_evolution(action_history)
+    Viz.plot_model(expert)
+    plt.ioff()
     plt.show()
 
