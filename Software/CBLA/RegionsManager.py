@@ -6,6 +6,7 @@ from copy import copy
 from sklearn import linear_model
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
+import matplotlib.pyplot as plt
 
 class Expert():
 
@@ -272,6 +273,14 @@ class Expert():
             print(("      ")*level, "R ** ", end="")
             self.right.print(level+1)
 
+    def save_mean_errors(self, mean_errors):
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+            mean_errors.append(self.mean_error)
+        else:
+            self.left.save_mean_errors(mean_errors)
+            self.right.save_mean_errors(mean_errors)
 
 class RegionSplitter():
 

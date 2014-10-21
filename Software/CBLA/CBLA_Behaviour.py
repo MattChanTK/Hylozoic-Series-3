@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pickle
 import numpy as np
+from copy import copy
 
 import Visualization as Viz
 
@@ -13,10 +14,10 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 5000
+    sim_duration = 10
 
     # use saved expert
-    is_using_saved_expert = 0
+    is_using_saved_expert = 1
     # initial actions
     Mi = ((0,),)
 
@@ -26,9 +27,13 @@ if __name__ == "__main__":
             expert = pickle.load(input)
         with open('action_history_backup.pkl', 'rb') as input:
             action_history = pickle.load(input)
+        with open('mean_error_history_backup.pkl', 'rb') as input:
+            mean_error_history = pickle.load(input)
+
     else:
         expert = Expert()
         action_history = []
+        mean_error_history = []
 
         # initial training action
         Mi = []
@@ -78,6 +83,11 @@ if __name__ == "__main__":
         print("Expected Reward", L)
         print("Next Action", M1)
 
+        # record the mean errors of each region
+        mean_errors = []
+        expert.save_mean_errors(mean_errors)
+        mean_error_history.append(copy(mean_errors))
+
         # set to current state
 
         S = S1
@@ -101,6 +111,9 @@ if __name__ == "__main__":
             with open('action_history_backup.pkl', 'wb') as output:
                 pickle.dump(action_history, output, pickle.HIGHEST_PROTOCOL)
 
+            with open('mean_error_history_backup.pkl', 'wb') as output:
+                pickle.dump(mean_error_history, output, pickle.HIGHEST_PROTOCOL)
+
     with open('expert_backup.pkl', 'wb') as output:
         pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)
 
@@ -109,8 +122,9 @@ if __name__ == "__main__":
 
     expert.print()
 
-    Viz.plot_evolution(action_history)
-    Viz.plot_model(expert)
+    Viz.plot_evolution(action_history, fig_num=1, subplot_num=221)
+    Viz.plot_model(expert, fig_num=1, subplot_num=222)
+    Viz.plot_regional_mean_errors(mean_error_history,  fig_num=1, subplot_num=212)
     plt.ioff()
     plt.show()
 
