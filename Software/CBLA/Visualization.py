@@ -41,7 +41,7 @@ def plot_model(Expert, x_idx=1, y_idx=0, fig_num=1):
         plot.plot(X, Y, ".")
 
         # plot the model
-        pts = list(range(round(min(X)), round(max(X))))
+        pts = list(np.arange(round(min(X)), round(max(X)), 0.1))
         try:
             plot.plot(pts, Expert.predict_model.predict(list(zip(*[pts, pts]))), color="k", linewidth=3)
         except Exception:

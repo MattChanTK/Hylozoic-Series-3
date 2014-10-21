@@ -16,7 +16,7 @@ if __name__ == "__main__":
     sim_duration = 5000
 
     # use saved expert
-    is_using_saved_expert = 1
+    is_using_saved_expert = 0
     # initial actions
     Mi = ((0,),)
 

@@ -5,6 +5,7 @@ import random
 from copy import copy
 from sklearn import linear_model
 from sklearn.cluster import KMeans
+from sklearn.cluster import Ward
 
 class Expert():
 
@@ -191,8 +192,10 @@ class Expert():
             if self.is_possible(S1):
                 # reward is just the reward in the most recent time region
                 expected_reward = self.calc_expected_reward()
+
+                # TODO check it this actually makes sense
                 # have to go back to zero over time
-                expected_reward -= math.copysign(expected_reward, 1.0)
+                #self.rewards_history[-1] -= math.copysign(expected_reward, 0.05)
             else:
                 expected_reward = -float("inf")
 
@@ -277,8 +280,6 @@ class RegionSplitter():
         self.cut_dim = 0
         self.cut_val = 0
 
-
-
         sample_num = len(data)
         dim_num = len(data[0])
 
@@ -296,6 +297,7 @@ class RegionSplitter():
          # TODO: need proper clustering
         # k-mean
         self.clusterer = KMeans(n_clusters=2, init='k-means++')
+
         data = list(zip(list(zip(*data))[self.cut_dim]))
         self.clusterer.fit(data)
 
@@ -306,7 +308,7 @@ class RegionSplitter():
         if not isinstance(data, tuple):
             raise(TypeError, "data must be a tuple")
 
-        data = data[self.cut_dim]
+        data = [(data[self.cut_dim],)]
         group = self.clusterer.predict(data)
 
         return group == 0
