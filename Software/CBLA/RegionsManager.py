@@ -111,8 +111,8 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 1
-        expected_reward_threshold = -float("inf")
+        mean_error_threshold = 0.01
+        expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
             (self.mean_error > mean_error_threshold or self.calc_expected_reward() < expected_reward_threshold):
@@ -151,10 +151,12 @@ class Expert():
                 # transferring "knowledge" to child nodes
                 self.right.mean_error = self.mean_error
                 self.right.rewards_history = copy(self.rewards_history)
+                self.right.prediction_model = copy(self.predict_model)
                 self.right.kga.errors = copy(self.kga.errors)
                 self.right.training_count = 0
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
+                self.left.prediction_model = copy(self.predict_model)
                 self.left.kga.errors = copy(self.kga.errors)
                 self.left.training_count = 0
 
@@ -213,7 +215,8 @@ class Expert():
             next_action_L = self.left.get_next_action(S1)
             next_action_R = self.right.get_next_action(S1)
 
-            if is_exploring and next_action_L[1] > -float("inf") and next_action_R[1] > -float("inf"):
+            if (is_exploring and next_action_L[1] > -float("inf") and next_action_R[1] > -float("inf"))\
+                or (next_action_L[1] == -float("inf") and next_action_L[1] == -float("inf")):
                 if random.random() < 0.5:
                     return next_action_L
                 else:
@@ -288,31 +291,54 @@ class Expert():
 
 class RegionSplitter():
 
-    def __init__(self, data, label):
+    def __init__(self, data, label=None):
 
         self.cut_dim = 0
         self.cut_val = 0
 
-        sample_num = len(data)
         dim_num = len(data[0])
 
-        # combine the data and the label for sorting purposes
-        exemplars = [(data[i], label[i]) for i in range(sample_num)]
+        data_zipped = list(zip(*data))
+
+        # set to cut dimension 1
+        # self.cut_dim = 1
+        # self.clusterer = KMeans(n_clusters=2, init='k-means++')
+        # self.clusterer.fit(list(zip(data_zipped[1])))
+        # return
 
         # sort in each dimension
-        dim_max_range = 0
+        dim_min = float("inf")
         for i in range(dim_num):
-            exemplars.sort(key=lambda exemplar: exemplar[0][i])
 
-            if dim_max_range < exemplars[-1][0][i] - exemplars[0][0][i]:
+             # TODO: need proper clustering
+            # k-mean cluster for the dimension
+            clusterer = KMeans(n_clusters=2, init='k-means++')
+
+            grouping = clusterer.fit_predict(list(zip(data_zipped[i])))
+
+            groups = []
+            groups.append([data[j] for j in range(len(data_zipped[i])) if grouping[j] == 0])
+            groups.append([data[j] for j in range(len(data_zipped[i])) if grouping[j] == 1])
+
+            weighted_avg_variance = []
+            for group in groups:
+                num_sample = len(group)
+                group = zip(*group)
+
+                variance = []
+                for group_k in group:
+                    mean = math.fsum(group_k)/len(group_k)
+                    variance.append(math.fsum([((x - mean)**2/(max(group_k)-min(group_k))**2) for x in group_k]))
+                weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
+
+            in_group_variance = math.fsum(weighted_avg_variance)
+
+            if dim_min > in_group_variance:
+
+                dim_min = in_group_variance
                 self.cut_dim = i
+                self.clusterer = clusterer
 
-         # TODO: need proper clustering
-        # k-mean
-        self.clusterer = KMeans(n_clusters=2, init='k-means++')
-
-        data = list(zip(list(zip(*data))[self.cut_dim]))
-        self.clusterer.fit(data)
 
         # just cut in half
         #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]

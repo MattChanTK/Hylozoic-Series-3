@@ -24,17 +24,19 @@ def plot_evolution(action_history, fig_num=1, subplot_num=121):
 
     return plot
 
-def plot_model(Expert, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
+def plot_model(Expert, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
 
     # plot configuration
-    fig = plt.figure(fig_num)
-    plot = fig.add_subplot(subplot_num)
-    plt.ion()
-    plt.show()
-    plt.hold(True)
-    plt.title("Prediction Models")
-    plt.ylabel("M(t)")
-    plt.xlabel("S(t+1)")
+    if plot is None:
+        fig = plt.figure(fig_num)
+        plot = fig.add_subplot(subplot_num)
+        plot.set_color_cycle(['r', 'g', 'b', 'y', 'c', 'm', 'y'])
+        plt.ion()
+        plt.show()
+        plt.hold(True)
+        plt.title("Prediction Models")
+        plt.ylabel("SM(t) [" + str(x_idx) + "]")
+        plt.xlabel("S(t+1)")
 
     # this is leaf node
     if Expert.left is None and Expert.right is None:
@@ -55,8 +57,8 @@ def plot_model(Expert, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
             pass
 
     else:
-        plot_model(Expert.left, x_idx, y_idx, fig_num, subplot_num)
-        plot_model(Expert.right, x_idx, y_idx, fig_num, subplot_num)
+        plot_model(Expert.left, plot, x_idx, y_idx, fig_num, subplot_num)
+        plot_model(Expert.right, plot, x_idx, y_idx, fig_num, subplot_num)
 
 def plot_regional_mean_errors(mean_error_history, regions_ids=None, fig_num=2, subplot_num=111):
     tree_colours = ['r', 'g', 'b', 'y', 'c', 'm', 'y', 'k']
