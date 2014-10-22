@@ -17,7 +17,7 @@ if __name__ == "__main__":
     sim_duration = 2000
 
     # use saved expert
-    is_using_saved_expert = 0
+    is_using_saved_expert = 1
     # initial actions
     Mi = ((0,),)
 
@@ -29,6 +29,8 @@ if __name__ == "__main__":
             action_history = pickle.load(input)
         with open('mean_error_history_backup.pkl', 'rb') as input:
             mean_error_history = pickle.load(input)
+        with open('region_ids_history_backup.pkl', 'rb') as input:
+            region_ids_history = pickle.load(input)
 
     else:
         expert = Expert()
@@ -107,7 +109,7 @@ if __name__ == "__main__":
         else:
             exploring_rate = -0.05*L + 0.7
 
-        if t % 1000 == 0:
+        if t % 1000 == 0 or t >= sim_duration:
             with open('expert_backup.pkl', 'wb') as output:
                 pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)
 
@@ -117,11 +119,9 @@ if __name__ == "__main__":
             with open('mean_error_history_backup.pkl', 'wb') as output:
                 pickle.dump(mean_error_history, output, pickle.HIGHEST_PROTOCOL)
 
-    with open('expert_backup.pkl', 'wb') as output:
-        pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)
+            with open('region_ids_history_backup.pkl', 'wb') as output:
+                pickle.dump(region_ids_history, output, pickle.HIGHEST_PROTOCOL)
 
-    with open('action_history_backup.pkl', 'wb') as output:
-        pickle.dump(action_history, output, pickle.HIGHEST_PROTOCOL)
 
     expert.print()
 
