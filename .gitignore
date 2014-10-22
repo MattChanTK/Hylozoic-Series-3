@@ -71,6 +71,7 @@ CuriousSystem/outputs/*.csv
 CuriousSystem/outputs/*/*
 CuriousSystem/outputs/*.png
 CuriousSystem2/outputs/*/*.png
+*.pkl
 
 
 # Compiled source #
