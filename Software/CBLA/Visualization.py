@@ -58,7 +58,7 @@ def plot_model(Expert, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
         plot_model(Expert.left, x_idx, y_idx, fig_num, subplot_num)
         plot_model(Expert.right, x_idx, y_idx, fig_num, subplot_num)
 
-def plot_regional_mean_errors(mean_error_history, fig_num=2, subplot_num=111):
+def plot_regional_mean_errors(mean_error_history, regions_ids, fig_num=2, subplot_num=111):
     tree_colours = ['r', 'g', 'b', 'y', 'c', 'm', 'y', 'k']
      # plot configuration
     fig = plt.figure(fig_num)
@@ -70,10 +70,16 @@ def plot_regional_mean_errors(mean_error_history, fig_num=2, subplot_num=111):
     plt.xlabel("Time Step")
     plt.ylabel("Mean Error")
 
+    for t in range(len(mean_error_history)):
+        data = list(zip(regions_ids[t], mean_error_history[t]))
+        data.sort(key=lambda region: region[0])
+        data = list(zip(*data))
+        mean_error_history[t] = data[1]
+
     max_len = len(mean_error_history[-1])
     for t in range(len(mean_error_history)):
         padding = [None]*(max_len - len(mean_error_history[t]))
-        mean_error_history[t] = mean_error_history[t] + padding
+        mean_error_history[t] = list(mean_error_history[t]) + padding
 
     data = zip(*mean_error_history)
     i = 0

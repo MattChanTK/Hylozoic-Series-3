@@ -270,17 +270,20 @@ class Expert():
         else:
             print(" L ** ", end="")
             self.left.print(level+1)
-            print(("      ")*level, "R ** ", end="")
+            print((" ")*len(" L ** ")*level, "R ** ", end="")
             self.right.print(level+1)
 
-    def save_mean_errors(self, mean_errors):
+    def save_mean_errors(self, mean_errors, region_ids, region=0, max_region=0, level=0):
 
         # this is leaf node
         if self.left is None and self.right is None:
             mean_errors.append(self.mean_error)
+            region_ids.append(region)
         else:
-            self.left.save_mean_errors(mean_errors)
-            self.right.save_mean_errors(mean_errors)
+            next_max_region = 2**(level+1)-1
+            self.left.save_mean_errors(mean_errors, region_ids, region, next_max_region, level+1)
+            self.right.save_mean_errors(mean_errors, region_ids, max_region+region+1, next_max_region, level+1)
+
 
 class RegionSplitter():
 
