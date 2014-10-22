@@ -14,10 +14,10 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 2000
+    sim_duration = 8000
 
     # use saved expert
-    is_using_saved_expert = 1
+    is_using_saved_expert = 0
     # initial actions
     Mi = ((0,),)
 
@@ -126,8 +126,9 @@ if __name__ == "__main__":
     expert.print()
 
     Viz.plot_evolution(action_history, fig_num=1, subplot_num=221)
-    Viz.plot_model(expert, fig_num=1, subplot_num=222)
-    Viz.plot_regional_mean_errors(mean_error_history, region_ids_history, fig_num=1, subplot_num=212)
+    Viz.plot_model(expert, x_idx=1, y_idx=0, fig_num=1, subplot_num=222)
+    Viz.plot_model(expert, x_idx=0, y_idx=0, fig_num=1, subplot_num=224)
+    Viz.plot_regional_mean_errors(mean_error_history, region_ids_history, fig_num=1, subplot_num=223)
     plt.ioff()
     plt.show()
 
