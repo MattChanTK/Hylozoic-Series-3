@@ -109,4 +109,11 @@ uint16_t WaveTable::get_duration() const{
 
 	return duration;
 }
+
+void WaveTable::restart_wave_function(){
+	wave_function_cycling == false;
+	step_count = 1;
+	pwm_output = 0;
+	
+}
 		

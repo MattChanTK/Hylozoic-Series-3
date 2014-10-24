@@ -35,6 +35,9 @@ class WaveTable{
 		//--- Setters and getters for the configuration parameters ---
 		WaveTable& set_duration(const uint16_t Duration);
 		uint16_t get_duration() const;
+		
+		//--- restart the wave ---
+		void restart_wave_function();
 
 	
 	private:
