@@ -8,7 +8,18 @@
 HK_Behaviours::HK_Behaviours():
 		tentacle_ir_state{tentacle_0_ir_state, tentacle_1_ir_state, tentacle_2_ir_state},
 		tentacle_ir_threshold{tentacle_0_ir_threshold, tentacle_1_ir_threshold, tentacle_2_ir_threshold},
-		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period}
+		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period},
+		tentacle_scout_ir_threshold{tentacle_0_scout_ir_threshold, tentacle_1_scout_ir_threshold, tentacle_2_scout_ir_threshold},
+		scout_led_0_wave(5000, cos_wave_1),
+		scout_led_1_wave(5000, cos_wave_1),
+		scout_led_2_wave(5000, cos_wave_1),
+		scout_led_wave{scout_led_0_wave, scout_led_1_wave, scout_led_2_wave},
+		extra_lights_0_wave(2500, cos_wave_1),
+		extra_lights_1_wave(2500, cos_wave_2),
+		extra_lights_2_wave(2500, cos_wave_3),
+		extra_lights_3_wave(2500, cos_wave_4),
+		extra_lights_wave{extra_lights_0_wave, extra_lights_1_wave, extra_lights_2_wave, extra_lights_3_wave}
+		
 {
 	
 }
@@ -336,9 +347,14 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 			
 			// starting a cycle
 			if (tentacle_cycling[i] == false){
-			
+				
+				uint8_t sma_action_type = type[i];
+				// if setting type to 255, the actual type will be random
+				if (sma_action_type == 255){
+					sma_action_type = random(0,3);
+				}
 				// behaviour Type
-				switch (type[i]){
+				switch (sma_action_type){
 					case 1:
 						sma0[i] = 0;
 						sma1[i] = 1;
@@ -396,67 +412,115 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 }
 
 
-// //---- bottom IR primary action (soft) -----
-// void HK_Behaviours::tentacle_bottom_ir_primary_action(const uint32_t &curr_time){
+// //---- bottom IR primary action  -----
+void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 
 
-	// //---- Tentacle cycling variables -----
-	// uint16_t protocell_cycle_period = 10000;
-
-	// static wave_t sine_wave1 [32] = {0, 12, 23, 31, 36, 40, 43, 46, 48, 50, 51, 52, 53, 54, 55, 55, 55, 55, 55, 54, 53, 52, 51, 50, 48, 46, 43, 40, 36, 31, 23, 12};
-	// static wave_t sine_wave2 [32] = {48, 50, 51, 52, 53, 54, 55, 55, 55, 55, 55, 54, 53, 52, 51, 50, 48, 46, 43, 40, 36, 31, 23, 12, 0, 12, 23, 31, 36, 40, 43, 46};
-	// static WaveTable bot_ir_sine_wave(10000, sine_wave1);
-	// static WaveTable bot_ir_cosine_wave(10000, sine_wave2);
+	//---- Tentacle cycling variables -----
+	static uint16_t scout_led_period[3] = {5000, 5000, 5000};
+	static uint16_t extra_lights_period[4] = {2500, 2500, 2500, 2500};
 	
-	// //~~read IR sensors state~~
-	// // for (uint8_t i=0; i<3; i++){
-		// // tentacle_ir_state[i][0] = (uint8_t) tentacle[i].read_analog_state(0);
-	// // }
-	
-	// uint8_t closest_ir = 0;
+
+	//~~read IR sensors state~~
 	// for (uint8_t i=0; i<3; i++){
-		// if (tentacle_ir_state[i][0] > closest_ir)
-			// closest_ir = tentacle_ir_state[i][0];
+		// tentacle_ir_state[i][0] = (uint8_t) tentacle[i].read_analog_state(0);
 	// }
 	
-
-	// //if the object is very close
-	// if (closest_ir > tentacle_ir_threshold[0][0]){
-		// // for (uint8_t i = 0; i<2; i++)
-			// // protocell[i].set_led_level(200);
-
-		// return;	
-	// }
+	bool extra_lights_on = false;
 	
-	// uint8_t level_divider = 2;
-	// // if there is no object detected
-	// if (closest_ir < 80){
-		// protocell_cycle_period = 10000;
-		// //level_divider = 10;
-		// // for (uint8_t i = 0; i<2; i++)
-			// // protocell[i].set_led_level(0);
-		// // return;
-	// }
-	// //otherwise, set the cycle period depending on distance
-	// else if (closest_ir < 120)
-		// protocell_cycle_period = 10*(255-closest_ir);
-	// else
-		// protocell_cycle_period = 10*(255-closest_ir);
+	for (uint8_t i=0; i<3; i++){
+		bool scout_led_on = false;
+
+		//if something is very close
+		if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][2]){
+			scout_led_on = true;
+			scout_led_period[i] = 1000;
+			
+			extra_lights_on = true;
+			if (extra_lights_on){
+				for (uint8_t j=0; j<4; j++){
+					if (extra_lights_period[j] > 1000){
+						extra_lights_period[j] = 1000;
+					}
+				}
+			}
+			
+		}		
+
+		//if something is close
+		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][1]){
+			scout_led_on = true;
+			scout_led_period[i] = 5000;
+			
+			extra_lights_on = true;
+			if (extra_lights_on){
+				for (uint8_t j=0; j<4; j++){
+					if (extra_lights_period[j] > 2500){
+						extra_lights_period[j] = 2500;
+					}
+				}
+			}
+		}
+
+		//if something is detected but far
+		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][0]){
+			scout_led_on = true;
+			scout_led_period[i] = 5000;
+			
+			extra_lights_on |= false;
+			
+			
+		}
 		
-	// if (protocell_cycle_period < 100)
-		// protocell_cycle_period = 100;
+		//if there is no object detected
+		else{
+			scout_led_on = false;
+			extra_lights_on |= false;
+		}
+		
+		if (scout_led_on){
+			scout_led_wave[i].set_duration(scout_led_period[i]);
+			uint8_t scout_led_level = scout_led_wave[i].wave_function(curr_time);
+			
+			tentacle[i].set_led_level(0, scout_led_level);
+		}
+		else{
+			scout_led_wave[i].restart_wave_function();
+			tentacle[i].set_led_level(0, 0);
 
+		}
+		
+	}
+
+
+	if (extra_lights_on){
+
+		for (uint8_t i=0; i<4; i++){
+			extra_lights_wave[i].set_duration(extra_lights_period[i]);
+			uint8_t extra_lights_level = extra_lights_wave[i].wave_function(curr_time);
+			
+			if (i<2){
+				extra_lights.set_led_level(i, extra_lights_level);
+			}
+			else{
+				extra_lights.set_sma_level(i-2, extra_lights_level);
+			}
+		}
+	}
+	else{
+		for (uint8_t i=0; i<4; i++){
+			extra_lights_wave[i].restart_wave_function();
+			uint8_t extra_lights_level = 0;
+			extra_lights_period[i] =25000;
+			
+			if (i<2){
+				extra_lights.set_led_level(i, extra_lights_level);
+			}
+			else{
+				extra_lights.set_sma_level(i-2, extra_lights_level);
+			}
+		}
+			
+	}
 	
-	// bot_ir_sine_wave.set_duration(protocell_cycle_period);
-	// bot_ir_cosine_wave.set_duration(protocell_cycle_period);
-	
-	
-	// //~~~ tentacle cycle~~~~	
-	// uint8_t led_level[2];
-	// led_level[0] = bot_ir_cosine_wave.wave_function(curr_time) / level_divider;
-	// led_level[1] = bot_ir_sine_wave.wave_function(curr_time) / level_divider;
-	// for (uint8_t i = 0; i<2; i++){
-		// protocell[i].set_led_level(led_level[i]);
-	// }
-	
-// }
+}
