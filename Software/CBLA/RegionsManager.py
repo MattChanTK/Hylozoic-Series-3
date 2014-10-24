@@ -328,7 +328,7 @@ class RegionSplitter():
                 variance = []
                 for group_k in group:
                     mean = math.fsum(group_k)/len(group_k)
-                    variance.append(math.fsum([((x - mean)**2/(max(group_k)-min(group_k))**2) for x in group_k]))
+                    variance.append(math.fsum([((x - mean)**2/((max(group_k)+ min(group_k))/2)**2) for x in group_k]))
                 weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
             in_group_variance = math.fsum(weighted_avg_variance)

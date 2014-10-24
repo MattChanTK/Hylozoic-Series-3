@@ -11,20 +11,20 @@ class SimpleFunction():
         if not isinstance(M, tuple):
             raise(TypeError, "M must be a tuple")
 
-        S = M[0]*1.5
+        S1 = M[0]*1.5
 
         if 25 > M[0] > 10:
-            S += random.uniform(-0.1, 0.1)
+            S1 += random.uniform(-0.1, 0.1)
         elif -10 > M[0] > -25:
-            S += random.uniform(-0.1, 0.1)
+            S1 += random.uniform(-0.1, 0.1)
         elif -10 <= M[0] <= 10:
-            S += math.sin(M[0])*10
+            S1 += math.sin(M[0])*10
         else:
-            S += random.uniform(-M[0], M[0])
+            S1 += random.uniform(-M[0], M[0])
 
 
 
-        self.S = (S,)
+        self.S = (S1,)
 
     def report(self):
         return self.S
