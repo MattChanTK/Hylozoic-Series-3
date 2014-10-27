@@ -23,7 +23,6 @@ void setup() {
 void loop() {
 	
 
-
 	//check for new messages
 	if (hk_unit.receive_msg()){
 			
