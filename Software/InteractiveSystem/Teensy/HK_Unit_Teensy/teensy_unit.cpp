@@ -96,7 +96,7 @@ void TeensyUnit::init(){
 	while (receive_msg()){
 	    // this prevents the Teensy from being stuck in infinite loop
 	    clearing_counter++;
-	    if (clearing_counter>10000000){
+	    if (clearing_counter>100){
 			break;
         }
 		

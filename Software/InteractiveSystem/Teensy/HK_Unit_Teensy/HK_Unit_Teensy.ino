@@ -22,7 +22,7 @@ void setup() {
 
 void loop() {
 	
-
+	
 	//check for new messages
 	if (hk_unit.receive_msg()){
 			
@@ -30,6 +30,7 @@ void loop() {
 		hk_unit.parse_msg();
 
 	}
+
 
 	uint32_t curr_time = millis();
 	hk_unit.sample_inputs();
