@@ -69,17 +69,20 @@ class HK_Behaviours : public TeensyUnit{
 		//--- Tentacle tip primary action ----
 		
 		//~~input~~
+		// {bottom IR, tip IR}
 		uint8_t tentacle_0_ir_threshold[2] = {240, 80};
 		uint8_t tentacle_1_ir_threshold[2] = {240, 80};
 		uint8_t tentacle_2_ir_threshold[2] = {240, 80};
 		uint8_t* tentacle_ir_threshold[3];
 		
 		//~~output~~
+		// {on time, off time}
 		uint8_t tentacle_0_cycle_period[2] = {2, 8};
 		uint8_t tentacle_1_cycle_period[2] = {2, 8};
 		uint8_t tentacle_2_cycle_period[2] = {2, 8};
 		uint8_t* tentacle_cycle_period[3];
 
+		// {tentacle 0, tentacle 1, tentacle 2} in ms
 		uint16_t tentacle_cycle_offset[3] = {500, 500, 500};
 		
 		

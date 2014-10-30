@@ -434,13 +434,13 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		//if something is very close
 		if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][2]){
 			scout_led_on = true;
-			scout_led_period[i] = 1000;
+			scout_led_period[i] = 1000; // modify scout led period here (in ms)
 			
 			extra_lights_on = true;
 			if (extra_lights_on){
 				for (uint8_t j=0; j<4; j++){
-					if (extra_lights_period[j] > 1000){
-						extra_lights_period[j] = 1000;
+					if (extra_lights_period[j] > 1000){	// modify extra lights period here (in ms)
+						extra_lights_period[j] = 1000;	// modify extra lights period here (in ms)
 					}
 				}
 			}
@@ -450,13 +450,13 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		//if something is close
 		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][1]){
 			scout_led_on = true;
-			scout_led_period[i] = 5000;
+			scout_led_period[i] = 5000;  // modify scout led period here (in ms)
 			
 			extra_lights_on = true;
 			if (extra_lights_on){
 				for (uint8_t j=0; j<4; j++){
 					if (extra_lights_period[j] > 2500){
-						extra_lights_period[j] = 2500;
+						extra_lights_period[j] = 2500;  // modify extra lights period here (in ms)
 					}
 				}
 			}
@@ -465,7 +465,7 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		//if something is detected but far
 		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][0]){
 			scout_led_on = true;
-			scout_led_period[i] = 5000;
+			scout_led_period[i] = 5000;	  // modify scout led period here (in ms)
 			
 			extra_lights_on |= false;
 			
@@ -511,7 +511,7 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		for (uint8_t i=0; i<4; i++){
 			extra_lights_wave[i].restart_wave_function();
 			uint8_t extra_lights_level = 0;
-			extra_lights_period[i] =25000;
+			extra_lights_period[i] = 25000;
 			
 			if (i<2){
 				extra_lights.set_led_level(i, extra_lights_level);
