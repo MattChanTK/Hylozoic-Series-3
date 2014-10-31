@@ -10,6 +10,7 @@ HK_Behaviours::HK_Behaviours():
 		tentacle_ir_threshold{tentacle_0_ir_threshold, tentacle_1_ir_threshold, tentacle_2_ir_threshold},
 		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period},
 		tentacle_scout_ir_threshold{tentacle_0_scout_ir_threshold, tentacle_1_scout_ir_threshold, tentacle_2_scout_ir_threshold},
+		preset_scout_led_period{preset_scout_led_0_period, preset_scout_led_1_period,preset_scout_led_2_period}, 
 		scout_led_0_wave(5000, cos_wave_1),
 		scout_led_1_wave(5000, cos_wave_1),
 		scout_led_2_wave(5000, cos_wave_1),
@@ -137,15 +138,20 @@ void HK_Behaviours::compose_reply(byte front_signature, byte back_signature){
 //--- Sampling function ---
 void HK_Behaviours::sample_inputs(){
 
-	
+	const uint8_t read_buff_num = 20;
 	//>>>tentacle<<<
 	
 	//~~IR sensors state~~
-	for (uint8_t i=0; i<2; i++){
-		tentacle_ir_state[0][i] = tentacle_0.read_analog_state(i);
-		tentacle_ir_state[1][i] = tentacle_1.read_analog_state(i);
-		tentacle_ir_state[2][i] = tentacle_2.read_analog_state(i);
+	for (uint8_t i = 0; i<3; i++){
+		for (uint8_t j=0; j<2; j++){
+			uint16_t read_buff = 0;
+			for (uint8_t k=0; k<read_buff_num; k++){
+				read_buff += tentacle[i].read_analog_state(j);
+			}
+			tentacle_ir_state[i][j] = (uint8_t) (read_buff/read_buff_num);
+		}
 	}
+
 
 	
 
@@ -315,7 +321,7 @@ void HK_Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 
 
 //---- Tip IR primary action -----
-void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, const uint8_t* type){
+void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time){
 	
 	
 	//---- Tentacle cycling variables -----
@@ -338,8 +344,28 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 	for (uint8_t i=0; i<3; i++){
 	
 		
+		uint8_t sma_action_type = 0; 
 		if (tentacle_ir_state[i][1] > tentacle_ir_threshold[i][1]){
+			
 			tentacle_on[i] = true;
+			
+			// determine the adjacent tentacle
+			uint8_t adj_id;
+			if (i==0){
+				adj_id = 2;
+			}
+			else{
+				adj_id = i-1;
+			}
+			
+			
+			if (tentacle_ir_state[i][0] > tentacle_ir_threshold[i][0]){
+				sma_action_type = 1;
+			}
+			else if (tentacle_ir_state[adj_id][0] > tentacle_ir_threshold[adj_id][0]){
+				sma_action_type = 2;
+			}
+			
 		}
 
 		
@@ -348,7 +374,6 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 			// starting a cycle
 			if (tentacle_cycling[i] == false){
 				
-				uint8_t sma_action_type = type[i];
 				// if setting type to 255, the actual type will be random
 				if (sma_action_type == 255){
 					sma_action_type = random(0,3);
@@ -357,13 +382,13 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 				switch (sma_action_type){
 					case 1:
 						sma0[i] = 0;
-						sma1[i] = 1;
-						sma_offset_time[i] = tentacle_cycle_offset[i];
+						sma1[i] = 0;
+						sma_offset_time[i] = 0; //tentacle_cycle_offset[i];
 					break;
 					case 2:
 						sma0[i] = 1;
-						sma1[i] = 0;
-						sma_offset_time[i] = tentacle_cycle_offset[i];
+						sma1[i] = 1;
+						sma_offset_time[i] = 0; //tentacle_cycle_offset[i];
 					break;
 					default:
 						sma0[i] = 0;
@@ -394,16 +419,18 @@ void HK_Behaviours::tentacle_tip_ir_primary_action(const uint32_t &curr_time, co
 					tentacle[i].set_sma_level(sma0[i], 0);
 	
 				}
+				else{
 				
-				// if reaches the on period, turn it off
-				else if (cycle_time > tentacle_cycle_period[i][0]*1000){
-					tentacle[i].set_sma_level(sma0[i], 0);
-				}	
-				
+					// if reaches the on period, turn it off
+					if (cycle_time > tentacle_cycle_period[i][0]*1000){
+						tentacle[i].set_sma_level(sma0[i], 0);
+					}	
+					
 
-				//if reaches the offset time
-				else if (cycle_time > sma_offset_time[i]){
-					tentacle[i].set_sma_level(sma1[i], 255);
+					//if reaches the offset time
+					if (cycle_time > sma_offset_time[i]){
+						tentacle[i].set_sma_level(sma1[i], 255);
+					}
 				}
 			}
 		}
@@ -417,10 +444,11 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 
 
 	//---- Tentacle cycling variables -----
-	static uint16_t scout_led_period[3] = {5000, 5000, 5000};
-	static uint16_t extra_lights_period[4] = {2500, 2500, 2500, 2500};
+	static uint16_t scout_led_period[3] = {preset_scout_led_period[0][0], preset_scout_led_period[1][0], preset_scout_led_period[2][0]};
+	static uint16_t extra_lights_period[4] = {preset_extra_light_period[0], preset_extra_light_period[0], preset_extra_light_period[0], preset_extra_light_period[0]};
+	static bool scout_led_resting[3] = {true, true, true};
+	static bool extra_lights_resting[4] = {true, true, true, true};
 	
-
 	//~~read IR sensors state~~
 	// for (uint8_t i=0; i<3; i++){
 		// tentacle_ir_state[i][0] = (uint8_t) tentacle[i].read_analog_state(0);
@@ -430,17 +458,21 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 	
 	for (uint8_t i=0; i<3; i++){
 		bool scout_led_on = false;
-
+		
 		//if something is very close
 		if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][2]){
 			scout_led_on = true;
-			scout_led_period[i] = 1000; // modify scout led period here (in ms)
+			scout_led_period[i] = preset_scout_led_period[i][2];
+			// scout_led_period[i] = (uint16_t) ((int16_t) scout_led_period[i] + 
+									// ((int16_t)(preset_scout_led_period[i][2]/period_change_rate) - (int16_t) (scout_led_period[i]/period_change_rate))); 
 			
 			extra_lights_on = true;
 			if (extra_lights_on){
 				for (uint8_t j=0; j<4; j++){
-					if (extra_lights_period[j] > 1000){	// modify extra lights period here (in ms)
-						extra_lights_period[j] = 1000;	// modify extra lights period here (in ms)
+					if (extra_lights_period[j] > preset_extra_light_period[2]){
+						extra_lights_period[j] = preset_extra_light_period[2];	
+						// extra_lights_period[j] = (uint16_t) ((int16_t) extra_lights_period[j] + 
+								// ((int16_t)(preset_extra_light_period[2]/period_change_rate) - (int16_t) (extra_lights_period[j]/period_change_rate))); 
 					}
 				}
 			}
@@ -450,13 +482,17 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		//if something is close
 		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][1]){
 			scout_led_on = true;
-			scout_led_period[i] = 5000;  // modify scout led period here (in ms)
+			scout_led_period[i] = preset_scout_led_period[i][1];
+			// scout_led_period[i] = (uint16_t) ((int16_t) scout_led_period[i] + 
+									// ((int16_t)(preset_scout_led_period[i][1]/period_change_rate) - (int16_t) (scout_led_period[i]/period_change_rate))); 
 			
 			extra_lights_on = true;
 			if (extra_lights_on){
 				for (uint8_t j=0; j<4; j++){
-					if (extra_lights_period[j] > 2500){
-						extra_lights_period[j] = 2500;  // modify extra lights period here (in ms)
+					if (extra_lights_period[j] > preset_extra_light_period[1]){
+						extra_lights_period[j] = preset_extra_light_period[1]; 
+						// extra_lights_period[j] = (uint16_t) ((int16_t) extra_lights_period[j] + 
+								// ((int16_t)(preset_extra_light_period[1]/period_change_rate) - (int16_t) (extra_lights_period[j]/period_change_rate))); 
 					}
 				}
 			}
@@ -465,7 +501,9 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		//if something is detected but far
 		else if (tentacle_ir_state[i][0] > tentacle_scout_ir_threshold[i][0]){
 			scout_led_on = true;
-			scout_led_period[i] = 5000;	  // modify scout led period here (in ms)
+			scout_led_period[i] = preset_scout_led_period[i][0];
+			// scout_led_period[i] = (uint16_t) ((int16_t) scout_led_period[i] + 
+									// ((int16_t)(preset_scout_led_period[i][0]/period_change_rate) - (int16_t) (scout_led_period[i]/period_change_rate)));   
 			
 			extra_lights_on |= false;
 			
@@ -478,15 +516,31 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 			extra_lights_on |= false;
 		}
 		
+		//Actuation
+		
 		if (scout_led_on){
-			scout_led_wave[i].set_duration(scout_led_period[i]);
 			uint8_t scout_led_level = scout_led_wave[i].wave_function(curr_time);
-			
+			scout_led_wave[i].set_duration(scout_led_period[i]);
+			//uint8_t scout_led_level = scout_led_wave[i].wave_function(curr_time);
 			tentacle[i].set_led_level(0, scout_led_level);
+			scout_led_resting[i] = false;
 		}
 		else{
-			scout_led_wave[i].restart_wave_function();
-			tentacle[i].set_led_level(0, 0);
+			uint8_t scout_led_level = 0; 
+			if (!scout_led_resting[i]){
+				scout_led_level = scout_led_wave[i].wave_function(curr_time);
+			}
+
+			
+			if (scout_led_resting[i] || scout_led_level < 2){
+				scout_led_wave[i].restart_wave_function();
+				tentacle[i].set_led_level(0, 0);
+				scout_led_resting[i] = true;
+			}
+			else{
+				tentacle[i].set_led_level(0, scout_led_level);
+				scout_led_resting[i] = false;
+			}
 
 		}
 		
@@ -498,6 +552,7 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 		for (uint8_t i=0; i<4; i++){
 			extra_lights_wave[i].set_duration(extra_lights_period[i]);
 			uint8_t extra_lights_level = extra_lights_wave[i].wave_function(curr_time);
+			extra_lights_resting[i] = false;
 			
 			if (i<2){
 				extra_lights.set_led_level(i, extra_lights_level);
@@ -509,9 +564,22 @@ void HK_Behaviours::tentacle_scout_ir_primary_action(const uint32_t &curr_time){
 	}
 	else{
 		for (uint8_t i=0; i<4; i++){
-			extra_lights_wave[i].restart_wave_function();
+			
 			uint8_t extra_lights_level = 0;
-			extra_lights_period[i] = 25000;
+			if (!extra_lights_resting[i]){
+				extra_lights_level = extra_lights_wave[i].wave_function(curr_time);
+			}
+			
+			if (extra_lights_resting[i] || extra_lights_level < 2){
+				extra_lights_wave[i].restart_wave_function();
+				extra_lights_level = 0;
+				extra_lights_period[i] = preset_extra_light_period[0];
+				extra_lights_resting[i] = true;
+			}
+			else{
+				extra_lights_resting[i] = false;
+			}
+	
 			
 			if (i<2){
 				extra_lights.set_led_level(i, extra_lights_level);

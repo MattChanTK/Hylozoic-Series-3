@@ -38,10 +38,9 @@ void loop() {
 	//hk_unit.led_wave_behaviour(curr_time);
 	//hk_unit.test_behaviour((const uint32_t) curr_time);
 	
-	uint8_t tentacle_action_type[3] = {255,255,255}; // random type
-	hk_unit.tentacle_tip_ir_primary_action(curr_time, tentacle_action_type);
+	hk_unit.tentacle_tip_ir_primary_action(curr_time);
 	
-	hk_unit.tentacle_scout_ir_primary_action(curr_time);
+	//hk_unit.tentacle_scout_ir_primary_action(curr_time);
 	
 	//hk_unit.stress_test_behaviour(curr_time);
 	
