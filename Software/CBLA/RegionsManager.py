@@ -12,7 +12,10 @@ class Expert():
 
     max_training_data_num = 5000
 
-    def __init__(self):
+    def __init__(self, id=0, level=0):
+
+        self.expert_id = id
+        self.expert_level = level
 
         # child expert
         self.left = None
@@ -39,6 +42,7 @@ class Expert():
 
         # number of re-training
         self.training_count = 0
+
 
     def append(self, SM, S1, S1_predicted=None):
 
@@ -112,10 +116,10 @@ class Expert():
     def is_splitting(self):
         split_threshold = 500
         mean_error_threshold = 0.01
-        expected_reward_threshold = -0.001
+        #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
-            (self.mean_error > mean_error_threshold or self.calc_expected_reward() < expected_reward_threshold):
+            (self.mean_error > mean_error_threshold):# or self.calc_expected_reward() < expected_reward_threshold):
             return True
         return False
 
@@ -129,9 +133,10 @@ class Expert():
                 # instantiate the splitter
                 self.region_splitter = RegionSplitter(self.training_data, self.training_label)
 
+
                 # instantiate the left and right expert
-                self.right = Expert()
-                self.left = Expert()
+                self.right = Expert(id=(self.expert_id + (1 << self.expert_level)), level=self.expert_level+1)
+                self.left = Expert(id=self.expert_id,  level=self.expert_level+1)
 
                 # split the data to the correct region
                 for i in range(len(self.training_data)):
@@ -268,7 +273,8 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             mean_error_string = '%.*f' % (2, self.mean_error)
-            print(len(self.training_data), "#", str(self.training_count), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
+            #print(len(self.training_data), "#", str(self.training_count), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
+            print(len(self.training_data), "#", str(self.expert_id), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
 
         else:
             print(" L ** ", end="")
@@ -316,9 +322,8 @@ class RegionSplitter():
 
             grouping = clusterer.fit_predict(list(zip(data_zipped[i])))
 
-            groups = []
-            groups.append([data[j] for j in range(len(data_zipped[i])) if grouping[j] == 0])
-            groups.append([data[j] for j in range(len(data_zipped[i])) if grouping[j] == 1])
+            groups = [[data[j] for j in range(len(data_zipped[i])) if grouping[j] == 0],
+                      [data[j] for j in range(len(data_zipped[i])) if grouping[j] == 1]]
 
             weighted_avg_variance = []
             for group in groups:
@@ -328,7 +333,7 @@ class RegionSplitter():
                 variance = []
                 for group_k in group:
                     mean = math.fsum(group_k)/len(group_k)
-                    variance.append(math.fsum([((x - mean)**2/((max(group_k)+ min(group_k))/2)**2) for x in group_k]))
+                    variance.append(math.fsum([((x - mean)**2) for x in group_k]))
                 weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
             in_group_variance = math.fsum(weighted_avg_variance)
