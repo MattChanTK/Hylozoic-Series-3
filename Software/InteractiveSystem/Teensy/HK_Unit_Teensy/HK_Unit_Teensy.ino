@@ -40,7 +40,7 @@ void loop() {
 	
 	hk_unit.tentacle_tip_ir_primary_action(curr_time);
 	
-	//hk_unit.tentacle_scout_ir_primary_action(curr_time);
+	hk_unit.tentacle_scout_ir_primary_action(curr_time);
 	
 	//hk_unit.stress_test_behaviour(curr_time);
 	

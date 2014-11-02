@@ -69,6 +69,7 @@ class HK_Behaviours : public TeensyUnit{
 		//--- Tentacle tip primary action ----
 		
 		//~~input~~
+		//*** edit the IR sensors' thresholds for the Tentacle (SMA) behaviours here ****
 		// {bottom IR, tip IR}
 		uint8_t tentacle_0_ir_threshold[2] = {50, 80};
 		uint8_t tentacle_1_ir_threshold[2] = {50, 80};
@@ -76,12 +77,13 @@ class HK_Behaviours : public TeensyUnit{
 		uint8_t* tentacle_ir_threshold[3];
 		
 		//~~output~~
+		//*** edit the ON and OFF periods of an SMA activation here ****
 		// {on time, off time}
 		uint8_t tentacle_0_cycle_period[2] = {2, 15};
 		uint8_t tentacle_1_cycle_period[2] = {2, 15};
 		uint8_t tentacle_2_cycle_period[2] = {2, 15};
 		uint8_t* tentacle_cycle_period[3];
-
+		
 		// {tentacle 0, tentacle 1, tentacle 2} in ms
 		uint16_t tentacle_cycle_offset[3] = {1000, 1000, 1000};
 		
@@ -91,6 +93,7 @@ class HK_Behaviours : public TeensyUnit{
 		//~~input~~
 		int8_t period_change_rate = 10;
 		
+		//*** edit the triggering threshold of bottom IR sensors for reflex and extra lights behaviours****
 		//{far, close, very close}
 		uint8_t tentacle_0_scout_ir_threshold[3] = {40, 80, 120};
 		uint8_t tentacle_1_scout_ir_threshold[3] = {40, 80, 120};
@@ -98,21 +101,36 @@ class HK_Behaviours : public TeensyUnit{
 		uint8_t* tentacle_scout_ir_threshold[3];
 		
 		//~~output~~		
-		//{far, close, very close}
+		//*** edit the periods of the waveform of the reflex LED here****
+		//three distances: {far, close, very close}
 		uint16_t preset_scout_led_0_period[3] = {5000, 5000, 1000};
 		uint16_t preset_scout_led_1_period[3] = {5000, 5000, 1000};
 		uint16_t preset_scout_led_2_period[3] = {5000, 5000, 1000};
 		uint16_t* preset_scout_led_period[3];
 		
-		//{far, close, very close}
-		uint16_t preset_extra_light_period[3] = {65535, 2500, 1000};  // NOTE: "far" is not used
+		//*** edit the periods of the waveform of the high-power LED here****
+		//three distances: {far, close, very close}
+		uint16_t preset_extra_light_period[3] = {65535, 8000, 8000};  // NOTE: "far" is not used
 		
 		
 		// wave forms
-		const_wave_t cos_wave_1[wave_size] = {0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2};
-		const_wave_t cos_wave_2[wave_size] = {126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151};
-		const_wave_t cos_wave_3[wave_size] = {254, 251, 244, 232, 216, 197, 175, 151, 126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251};
-		const_wave_t cos_wave_4[wave_size] = {127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102};
+		// const_wave_t cos_wave_1[wave_size] = {0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2};
+		// const_wave_t cos_wave_2[wave_size] = {126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151};
+		// const_wave_t cos_wave_3[wave_size] = {254, 251, 244, 232, 216, 197, 175, 151, 126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251};
+		// const_wave_t cos_wave_4[wave_size] = {127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102};
+		
+		//*** edit the waveform for the reflex LED here****
+		const_wave_t reflex_cos_wave_1[wave_size] = {0, 0, 3, 7, 13, 22, 34, 49, 68, 92, 119, 149, 180, 209, 233, 249, 255, 249, 233, 209, 180, 149, 119, 92, 68, 49, 34, 22, 13, 7, 3, 0};
+		// const_wave_t cos_wave_2[wave_size] = {68, 49, 34, 22, 13, 7, 3, 0, 0, 0, 3, 7, 13, 22, 34, 49, 68, 92, 119, 149, 180, 209, 233, 249, 255, 249, 233, 209, 180, 149, 119, 92};
+		// const_wave_t cos_wave_3[wave_size] = {255, 249, 233, 209, 180, 149, 119, 92, 68, 49, 34, 22, 13, 7, 3, 0, 0, 0, 3, 7, 13, 22, 34, 49, 68, 92, 119, 149, 180, 209, 233, 249};
+		// const_wave_t cos_wave_4[wave_size] = {68, 92, 119, 149, 180, 209, 233, 249, 255, 249, 233, 209, 180, 149, 119, 92, 68, 49, 34, 22, 13, 7, 3, 0, 0, 0, 3, 7, 13, 22, 34, 49};
+		
+		//*** edit the waveform for the four high-power LED here****
+		const_wave_t cos_wave_1[wave_size] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 51, 84, 115, 140, 157, 163, 157, 140, 115, 84, 51, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		const_wave_t cos_wave_2[wave_size] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 51, 84, 115, 140, 157, 163, 157, 140, 115, 84, 51, 20, 0, 0, 0, 0, 0};
+		const_wave_t cos_wave_3[wave_size] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 51, 84, 115, 140, 157, 163, 157, 140, 115, 84, 51, 20, 0};
+		const_wave_t cos_wave_4[wave_size] = {84, 51, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 51, 84, 115, 140, 157, 163, 157, 140, 115};
+		
 		
 		WaveTable scout_led_0_wave;
 		WaveTable scout_led_1_wave;
