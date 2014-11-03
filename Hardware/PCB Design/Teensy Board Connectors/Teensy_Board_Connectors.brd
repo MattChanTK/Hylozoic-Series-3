@@ -117,7 +117,7 @@
 <wire x1="75.692" y1="80.772" x2="0" y2="80.772" width="0" layer="20"/>
 <wire x1="0" y1="80.772" x2="0" y2="16.51" width="0" layer="20"/>
 <text x="35.052" y="35.306" size="1.778" layer="21" rot="R90">RJ45 Connectors Board</text>
-<text x="37.592" y="35.306" size="1.27" layer="21" rot="R90">10/14</text>
+<text x="42.672" y="35.306" size="1.27" layer="21" rot="R90">10/14</text>
 <text x="40.132" y="35.306" size="1.27" layer="21" rot="R90">by PBAI &amp; UWaterloo</text>
 <text x="31.75" y="73.66" size="1.778" layer="22" rot="MR270">Jack 1</text>
 <text x="45.72" y="73.66" size="1.778" layer="22" rot="MR270">Jack 4</text>
@@ -131,6 +131,7 @@
 <text x="59.69" y="69.85" size="1.778" layer="21" rot="R180">Jack 4</text>
 <text x="59.69" y="49.53" size="1.778" layer="21" rot="R180">Jack 5</text>
 <text x="59.69" y="29.21" size="1.778" layer="21" rot="R180">Jack 6</text>
+<text x="37.592" y="35.306" size="1.27" layer="21" rot="R90">Hylozoic Series 3</text>
 </plain>
 <libraries>
 <library name="CBLA_Test_bed_Library">
