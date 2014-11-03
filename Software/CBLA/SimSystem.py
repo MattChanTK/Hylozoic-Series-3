@@ -11,7 +11,7 @@ class SimpleFunction():
         if not isinstance(M, tuple):
             raise(TypeError, "M must be a tuple")
 
-        S1 = M[0]*1.5
+        S1 = M[0]*0.5
 
         if 25 > M[0] > 10:
             S1 += random.uniform(-0.1, 0.1)
@@ -21,8 +21,6 @@ class SimpleFunction():
             S1 += math.sin(M[0])*10
         else:
             S1 += random.uniform(-M[0], M[0])
-
-
 
         self.S = (S1,)
 

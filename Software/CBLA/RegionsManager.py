@@ -282,17 +282,15 @@ class Expert():
             print((" ")*len(" L ** ")*level, "R ** ", end="")
             self.right.print(level+1)
 
-    def save_mean_errors(self, mean_errors, region_ids=None, region=0, max_region=0, level=0):
+    def save_mean_errors(self, mean_errors):
 
         # this is leaf node
         if self.left is None and self.right is None:
-            mean_errors.append(self.mean_error)
-            if region_ids is not None:
-                region_ids.append(region)
+            mean_errors.append((self.expert_id, self.mean_error))
         else:
-            next_max_region = 2**(level+1)-1
-            self.left.save_mean_errors(mean_errors, region_ids, region, next_max_region, level+1)
-            self.right.save_mean_errors(mean_errors, region_ids, max_region+region+1, next_max_region, level+1)
+
+            self.left.save_mean_errors(mean_errors)
+            self.right.save_mean_errors(mean_errors)
 
 
 class RegionSplitter():
@@ -307,10 +305,10 @@ class RegionSplitter():
         data_zipped = list(zip(*data))
 
         # set to cut dimension 1
-        # self.cut_dim = 1
-        # self.clusterer = KMeans(n_clusters=2, init='k-means++')
-        # self.clusterer.fit(list(zip(data_zipped[1])))
-        # return
+        self.cut_dim = 1
+        self.clusterer = KMeans(n_clusters=2, init='k-means++')
+        self.clusterer.fit(list(zip(data_zipped[1])))
+        return
 
         # sort in each dimension
         dim_min = float("inf")

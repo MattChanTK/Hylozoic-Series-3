@@ -24,13 +24,12 @@ def plot_evolution(action_history, fig_num=1, subplot_num=121):
 
     return plot
 
-def plot_model(Expert, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
+def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
 
     # plot configuration
     if plot is None:
         fig = plt.figure(fig_num)
         plot = fig.add_subplot(subplot_num)
-        plot.set_color_cycle(['r', 'g', 'b', 'y', 'c', 'm', 'y'])
         plt.ion()
         plt.show()
         plt.hold(True)
@@ -41,27 +40,28 @@ def plot_model(Expert, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
     # this is leaf node
     if Expert.left is None and Expert.right is None:
 
+        colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
 
         # plot the exemplars in the training set
         training_data = list(zip(*Expert.training_data))
         training_label = list(zip(*Expert.training_label))
         X = training_data[x_idx]
         Y = training_label[y_idx]
-        plot.plot(Y, X, ".")
+        plot.plot(Y, X, marker='o', ms=2, mew=0, lw=0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
         pts = list(np.arange(round(min(X)), round(max(X)), 0.1))
         try:
-            plot.plot(Expert.predict_model.predict(list(zip(*[pts, pts]))), pts, color="k", linewidth=3)
+            plot.plot(Expert.predict_model.predict(list(zip(*[pts, pts]))), pts, ls='-', color="k", linewidth=1)
         except Exception:
             pass
 
     else:
-        plot_model(Expert.left, plot, x_idx, y_idx, fig_num, subplot_num)
-        plot_model(Expert.right, plot, x_idx, y_idx, fig_num, subplot_num)
+        plot_model(Expert.left, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
+        plot_model(Expert.right, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
 
-def plot_regional_mean_errors(mean_error_history, regions_ids=None, fig_num=2, subplot_num=111):
-    tree_colours = ['r', 'g', 'b', 'y', 'c', 'm', 'y', 'k']
+def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot_num=111):
+
      # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
@@ -72,27 +72,19 @@ def plot_regional_mean_errors(mean_error_history, regions_ids=None, fig_num=2, s
     plt.xlabel("Time Step")
     plt.ylabel("Mean Error")
 
-    if regions_ids is not None:
-        for t in range(len(mean_error_history)):
-            data = list(zip(regions_ids[t], mean_error_history[t]))
-            data.sort(key=lambda region: region[0])
-            data = list(zip(*data))
-            mean_error_history[t] = data[1]
 
-    max_len = len(mean_error_history[-1])
+    # creating an empty list for each region
+    region_error = dict()
+    for id in region_ids:
+        region_error[id] = [None]*len(mean_error_history)
+
+    # group errors into groups corresponding to their region ids
     for t in range(len(mean_error_history)):
-        padding = [None]*(max_len - len(mean_error_history[t]))
-        mean_error_history[t] = list(mean_error_history[t]) + padding
+        for mean_error in mean_error_history[t]:
+            if mean_error[0] in region_ids:
+                region_error[mean_error[0]][t] = mean_error[1]
 
-    data = zip(*mean_error_history)
-    i = 0
-    for region in data:
-        i += 1
-        plot.plot(range(len(region)), region, tree_colours[i%len(tree_colours)]+'.')
 
-    # for t in range(len(mean_error_history)):
-    #
-    #
-    #     plot(t, mean_error_history[t], 'b.')
-    #     # for region in range(len(mean_error_history[t])):
-    #     #     plot.plot(t,mean_error_history[t][region], tree_colours[region%len(tree_colours)]+'.')
+    colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
+    for id in region_error:
+        plot.plot(range(len(region_error[id])), region_error[id], ls='-', lw=2, color=colours[region_ids.index(id)])

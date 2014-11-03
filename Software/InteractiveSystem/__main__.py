@@ -3,7 +3,7 @@ from TeensyInterface import TeensyManager
 import cProfile
 from pstats import Stats
 
-behaviours_config = 2
+behaviours_config = 1
 
 
 if behaviours_config == 0:

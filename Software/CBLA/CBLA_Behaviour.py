@@ -14,7 +14,7 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 8000
+    sim_duration = 2000
 
     # use saved expert
     is_using_saved_expert = 0
@@ -29,14 +29,11 @@ if __name__ == "__main__":
             action_history = pickle.load(input)
         with open('mean_error_history_backup.pkl', 'rb') as input:
             mean_error_history = pickle.load(input)
-        with open('region_ids_history_backup.pkl', 'rb') as input:
-            region_ids_history = pickle.load(input)
 
     else:
         expert = Expert()
         action_history = []
         mean_error_history = []
-        region_ids_history = []
 
         # initial training action
         Mi = []
@@ -89,9 +86,8 @@ if __name__ == "__main__":
         # record the mean errors of each region
         mean_errors = []
         region_ids = []
-        expert.save_mean_errors(mean_errors, region_ids)
+        expert.save_mean_errors(mean_errors)
         mean_error_history.append(copy(mean_errors))
-        region_ids_history.append(copy(region_ids))
 
         # set to current state
 
@@ -119,16 +115,16 @@ if __name__ == "__main__":
             with open('mean_error_history_backup.pkl', 'wb') as output:
                 pickle.dump(mean_error_history, output, pickle.HIGHEST_PROTOCOL)
 
-            with open('region_ids_history_backup.pkl', 'wb') as output:
-                pickle.dump(region_ids_history, output, pickle.HIGHEST_PROTOCOL)
-
 
     expert.print()
 
+    # find out what are the ids that existed
+    region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+
     Viz.plot_evolution(action_history, fig_num=1, subplot_num=221)
-    Viz.plot_model(expert, x_idx=1, y_idx=0, fig_num=1, subplot_num=222)
-    Viz.plot_model(expert, x_idx=0, y_idx=0, fig_num=1, subplot_num=224)
-    Viz.plot_regional_mean_errors(mean_error_history, region_ids_history, fig_num=1, subplot_num=223)
+    Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=222)
+    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=224)
+    Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=223)
     plt.ioff()
     plt.show()
 
