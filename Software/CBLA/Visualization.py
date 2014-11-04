@@ -1,6 +1,7 @@
 __author__ = 'Matthew'
 import numpy as np
 import matplotlib.pyplot as plt
+import pydot
 
 
 def moving_average(interval, window_size):
@@ -15,7 +16,7 @@ def plot_evolution(action_history, fig_num=1, subplot_num=121):
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
-    plot.plot(moving_average(action_history, 1), '.')
+    plot.plot(moving_average(action_history, 1), marker='o', ms=1.5, mew=0, lw=0)
     plt.ion()
     plt.show()
     plt.title("Action vs Time")
@@ -96,3 +97,37 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
     colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
     for id in region_error:
         plot.plot(range(len(region_error[id])), region_error[id], ls='-', lw=2, color=colours[region_ids.index(id)])
+
+
+def plot_expert_tree(Expert, graph=None, level=0):
+
+    # if it is the root
+    is_root = False
+    if graph is None:
+        graph = pydot.Dot(graph_type='graph')
+        is_root = True
+
+    # this is leaf node
+    if Expert.left is None and Expert.right is None:
+        return Expert.expert_id
+
+    else:
+
+        left_id = plot_expert_tree(Expert.left, graph, level+1)
+        right_id = plot_expert_tree(Expert.right, graph, level+1)
+
+        edge_left = pydot.Edge('%d. %d' % (level, Expert.expert_id), '%d. %d' % (level+1, left_id))
+        graph.add_edge(edge_left)
+        edge_right = pydot.Edge('%d. %d' % (level, Expert.expert_id), '%d. %d' % (level+1, right_id))
+        graph.add_edge(edge_right)
+
+        if is_root:
+            graph.write_png('tree_graph.png')
+
+        return Expert.expert_id
+
+
+
+
+
+
