@@ -34,8 +34,8 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
-        plt.ylabel("SM(t) [" + str(x_idx) + "]")
-        plt.xlabel("S(t+1)")
+        plt.xlabel("SM(t) [" + str(x_idx) + "]")
+        plt.ylabel("S(t+1)")
 
     # this is leaf node
     if Expert.left is None and Expert.right is None:
@@ -47,13 +47,21 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         training_label = list(zip(*Expert.training_label))
         X = training_data[x_idx]
         Y = training_label[y_idx]
-        plot.plot(Y, X, marker='o', ms=2, mew=0, lw=0, color=colours[region_ids.index(Expert.expert_id)])
+        plot.plot(X, Y, marker='o', ms=2, mew=0, lw=0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
-        pts = list(np.arange(round(min(X)), round(max(X)), 0.1))
+        pts = [None]*len(Expert.training_data[0])
+        for i in range(len(pts)):
+            max_val = round(max(training_data[i]))
+            min_val = round(min(training_data[i]))
+            try:
+                pts[i] = list(np.arange(min_val, max_val, (max_val-min_val)/100))
+            except ZeroDivisionError:
+                pts[i] = [min_val]
+
         try:
-            plot.plot(Expert.predict_model.predict(list(zip(*[pts, pts]))), pts, ls='-', color="k", linewidth=1)
-        except Exception:
+            plot.plot(pts[x_idx], list(list(zip(*Expert.predict_model.predict(list(zip(*pts)))))[0]), ls='-', color='k', linewidth=1)
+        except ValueError:
             pass
 
     else:

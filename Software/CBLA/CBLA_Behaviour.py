@@ -14,10 +14,10 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 2000
+    sim_duration = 3000
 
     # use saved expert
-    is_using_saved_expert = 0
+    is_using_saved_expert = 1
     # initial actions
     Mi = ((0,),)
 

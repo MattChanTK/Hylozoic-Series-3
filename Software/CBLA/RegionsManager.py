@@ -115,7 +115,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 0.01
+        mean_error_threshold = 0.5
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -295,24 +295,25 @@ class Expert():
 
 class RegionSplitter():
 
-    def __init__(self, data, label=None):
+    def __init__(self, data, label):
 
         self.cut_dim = 0
         self.cut_val = 0
 
-        dim_num = len(data[0])
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
 
         data_zipped = list(zip(*data))
 
         # set to cut dimension 1
-        self.cut_dim = 1
-        self.clusterer = KMeans(n_clusters=2, init='k-means++')
-        self.clusterer.fit(list(zip(data_zipped[1])))
-        return
+        # self.cut_dim = 1
+        # self.clusterer = KMeans(n_clusters=2, init='k-means++')
+        # self.clusterer.fit(list(zip(data_zipped[1])))
+        # return
 
         # sort in each dimension
         dim_min = float("inf")
-        for i in range(dim_num):
+        for i in range(data_dim_num):
 
              # TODO: need proper clustering
             # k-mean cluster for the dimension
@@ -320,8 +321,8 @@ class RegionSplitter():
 
             grouping = clusterer.fit_predict(list(zip(data_zipped[i])))
 
-            groups = [[data[j] for j in range(len(data_zipped[i])) if grouping[j] == 0],
-                      [data[j] for j in range(len(data_zipped[i])) if grouping[j] == 1]]
+            groups = [[label[j] for j in range(len(data_zipped[i])) if grouping[j] == 0],
+                      [label[j] for j in range(len(data_zipped[i])) if grouping[j] == 1]]
 
             weighted_avg_variance = []
             for group in groups:
@@ -331,7 +332,8 @@ class RegionSplitter():
                 variance = []
                 for group_k in group:
                     mean = math.fsum(group_k)/len(group_k)
-                    variance.append(math.fsum([((x - mean)**2) for x in group_k]))
+                    norm = math.fsum([math.fabs(x) for x in group_k])/len(group_k)
+                    variance.append(math.fsum([((x - mean)**2)/norm**2 for x in group_k]))
                 weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
             in_group_variance = math.fsum(weighted_avg_variance)
