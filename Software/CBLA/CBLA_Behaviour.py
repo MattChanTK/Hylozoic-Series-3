@@ -3,7 +3,6 @@ import random
 from RegionsManager import Expert
 from SimSystem import SimpleFunction as Robot
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import pickle
 import numpy as np
 from copy import copy
@@ -14,10 +13,10 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 3000
+    sim_duration = 2000
 
     # use saved expert
-    is_using_saved_expert = 1
+    is_using_saved_expert = 0
     # initial actions
     Mi = ((0,),)
 
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     t = 0
     S = (0,)
     M = Mi[0]
-    exploring_rate = 0.2
+    exploring_rate = 0.5
 
     while t < sim_duration:
         t += 1
@@ -71,16 +70,27 @@ if __name__ == "__main__":
         # add exemplar to expert
         expert.append(S + M, S1, S1_predicted)
 
-        expert.split()  # won't actually split if the condition is not met
+        # split is being done within append
+        # expert.split()  # won't actually split if the condition is not met
 
 
         # random action or the best action
         print("Exploring Rate: ", exploring_rate)
         is_exploring = (random.random() < exploring_rate)
 
-        M1, L = expert.get_next_action(S1, is_exploring)
+        candidate = []
+        M1, L = expert.get_next_action(S1, is_exploring, candidate)
 
-        print("Expected Reward", L)
+        # select a random possible action if it is exploring
+        if is_exploring:
+            try:
+                selection = random.randint(0, len(candidate)-1)
+                M1 = candidate[selection]
+            except ValueError:
+                pass
+        else:
+            print("Expected Reward", L)
+
         print("Next Action", M1)
 
         # record the mean errors of each region
@@ -98,13 +108,18 @@ if __name__ == "__main__":
             M = M1
 
         # update learning rate based on reward
-        if L < 0.01:
-            exploring_rate = 0.7
-        if L > 10:
-            exploring_rate = 0.2
-        else:
-            exploring_rate = -0.05*L + 0.7
-
+        if is_exploring:  # if it was exploring, stick with the original learning rate
+            exploring_rate_range = [0.5, 0.2]
+            reward_range = [0.01, 100.0]
+            if L < reward_range[0]:
+                exploring_rate = exploring_rate_range[0]
+            elif L > reward_range[1]:
+                exploring_rate = exploring_rate_range[1]
+            else:
+                m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
+                b = exploring_rate_range[0] - m*reward_range[0]
+                exploring_rate = m*L + b
+                print(m, L, b)
         if t % 1000 == 0 or t >= sim_duration:
             with open('expert_backup.pkl', 'wb') as output:
                 pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)
@@ -121,10 +136,12 @@ if __name__ == "__main__":
     # find out what are the ids that existed
     region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
+    Viz.plot_expert_tree(expert)
     Viz.plot_evolution(action_history, fig_num=1, subplot_num=221)
     Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=222)
     Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=224)
     Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=223)
+
     plt.ioff()
     plt.show()
 
