@@ -31,6 +31,9 @@ class Expert():
         # prediction model
         self.predict_model = linear_model.LinearRegression()
 
+        # mapping between S(t+1) to M(t+1)
+        self.sm_relation = linear_model.LinearRegression()
+
         # error is max at first
         self.mean_error = float("inf")
 
@@ -71,6 +74,9 @@ class Expert():
                 self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
                 self.rewards_history.append(self.kga.calc_reward())
                 self.rewards_history = self.rewards_history[-1:]
+
+            # #split if necessary
+            self.split()
 
         # Cases when only one of the child is NONE
         elif self.left is None or self.right is None:
@@ -115,7 +121,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 0.5
+        mean_error_threshold = 1
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -185,7 +191,7 @@ class Expert():
     def calc_expected_reward(self):
         return self.rewards_history[-1]
 
-    def get_next_action(self, S1, is_exploring=False):
+    def get_next_action(self, S1, is_exploring, candidates=[]):
 
         if not isinstance(S1, tuple):
             raise(TypeError, "S1 must be a tuple")
@@ -207,7 +213,10 @@ class Expert():
             else:
                 expected_reward = -float("inf")
 
-            M1 = self.get_possible_action(S1, is_exploring)
+            M1 = self.get_possible_action(S1)
+
+            if is_exploring and expected_reward > -float('inf'):
+                candidates.append(copy(M1))
 
             return (M1, expected_reward)
 
@@ -217,8 +226,8 @@ class Expert():
 
         else:
             # return the child node with the largest reward
-            next_action_L = self.left.get_next_action(S1)
-            next_action_R = self.right.get_next_action(S1)
+            next_action_L = self.left.get_next_action(S1, is_exploring, candidates)
+            next_action_R = self.right.get_next_action(S1, is_exploring, candidates)
 
             if (is_exploring and next_action_L[1] > -float("inf") and next_action_R[1] > -float("inf"))\
                 or (next_action_L[1] == -float("inf") and next_action_L[1] == -float("inf")):
@@ -242,7 +251,7 @@ class Expert():
                 return False
         return True
 
-    def get_possible_action(self, S1, is_exploring=False):
+    def get_possible_action(self, S1):
         # TODO need a proper way to figure out what are the possible action
 
         # find out the indices of M data
@@ -252,15 +261,29 @@ class Expert():
         M = zip(*self.training_data)
         M = tuple(M)[M_index[0]:M_index[1]]
 
-        # take random number that falls within range method
-        M1 = []
-        for i in range(len(M)):
-            # find the max and min in each dimension
-            min_M = min(M[i])
-            max_M = max(M[i])
-            # take a random number within the range
-            M1.append(random.uniform(min_M, max_M))
-        M1 = tuple(M1)
+
+        # # extract the S part of the data out
+        # S = zip(*self.training_data)
+        # S = tuple(S)[0:M_index[0]]
+        #
+        # random_select = False
+        # try:
+        #     self.sm_relation.fit(list(zip(*S)), list(zip(*M)))
+        #     M1 = tuple(self.sm_relation.predict(S1))
+        # except ValueError:
+        #     random_select = True
+
+        random_select = True
+        if random_select:
+        #take random number that falls within range method
+            M1 = []
+            for i in range(len(M)):
+                # find the max and min in each dimension
+                min_M = min(M[i])
+                max_M = max(M[i])
+                # take a random number within the range
+                M1.append(random.uniform(min_M, max_M))
+            M1 = tuple(M1)
 
         # take the average of the M1 in each dimension method
         #M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
@@ -308,14 +331,14 @@ class RegionSplitter():
         # set to cut dimension 1
         # self.cut_dim = 1
         # self.clusterer = KMeans(n_clusters=2, init='k-means++')
-        # self.clusterer.fit(list(zip(data_zipped[1])))
+        # self.clusterer.fit(list(zip(data_zipped[self.cut_dim])))
         # return
 
         # sort in each dimension
         dim_min = float("inf")
         for i in range(data_dim_num):
 
-             # TODO: need proper clustering
+            # TODO: need proper clustering
             # k-mean cluster for the dimension
             clusterer = KMeans(n_clusters=2, init='k-means++')
 
@@ -332,8 +355,8 @@ class RegionSplitter():
                 variance = []
                 for group_k in group:
                     mean = math.fsum(group_k)/len(group_k)
-                    norm = math.fsum([math.fabs(x) for x in group_k])/len(group_k)
-                    variance.append(math.fsum([((x - mean)**2)/norm**2 for x in group_k]))
+                    norm = math.fsum([x**2 for x in group_k])/len(group_k)
+                    variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
                 weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
             in_group_variance = math.fsum(weighted_avg_variance)
