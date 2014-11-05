@@ -13,7 +13,7 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 2000
+    sim_duration = 5000
 
     # use saved expert
     is_using_saved_expert = 0
@@ -119,7 +119,7 @@ if __name__ == "__main__":
                 m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
                 b = exploring_rate_range[0] - m*reward_range[0]
                 exploring_rate = m*L + b
-                print(m, L, b)
+
         if t % 1000 == 0 or t >= sim_duration:
             with open('expert_backup.pkl', 'wb') as output:
                 pickle.dump(expert, output, pickle.HIGHEST_PROTOCOL)

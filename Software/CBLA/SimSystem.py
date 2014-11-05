@@ -21,6 +21,7 @@ class SimpleFunction():
             S1 += math.sin(M[0])*10
         else:
             S1 += random.uniform(-M[0], M[0])
+            #S1 += random.uniform(-80, 80)
 
         self.S = (S1,)
 

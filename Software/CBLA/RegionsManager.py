@@ -6,6 +6,7 @@ from copy import copy
 from sklearn import linear_model
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 class Expert():
@@ -137,8 +138,9 @@ class Expert():
             if self.is_splitting():
                 print("It's splitting")
                 # instantiate the splitter
-                self.region_splitter = RegionSplitter(self.training_data, self.training_label)
-
+                self.region_splitter = RegionSplitter_oudeyer(self.training_data, self.training_label)
+                #self.region_splitter = RegionSplitter(self.training_data, self.training_label)
+                #self.region_splitter = RegionSplitter_PCA_KMean(self.training_data, self.training_label)
 
                 # instantiate the left and right expert
                 self.right = Expert(id=(self.expert_id + (1 << self.expert_level)), level=self.expert_level+1)
@@ -328,7 +330,7 @@ class RegionSplitter():
 
         data_zipped = list(zip(*data))
 
-        # set to cut dimension 1
+        #set to cut dimension 1
         # self.cut_dim = 1
         # self.clusterer = KMeans(n_clusters=2, init='k-means++')
         # self.clusterer.fit(list(zip(data_zipped[self.cut_dim])))
@@ -380,6 +382,96 @@ class RegionSplitter():
 
         return group == 0
         # data[self.cut_dim] > self.cut_val
+
+
+class RegionSplitter_PCA_KMean():
+    def __init__(self, data, label):
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        self.n_comp = min(1, data_dim_num)
+
+        self.pca = PCA(n_components=self.n_comp)
+
+        data = self.pca.fit_transform(data)
+        data_zipped = list(zip(*data))
+
+        # k-mean cluster for the dimension
+        self.clusterer = KMeans(n_clusters=2, init='k-means++')
+
+        self.clusterer.fit(list(zip(*data_zipped)))
+
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise(TypeError, "data must be a tuple")
+
+        data = tuple(self.pca.transform(data)[0])
+        group = self.clusterer.predict(data)
+
+        return group == 0
+
+
+class RegionSplitter_oudeyer():
+
+    def __init__(self, data, label):
+
+        self.cut_dim = 0
+        self.cut_val = 0
+        num_candidates = 50
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        data_zipped = list(zip(*data))
+
+        # sort in each dimension
+        dim_min = float("inf")
+        for i in range(data_dim_num):
+
+            for k in range(num_candidates):
+                # pick a random value
+                cut_val = random.choice(data_zipped[i])
+
+                groups = [[label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
+                          [label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
+
+                # check if any of the group is 0
+                if len(groups[0]) == 0 or len(groups[1]) == 0:
+                    break
+
+                weighted_avg_variance = []
+                for group in groups:
+                    num_sample = len(group)
+                    group = zip(*group)
+
+                    variance = []
+                    for group_k in group:
+                        mean = math.fsum(group_k)/len(group_k)
+                        norm = math.fsum([x**2 for x in group_k])/len(group_k)
+                        variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
+                    weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
+
+                in_group_variance = math.fsum(weighted_avg_variance)
+
+                if dim_min > in_group_variance:
+
+                    dim_min = in_group_variance
+                    self.cut_dim = i
+                    self.cut_val = cut_val
+
+
+        # just cut in half
+        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise(TypeError, "data must be a tuple")
+
+        group = data[self.cut_dim] <= self.cut_val
+
+        return group == 0
 
 
 class KGA():
