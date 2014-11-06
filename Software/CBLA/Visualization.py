@@ -107,7 +107,7 @@ def plot_model_3D(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, su
             max_val = round(max(training_data[i]))
             min_val = round(min(training_data[i]))
             try:
-                pts[i] = list(np.arange(min_val, max_val, (max_val-min_val)/100))
+                pts[i] = list(np.linspace(min_val, max_val, 100))
             except ZeroDivisionError:
                 pts[i] = [min_val]
 
@@ -160,24 +160,33 @@ def plot_expert_tree(Expert, graph=None, level=0):
         graph = pydot.Dot(graph_type='graph')
         is_root = True
 
+
+
     # this is leaf node
     if Expert.left is None and Expert.right is None:
-        return Expert.expert_id
-
+        this_node = pydot.Node('Node %d.%d\nErr=%.*f\nER=%f\n# data=%d\n# new data=%d' % (level, Expert.expert_id,
+                                                                       2, Expert.mean_error, Expert.rewards_history[-1],
+                                                                       len(Expert.training_data), Expert.training_count))
+    # if not a left node
     else:
+        # create the node
+        #this_node = pydot.Node('%d. %d' % (level, Expert.expert_id))
+        this_node = pydot.Node('cut dim=%d \ncut val=%.*f' % (Expert.region_splitter.cut_dim, 2, Expert.region_splitter.cut_val))
+        graph.add_node(this_node)
 
-        left_id = plot_expert_tree(Expert.left, graph, level+1)
-        right_id = plot_expert_tree(Expert.right, graph, level+1)
+        # find the child nodes
+        left_node = plot_expert_tree(Expert.left, graph, level+1)
+        right_node = plot_expert_tree(Expert.right, graph, level+1)
 
-        edge_left = pydot.Edge('%d. %d' % (level, Expert.expert_id), '%d. %d' % (level+1, left_id))
+        edge_left = pydot.Edge(this_node, left_node)
         graph.add_edge(edge_left)
-        edge_right = pydot.Edge('%d. %d' % (level, Expert.expert_id), '%d. %d' % (level+1, right_id))
+        edge_right = pydot.Edge(this_node, right_node)
         graph.add_edge(edge_right)
 
-        if is_root:
-            graph.write_png('tree_graph.png')
+    if is_root:
+        graph.write_png('tree_graph.png')
 
-        return Expert.expert_id
+    return this_node
 
 
 

@@ -13,12 +13,15 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 5000
+    sim_duration = 3000
 
     # use saved expert
     is_using_saved_expert = 0
     # initial actions
+
     Mi = ((0,),)
+    # instantiate a Robot
+    robot = Robot()
 
     # instantiate an Expert
     if is_using_saved_expert:
@@ -35,14 +38,7 @@ if __name__ == "__main__":
         mean_error_history = []
 
         # initial training action
-        Mi = []
-        for i in range(-70, 70):
-            Mi.append((i,))
-        Mi = tuple(Mi)
-
-
-    # instantiate a Robot
-    robot = Robot()
+        Mi = robot.get_possible_action()
 
 
     # initial conditions
@@ -59,6 +55,7 @@ if __name__ == "__main__":
         # have the expert make prediction
         S1_predicted = expert.predict(S, M)
         print("Predicted S1: ", S1_predicted)
+
 
         # do action
         action_history.append(M)
@@ -77,6 +74,9 @@ if __name__ == "__main__":
         # random action or the best action
         print("Exploring Rate: ", exploring_rate)
         is_exploring = (random.random() < exploring_rate)
+
+        # generate a list of possible action given the state
+        M_candidates = robot.get_possible_action()
 
         candidate = []
         M1, L = expert.get_next_action(S1, is_exploring, candidate)

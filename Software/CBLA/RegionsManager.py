@@ -8,6 +8,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import numpy as np
 
 class Expert():
 
@@ -122,7 +123,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 1
+        mean_error_threshold = -float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -209,9 +210,6 @@ class Expert():
                 # reward is just the reward in the most recent time region
                 expected_reward = self.calc_expected_reward()
 
-                # TODO check it this actually makes sense
-                # have to go back to zero over time
-                #self.rewards_history[-1] -= math.copysign(expected_reward, 0.05)
             else:
                 expected_reward = -float("inf")
 
@@ -298,8 +296,8 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             mean_error_string = '%.*f' % (2, self.mean_error)
-            #print(len(self.training_data), "#", str(self.training_count), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
-            print(len(self.training_data), "#", str(self.expert_id), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
+            print(len(self.training_data), "#", str(self.training_count), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
+            #print(len(self.training_data), "#", str(self.expert_id), "(err =", mean_error_string, ";ER =", self.rewards_history[-1], ") --", self.training_data)
 
         else:
             print(" L ** ", end="")
@@ -432,7 +430,9 @@ class RegionSplitter_oudeyer():
 
             for k in range(num_candidates):
                 # pick a random value
-                cut_val = random.choice(data_zipped[i])
+                max_val = max(data_zipped[i])
+                min_val = min(data_zipped[i])
+                cut_val = random.choice(np.linspace(min_val, max_val, num=100))
 
                 groups = [[label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
                           [label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
@@ -449,7 +449,7 @@ class RegionSplitter_oudeyer():
                     variance = []
                     for group_k in group:
                         mean = math.fsum(group_k)/len(group_k)
-                        norm = math.fsum([x**2 for x in group_k])/len(group_k)
+                        norm = 1 #math.fsum([x**2 for x in group_k])/len(group_k)
                         variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
                     weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 

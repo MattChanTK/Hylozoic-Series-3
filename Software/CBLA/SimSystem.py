@@ -20,10 +20,21 @@ class SimpleFunction():
         elif -10 <= M[0] <= 10:
             S1 += math.sin(M[0])*10
         else:
-            S1 += random.uniform(-M[0], M[0])
+            pass
+            #S1 += random.uniform(-M[0], M[0])
             #S1 += random.uniform(-80, 80)
 
         self.S = (S1,)
 
     def report(self):
         return self.S
+
+    def get_possible_action(self, s=None):
+
+        if s is None:
+            s = self.S
+
+        m = []
+        for i in range(-70, 70):
+            m.append((i,))
+        return m
