@@ -123,7 +123,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = -float('inf')
+        mean_error_threshold =  5 #-float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -150,9 +150,13 @@ class Expert():
                 # split the data to the correct region
                 for i in range(len(self.training_data)):
                     if self.region_splitter.classify(self.training_data[i]):
-                        self.right.append(self.training_data[i], self.training_label[i])
+                        self.right.training_data.append(self.training_data[i])
+                        self.right.training_label.append(self.training_label[i])
+                        # self.right.append(self.training_data[i], self.training_label[i])
                     else:
-                        self.left.append(self.training_data[i], self.training_label[i])
+                        self.left.training_data.append(self.training_data[i])
+                        self.left.training_label.append(self.training_label[i])
+                        #self.left.append(self.training_data[i], self.training_label[i])
 
                 # if either of them is empty
                 if len(self.left.training_data) == 0 or len(self.right.training_data) == 0:
@@ -163,11 +167,13 @@ class Expert():
                     return
 
                 # transferring "knowledge" to child nodes
+                self.right.train()
                 self.right.mean_error = self.mean_error
                 self.right.rewards_history = copy(self.rewards_history)
                 self.right.prediction_model = copy(self.predict_model)
                 self.right.kga.errors = copy(self.kga.errors)
                 self.right.training_count = 0
+                self.left.train()
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
                 self.left.prediction_model = copy(self.predict_model)
@@ -206,7 +212,7 @@ class Expert():
             if len(self.training_data) == 0:
                 raise(Exception, "This node has no training data!")
 
-            if self.is_possible(S1):
+            if self.is_relevant(S1):
                 # reward is just the reward in the most recent time region
                 expected_reward = self.calc_expected_reward()
 
@@ -240,7 +246,36 @@ class Expert():
             else:
                 return next_action_R
 
-    def is_possible(self, S1):
+    def evaluate_action(self, S1, M1):
+
+        if not isinstance(S1, tuple):
+            raise(TypeError, "S1 must be a tuple")
+        if not isinstance(M1, tuple):
+            raise(TypeError, "M1 must be a tuple")
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+            #print("Mean Error", self.mean_error)
+
+            if len(self.training_data) == 0:
+                raise(Exception, "This node has no training data!")
+
+            expected_reward = self.calc_expected_reward()
+
+            return expected_reward
+
+        # Cases when only one of the child is NONE
+        elif self.left is None and self.right is None:
+            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
+
+        else:
+
+            if self.region_splitter.classify(S1+M1):
+                return self.right.evaluate_action(S1, M1)
+            else:
+                return self.left.evaluate_action(S1, M1)
+
+    def is_relevant(self, S1):
         #TODO how to know if the state is associated with the region
         # check if the S1 is within the min and max range of all existing data points
         data_transpose = list(zip(*self.training_data))
@@ -277,12 +312,16 @@ class Expert():
         if random_select:
         #take random number that falls within range method
             M1 = []
-            for i in range(len(M)):
-                # find the max and min in each dimension
-                min_M = min(M[i])
-                max_M = max(M[i])
-                # take a random number within the range
-                M1.append(random.uniform(min_M, max_M))
+            # for i in range(len(M)):
+            #     # find the max and min in each dimension
+            #     min_M = min(M[i])
+            #     max_M = max(M[i])
+            #     # take a random number within the range
+            #     M1.append(random.uniform(min_M, max_M))
+            #
+            # pick one of the previous action
+            M1 = random.choice(list(zip(*M)))
+
             M1 = tuple(M1)
 
         # take the average of the M1 in each dimension method

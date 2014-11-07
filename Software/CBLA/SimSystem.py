@@ -1,6 +1,7 @@
 __author__ = 'Matthew'
 import math
 import random
+import numpy as np
 
 class SimpleFunction():
 
@@ -20,8 +21,8 @@ class SimpleFunction():
         elif -10 <= M[0] <= 10:
             S1 += math.sin(M[0])*10
         else:
-            pass
-            #S1 += random.uniform(-M[0], M[0])
+
+            S1 += random.uniform(-M[0], M[0])
             #S1 += random.uniform(-80, 80)
 
         self.S = (S1,)
@@ -34,7 +35,9 @@ class SimpleFunction():
         if s is None:
             s = self.S
 
-        m = []
-        for i in range(-70, 70):
-            m.append((i,))
+        # m = []
+        m = list(zip(np.linspace(-70, 70, 1000)))
+
+        # for i in :
+        #     m.append((i,))
         return m

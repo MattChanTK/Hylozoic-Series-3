@@ -59,7 +59,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         max_val = round(max(training_data[x_idx]))
         min_val = round(min(training_data[x_idx]))
         try:
-            pts[x_idx] = list(np.arange(min_val, max_val, (max_val-min_val)/num_sample))
+            pts[x_idx] = list(np.linspace(min_val, max_val, 100))
         except ZeroDivisionError:
             pts[x_idx] = [min_val]
 

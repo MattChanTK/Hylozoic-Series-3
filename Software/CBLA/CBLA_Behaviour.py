@@ -13,7 +13,7 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 3000
+    sim_duration = 5000
 
     # use saved expert
     is_using_saved_expert = 0
@@ -38,13 +38,14 @@ if __name__ == "__main__":
         mean_error_history = []
 
         # initial training action
-        Mi = robot.get_possible_action()
+        Mi = random.sample(robot.get_possible_action(), 300)
 
 
     # initial conditions
     t = 0
     S = (0,)
     M = Mi[0]
+    L = float("-inf")
     exploring_rate = 0.5
 
     while t < sim_duration:
@@ -75,9 +76,30 @@ if __name__ == "__main__":
         print("Exploring Rate: ", exploring_rate)
         is_exploring = (random.random() < exploring_rate)
 
-        # generate a list of possible action given the state
-        M_candidates = robot.get_possible_action()
+        #START ---- the Oudeyer way ----- START
 
+        # # generate a list of possible action given the state
+        # M_candidates = robot.get_possible_action()
+        #
+        # if is_exploring:
+        #     M1 = random.choice(M_candidates)
+        #
+        # else:
+        #     M1 = 0
+        #     highest_L = float("-inf")
+        #     for M_candidate in M_candidates:
+        #         L = expert.evaluate_action(S1, M_candidate)
+        #         if L > highest_L:
+        #             M1 = M_candidate
+        #             highest_L = L
+        #
+        #     print("Expected Reward", highest_L)
+        #     L = highest_L
+        #
+        # print("Next Action", M1)
+
+
+        #START ---- the old way ------ START
         candidate = []
         M1, L = expert.get_next_action(S1, is_exploring, candidate)
 
@@ -92,6 +114,8 @@ if __name__ == "__main__":
             print("Expected Reward", L)
 
         print("Next Action", M1)
+
+        #END ---- the old way ------ END
 
         # record the mean errors of each region
         mean_errors = []
@@ -109,7 +133,7 @@ if __name__ == "__main__":
 
         # update learning rate based on reward
         if is_exploring:  # if it was exploring, stick with the original learning rate
-            exploring_rate_range = [0.5, 0.2]
+            exploring_rate_range = [0.5, 0.1]
             reward_range = [0.01, 100.0]
             if L < reward_range[0]:
                 exploring_rate = exploring_rate_range[0]
