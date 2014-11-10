@@ -152,7 +152,7 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
         plot.plot(range(len(region_error[id])), region_error[id], ls='-', lw=2, color=colours[region_ids.index(id)])
 
 
-def plot_expert_tree(Expert, graph=None, level=0):
+def plot_expert_tree(Expert, region_ids, graph=None, level=0):
 
     # if it is the root
     is_root = False
@@ -160,13 +160,20 @@ def plot_expert_tree(Expert, graph=None, level=0):
         graph = pydot.Dot(graph_type='graph')
         is_root = True
 
-
-
     # this is leaf node
     if Expert.left is None and Expert.right is None:
+
+
+        colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
+        colour = colours[region_ids.index(Expert.expert_id)]
+
+        for c in range(len(colour)-1):
+            colour[c] = round(colour[c]*0xFF)
+
         this_node = pydot.Node('Node %d.%d\nErr=%.*f\nER=%f\n# data=%d\n# new data=%d' % (level, Expert.expert_id,
                                                                        2, Expert.mean_error, Expert.rewards_history[-1],
-                                                                       len(Expert.training_data), Expert.training_count))
+                                                                       len(Expert.training_data), Expert.training_count),
+                               style="filled", fillcolor="#%x%x%x%x"%(colour[0], colour[1], colour[2], colour[3]))
     # if not a left node
     else:
         # create the node
@@ -175,8 +182,10 @@ def plot_expert_tree(Expert, graph=None, level=0):
         graph.add_node(this_node)
 
         # find the child nodes
-        left_node = plot_expert_tree(Expert.left, graph, level+1)
-        right_node = plot_expert_tree(Expert.right, graph, level+1)
+        left_node = plot_expert_tree(Expert=Expert.left, region_ids=region_ids, graph=graph, level=level+1)
+        right_node = plot_expert_tree(Expert=Expert.right, region_ids=region_ids, graph=graph, level=level+1)
+        graph.add_node(left_node)
+        graph.add_node(right_node)
 
         edge_left = pydot.Edge(this_node, left_node)
         graph.add_edge(edge_left)

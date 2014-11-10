@@ -123,7 +123,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold =  5 #-float('inf')
+        mean_error_threshold =  1 #-float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -494,7 +494,7 @@ class RegionSplitter_oudeyer():
 
                 in_group_variance = math.fsum(weighted_avg_variance)
 
-                if dim_min > in_group_variance:
+                if in_group_variance < dim_min:
 
                     dim_min = in_group_variance
                     self.cut_dim = i
