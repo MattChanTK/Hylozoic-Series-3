@@ -613,6 +613,7 @@ class RegionSplitter_oudeyer_modified():
                 weighted_avg_variance = []
                 for group in groups:
 
+                    # calculate error with a linear model
                     data_k = list(zip(*group))[0]
                     label_k = list(zip(*group))[1]
                     predict_model = linear_model.LinearRegression()
@@ -624,6 +625,7 @@ class RegionSplitter_oudeyer_modified():
                     num_sample = len(group)
                     group = zip(*group[0])
 
+                    # calculate variance of data points
                     variance = []
                     for group_k in group:
                         mean = math.fsum(group_k)/len(group_k)
@@ -633,13 +635,16 @@ class RegionSplitter_oudeyer_modified():
 
                     avg_error.append(rms_error)
 
-                avg_error = math.fsum(avg_error)/2
+                error_diff = -(avg_error[0] - avg_error[1])**2
+                smallest_error = min(avg_error)
                 in_group_variance = math.fsum(weighted_avg_variance)
-                print('cut_dim=%d cut_val=%f avg_err=%f var=%f'%(i, cut_val, avg_error, in_group_variance))
+                #print('cut_dim=%d cut_val=%f avg_err=%f var=%f'%(i, cut_val, smallest_error, in_group_variance))
 
-                if avg_error + 0.01*in_group_variance < dim_min:
+                score = (error_diff) / ((in_group_variance+1) *(smallest_error+1))
 
-                    dim_min = avg_error
+                if score < dim_min:
+
+                    dim_min = score
                     self.cut_dim = i
                     self.cut_val = cut_val
 
