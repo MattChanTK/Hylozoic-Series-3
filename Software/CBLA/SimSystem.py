@@ -19,17 +19,18 @@ class SimpleFunction():
         S1 = list(copy.copy(self.S))
 
         for i in range(len(self.S)):
-            S1[i] = M[0]*0.5
+            S1[i] = self.S[0]*0.5
 
             if 25 > M[0] > 10:
                 S1[i] += random.uniform(-0.1, 0.1)
             elif -10 > M[0] > -25:
                 S1[i] += random.uniform(-0.1, 0.1)
             elif -10 <= M[0] <= 10:
-                S1[i] += math.sin(M[0])*10
+                S1[i] += math.sin(self.S[0]*10)*50
             else:
-                S1[i] += random.uniform(-M[0], M[0])
+                S1[i] += random.uniform(-self.S[0], self.S[0])
                 #S1[i] += random.uniform(-80, 80)
+                pass
 
         self.S = tuple(S1)
 

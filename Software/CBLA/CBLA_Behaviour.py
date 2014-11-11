@@ -13,13 +13,14 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 1000
+    sim_duration = 5000
 
     # use saved expert
-    is_using_saved_expert = 1
-    # initial actions
+    is_using_saved_expert = 0
 
+    # initial actions
     Mi = ((0,),)
+
     # instantiate a Robot
     robot = Robot()
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     S = (0,)
     M = Mi[0]
     L = float("-inf")
-    exploring_rate = 0.01
+    exploring_rate = 0.5
 
     while t < sim_duration:
         t += 1
@@ -132,17 +133,17 @@ if __name__ == "__main__":
             M = M1
 
         # update learning rate based on reward
-        # if is_exploring:  # if it was exploring, stick with the original learning rate
-        #     exploring_rate_range = [0.5, 0.1]
-        #     reward_range = [0.01, 100.0]
-        #     if L < reward_range[0]:
-        #         exploring_rate = exploring_rate_range[0]
-        #     elif L > reward_range[1]:
-        #         exploring_rate = exploring_rate_range[1]
-        #     else:
-        #         m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
-        #         b = exploring_rate_range[0] - m*reward_range[0]
-        #         exploring_rate = m*L + b
+        if is_exploring:  # if it was exploring, stick with the original learning rate
+            exploring_rate_range = [0.5, 0.1]
+            reward_range = [0.01, 100.0]
+            if L < reward_range[0]:
+                exploring_rate = exploring_rate_range[0]
+            elif L > reward_range[1]:
+                exploring_rate = exploring_rate_range[1]
+            else:
+                m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
+                b = exploring_rate_range[0] - m*reward_range[0]
+                exploring_rate = m*L + b
 
         if t % 1000 == 0 or t >= sim_duration:
             with open('expert_backup.pkl', 'wb') as output:
@@ -161,10 +162,11 @@ if __name__ == "__main__":
     region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
     Viz.plot_expert_tree(expert, region_ids)
-    Viz.plot_evolution(action_history, fig_num=1, subplot_num=221)
-    Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=222)
-    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=224)
-    Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=223)
+    Viz.plot_evolution(action_history, fig_num=1, subplot_num=241)
+    Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=242)
+    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=246)
+    Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=245)
+    Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
 
     plt.ioff()
     plt.show()

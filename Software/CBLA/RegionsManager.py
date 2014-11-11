@@ -7,6 +7,8 @@ from sklearn import linear_model
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
 from sklearn.decomposition import PCA
+from sklearn.neighbors import KNeighborsClassifier as knn
+from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -122,8 +124,8 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = 500
-        mean_error_threshold =  1 #-float('inf')
+        split_threshold = 1000
+        mean_error_threshold = 100 #-float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -139,8 +141,8 @@ class Expert():
             if self.is_splitting():
                 print("It's splitting")
                 # instantiate the splitter
-                self.region_splitter = RegionSplitter_oudeyer(self.training_data, self.training_label)
-                #self.region_splitter = RegionSplitter(self.training_data, self.training_label)
+                #self.region_splitter = RegionSplitter_oudeyer(self.training_data, self.training_label)
+                self.region_splitter = RegionSplitter_oudeyer_modified(self.training_data, self.training_label)
                 #self.region_splitter = RegionSplitter_PCA_KMean(self.training_data, self.training_label)
 
                 # instantiate the left and right expert
@@ -355,7 +357,7 @@ class Expert():
             self.right.save_mean_errors(mean_errors)
 
 
-class RegionSplitter():
+class RegionSplitter_KMean():
 
     def __init__(self, data, label):
 
@@ -478,7 +480,7 @@ class RegionSplitter_oudeyer():
 
                 # check if any of the group is 0
                 if len(groups[0]) == 0 or len(groups[1]) == 0:
-                    break
+                    continue
 
                 weighted_avg_variance = []
                 for group in groups:
@@ -488,7 +490,7 @@ class RegionSplitter_oudeyer():
                     variance = []
                     for group_k in group:
                         mean = math.fsum(group_k)/len(group_k)
-                        norm = 1 #math.fsum([x**2 for x in group_k])/len(group_k)
+                        norm = max(math.fsum([x**2 for x in group_k])/len(group_k), 1)
                         variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
                     weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
@@ -512,6 +514,172 @@ class RegionSplitter_oudeyer():
 
         return group == 0
 
+class RegionSplitter_oudeyer_diff_var():
+
+    def __init__(self, data, label):
+
+        self.cut_dim = 0
+        self.cut_val = 0
+        min_group_size = 100
+        num_candidates = 50
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        data_zipped = list(zip(*data))
+
+        # sort in each dimension
+        dim_min = float("inf")
+        for i in range(data_dim_num):
+
+            for k in range(num_candidates):
+                # pick a random value
+                max_val = max(data_zipped[i])
+                min_val = min(data_zipped[i])
+                cut_val = random.choice(np.linspace(min_val, max_val, num=100))
+
+                groups = [[label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
+                          [label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
+
+                # check if any of the group is 0
+                if len(groups[0]) < min_group_size or len(groups[1]) < min_group_size:
+                    continue
+
+                weighted_avg_variance = []
+                for group in groups:
+                    num_sample = len(group)
+                    group = zip(*group)
+
+                    variance = []
+                    for group_k in group:
+                        mean = math.fsum(group_k)/len(group_k)
+                        norm = max(math.fsum([x**2 for x in group_k])/len(group_k), 1)
+                        variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
+                    weighted_avg_variance.append(math.fsum(variance)/len(variance)/num_sample)
+
+                var_diff = -abs(weighted_avg_variance[1] - weighted_avg_variance[0])
+                print("cut_dim=%d cut_val=%f var_diff=%f"%(i, cut_val,var_diff))
+                if var_diff < dim_min:
+
+                    dim_min = var_diff
+                    self.cut_dim = i
+                    self.cut_val = cut_val
+
+
+        # just cut in half
+        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise(TypeError, "data must be a tuple")
+
+        group = data[self.cut_dim] <= self.cut_val
+
+        return group == 0
+
+class RegionSplitter_oudeyer_modified():
+
+    def __init__(self, data, label):
+
+        self.cut_dim = 0
+        self.cut_val = 0
+        num_candidates = 100
+        min_group_size = 20
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        data_zipped = list(zip(*data))
+
+        # sort in each dimension
+        dim_min = float("inf")
+        for i in range(data_dim_num):
+
+            for k in range(num_candidates):
+                # pick a random value
+                max_val = max(data_zipped[i])
+                min_val = min(data_zipped[i])
+                cut_val = random.uniform(min_val, max_val)
+
+                groups = [[[data[j], label[j]] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
+                          [[data[j], label[j]] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
+
+                # check if any of the group is 0 or 1
+
+                if len(groups[0]) < min_group_size or len(groups[1]) < min_group_size:
+                    continue
+
+                avg_error = []
+                weighted_avg_variance = []
+                for group in groups:
+
+                    data_k = list(zip(*group))[0]
+                    label_k = list(zip(*group))[1]
+                    predict_model = linear_model.LinearRegression()
+                    predict_model.fit(data_k[:int(len(group)/2)], label_k[:int(len(group)/2)])
+                    label_predict = predict_model.predict(data_k[int(len(group)/2)+1:])
+
+                    rms_error = math.sqrt(math.fsum([(label_predict[sample] - label_k[int(len(group)/2)+1 + sample])**2 for sample in range(len(label_predict))])/len(label_predict))
+
+                    num_sample = len(group)
+                    group = zip(*group[0])
+
+                    variance = []
+                    for group_k in group:
+                        mean = math.fsum(group_k)/len(group_k)
+                        norm = max(math.fsum([x**2 for x in group_k])/len(group_k), 1)
+                        variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
+                    weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
+
+                    avg_error.append(rms_error)
+
+                avg_error = math.fsum(avg_error)/2
+                in_group_variance = math.fsum(weighted_avg_variance)
+                print('cut_dim=%d cut_val=%f avg_err=%f var=%f'%(i, cut_val, avg_error, in_group_variance))
+
+                if avg_error + 0.01*in_group_variance < dim_min:
+
+                    dim_min = avg_error
+                    self.cut_dim = i
+                    self.cut_val = cut_val
+
+
+        # just cut in half
+        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise(TypeError, "data must be a tuple")
+
+        group = data[self.cut_dim] <= self.cut_val
+
+        return group == 0
+
+class RegionSplitter():
+
+    def __init__(self, data, label):
+
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        data_label = zip(*(list(zip(*data)) + list(zip(*label))))
+
+        # cluster data with labels
+        clusterer = KMeans(n_clusters=2, init='k-means++')
+        grouping = clusterer.fit_predict(list(data_label))
+        self.classifier = SVC()
+        self.classifier.fit(data, grouping)
+
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise(TypeError, "data must be a tuple")
+
+        group = self.classifier.predict(data)
+
+        return group==0
+
 
 class KGA():
 
@@ -521,10 +689,10 @@ class KGA():
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 500
+        self.delta = 100
 
         # time window
-        self.tau = 50
+        self.tau = 30
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):
