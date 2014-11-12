@@ -14,7 +14,7 @@ def moving_average(interval, window_size):
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, fig_num=1, subplot_num=121):
+def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
@@ -22,9 +22,9 @@ def plot_evolution(action_history, fig_num=1, subplot_num=121):
     plot.plot(moving_average(action_history, 1), marker='o', ms=1.5, mew=0, lw=0)
     plt.ion()
     plt.show()
-    plt.title("Action vs Time")
+    plt.title(title)
     plt.xlabel("Time Step")
-    plt.ylabel("M(t)")
+    plt.ylabel(y_label)
 
     return plot
 

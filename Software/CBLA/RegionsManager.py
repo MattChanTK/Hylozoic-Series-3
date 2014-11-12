@@ -9,6 +9,9 @@ from sklearn.cluster import Ward
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier as knn
 from sklearn.svm import SVC
+from sklearn.svm import SVR
+from sklearn.cross_validation import KFold
+from sklearn import metrics
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -34,6 +37,7 @@ class Expert():
 
         # prediction model
         self.predict_model = linear_model.LinearRegression()
+        #self.predict_model = SVR()
 
         # mapping between S(t+1) to M(t+1)
         self.sm_relation = linear_model.LinearRegression()
@@ -124,8 +128,8 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = 1000
-        mean_error_threshold = 100 #-float('inf')
+        split_threshold = 500
+        mean_error_threshold = 5  # -float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \
@@ -514,68 +518,6 @@ class RegionSplitter_oudeyer():
 
         return group == 0
 
-class RegionSplitter_oudeyer_diff_var():
-
-    def __init__(self, data, label):
-
-        self.cut_dim = 0
-        self.cut_val = 0
-        min_group_size = 100
-        num_candidates = 50
-
-        data_dim_num = len(data[0])
-        label_dim_num = len(label[0])
-
-        data_zipped = list(zip(*data))
-
-        # sort in each dimension
-        dim_min = float("inf")
-        for i in range(data_dim_num):
-
-            for k in range(num_candidates):
-                # pick a random value
-                max_val = max(data_zipped[i])
-                min_val = min(data_zipped[i])
-                cut_val = random.choice(np.linspace(min_val, max_val, num=100))
-
-                groups = [[label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
-                          [label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
-
-                # check if any of the group is 0
-                if len(groups[0]) < min_group_size or len(groups[1]) < min_group_size:
-                    continue
-
-                weighted_avg_variance = []
-                for group in groups:
-                    num_sample = len(group)
-                    group = zip(*group)
-
-                    variance = []
-                    for group_k in group:
-                        mean = math.fsum(group_k)/len(group_k)
-                        norm = max(math.fsum([x**2 for x in group_k])/len(group_k), 1)
-                        variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
-                    weighted_avg_variance.append(math.fsum(variance)/len(variance)/num_sample)
-
-                var_diff = -abs(weighted_avg_variance[1] - weighted_avg_variance[0])
-                print("cut_dim=%d cut_val=%f var_diff=%f"%(i, cut_val,var_diff))
-                if var_diff < dim_min:
-
-                    dim_min = var_diff
-                    self.cut_dim = i
-                    self.cut_val = cut_val
-
-
-        # just cut in half
-        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
-
-    def classify(self, data):
-        if not isinstance(data, tuple):
-            raise(TypeError, "data must be a tuple")
-
-        group = data[self.cut_dim] <= self.cut_val
-
-        return group == 0
 
 class RegionSplitter_oudeyer_modified():
 
@@ -590,6 +532,25 @@ class RegionSplitter_oudeyer_modified():
         label_dim_num = len(label[0])
 
         data_zipped = list(zip(*data))
+
+        # model used to evaluate the data
+        model = linear_model.LinearRegression()
+
+        # the error of whole partition
+        n_fold = 2
+        kf = KFold(len(data), n_folds=n_fold)
+        rms_error_whole = 0
+        for train_index, test_index in kf:
+            data_train, data_test = np.array(data)[train_index], np.array(data)[test_index]
+            label_train, label_test = np.array(label)[train_index], np.array(label)[test_index]
+
+            model = linear_model.LinearRegression()
+            model.fit(data_train, label_train)
+            label_predict = model.predict(data_test)
+
+            rms_error_whole += metrics.mean_squared_error(label_test, label_predict)
+
+        rms_error_whole /= n_fold
 
         # sort in each dimension
         dim_min = float("inf")
@@ -611,16 +572,30 @@ class RegionSplitter_oudeyer_modified():
 
                 avg_error = []
                 weighted_avg_variance = []
+
+
                 for group in groups:
 
                     # calculate error with a linear model
                     data_k = list(zip(*group))[0]
                     label_k = list(zip(*group))[1]
-                    predict_model = linear_model.LinearRegression()
-                    predict_model.fit(data_k[:int(len(group)/2)], label_k[:int(len(group)/2)])
-                    label_predict = predict_model.predict(data_k[int(len(group)/2)+1:])
 
-                    rms_error = math.sqrt(math.fsum([(label_predict[sample] - label_k[int(len(group)/2)+1 + sample])**2 for sample in range(len(label_predict))])/len(label_predict))
+                    # the split groups error
+                    n_fold = 2
+                    kf = KFold(len(data_k), n_folds=n_fold)
+                    rms_error_split = 0
+                    for train_index, test_index in kf:
+                        data_train, data_test = np.array(data_k)[train_index], np.array(data_k)[test_index]
+                        label_train, label_test = np.array(label_k)[train_index], np.array(label_k)[test_index]
+
+                        model.fit(data_train, label_train)
+                        label_predict = model.predict(data_test)
+
+                        rms_error_split += metrics.mean_squared_error(label_test, label_predict)
+
+                    rms_error_split /= n_fold
+
+                    avg_error.append(rms_error_split)
 
                     num_sample = len(group)
                     group = zip(*group[0])
@@ -633,14 +608,18 @@ class RegionSplitter_oudeyer_modified():
                         variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
                     weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
 
-                    avg_error.append(rms_error)
 
-                error_diff = -(avg_error[0] - avg_error[1])**2
+
+                error_diff = (avg_error[0] - avg_error[1])**2
                 smallest_error = min(avg_error)
+                biggest_error_reduction = max(rms_error_whole - avg_error[0], rms_error_whole-avg_error[1])
                 in_group_variance = math.fsum(weighted_avg_variance)
                 #print('cut_dim=%d cut_val=%f avg_err=%f var=%f'%(i, cut_val, smallest_error, in_group_variance))
 
-                score = (error_diff) / ((in_group_variance+1) *(smallest_error+1))
+                try:
+                    score = ((in_group_variance+1)*(smallest_error+1)) / (error_diff*(biggest_error_reduction**0.5))
+                except ZeroDivisionError:
+                    score = float("inf")
 
                 if score < dim_min:
 
@@ -708,7 +687,7 @@ class KGA():
         error = 0
         for i in range(len(S_actual)):
             error += (S_actual[i] - S_predicted[i])**2
-        error /= len(S_actual)
+        error = math.sqrt(error/len(S_actual))
         print("Prediction Error: ", error)
         self.errors.append(error)
 

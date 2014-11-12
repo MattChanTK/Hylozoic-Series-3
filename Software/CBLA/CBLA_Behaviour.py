@@ -13,7 +13,7 @@ import Visualization as Viz
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 5000
+    sim_duration = 10000
 
     # use saved expert
     is_using_saved_expert = 1
@@ -30,12 +30,15 @@ if __name__ == "__main__":
             expert = pickle.load(input)
         with open('action_history_backup.pkl', 'rb') as input:
             action_history = pickle.load(input)
+        with open('state_history_backup.pkl', 'rb') as input:
+            state_history = pickle.load(input)
         with open('mean_error_history_backup.pkl', 'rb') as input:
             mean_error_history = pickle.load(input)
 
     else:
         expert = Expert()
         action_history = []
+        state_history = []
         mean_error_history = []
 
         # initial training action
@@ -61,6 +64,7 @@ if __name__ == "__main__":
 
         # do action
         action_history.append(M)
+        state_history.append(S)
         robot.actuate(M)
 
         # read sensor
@@ -152,6 +156,9 @@ if __name__ == "__main__":
             with open('action_history_backup.pkl', 'wb') as output:
                 pickle.dump(action_history, output, pickle.HIGHEST_PROTOCOL)
 
+            with open('state_history_backup.pkl', 'wb') as output:
+                pickle.dump(state_history, output, pickle.HIGHEST_PROTOCOL)
+
             with open('mean_error_history_backup.pkl', 'wb') as output:
                 pickle.dump(mean_error_history, output, pickle.HIGHEST_PROTOCOL)
 
@@ -162,10 +169,11 @@ if __name__ == "__main__":
     region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
     Viz.plot_expert_tree(expert, region_ids)
-    Viz.plot_evolution(action_history, fig_num=1, subplot_num=241)
-    Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=242)
-    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=246)
-    Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=245)
+    Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=1, subplot_num=261)
+    Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)', fig_num=1, subplot_num=262)
+    Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=263)
+    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=269)
+    Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=234)
     Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
 
     plt.ioff()
