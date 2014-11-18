@@ -8,14 +8,14 @@
 </settings>
 <grid distance="0.01" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.005" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="no" active="yes"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
+<layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="yes"/>
 <layer number="17" name="Pads" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="18" name="Vias" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="19" name="Unrouted" color="6" fill="1" visible="yes" active="yes"/>
 <layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="yes"/>
-<layer number="21" name="tPlace" color="7" fill="1" visible="no" active="yes"/>
-<layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="21" name="tPlace" color="7" fill="1" visible="yes" active="yes"/>
+<layer number="22" name="bPlace" color="7" fill="1" visible="no" active="yes"/>
 <layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="yes"/>
 <layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="yes"/>
 <layer number="25" name="tNames" color="7" fill="1" visible="no" active="yes"/>
@@ -524,7 +524,7 @@
 <text x="100.33" y="10.16" size="1.27" layer="21" font="vector" ratio="17" rot="R90">+12V</text>
 <text x="100.33" y="20.828" size="1.27" layer="21" font="vector" ratio="17" rot="R90">GND</text>
 <text x="100.33" y="15.875" size="1.27" layer="21" font="vector" ratio="17" rot="R90">GND</text>
-<text x="34.29" y="15.748" size="0.8128" layer="21" font="vector" ratio="15" rot="R180">Tentacle Tip</text>
+<text x="18.288" y="29.464" size="0.8128" layer="21" font="vector" ratio="15" rot="R270">Extension</text>
 <text x="37.338" y="27.432" size="0.8128" layer="21" font="vector" ratio="17" rot="SR90">IR1</text>
 <text x="88.646" y="6.604" size="0.8128" layer="21" font="vector" ratio="17" rot="R90">ON</text>
 <text x="88.646" y="11.176" size="0.8128" layer="21" font="vector" ratio="17" rot="R90">OFF</text>
@@ -543,7 +543,7 @@
 <text x="41.402" y="23.114" size="0.6096" layer="21" font="vector" ratio="7">GND</text>
 <text x="43.942" y="23.114" size="0.6096" layer="21" font="vector" ratio="7">VCC</text>
 <text x="6.096" y="5.842" size="1.016" layer="21" font="vector" ratio="17">&lt;-Teensy</text>
-<text x="19.304" y="9.906" size="1.778" layer="21" font="vector" ratio="15">Tentacle
+<text x="19.304" y="11.176" size="1.778" layer="21" font="vector" ratio="15">Device
 Module</text>
 <text x="34.798" y="4.826" size="0.6096" layer="21" font="vector" ratio="15">3.3V</text>
 <text x="32.258" y="4.826" size="0.6096" layer="21" font="vector" ratio="15">GND</text>
@@ -596,10 +596,10 @@ Module</text>
 <text x="60.579" y="27.559" size="2.54" layer="22" font="vector" ratio="15" rot="MR0">+</text>
 <text x="53.721" y="27.559" size="2.54" layer="21" font="vector" ratio="15">-</text>
 <text x="55.499" y="27.559" size="2.54" layer="22" font="vector" ratio="15" rot="MR0">-</text>
-<text x="34.544" y="10.16" size="1.778" layer="22" font="vector" ratio="15" rot="MR0">Tentacle
+<text x="34.29" y="12.192" size="1.778" layer="22" font="vector" ratio="15" rot="MR0">Device
 Module</text>
-<text x="19.304" y="8.382" size="0.8128" layer="21" font="vector" ratio="15">11/2014</text>
-<text x="34.29" y="8.382" size="0.8128" layer="22" font="vector" ratio="15" rot="MR0">11/2014</text>
+<text x="19.304" y="6.35" size="0.8128" layer="21" font="vector" ratio="15">11/2014</text>
+<text x="34.29" y="6.858" size="0.8128" layer="22" font="vector" ratio="15" rot="MR0">11/2014</text>
 <text x="57.023" y="18.415" size="1.27" layer="22" font="vector" ratio="15" rot="MR0">+</text>
 <text x="63.373" y="10.795" size="1.27" layer="22" font="vector" ratio="15" rot="MR0">+</text>
 <text x="73.279" y="10.795" size="1.27" layer="22" font="vector" ratio="15" rot="MR0">+</text>
@@ -616,8 +616,10 @@ Module</text>
 <text x="72.009" y="19.431" size="1.27" layer="21" font="vector" ratio="15">-</text>
 <text x="66.675" y="19.431" size="1.27" layer="21" font="vector" ratio="15">+</text>
 <text x="56.261" y="19.431" size="1.27" layer="21" font="vector" ratio="15">+</text>
-<text x="34.29" y="7.112" size="0.8128" layer="22" font="vector" ratio="15" rot="MR0">by PBAI &amp; UWaterloo</text>
-<text x="19.304" y="7.112" size="0.8128" layer="21" font="vector" ratio="15">by PBAI &amp; UWaterloo</text>
+<text x="34.29" y="8.382" size="0.8128" layer="22" font="vector" ratio="15" rot="MR0">by PBAI &amp; UWaterloo</text>
+<text x="19.304" y="7.62" size="0.8128" layer="21" font="vector" ratio="15">by PBAI &amp; UWaterloo</text>
+<text x="34.29" y="10.16" size="1.016" layer="22" font="vector" ratio="15" rot="MR0">Hylozoic Series 3</text>
+<text x="19.304" y="9.398" size="1.016" layer="21" font="vector" ratio="15">Hylozoic Series 3</text>
 </plain>
 <libraries>
 <library name="rcl">
