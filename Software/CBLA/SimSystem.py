@@ -22,18 +22,19 @@ class SimpleFunction():
             S1[i] = M[0]*0.5
 
             if 55 > M[0] > 10:
+                continue
                 S1[i] += random.uniform(-M[0]*0.5, M[0]*0.5)
             elif -10 > M[0] > -55:
                 continue
                 S1[i] += random.uniform(-10, 10)
             elif -10 <= M[0] <= 10:
                 S1[i] += math.sin(self.S[0]/10)*50
-            elif M[0] >= 55:
-                S1[i] += (math.sin(self.S[0]/5)*25 + random.uniform(-20, 20))
+            # elif M[0] >= 55:
+            #     S1[i] += (math.sin(self.S[0]/5)*25 + random.uniform(-20, 20))
             else:
-                S1[i] += math.sin(self.S[0]/5)*25
+                #S1[i] += math.sin(self.S[0]/5)*25
                 #S1[i] += random.uniform(-M[0], M[0])
-                #S1[i] += random.uniform(-80, 80)
+                S1[i] += random.uniform(-80, 80)
 
 
         self.S = tuple(S1)
