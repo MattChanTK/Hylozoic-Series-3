@@ -38,8 +38,13 @@ class SimpleFunction():
                 S1[i] += math.sin(m/10.0)*10.0
 
         self.S = tuple(S1)
+        self.M0 = M
 
-    def report(self):
+    def report(self, report_m=False):
+
+        if report_m:
+            return self.S, self.M0
+
         return self.S
 
     def get_possible_action(self, state=None, num_sample=1000, randomize=True):
@@ -62,7 +67,7 @@ class SimpleFunction():
 
 class SimpleDataSource(SimpleFunction):
 
-    def __init__(self, filename=None):
+    def __init__(self, filename):
 
         if not isinstance(filename, str):
             raise(TypeError, "filename must be a string")
@@ -71,7 +76,29 @@ class SimpleDataSource(SimpleFunction):
             self.data = pickle.load(data_pickle)
             self.label = pickle.load(data_pickle)
 
+        self.M0 = tuple(self.data.tolist()[0])
+        self.S = tuple(self.label.tolist()[0])
 
+    def __get_closest_data_point(self, x):
+
+        if len(self.data[0]) != len(x):
+            raise(ValueError, "x must have the same dimension as the data source")
+
+        deltas = self.data - x
+        dist_2 = np.einsum('ij,ij->i', deltas, deltas)
+        return np.argmin(dist_2)
+
+    def actuate(self, x_req):
+
+        x_in_idx = self.__get_closest_data_point(x_req)
+        self.S = tuple(self.label.tolist()[x_in_idx])
+        self.M0 = tuple(self.data.tolist()[x_in_idx])
+
+    def get_possible_action(self, state=None, num_sample=1000, randomize=None):
+
+        indices = np.random.choice(len(self.data), size=num_sample, replace=False)
+        M_candidates = tuple(map(tuple, (self.data[indices, :].tolist())))
+        return M_candidates
 
 
 def generate_data(function, num_sample=1000, randomize=True):
@@ -92,8 +119,8 @@ def generate_data(function, num_sample=1000, randomize=True):
 
 if __name__ == '__main__':
 
-    func = SimpleFunction(low_bound=(-80, -80), high_bound=(80, 80))
-    data, label = (generate_data(func, num_sample=10, randomize=False))
+    func = SimpleFunction(low_bound=(-80, ), high_bound=(80,))
+    data, label = (generate_data(func, num_sample=10000, randomize=True))
 
     with open('SimpleData.pkl', 'wb') as data_pickle:
         pickle.dump(data, data_pickle, pickle.HIGHEST_PROTOCOL)
@@ -101,5 +128,9 @@ if __name__ == '__main__':
 
     test = SimpleDataSource('SimpleData.pkl')
 
-    print(test.label)
-    print(test.data)
+    # print(test.label)
+    # print(test.data)
+
+    index = test.actuate((34,))
+    print(test.data[index])
+    print(test.label[index])

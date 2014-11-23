@@ -1,7 +1,7 @@
 import math
 import random
 from RegionsManager import Expert
-from SimSystem import SimpleFunction as Robot
+from SimSystem import SimpleDataSource as Robot
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     Mi = ((0,),)
 
     # instantiate a Robot
-    robot = Robot()
+    robot = Robot(filename='SimpleData.pkl')
 
     # instantiate an Expert
     if is_using_saved_expert:
