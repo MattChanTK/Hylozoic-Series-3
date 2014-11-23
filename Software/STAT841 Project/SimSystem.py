@@ -35,7 +35,7 @@ class SimpleFunction():
         S1 = [0]*len(self.S)
         for i in range(len(self.S)):
             for m in M:
-                S1[i] += math.sin(m/10.0)*10.0
+                S1[i] += math.sin(m/25.0)*10.0
 
         self.S = tuple(S1)
         self.M0 = M
@@ -63,6 +63,28 @@ class SimpleFunction():
         M_candidates = tuple(map(tuple, X))
 
         return M_candidates
+
+class SimpleFunction2(SimpleFunction):
+
+    def actuate(self, M):
+        if not isinstance(M, tuple):
+            raise(TypeError, "M must be a tuple")
+        if len(M) != len(self.M0):
+            raise(ValueError, "M must be %d dimension" % len(self.M0))
+
+        S1 = [0]*len(self.S)
+
+        if M[0] > 0:
+            for i in range(len(self.S)):
+                for m in M:
+                    S1[i] += math.sin(m/25.0)*10.0
+        else:
+            for i in range(len(self.S)):
+                for m in M:
+                    S1[i] += math.sin(m/25.0)*10.0 + random.uniform(M[0]/5, -M[0]/5)
+
+        self.S = tuple(S1)
+        self.M0 = M
 
 
 class SimpleDataSource(SimpleFunction):
@@ -109,9 +131,9 @@ def generate_data(function, num_sample=1000, randomize=True):
     for n in range(num_sample):
         function.actuate(X[n])
         Y[n] = np.asarray(function.report())
-    Y = np.asmatrix(np.asarray(Y))
+    Y = np.asarray(Y)
 
-    X = np.asmatrix(np.asarray(X))
+    X = np.asarray(X)
 
     return X, Y
 
@@ -119,7 +141,7 @@ def generate_data(function, num_sample=1000, randomize=True):
 
 if __name__ == '__main__':
 
-    func = SimpleFunction(low_bound=(-80, ), high_bound=(80,))
+    func = SimpleFunction(low_bound=(-80, -80 ), high_bound=(80, 80))
     data, label = (generate_data(func, num_sample=10000, randomize=True))
 
     with open('SimpleData.pkl', 'wb') as data_pickle:
@@ -127,10 +149,3 @@ if __name__ == '__main__':
         pickle.dump(label, data_pickle, pickle.HIGHEST_PROTOCOL)
 
     test = SimpleDataSource('SimpleData.pkl')
-
-    # print(test.label)
-    # print(test.data)
-
-    index = test.actuate((34,))
-    print(test.data[index])
-    print(test.label[index])

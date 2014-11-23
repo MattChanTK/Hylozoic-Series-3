@@ -105,16 +105,20 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         ax.scatter(X, Y, Z, marker='o', s=2.0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
-        pts = [None]*len(Expert.training_data[0])
-        for i in range(len(pts)):
-            max_val = round(max(training_data[i]))
-            min_val = round(min(training_data[i]))
-
-            pts[i] = list(np.linspace(min_val, max_val, 100))
+        pts = [None]*2
+        pts[0] = list(np.linspace(round(min(X)), round(max(X)), 100))
+        pts[1] = list(np.linspace(round(min(Y)), round(max(Y)), 100))
 
         pts = np.meshgrid(pts[0], pts[1])
 
-        zs = np.array([Expert.predict_model.predict(tuple([x, y])) for x,y in zip(np.ravel(pts[0]), np.ravel(pts[1]))])
+        # padding 0 for not visualized components
+        num_dim = len(Expert.training_data[0])
+        f_pad = [0]*x_idx[0]
+        m_pad = [0]*(x_idx[1]-x_idx[0]-1)
+        b_pad = [0]*(num_dim-x_idx[1]-1)
+
+        zs = np.array([Expert.predict_model.predict(tuple(f_pad + [x] + m_pad + [y] + b_pad))
+                       for x,y in zip(np.ravel(pts[0]), np.ravel(pts[1]))])
         z = zs.reshape(pts[0].shape)
         ax.plot_surface(pts[0], pts[1], z, color='k', alpha=0.5, linewidth=0, antialiased=True)
 

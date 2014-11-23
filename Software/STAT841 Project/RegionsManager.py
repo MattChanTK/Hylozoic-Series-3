@@ -129,7 +129,7 @@ class Expert():
 
     def is_splitting(self):
         split_threshold = 500
-        mean_error_threshold = 5  # -float('inf')
+        mean_error_threshold = 4  # -float('inf')
         #expected_reward_threshold = -0.001
 
         if len(self.training_data) > split_threshold and \

@@ -1,7 +1,7 @@
 import math
 import random
 from RegionsManager import Expert
-from SimSystem import SimpleDataSource as Robot
+from SimSystem import SimpleFunction2 as Robot
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
@@ -18,11 +18,9 @@ if __name__ == "__main__":
     # use saved expert
     is_using_saved_expert = 0
 
-    # initial actions
-    Mi = ((0,),)
 
     # instantiate a Robot
-    robot = Robot(filename='SimpleData.pkl')
+    robot = Robot()#filename='SimpleData.pkl')
 
     # instantiate an Expert
     if is_using_saved_expert:
@@ -32,9 +30,10 @@ if __name__ == "__main__":
             action_history = pickle.load(input)
         with open('state_history_backup.pkl', 'rb') as input:
             state_history = pickle.load(input)
-
         with open('mean_error_history_backup.pkl', 'rb') as input:
             mean_error_history = pickle.load(input)
+
+        Mi = robot.get_possible_action(num_sample=1)
 
     else:
         expert = Expert()
@@ -44,7 +43,6 @@ if __name__ == "__main__":
 
         # initial training action
         Mi = robot.get_possible_action(num_sample=100)
-
 
     # initial conditions
     t = 0
@@ -145,6 +143,8 @@ if __name__ == "__main__":
     Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=269)
     Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=234)
     Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
+    #Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122)
+
 
     plt.ioff()
     plt.show()
