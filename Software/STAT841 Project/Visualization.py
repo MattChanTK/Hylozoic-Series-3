@@ -7,19 +7,19 @@ import itertools
 
 
 
-def moving_average(interval, window_size):
+def moving_average(interval, window_size, dim=0):
     interval = np.asarray(interval)
-    interval = interval[:,0]
+    interval = interval[:,dim]
     window = np.ones(int(window_size))/float(window_size)
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', fig_num=1, subplot_num=121):
+def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', y_dim=0, fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
-    plot.plot(moving_average(action_history, 1), marker='o', ms=1.5, mew=0, lw=0)
+    plot.plot(moving_average(action_history, 1, dim=0), marker='o', ms=1.5, mew=0, lw=0)
     plt.ion()
     plt.show()
     plt.title(title)

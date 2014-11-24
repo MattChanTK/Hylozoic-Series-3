@@ -74,14 +74,20 @@ class SimpleFunction2(SimpleFunction):
 
         S1 = [0]*len(self.S)
 
-        if M[0] > 0:
+
+        if M[0] > 25:
             for i in range(len(self.S)):
                 for m in M:
-                    S1[i] += math.sin(m/25.0)*10.0
+                    S1[i] += M[0]/5
+
+        elif M[0] > -25:
+            for i in range(len(self.S)):
+                for m in M:
+                    S1[i] += math.sin(m/7.0)*10.0
         else:
             for i in range(len(self.S)):
                 for m in M:
-                    S1[i] += math.sin(m/25.0)*10.0 + random.uniform(M[0]/5, -M[0]/5)
+                    S1[i] += math.sin(m/25.0)*10.0 + random.uniform(M[0]/25, -M[0]/25)
 
         self.S = tuple(S1)
         self.M0 = M

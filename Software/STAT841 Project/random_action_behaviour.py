@@ -10,13 +10,33 @@ from copy import copy
 import Visualization as Viz
 
 
+def weighted_choice_sub(weights, min_percent=0.1):
+    min_weight = min(weights)
+    weights = [x-min_weight for x in weights]
+    adj_val = min_percent*max(weights)
+    weights = [x+adj_val for x in weights]
+
+    rnd = random.random() * sum(weights)
+    for i, w in enumerate(weights):
+        rnd -= w
+        if rnd < 0:
+            return i
+
+    return random.randint(0, len(weights)-1)
+
 if __name__ == "__main__":
 
     # number of time step
     sim_duration = 5000
 
     # use saved expert
-    is_using_saved_expert = 0
+    is_using_saved_expert = 1
+
+    # use adaptive learning rate
+    adapt_exploring_rate = False
+
+    # exploring rate
+    exploring_rate = 0.1
 
 
     # instantiate a Robot
@@ -49,7 +69,7 @@ if __name__ == "__main__":
     S = (0,)
     M = Mi[0]
     L = float("-inf")
-    exploring_rate = 0.1
+
 
     while t < sim_duration:
         t += 1
@@ -76,31 +96,67 @@ if __name__ == "__main__":
         # expert.split()  # won't actually split if the condition is not met
 
 
+
         # random action or the best action
         print("Exploring Rate: ", exploring_rate)
         is_exploring = (random.random() < exploring_rate)
 
         #START ---- the Oudeyer way ----- START
 
+        # # generate a list of possible action given the state
+        # M_candidates = robot.get_possible_action(state=S1, num_sample=50)
+        #
+        # if is_exploring:
+        #     M1 = random.choice(M_candidates)
+        #
+        # else:
+        #     M1 = 0
+        #     highest_L = float("-inf")
+        #     for M_candidate in M_candidates:
+        #         L = expert.evaluate_action(S1, M_candidate)
+        #         if L > highest_L:
+        #             M1 = M_candidate
+        #             highest_L = L
+        #
+        #     print("Expected Reward", highest_L)
+        #     L = highest_L
+        #
+        # print("Next Action", M1)
+
+        #END ---- the Oudeyer way ----- END
+
+        #START ---- the Probabilistic way ----- START
+
         # generate a list of possible action given the state
         M_candidates = robot.get_possible_action(state=S1, num_sample=50)
 
-        if is_exploring:
-            M1 = random.choice(M_candidates)
 
-        else:
-            M1 = 0
-            highest_L = float("-inf")
-            for M_candidate in M_candidates:
-                L = expert.evaluate_action(S1, M_candidate)
-                if L > highest_L:
-                    M1 = M_candidate
-                    highest_L = L
 
-            print("Expected Reward", highest_L)
-            L = highest_L
+        L_list = []
+        for M_candidate in M_candidates:
+            L_list.append(expert.evaluate_action(S1, M_candidate))
 
+        M_idx = weighted_choice_sub(L_list, min_percent=exploring_rate)
+        L = max(L_list)
+        print("Highest Expected Reward", L)
+        M1 = M_candidates[M_idx]
         print("Next Action", M1)
+
+        #END ---- the Probabilistic way ----- END
+
+
+        # update learning rate based on reward
+        if is_exploring and adapt_exploring_rate:  # if it was exploring, stick with the original learning rate
+            exploring_rate_range = [0.5, 0.01]
+            reward_range = [0.01, 100.0]
+            if L < reward_range[0]:
+                exploring_rate = exploring_rate_range[0]
+            elif L > reward_range[1]:
+                exploring_rate = exploring_rate_range[1]
+            else:
+                m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
+                b = exploring_rate_range[0] - m*reward_range[0]
+                exploring_rate = m*L + b
 
         # record the mean errors of each region
         mean_errors = []
