@@ -7,19 +7,19 @@ import itertools
 
 
 
-def moving_average(interval, window_size):
+def moving_average(interval, window_size, dim=0):
     interval = np.asarray(interval)
-    interval = interval[:,0]
+    interval = interval[:,dim]
     window = np.ones(int(window_size))/float(window_size)
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', fig_num=1, subplot_num=121):
+def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', y_dim=0, fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
-    plot.plot(moving_average(action_history, 1), marker='o', ms=1.5, mew=0, lw=0)
+    plot.plot(moving_average(action_history, 1, dim=0), marker='o', ms=1.5, mew=0, lw=0)
     plt.ion()
     plt.show()
     plt.title(title)
@@ -105,16 +105,20 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         ax.scatter(X, Y, Z, marker='o', s=2.0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
-        pts = [None]*len(Expert.training_data[0])
-        for i in range(len(pts)):
-            max_val = round(max(training_data[i]))
-            min_val = round(min(training_data[i]))
-
-            pts[i] = list(np.linspace(min_val, max_val, 100))
+        pts = [None]*2
+        pts[0] = list(np.linspace(round(min(X)), round(max(X)), 100))
+        pts[1] = list(np.linspace(round(min(Y)), round(max(Y)), 100))
 
         pts = np.meshgrid(pts[0], pts[1])
 
-        zs = np.array([Expert.predict_model.predict(tuple([x, y])) for x,y in zip(np.ravel(pts[0]), np.ravel(pts[1]))])
+        # padding 0 for not visualized components
+        num_dim = len(Expert.training_data[0])
+        f_pad = [0]*x_idx[0]
+        m_pad = [0]*(x_idx[1]-x_idx[0]-1)
+        b_pad = [0]*(num_dim-x_idx[1]-1)
+
+        zs = np.array([Expert.predict_model.predict(tuple(f_pad + [x] + m_pad + [y] + b_pad))
+                       for x,y in zip(np.ravel(pts[0]), np.ravel(pts[1]))])
         z = zs.reshape(pts[0].shape)
         ax.plot_surface(pts[0], pts[1], z, color='k', alpha=0.5, linewidth=0, antialiased=True)
 
