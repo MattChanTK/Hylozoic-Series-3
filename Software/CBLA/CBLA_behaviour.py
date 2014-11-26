@@ -10,7 +10,7 @@ from copy import copy
 import Visualization as Viz
 
 
-def weighted_choice_sub(weights, min_percent=0.1):
+def weighted_choice_sub(weights, min_percent=0.05):
     min_weight = min(weights)
     weights = [x-min_weight for x in weights]
     adj_val = min_percent*max(weights)
@@ -30,13 +30,13 @@ if __name__ == "__main__":
     sim_duration = 5000
 
     # use saved expert
-    is_using_saved_expert = 1
+    is_using_saved_expert = 0
 
     # use adaptive learning rate
     adapt_exploring_rate = False
 
     # exploring rate
-    exploring_rate = 0.1
+    exploring_rate = 0.05
 
 
     # instantiate a Robot
@@ -129,7 +129,6 @@ if __name__ == "__main__":
 
         # generate a list of possible action given the state
         M_candidates = robot.get_possible_action(state=S1, num_sample=50)
-
 
 
         L_list = []

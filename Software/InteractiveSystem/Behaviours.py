@@ -44,6 +44,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     #=== "Basic" commands"
                     cmd_obj = command_object(teensy_name, 'basic')
 
+
                     cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
                     cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
 

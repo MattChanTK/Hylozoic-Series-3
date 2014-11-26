@@ -131,6 +131,7 @@ class SimpleDataSource(SimpleFunction):
 
 def generate_data(function, num_sample=1000, randomize=True):
 
+    print("Generating Data Set")
     X = function.get_possible_action(num_sample=num_sample, randomize=randomize)
     Y = [None]*num_sample
 
@@ -147,7 +148,7 @@ def generate_data(function, num_sample=1000, randomize=True):
 
 if __name__ == '__main__':
 
-    func = SimpleFunction(low_bound=(-80, -80 ), high_bound=(80, 80))
+    func = SimpleFunction2(low_bound=(-80, -80 ), high_bound=(80, 80))
     data, label = (generate_data(func, num_sample=10000, randomize=True))
 
     with open('SimpleData.pkl', 'wb') as data_pickle:

@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 
-from RegionSplitter import RegionSplitter_oudeyer as RegionSplitter
+from RegionSplitter import RegionSplitter_oudeyer_modified as RegionSplitter
 import math
 import random
 from copy import copy

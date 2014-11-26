@@ -10,6 +10,7 @@ from sklearn.svm import SVC
 from sklearn.svm import SVR
 from sklearn.cross_validation import KFold
 from sklearn import metrics
+from sklearn import linear_model
 import matplotlib.pyplot as plt
 
 
