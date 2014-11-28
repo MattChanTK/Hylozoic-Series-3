@@ -1,7 +1,7 @@
 import math
 import random
 from RegionsManager import Expert
-from SimSystem import SimpleFunction2 as Robot
+from SimSystem import DiagonalPlane2 as Robot
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
@@ -27,10 +27,10 @@ def weighted_choice_sub(weights, min_percent=0.05):
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 5000
+    sim_duration = 1
 
     # use saved expert
-    is_using_saved_expert = 0
+    is_using_saved_expert = 1
 
     # use adaptive learning rate
     adapt_exploring_rate = False
@@ -40,7 +40,8 @@ if __name__ == "__main__":
 
 
     # instantiate a Robot
-    robot = Robot()#filename='SimpleData.pkl')
+    #robot = Robot(filename='SimpleData.pkl')
+    robot = Robot(low_bound=(-80,-80), high_bound=(80,80))
 
     # instantiate an Expert
     if is_using_saved_expert:
@@ -192,13 +193,14 @@ if __name__ == "__main__":
     region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
     Viz.plot_expert_tree(expert, region_ids)
-    Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=1, subplot_num=261)
-    Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)', fig_num=1, subplot_num=262)
+    #Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=1, subplot_num=261)
+    Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[1]', y_dim=1, fig_num=1, subplot_num=261)
+    Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[0]', y_dim=0, fig_num=1, subplot_num=262)
     Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=263)
-    Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=269)
+    Viz.plot_model(expert, region_ids, x_idx=2, y_idx=0, fig_num=1, subplot_num=269)
     Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=234)
-    Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
-    #Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122)
+    #Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
+    Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122, data_only=True)
 
 
     plt.ioff()
