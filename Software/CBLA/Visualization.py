@@ -19,7 +19,7 @@ def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', y_dim
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
-    plot.plot(moving_average(action_history, 1, dim=0), marker='o', ms=1.5, mew=0, lw=0)
+    plot.plot(moving_average(action_history, 1, dim=y_dim), marker='o', ms=1.5, mew=0, lw=0)
     plt.ion()
     plt.show()
     plt.title(title)
@@ -75,7 +75,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plot_model(Expert.left, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
         plot_model(Expert.right, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
 
-def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111):
+def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False):
 
     # plot configuration
     if ax is None:
@@ -104,6 +104,9 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         Z = training_label[y_idx]
         ax.scatter(X, Y, Z, marker='o', s=2.0, color=colours[region_ids.index(Expert.expert_id)])
 
+        if data_only:
+            return
+
         # plot the model
         pts = [None]*2
         pts[0] = list(np.linspace(round(min(X)), round(max(X)), 100))
@@ -124,8 +127,8 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
 
 
     else:
-        plot_model_3D(Expert.left, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num)
-        plot_model_3D(Expert.right, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num)
+        plot_model_3D(Expert.left, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
+        plot_model_3D(Expert.right, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
 
 def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot_num=111):
 
@@ -184,7 +187,7 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0):
         # create the node
         #this_node = pydot.Node('%d. %d' % (level, Expert.expert_id))
         try:
-            this_node = pydot.Node('cut dim=%d \ncut val=%.*f' % (Expert.region_splitter.cut_dim, 2, Expert.region_splitter.cut_val))
+            this_node = pydot.Node('Node %d.%d\ncut dim=%d \ncut val=%.*f' % (level, Expert.expert_id,Expert.region_splitter.cut_dim, 2, Expert.region_splitter.cut_val))
         except AttributeError:
             this_node = pydot.Node('Node %d.%d'% (level, Expert.expert_id))
         graph.add_node(this_node)
