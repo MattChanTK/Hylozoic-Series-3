@@ -95,6 +95,7 @@ CuriousSystem2/outputs/*/*.png
 *.rar
 *.tar
 *.zip
+!Software/archive/*.zip
 
 # Logs and databases #
 ######################
