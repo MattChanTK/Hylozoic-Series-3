@@ -37,10 +37,7 @@ void loop() {
     //teensy_unit.led_blink_behaviour(curr_time);
 	//teensy_unit.led_wave_behaviour(curr_time);
 	//teensy_unit.test_behaviour((const uint32_t) curr_time);
-	
-	teensy_unit.tentacle_tip_ir_primary_action(curr_time);
-	
-	teensy_unit.tentacle_scout_ir_primary_action(curr_time);
+
 	
 	//teensy_unit.stress_test_behaviour(curr_time);
 	
