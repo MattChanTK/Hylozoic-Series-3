@@ -6,15 +6,13 @@
 //===========================================================================
 
 Behaviours::Behaviours():
-		tentacle_ir_state{tentacle_0_ir_state, tentacle_1_ir_state, tentacle_2_ir_state},
-		tentacle_ir_threshold{tentacle_0_ir_threshold, tentacle_1_ir_threshold, tentacle_2_ir_threshold},
-		tentacle_cycle_period{tentacle_0_cycle_period, tentacle_1_cycle_period , tentacle_2_cycle_period},
-		tentacle_scout_ir_threshold{tentacle_0_scout_ir_threshold, tentacle_1_scout_ir_threshold, tentacle_2_scout_ir_threshold},
-		preset_scout_led_period{preset_scout_led_0_period, preset_scout_led_1_period,preset_scout_led_2_period}, 
-		scout_led_0_wave(5000, reflex_cos_wave_1),
-		scout_led_1_wave(5000, reflex_cos_wave_1),
-		scout_led_2_wave(5000, reflex_cos_wave_1),
-		scout_led_wave{scout_led_0_wave, scout_led_1_wave, scout_led_2_wave}
+		tentacle_ir_state{tentacle_0_ir_state, tentacle_1_ir_state, tentacle_2_ir_state, tentacle_3_ir_state},
+		tentacle_acc_state{tentacle_0_acc_state, tentacle_1_acc_state, tentacle_2_acc_state, tentacle_3_acc_state},
+		tentacle_ir_threshold{tentacle_0_ir_threshold, tentacle_1_ir_threshold, tentacle_2_ir_threshold, tentacle_3_ir_threshold},
+		tentacle_arm_cycle_period{tentacle_0_arm_cycle_period, tentacle_1_arm_cycle_period , tentacle_2_arm_cycle_period, tentacle_3_arm_cycle_period},
+		tentacle_reflex_period{tentacle_0_reflex_period, tentacle_1_reflex_period, tentacle_2_reflex_period, tentacle_3_reflex_period},
+		tentacle_sma_level{tentacle_0_sma_level, tentacle_1_sma_level, tentacle_2_sma_level, tentacle_3_sma_level},
+		tentacle_motion_on{tentacle_0_motion_on, tentacle_1_motion_on, tentacle_2_motion_on
 		
 {
 	
