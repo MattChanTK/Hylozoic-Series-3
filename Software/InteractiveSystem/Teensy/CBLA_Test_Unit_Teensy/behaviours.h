@@ -75,7 +75,7 @@ class ProtocellVar{
 		uint16_t protocell_als_threshold = 100;
 		
 		//~~high-power LED cycle period
-		uint8_t protocell_cycle_period = 3000;
+		uint16_t protocell_cycle_period = 3000;
 		
 		//----OUTPUT (actuators)----
 		
@@ -156,7 +156,8 @@ class Behaviours : public TeensyUnit{
 		//~~ instances ~~~
 		WaveTable test_wave;
 		
-		//~~ waveform definitions ~~~
+		//~~ waveform definitions
+		~~~
 		// const_wave_t cos_wave_1[wave_size] = {0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2};
 		// const_wave_t cos_wave_2[wave_size] = {126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151};
 		// const_wave_t cos_wave_3[wave_size] = {254, 251, 244, 232, 216, 197, 175, 151, 126, 102, 78, 56, 37, 21, 9, 2, 0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251};
