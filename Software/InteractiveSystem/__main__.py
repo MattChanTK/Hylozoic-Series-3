@@ -21,8 +21,13 @@ packet_size_out = 64
 
 
 def main():
-    # change priority of the the Python process to HIGH
-    changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
+
+    try:
+        # change priority of the the Python process to HIGH
+        changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
+    except Exception:
+        print("Cannot change priority; this is not a window machine")
+
 
     # instantiate Teensy Monitor
     teensy_manager = TeensyManager(import_config=True)

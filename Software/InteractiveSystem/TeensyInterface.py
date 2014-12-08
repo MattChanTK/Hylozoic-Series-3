@@ -141,7 +141,7 @@ class TeensyInterface(threading.Thread):
     def __init__(self, serial_num, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID, print_to_term=False, unit_config='default'):
 
         if unit_config == 'SIMPLIFIED_TEST_UNIT':
-            from TestUnitConfiguration import SimplifiedTestUnit as SysParam
+            from CommunicationProtocol import SimplifiedTestUnit as SysParam
         else:
             from SystemParameters import SystemParameters as SysParam
 
@@ -216,14 +216,19 @@ class TeensyInterface(threading.Thread):
 
     def run(self):
 
-        # change priority of the the Python process to HIGH
-        changePriority.SetPriority(changePriority.Priorities.REALTIME_PRIORITY_CLASS)
+
+        try:
+            # change priority of the the Python process to HIGH
+            changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
+        except Exception:
+            print("Cannot change priority; this is not a window machine")
+
 
         no_reply_counter = 0
         while True:
 
             if self.param_updated_event.wait(timeout=1):
-                self.param_updated_event.clear()
+                self.param_updated_event.clear(b)
 
                 with self.lock:
                     self.lock_received_event.set()
