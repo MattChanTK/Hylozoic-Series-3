@@ -22,23 +22,7 @@ void Behaviours::parse_msg(){
         
 	switch (request_type){
 	
-		//Teensy programming pin
-		case 1: {
-			bool program_teensy = recv_data_buff[2];
-			if (program_teensy) {
-				digitalWrite(PGM_DO_pin, 1);
-				digitalWrite(13, 1);
-			}
-			break;
-		}
-		case 2: {
-		
-			// byte 2 to 33 --- indicator LED wave 
-			for (uint8_t i = 0; i < wave_size; i++)
-				test_wave.waveform[i] = recv_data_buff[i+2];
-			break;
-		}
-		default:{
+		case 0: { // basic
 		
 			// >>>>>> byte 2 to 9: ON-BOARD <<<<<<<
 			
@@ -50,51 +34,144 @@ void Behaviours::parse_msg(){
 			for (uint8_t i = 0; i < 2 ; i++)
 			  indicator_led_blink_period += recv_data_buff[3+i] << (8*i);
 			
-			
-			// >>>>> byte 10 to byte 19: TENTACLE 0
-			// >>>>> byte 20 to byte 29: TENTACLE 1
-			// >>>>> byte 30 to byte 39: TENTACLE 2		
-			for (uint8_t j = 0; j < 4; j++){
-				
-				uint8_t byte_offset = 10*(j) + 10;
-				
-				// byte x0 --- IR 0 sensor state
-				for (uint8_t i = 0; i < 2; i++)
-					tentacle_var[j].tentacle_ir_state[0] += recv_data_buff[byte_offset+i] << (8*i);
-					
-				// byte x2 --- IR 1 sensor state
-				for (uint8_t i = 0; i < 2; i++)
-					tentacle_var[j].tentacle_ir_state[1] += recv_data_buff[byte_offset+2+i] << (8*i);
-					
-				// byte x4 -- Accelerometer state (x-axis)
-				for (uint8_t i = 0; i < 2; i++)
-					tentacle_var[j].tentacle_acc_state[0] += recv_data_buff[byte_offset+4+i] << (8*i);
-					
-				// byte x6 -- Accelerometer state (y-axis)
-				for (uint8_t i = 0; i < 2; i++)
-					tentacle_var[j].tentacle_acc_state[1] += recv_data_buff[byte_offset+6+i] << (8*i);
-				
-				// byte x8 -- Accelerometer state (z-axis)
-				for (uint8_t i = 0; i < 2; i++)
-					tentacle_var[j].tentacle_acc_state[2] += recv_data_buff[byte_offset+8+i] << (8*i);			
-
-			}
-			
-			
-			// >>>>> byte 40 to byte 49: Protocell 0 and 1
-		
-			// byte 40 --- ambient light sensor 0 state
-			for (uint8_t i = 0; i < 2; i++)
-				protocell_var[0].protocell_als_state += recv_data_buff[40+i] << (8*i);
-				
-			// byte 42 --- ambient light sensor 1 state
-			for (uint8_t i = 0; i < 2; i++)
-				protocell_var[1].protocell_als_state += recv_data_buff[42+i] << (8*i);
-					
-			
+			// >>>> byte 10: CONFIG VARIABLES <<<<<
+			operation_mode = recv_data_buff[10];
 			
 			break;
 		}
+		
+		//Teensy programming pin
+		case 1: {
+			bool program_teensy = recv_data_buff[2];
+			if (program_teensy) {
+				digitalWrite(PGM_DO_pin, 1);
+				digitalWrite(13, 1);
+			}
+			break;
+		}
+		//Tentacles high level requests
+		case 2: {
+		
+			// (15 bytes each)
+			// >>>>> byte 2 to byte 16: TENTACLE 0
+			// >>>>> byte 17 to byte 31: TENTACLE 1
+			// >>>>> byte 32 to byte 46: TENTACLE 2	
+			// >>>>> byte 47 to byte 61: TENTACLE 3			
+			for (uint8_t j = 0; j < 4; j++){
+						
+				const uint8_t byte_offset = 15*(j) + 2;
+			
+				//--- internal variables---
+				
+				// byte x0 --- IR sensor 0 activation threshold
+				for (uint8_t i = 0; i < wave_size; i++)
+					tentacle_var[j].tentacle_ir_threshold[0] += recv_data_buff[byte_offset+i+0] << (8*i);
+					
+				// byte x2 --- IR sensor 1 activation threshold
+				for (uint8_t i = 0; i < wave_size; i++)
+					tentacle_var[j].tentacle_ir_threshold[1] += recv_data_buff[byte_offset+i+2] << (8*i);
+					
+				// byte x4 --- ON period of Tentacle arm activation
+				tentacle_var[j].tentacle_arm_cycle_period[0] = recv_data_buff[byte_offset+4];
+				
+				// byte x5 --- OFF period of Tentacle arm activation
+				tentacle_var[j].tentacle_arm_cycle_period[1] = recv_data_buff[byte_offset+5];
+				
+				// byte x6 --- Reflex channel 1 period 
+				for (uint8_t i = 0; i < wave_size; i++)
+					tentacle_var[j].tentacle_reflex_period[0] += recv_data_buff[byte_offset+i+6] << (8*i);
+				
+				// byte x8 --- Reflex channel 2 period 
+				for (uint8_t i = 0; i < wave_size; i++)
+					tentacle_var[j].tentacle_reflex_period[1] += recv_data_buff[byte_offset+i+8] << (8*i);
+					
+					
+				//--- actuator output variables---
+				
+				// byte x10 --- tentacle motion activation 
+				tentacle_var[j].tentacle_motion_on = recv_data_buff[byte_offset+10];
+				
+				// byte x11 --- reflex channel 1 wave type 
+				tentacle_var[j].tentacle_reflex_wave_type[0] = recv_data_buff[byte_offset+11];
+				
+				// byte x12 --- reflex channel 2 wave type 
+				tentacle_var[j].tentacle_reflex_wave_type[1] = recv_data_buff[byte_offset+12];
+				
+
+			}
+			break;
+		}
+			
+		//Tentacles low level requests
+		case 3: {
+		
+			// (15 bytes each)
+			// >>>>> byte 2 to byte 16: TENTACLE 0
+			// >>>>> byte 17 to byte 31: TENTACLE 1
+			// >>>>> byte 32 to byte 46: TENTACLE 2	
+			// >>>>> byte 47 to byte 61: TENTACLE 3			
+			for (uint8_t j = 0; j < 4; j++){
+				
+				const uint8_t byte_offset = 15*(j) + 2;
+						
+				// byte x0 --- tentacle SMA wire 0
+				tentacle_var[j].tentacle_sma_level[0] = recv_data_buff[byte_offset+0];
+				// byte x1 --- tentacle SMA wire 1
+				tentacle_var[j].tentacle_sma_level[1] = recv_data_buff[byte_offset+1];
+				// byte x2 --- reflex actuation level
+				tentacle_var[j].tentacle_reflex_level[0] = recv_data_buff[byte_offset+2];
+				// byte x4--- reflex actuation level
+				tentacle_var[j].tentacle_reflex_level[1] = recv_data_buff[byte_offset+3];
+			
+			}
+			break;
+		
+		}
+		
+		// Protocell requests
+		case 4: {
+			
+			// (15 bytes each)
+			// >>>>> byte 2 to byte 16: PROTOCELL 0
+			// >>>>> byte 17 to byte 31: PROTOCELL 1
+			for (uint8_t j = 0; j < 4; j++){
+						
+				const uint8_t byte_offset = 15*(j) + 2;
+				
+				// --- internal variables ----
+				// byte x0 --- Ambient light sensor threshold
+				for (uint8_t i = 0; i < wave_size; i++)
+					protocell_var[j].protocell_als_threshold += recv_data_buff[byte_offset+i+0] << (8*i);
+					
+				// byte x2 --- high-power LED cycle period 
+				for (uint8_t i = 0; i < wave_size; i++)
+					protocell_var[j].protocell_cycle_period += recv_data_buff[byte_offset+i+2] << (8*i);
+					
+				//--- actuator output variables---
+				// byte x4 --- high-power LED level 
+				protocell_var[j].protocell_led_level = recv_data_buff[byte_offset+4];
+				
+				// byte x5 --- reflex channel 2 wave type 
+				protocell_var[j].protocell_led_wave_type = recv_data_buff[byte_offset+5];
+						
+			}
+			break;
+		
+		}
+		
+		// wave forms
+		case 10: {
+		
+			// byte 2 to 3 --- indicator LED wave 
+			for (uint8_t i = 0; i < wave_size; i++)
+				test_wave.waveform[i] = recv_data_buff[i+2];
+			break;
+		}
+		default: {
+			break;
+		}
+		
+
 	}
 
 }
@@ -127,13 +204,25 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			
 				default:
 				{
+					// >>>>> byte 2 to byte 9: Protocell 0 and 1
+				
+					// byte 2 --- ambient light sensor 0 state
+					for (uint8_t i = 0; i < 2; i++)
+						recv_data_buff[2+i] = protocell_var[0].protocell_als_state >> (8*i); 
+						
+					// byte 4 --- ambient light sensor 1 state
+					for (uint8_t i = 0; i < 2; i++)
+						recv_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
+						
+						
 					// >>>>> byte 10 to byte 19: TENTACLE 0
 					// >>>>> byte 20 to byte 29: TENTACLE 1
 					// >>>>> byte 30 to byte 39: TENTACLE 2		
+					// >>>>> byte 40 to byte 49: TENTACLE 3
 						
 					for (uint8_t j = 0; j < 4; j++){
 						
-						uint8_t byte_offset = 10*(j) + 10;
+						const uint8_t byte_offset = 10*(j) + 10;
 						
 						// byte x0 --- IR 0 sensor state
 						for (uint8_t i = 0; i < 2; i++)
@@ -158,26 +247,17 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			
 					}
 					
-					
-					// >>>>> byte 40 to byte 49: Protocell 0 and 1
-				
-					// byte 40 --- ambient light sensor 0 state
-					for (uint8_t i = 0; i < 2; i++)
-						recv_data_buff[40+i] = protocell_var[0].protocell_als_state >> (8*i); 
-						
-					// byte 42 --- ambient light sensor 1 state
-					for (uint8_t i = 0; i < 2; i++)
-						recv_data_buff[42+i] = protocell_var[1].protocell_als_state >> (8*i);
-					
-					// >>>>> byte 50 to byte 59:
-					recv_data_buff[50] = neighbour_activation_state; 
-				}		
-				break;
 
+					// >>>>> byte 50 to byte 59:
+					recv_data_buff[50] = neighbour_activation_state;
+					
+					break;
+				}		
 
 			}
+			break;
 		}
-		break;
+		
 	}
 
 }

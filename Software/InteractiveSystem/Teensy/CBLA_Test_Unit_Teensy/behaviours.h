@@ -41,12 +41,11 @@ class TentacleVar{
 		//----OUTPUT (actuators)----
 		
 		//~~individual SMA PWM level~~~		
-		// 6 SMA wires per Tentacle
-		uint8_t tentacle_sma_level[6] = {0, 0, 0, 0, 0, 0};
+		// 2 SMA wires per Tentacle
+		uint8_t tentacle_sma_level[2] = {0, 0};
 
 		//~~Tentacle motion activation~~
-		// {arm_0, arm_1, arm_2} (in motion type)
-		uint8_t tentacle_motion_on[3] = {0, 0, 0};
+		uint8_t tentacle_motion_on = 0;
 	
 		//~~Reflex actuation level~~
 		// {channel 1, channel 2}
@@ -54,7 +53,7 @@ class TentacleVar{
 	
 		//~~Reflex wave type~~
 		// {channel 1, channel 2}
-		uint8_t tentacle_reflex_wave_type[2] = {0, 0};
+		uint8_t tentacle_reflex_wave_type[2] =  {0, 0};
 
 };
 
@@ -132,12 +131,14 @@ class Behaviours : public TeensyUnit{
 	
 		//>>> Teensy on-board <<<<
 		
-		//~~input~~
+		//----OUTPUT----
 		//~~indicator LED on~~
 		bool indicator_led_on = true; //exposed
 		//~~indicator LED blink~~
-		int16_t indicator_led_blink_period = 5000; //exposed
+		uint16_t indicator_led_blink_period = 5000; //exposed
 	
+		//~~operation mode~~~
+		uint8_t operation_mode = 0;
 
 		//>>> Tentacle <<<
 		TentacleVar tentacle_var[4];
