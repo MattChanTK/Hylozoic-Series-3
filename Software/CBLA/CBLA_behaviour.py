@@ -1,7 +1,7 @@
 import math
 import random
 from RegionsManager import Expert
-from SimSystem import DiagonalPlane2 as Robot
+from SimSystem import DiagonalPlane as Robot
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
@@ -27,10 +27,10 @@ def weighted_choice_sub(weights, min_percent=0.05):
 if __name__ == "__main__":
 
     # number of time step
-    sim_duration = 1
+    sim_duration = 500
 
     # use saved expert
-    is_using_saved_expert = 1
+    is_using_saved_expert = 0
 
     # use adaptive learning rate
     adapt_exploring_rate = False
@@ -42,6 +42,8 @@ if __name__ == "__main__":
     # instantiate a Robot
     #robot = Robot(filename='SimpleData.pkl')
     robot = Robot(low_bound=(-80,-80), high_bound=(80,80))
+    #robot = Robot(low_bound=(-80,), high_bound=(80,))
+
 
     # instantiate an Expert
     if is_using_saved_expert:
@@ -200,7 +202,7 @@ if __name__ == "__main__":
     Viz.plot_model(expert, region_ids, x_idx=2, y_idx=0, fig_num=1, subplot_num=269)
     Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=1, subplot_num=234)
     #Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
-    Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122, data_only=True)
+    Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122, data_only=False)
 
 
     plt.ioff()

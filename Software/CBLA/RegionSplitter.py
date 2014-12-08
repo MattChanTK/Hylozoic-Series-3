@@ -4,7 +4,9 @@ import math
 
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
-from sklearn.decomposition import PCA
+#from sklearn.decomposition import PCA
+from sklearn.decomposition import KernelPCA as PCA
+from sklearn.decomposition import FastICA as ICA
 from sklearn.neighbors import KNeighborsClassifier as knn
 from sklearn.svm import SVC
 from sklearn.svm import SVR
@@ -186,11 +188,17 @@ class RegionSplitter_PCA_oudeyer():
 
         self.n_comp = max(1, data_dim_num)
 
-        self.pca = PCA(n_components=self.n_comp)
+        self.pca = PCA(n_components=self.n_comp, kernel='linear')
+        # self.ica = ICA(n_components=self.n_comp)
 
         data = self.pca.fit_transform(data)
+        #data = self.ica.fit_transform(data)
 
         data_zipped = list(zip(*data))
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
 
         # sort in each dimension
         dim_min = float("inf")
@@ -200,7 +208,7 @@ class RegionSplitter_PCA_oudeyer():
                 # pick a random value
                 max_val = max(data_zipped[i])
                 min_val = min(data_zipped[i])
-                cut_val = random.choice(np.linspace(min_val, max_val, num=100))
+                cut_val = random.choice(np.linspace(min_val, max_val, num=500))
 
                 groups = [[label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] <= cut_val],
                           [label[j] for j in range(len(data_zipped[i])) if data_zipped[i][j] > cut_val]]
@@ -238,6 +246,7 @@ class RegionSplitter_PCA_oudeyer():
             raise(TypeError, "data must be a tuple")
 
         data = tuple(self.pca.transform(data)[0])
+        # data = tuple(self.ica.transform(data)[0])
         group = data[self.cut_dim] <= self.cut_val
 
         return group == 0
@@ -336,12 +345,15 @@ class RegionSplitter_oudeyer_modified():
 
                 error_diff = (avg_error[0] - avg_error[1])**2
                 smallest_error = min(avg_error)
-                biggest_error_reduction = max(rms_error_whole - avg_error[0], rms_error_whole-avg_error[1])
+                try:
+                    biggest_error_reduction = max(rms_error_whole - avg_error[0]/rms_error_whole, rms_error_whole-avg_error[1]/rms_error_whole)
+                except ZeroDivisionError:
+                    biggest_error_reduction = -float("inf")
                 in_group_variance = math.fsum(weighted_avg_variance)
                 #print('cut_dim=%d cut_val=%f avg_err=%f var=%f'%(i, cut_val, smallest_error, in_group_variance))
 
                 try:
-                    score = ((in_group_variance+1)*(smallest_error+1)) / (error_diff*(biggest_error_reduction**0.5))
+                    score = in_group_variance / (error_diff*biggest_error_reduction)
                 except ZeroDivisionError:
                     score = float("inf")
 
@@ -373,13 +385,16 @@ class RegionSplitter_PCA_oudeyer_modified():
         min_group_size = 20
 
         data_dim_num = len(data[0])
-        label_dim_num = len(label[0])
 
-        self.n_comp = max(1, data_dim_num)
+        self.n_comp =  max(1, data_dim_num)
 
-        self.pca = PCA(n_components=self.n_comp)
+        self.pca = PCA(n_components=self.n_comp, kernel='linear')
+        #self.pca = ICA(n_components=self.n_comp)
 
         data = self.pca.fit_transform(data)
+
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
 
         data_zipped = list(zip(*data))
 
