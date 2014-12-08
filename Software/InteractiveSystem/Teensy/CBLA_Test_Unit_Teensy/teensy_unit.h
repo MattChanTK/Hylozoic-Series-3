@@ -100,6 +100,7 @@ class TeensyUnit{
 		byte send_data_buff[packet_size];
 		byte recv_data_buff[packet_size];
 		uint8_t request_type = 0;
+		uint8_t reply_type = 0;
 		
 		//=== initialize slow pwm ===
 		PWMDriver spwm;	
