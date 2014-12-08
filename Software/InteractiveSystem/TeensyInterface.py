@@ -20,7 +20,7 @@ class TeensyManager():
         self.teensy_thread_table = dict()
 
         # configuration of the Teensy threads
-        self.unit_config_default = 'SIMPLIFIED_TEST_UNIT'
+        self.unit_config_default = 'DEFAULT'
         self.print_to_term_default = False
         self.import_config = import_config
 
@@ -142,6 +142,8 @@ class TeensyInterface(threading.Thread):
 
         if unit_config == 'SIMPLIFIED_TEST_UNIT':
             from CommunicationProtocol import SimplifiedTestUnit as SysParam
+        elif unit_config == 'CBLA_TEST_BED':
+            from CommunicationProtocol import CBLATestBed as SysParam
         else:
             from SystemParameters import SystemParameters as SysParam
 
@@ -228,7 +230,7 @@ class TeensyInterface(threading.Thread):
         while True:
 
             if self.param_updated_event.wait(timeout=1):
-                self.param_updated_event.clear(b)
+                self.param_updated_event.clear()
 
                 with self.lock:
                     self.lock_received_event.set()

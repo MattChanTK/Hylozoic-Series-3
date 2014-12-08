@@ -1,6 +1,7 @@
 import struct
 import re
 import copy
+import os
 
 class SystemParameters():
 
@@ -42,8 +43,8 @@ class SystemParameters():
         self.request_type = 'basic'
 
         # import parameters from files
-        self.output_param_config_filename = 'param_config_output_default'
-        self.input_param_config_filename = 'param_config_input_default'
+        self.output_param_config_filename = 'default_output_config'
+        self.input_param_config_filename = 'default_input_config'
 
         self.additional_config_routine()
 
@@ -57,7 +58,9 @@ class SystemParameters():
 
     def __import_output_param(self, filename):
 
+        prev_dir = os.getcwd()
         try:
+            os.chdir('protocol_config')
             with open(filename, mode='r') as f:
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
@@ -87,12 +90,16 @@ class SystemParameters():
                         self.request_types[req_type].add(name)
 
                     self.var_encode_func[var_type](name, init_val)
+        finally:
+            os.chdir(prev_dir)
 
         print("Output parameters: ", list(self.output_param.keys()))
 
     def __import_input_param(self, filename):
 
+        prev_dir = os.getcwd()
         try:
+            os.chdir('protocol_config')
             with open(filename, mode='r') as f:
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
@@ -108,6 +115,9 @@ class SystemParameters():
                 else:
                     name = entry[0]
                     self.input_state[name] = 0
+        finally:
+            os.chdir(prev_dir)
+
         print("Input parameters: ", list(self.input_state.keys()))
 
     def get_input_state(self, state_type):
