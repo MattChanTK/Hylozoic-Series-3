@@ -81,15 +81,83 @@ class CBLATestBed(SysParam.SystemParameters):
             # >>>>> byte 30 to byte 39
             content[28] = self.output_param['neighbour_activation_state']
 
+        elif self.request_type == 'tentacle_high_level':
 
+            # (15 bytes each)
+            # >>>>> byte 2 to byte 16: TENTACLE 0
+            # >>>>> byte 17 to byte 31: TENTACLE 1
+            # >>>>> byte 32 to byte 46: TENTACLE 2
+            # >>>>> byte 47 to byte 61: TENTACLE 3
+            for j in range(4):
+                device_header = 'tentacle_%d_' % j
+                byte_offset = 15*j
+
+                # byte x0 --- IR sensor 0 activation threshold
+                content[byte_offset+0] = self.output_param[device_header+'ir_0_threshold']
+                # byte x2 --- IR sensor 1 activation threshold
+                content[byte_offset+2] = self.output_param[device_header+'ir_1_threshold']
+
+                # byte x4 --- ON period of Tentacle arm activation
+                content[byte_offset+4] = self.output_param[device_header+'arm_cycle_on_threshold']
+                # byte x5 --- OFF period of Tentacle arm activation
+                content[byte_offset+5] = self.output_param[device_header+'arm_cycle_off_threshold']
+
+                # byte x6 --- Reflex channel 1 period
+                content[byte_offset+6] = self.output_param[device_header+'arm_cycle_reflex_0_period']
+                # byte x8 --- Reflex channel 2 period
+                content[byte_offset+8] = self.output_param[device_header+'arm_cycle_reflex_1_period']
+
+                # byte x10 --- tentacle motion activation
+                content[byte_offset+10] = self.output_param[device_header+'arm_motion_on']
+
+                # byte x11 --- reflex channel 1 wave type
+                content[byte_offset+11] = self.output_param[device_header+'reflex_0_wave_type']
+                # byte x12 --- reflex channel 2 wave type
+                content[byte_offset+12] = self.output_param[device_header+'reflex_1_wave_type']
+
+        elif self.request_type == 'tentacle_low_level':
+            # (15 bytes each)
+            # >>>>> byte 2 to byte 16: TENTACLE 0
+            # >>>>> byte 17 to byte 31: TENTACLE 1
+            # >>>>> byte 32 to byte 46: TENTACLE 2
+            # >>>>> byte 47 to byte 61: TENTACLE 3
+            for j in range(4):
+                device_header = 'tentacle_%d_' % j
+                byte_offset = 15*j
+
+                # byte x0 --- tentacle SMA wire 0
+                content[byte_offset+0] = self.output_param[device_header+'sma_0_level']
+                # byte x1 --- tentacle SMA wire 1
+                content[byte_offset+1] = self.output_param[device_header+'sma_1_level']
+                # byte x2 --- reflex actuation level
+                content[byte_offset+2] = self.output_param[device_header+'reflex_0_level']
+                # byte x4 --- reflex actuation level
+                content[byte_offset+3] = self.output_param[device_header+'reflex_1_level']
+
+        elif self.request_type == 'protocell':
+            # (15 bytes each)
+            # >>>>> byte 2 to byte 16: PROTOCELL 0
+            # >>>>> byte 17 to byte 31: PROTOCELL 1
+            for j in range(4):
+                device_header = 'protocell_%d_' % j
+                byte_offset = 15*j
+
+                # byte x0 --- Ambient light sensor threshold
+                content[byte_offset+0] = self.output_param[device_header+'als_threshold']
+                # byte x2 --- high-power LED cycle period
+                content[byte_offset+2] = self.output_param[device_header+'cycle_period']
+                # byte x4 --- high-power LED level
+                content[byte_offset+4] = self.output_param[device_header+'led_level']
+                # byte x5 --- high-power led wave type
+                content[byte_offset+5] = self.output_param[device_header+'led_wave_type']
 
         elif self.request_type == 'prgm':
             content[0] = self.output_param['program_teensy']
 
-        elif self.request_type == 'wave':
-
-            # byte 0 to 32: indicator led wave
-            content[0:32] = self.output_param['indicator_led_wave']
+        # elif self.request_type == 'wave':
+        #
+        #     # byte 0 to 32: indicator led wave
+        #     content[0:32] = self.output_param['indicator_led_wave']
 
     def __set_int8_array(self, input_type, raw_input):
 
