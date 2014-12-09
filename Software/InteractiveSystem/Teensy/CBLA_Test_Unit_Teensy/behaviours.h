@@ -135,7 +135,7 @@ class Behaviours : public TeensyUnit{
 		//~~indicator LED on~~
 		bool indicator_led_on = true; //exposed
 		//~~indicator LED blink~~
-		uint16_t indicator_led_blink_period = 5000; //exposed
+		uint16_t indicator_led_blink_period = 1000; //exposed
 	
 		//~~operation mode~~~
 		uint8_t operation_mode = 0;

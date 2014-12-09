@@ -19,7 +19,9 @@ void Behaviours::parse_msg(){
 	
 	// byte 1 --- type of request
 	request_type = recv_data_buff[1];
-        
+    
+	uint16_t temp_val = 0;
+	
 	switch (request_type){
 	
 		// Basic
@@ -30,17 +32,18 @@ void Behaviours::parse_msg(){
 			// byte 2 --- indicator led on or off
 			indicator_led_on = recv_data_buff[2];
 
-			// byte 3 and 4 --- indicator led blinking frequency
-					
+			// byte 3 and 4 --- indicator led blinking frequency	
+			temp_val = 0;
 			for (uint8_t i = 0; i < 2 ; i++)
-			  indicator_led_blink_period += recv_data_buff[3+i] << (8*i);
+			  temp_val += recv_data_buff[3+i] << (8*i);
+			indicator_led_blink_period = temp_val;
 			
 			// >>>> byte 10: CONFIG VARIABLES <<<<<
 			
 			// byte 10 ---- operation mode
 			operation_mode = recv_data_buff[10];
 			
-			// byte 11 ---- reply message type
+			// byte 11 ---- reply message type request
 			reply_type = recv_data_buff[11];
 			
 			// >>>>> byte 30 to byte 39:
@@ -73,12 +76,16 @@ void Behaviours::parse_msg(){
 				//--- internal variables---
 				
 				// byte x0 --- IR sensor 0 activation threshold
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					tentacle_var[j].tentacle_ir_threshold[0] += recv_data_buff[byte_offset+i+0] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+0] << (8*i);
+				tentacle_var[j].tentacle_ir_threshold[0] = temp_val;
 					
 				// byte x2 --- IR sensor 1 activation threshold
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					tentacle_var[j].tentacle_ir_threshold[1] += recv_data_buff[byte_offset+i+2] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+2] << (8*i);
+				tentacle_var[j].tentacle_ir_threshold[1] = temp_val;
 					
 				// byte x4 --- ON period of Tentacle arm activation
 				tentacle_var[j].tentacle_arm_cycle_period[0] = recv_data_buff[byte_offset+4];
@@ -87,12 +94,16 @@ void Behaviours::parse_msg(){
 				tentacle_var[j].tentacle_arm_cycle_period[1] = recv_data_buff[byte_offset+5];
 				
 				// byte x6 --- Reflex channel 1 period 
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					tentacle_var[j].tentacle_reflex_period[0] += recv_data_buff[byte_offset+i+6] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+6] << (8*i);
+				tentacle_var[j].tentacle_reflex_period[0] = temp_val;
 				
 				// byte x8 --- Reflex channel 2 period 
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					tentacle_var[j].tentacle_reflex_period[1] += recv_data_buff[byte_offset+i+8] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+8] << (8*i);
+				tentacle_var[j].tentacle_reflex_period[1] = temp_val;
 					
 					
 				//--- actuator output variables---
@@ -149,12 +160,16 @@ void Behaviours::parse_msg(){
 				
 				// --- internal variables ----
 				// byte x0 --- Ambient light sensor threshold
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					protocell_var[j].protocell_als_threshold += recv_data_buff[byte_offset+i+0] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+0] << (8*i);
+				tentacle_var[j].tentacle_reflex_period[1] = temp_val;
 					
 				// byte x2 --- high-power LED cycle period 
+				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
-					protocell_var[j].protocell_cycle_period += recv_data_buff[byte_offset+i+2] << (8*i);
+					temp_val += recv_data_buff[byte_offset+i+2] << (8*i);
+				protocell_var[j].protocell_cycle_period = temp_val;
 					
 				//--- actuator output variables---
 				// byte x4 --- high-power LED level 
@@ -171,9 +186,10 @@ void Behaviours::parse_msg(){
 		// wave forms
 		case 10: {
 		
-			// byte 2 to 3 --- indicator LED wave 
+			// byte 2 to 34 --- indicator LED wave 
 			for (uint8_t i = 0; i < wave_size; i++)
 				test_wave.waveform[i] = recv_data_buff[i+2];
+			
 			break;
 		}
 		default: {
@@ -198,11 +214,11 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 	send_data_buff[num_outgoing_byte-1] = back_signature;
 	
 	// sample the sensors
-	this->sample_inputs();
+	//this->sample_inputs();
 		
 		
 	// byte 1 --- type of reply
-	recv_data_buff[1] = reply_type;		
+	send_data_buff[1] =  reply_type;		
 
 	switch (reply_type){
 	
@@ -212,11 +228,14 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 		
 			// byte 2 --- ambient light sensor 0 state
 			for (uint8_t i = 0; i < 2; i++)
-				recv_data_buff[2+i] = protocell_var[0].protocell_als_state >> (8*i); 
+				send_data_buff[2+i] = protocell_var[0].protocell_als_state >> (8*i); 
 				
 			// byte 4 --- ambient light sensor 1 state
 			for (uint8_t i = 0; i < 2; i++)
-				recv_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
+				send_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
+				
+			for (uint8_t i = 0; i < 2; i++)
+				send_data_buff[6+i] = indicator_led_blink_period >> (8*i);
 				
 				
 			// >>>>> byte 10 to byte 19: TENTACLE 0
@@ -230,24 +249,24 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 				
 				// byte x0 --- IR 0 sensor state
 				for (uint8_t i = 0; i < 2; i++)
-					recv_data_buff[byte_offset+0+i] = tentacle_var[j].tentacle_ir_state[0] >> (8*i); 
+					send_data_buff[byte_offset+0+i] = tentacle_var[j].tentacle_ir_state[0] >> (8*i); 
 				
 				// byte x2 --- IR 1 sensor state
 				for (uint8_t i = 0; i < 2; i++)
-					recv_data_buff[byte_offset+2+i] = tentacle_var[j].tentacle_ir_state[1] >> (8*i); 
+					send_data_buff[byte_offset+2+i] = tentacle_var[j].tentacle_ir_state[1] >> (8*i); 
 		
 					
 				// byte x4 -- Accelerometer state (x-axis)
 				for (uint8_t i = 0; i < 2; i++)
-					recv_data_buff[byte_offset+4+i] = tentacle_var[j].tentacle_acc_state[0] >> (8*i); 
+					send_data_buff[byte_offset+4+i] = tentacle_var[j].tentacle_acc_state[0] >> (8*i); 
 			
 				// byte x6 -- Accelerometer state (y-axis)
 				for (uint8_t i = 0; i < 2; i++)
-					recv_data_buff[byte_offset+6+i] = tentacle_var[j].tentacle_acc_state[1] >> (8*i); 
+					send_data_buff[byte_offset+6+i] = tentacle_var[j].tentacle_acc_state[1] >> (8*i); 
 				
 				// byte x8 -- Accelerometer state (z-axis)
 				for (uint8_t i = 0; i < 2; i++)
-					recv_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
+					send_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
 	
 			}
 			break;
@@ -320,6 +339,7 @@ void Behaviours::sample_inputs(){
 //===========================================================================
 //============ BEHAVIOUR CODES =========
 //===========================================================================
+
 
 //---- test behaviour ----
 void Behaviours::test_behaviour(const uint32_t &curr_time) {
@@ -394,10 +414,9 @@ void Behaviours::led_blink_behaviour(const uint32_t &curr_time) {
 	else{
 	
 		// if stopped in the middle of a cycle
-		if (indicator_led_blink_cycling){
-			indicator_led_blink_cycling = false;
-			digitalWrite(indicator_led_pin, 0);
-		}
+		indicator_led_blink_cycling = false;
+
+		digitalWrite(indicator_led_pin, 0);
 	}
 }
 
