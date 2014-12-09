@@ -122,7 +122,7 @@ void Behaviours::parse_msg(){
 			break;
 		}
 			
-		//Tentacles low level requests
+		// Tentacles low level requests
 		case 3: {
 		
 			// (15 bytes each)
@@ -140,7 +140,7 @@ void Behaviours::parse_msg(){
 				tentacle_var[j].tentacle_sma_level[1] = recv_data_buff[byte_offset+1];
 				// byte x2 --- reflex actuation level
 				tentacle_var[j].tentacle_reflex_level[0] = recv_data_buff[byte_offset+2];
-				// byte x4--- reflex actuation level
+				// byte x4 --- reflex actuation level
 				tentacle_var[j].tentacle_reflex_level[1] = recv_data_buff[byte_offset+3];
 			
 			}
@@ -175,7 +175,7 @@ void Behaviours::parse_msg(){
 				// byte x4 --- high-power LED level 
 				protocell_var[j].protocell_led_level = recv_data_buff[byte_offset+4];
 				
-				// byte x5 --- reflex channel 2 wave type 
+				// byte x5 --- high-power led wave type 
 				protocell_var[j].protocell_led_wave_type = recv_data_buff[byte_offset+5];
 						
 			}
@@ -234,9 +234,6 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 			for (uint8_t i = 0; i < 2; i++)
 				send_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
 				
-			for (uint8_t i = 0; i < 2; i++)
-				send_data_buff[6+i] = indicator_led_blink_period >> (8*i);
-				
 				
 			// >>>>> byte 10 to byte 19: TENTACLE 0
 			// >>>>> byte 20 to byte 29: TENTACLE 1
@@ -268,6 +265,16 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 				for (uint8_t i = 0; i < 2; i++)
 					send_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
 	
+			}
+			break;
+		}
+		
+		// echo
+		case 1: {
+			
+			for (uint8_t i = 2; i<63; i++){
+
+				send_data_buff[i] = recv_data_buff[i];
 			}
 			break;
 		}
