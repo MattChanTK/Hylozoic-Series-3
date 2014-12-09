@@ -186,10 +186,15 @@ void Behaviours::parse_msg(){
 		// wave forms
 		case 10: {
 		
-			// byte 2 to 34 --- indicator LED wave 
-			for (uint8_t i = 0; i < wave_size; i++)
-				test_wave.waveform[i] = recv_data_buff[i+2];
+			//byte 2 wave type to change
+			uint8_t wave_type = recv_data_buff[2];
 			
+			if (wave_type < num_wave){
+				
+				// byte 3 to 35 --- indicator LED wave 
+				for (uint8_t i = 0; i < wave_size; i++)
+					wave[wave_type].waveform[i] = recv_data_buff[i+3];
+			}
 			break;
 		}
 		default: {
@@ -431,8 +436,8 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 	
 	
 	//static WaveTable test_wave(5);
-	test_wave.set_duration(10000);
-	uint8_t led_level = test_wave.wave_function(curr_time);
+	wave[0].set_duration(10000);
+	uint8_t led_level = wave[0].wave_function(curr_time);
 	//protocell.set_led_level(led_level);
 	analogWrite(5, led_level);
 	

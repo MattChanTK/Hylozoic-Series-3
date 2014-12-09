@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "teensy_unit.h"
 
+#define num_wave 10
 
 class TentacleVar{
 
@@ -153,8 +154,10 @@ class Behaviours : public TeensyUnit{
 		uint8_t neighbour_activation_state = 0;
 		
 		//>>> Wave Forms <<<
+		
 		//~~ instances ~~~
-		WaveTable test_wave;
+		WaveTable wave[num_wave];
+		
 		
 		//~~ waveform definitions ~~~
 		// const_wave_t cos_wave_1[wave_size] = {0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2};
