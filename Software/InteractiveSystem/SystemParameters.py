@@ -93,7 +93,7 @@ class SystemParameters():
                         self.var_list[var_type].add(name)
                     if req_type not in self.request_types.keys():
                         self.request_types[req_type] = set((name, ))
-                        self.request_type_ids[req_type] = req_type_id
+                        self.request_type_ids[req_type] = int(req_type_id)
                     else:
                         self.request_types[req_type].add(name)
 

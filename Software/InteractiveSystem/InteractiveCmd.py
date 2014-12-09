@@ -35,7 +35,7 @@ class InteractiveCmd():
 
         # prompt users for inputs
         elif cmd is None:
-            cmd = input("Enter--> [Teensy_name] [param_type]:[param_value] (separated by space).\n" +
+            cmd = input("Enter--> [Teensy_name] [request_type] [param_type]:[param_value] (separated by space).\n" +
                         "To apply changes, enter '>>apply'.\n")
 
             # tokenize the command
@@ -59,7 +59,7 @@ class InteractiveCmd():
 
             # extract the Teensy ID
             try:
-                if len(param_cmd_list) < 2:
+                if len(param_cmd_list) < 3:
                     raise Exception("Error: invalid command!")
                 dev_name = param_cmd_list[0]
 
@@ -68,11 +68,12 @@ class InteractiveCmd():
                  return -1
 
             # create a command object
-            cmd_obj = command_object(dev_name, 'basic')
+            cmd_type = param_cmd_list[1]
+            cmd_obj = command_object(dev_name, cmd_type)
 
             # extracts the parameters change requests
             try:
-                for param_cmd in param_cmd_list[1:]:
+                for param_cmd in param_cmd_list[2:]:
                     param = param_cmd.split(":")
                     cmd_obj.add_param_change(param[0], param[1])
             except Exception:

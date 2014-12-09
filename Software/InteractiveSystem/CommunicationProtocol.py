@@ -91,21 +91,22 @@ class CBLATestBed(SysParam.SystemParameters):
             for j in range(4):
                 device_header = 'tentacle_%d_' % j
                 byte_offset = 15*j
+                content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
 
                 # byte x0 --- IR sensor 0 activation threshold
-                content[byte_offset+0] = self.output_param[device_header+'ir_0_threshold']
+                content[byte_offset+0:byte_offset+2] = struct.pack('H', self.output_param[device_header+'ir_0_threshold'])
                 # byte x2 --- IR sensor 1 activation threshold
-                content[byte_offset+2] = self.output_param[device_header+'ir_1_threshold']
+                content[byte_offset+2:byte_offset+4] = struct.pack('H', self.output_param[device_header+'ir_1_threshold'])
 
                 # byte x4 --- ON period of Tentacle arm activation
-                content[byte_offset+4] = self.output_param[device_header+'arm_cycle_on_threshold']
+                content[byte_offset+4] = self.output_param[device_header+'arm_cycle_on_period']
                 # byte x5 --- OFF period of Tentacle arm activation
-                content[byte_offset+5] = self.output_param[device_header+'arm_cycle_off_threshold']
+                content[byte_offset+5] = self.output_param[device_header+'arm_cycle_off_period']
 
                 # byte x6 --- Reflex channel 1 period
-                content[byte_offset+6] = self.output_param[device_header+'arm_cycle_reflex_0_period']
+                content[byte_offset+6:byte_offset+8] = struct.pack('H', self.output_param[device_header+'arm_reflex_0_period'])
                 # byte x8 --- Reflex channel 2 period
-                content[byte_offset+8] = self.output_param[device_header+'arm_cycle_reflex_1_period']
+                content[byte_offset+8:byte_offset+10] = struct.pack('H', self.output_param[device_header+'arm_reflex_1_period'])
 
                 # byte x10 --- tentacle motion activation
                 content[byte_offset+10] = self.output_param[device_header+'arm_motion_on']
@@ -143,9 +144,9 @@ class CBLATestBed(SysParam.SystemParameters):
                 byte_offset = 15*j
 
                 # byte x0 --- Ambient light sensor threshold
-                content[byte_offset+0] = self.output_param[device_header+'als_threshold']
+                content[byte_offset+0:byte_offset+2] = struct.pack('H', self.output_param[device_header+'als_threshold'])
                 # byte x2 --- high-power LED cycle period
-                content[byte_offset+2] = self.output_param[device_header+'cycle_period']
+                content[byte_offset+2:byte_offset+4] = struct.pack('H', self.output_param[device_header+'cycle_period'])
                 # byte x4 --- high-power LED level
                 content[byte_offset+4] = self.output_param[device_header+'led_level']
                 # byte x5 --- high-power led wave type
