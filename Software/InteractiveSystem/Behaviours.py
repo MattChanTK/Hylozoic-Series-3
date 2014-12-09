@@ -23,12 +23,12 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
         indicator_led_on = dict()
         for teensy_name in teensy_names:
             indicator_led_period[teensy_name] = 0
-            indicator_led_on[teensy_name] = 0
+            indicator_led_on[teensy_name] = 1
 
         loop = 0
         crash_count = 0
-        num_loop = 20000
-        while (1): #loop < num_loop:
+        num_loop = 10000
+        while loop < num_loop:
             start_time = clock()
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
@@ -46,7 +46,8 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
                     cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*25)
+                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*50)
+
 
                     self.enter_command(cmd_obj)
 
@@ -76,26 +77,27 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 #     else:
                 #         indicator_led_on[teensy_name] = 1
 
-                print("[", teensy_name, "]")
-                print("Tentacle 0", end=" ---\t")
-                print("IR (", sample['tentacle_0_ir_0_state'], ", ", sample['tentacle_0_ir_1_state'], ")", end="  \t")
-                print("Accel (", sample['tentacle_0_acc_x_state'], ', ', sample['tentacle_0_acc_y_state'], ', ', sample['tentacle_0_acc_z_state'], ")" )
-
-                print("Tentacle 1", end=" ---\t")
-                print("IR (", sample['tentacle_1_ir_0_state'], ", ", sample['tentacle_1_ir_1_state'], ")", end="  \t")
-                print("Accel (", sample['tentacle_1_acc_x_state'], ', ', sample['tentacle_1_acc_y_state'], ', ', sample['tentacle_1_acc_z_state'], ")" )
-
-                print("Tentacle 2", end=" ---\t")
-                print("IR (", sample['tentacle_2_ir_0_state'], ", ", sample['tentacle_2_ir_1_state'], ")", end="  \t")
-                print("Accel (", sample['tentacle_2_acc_x_state'], ', ', sample['tentacle_2_acc_y_state'], ', ', sample['tentacle_2_acc_z_state'], ")" )
-
-                print("Protocell", end=" ---\t")
-                print("ALS (", sample['protocell_0_ambient_light_sensor_state'], ", ", sample['protocell_1_ambient_light_sensor_state'], ")")
-                print('')
+                # print("[", teensy_name, "]")
+                # print("Tentacle 0", end=" ---\t")
+                # print("IR (", sample['tentacle_0_ir_0_state'], ", ", sample['tentacle_0_ir_1_state'], ")", end="  \t")
+                # print("Accel (", sample['tentacle_0_acc_x_state'], ', ', sample['tentacle_0_acc_y_state'], ', ', sample['tentacle_0_acc_z_state'], ")" )
+                #
+                # print("Tentacle 1", end=" ---\t")
+                # print("IR (", sample['tentacle_1_ir_0_state'], ", ", sample['tentacle_1_ir_1_state'], ")", end="  \t")
+                # print("Accel (", sample['tentacle_1_acc_x_state'], ', ', sample['tentacle_1_acc_y_state'], ', ', sample['tentacle_1_acc_z_state'], ")" )
+                #
+                # print("Tentacle 2", end=" ---\t")
+                # print("IR (", sample['tentacle_2_ir_0_state'], ", ", sample['tentacle_2_ir_1_state'], ")", end="  \t")
+                # print("Accel (", sample['tentacle_2_acc_x_state'], ', ', sample['tentacle_2_acc_y_state'], ', ', sample['tentacle_2_acc_z_state'], ")" )
+                #
+                # print("Protocell", end=" ---\t")
+                # print("ALS (", sample['protocell_0_ambient_light_sensor_state'], ", ", sample['protocell_1_ambient_light_sensor_state'], ")")
+                # print('')
 
                 # new blink period
-                indicator_led_period[teensy_name] += 0.002
+                indicator_led_period[teensy_name] += 0.001
                 indicator_led_period[teensy_name] %= 10
+
 
             #     if sample['tentacle_2_acc_x_state'] == 0:
             #         crash_count += 1

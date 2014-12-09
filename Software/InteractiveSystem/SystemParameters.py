@@ -32,15 +32,21 @@ class SystemParameters():
 
         #==== inputs ====
         self.input_state = dict()
-        # ---defaults---
-        self.input_state['analog_0_state'] = 0
 
         #=== request type ====
         self.request_types = dict()
+        # variables associated to the request type
         self.request_types['basic'] = set(('indicator_led_on', 'indicator_led_period'))
         self.request_types['prgm'] = set(('program_teensy', ))
-        self.request_type_ids = enum_dict('basic', 'prgm')
+        self.request_type_ids = dict()
+        self.request_type_ids['basic'] = 0
+        self.request_type_ids['prgm'] = 1
         self.request_type = 'basic'
+
+        #=== reply type ====
+        self.reply_types = dict()
+        self.reply_types[0] = set()
+        self.reply_type = 0
 
         # import parameters from files
         self.output_param_config_filename = 'default_output_config'
@@ -69,7 +75,7 @@ class SystemParameters():
             for line in param_config:
                 entry = re.split('\W*', line)
                 try:
-                    if len(entry) != 4:
+                    if len(entry) != 5:
                         raise Exception("Invalid configuration at line -> " + line)
                 except Exception as e:
                     print(e)
@@ -77,7 +83,8 @@ class SystemParameters():
                     name = entry[0]
                     var_type = entry[1]
                     req_type = entry[2]
-                    init_val = entry[3]
+                    req_type_id = entry[3]
+                    init_val = entry[4]
 
                     # add name to the variable list
                     if var_type not in self.var_list.keys():
@@ -86,6 +93,7 @@ class SystemParameters():
                         self.var_list[var_type].add(name)
                     if req_type not in self.request_types.keys():
                         self.request_types[req_type] = set((name, ))
+                        self.request_type_ids[req_type] = req_type_id
                     else:
                         self.request_types[req_type].add(name)
 
@@ -108,12 +116,20 @@ class SystemParameters():
             for line in param_config:
                 entry = re.split('\W*', line)
                 try:
-                    if len(entry) != 1:
+                    if len(entry) != 2:
                         raise Exception("Invalid configuration at line -> " + line)
                 except Exception as e:
                     print(e)
                 else:
                     name = entry[0]
+                    rep_type = entry[1]
+
+                    # add name to the variable list
+                    if rep_type not in self.reply_types.keys():
+                        self.reply_types[rep_type] = set((name, ))
+                    else:
+                        self.reply_types[rep_type].add(name)
+
                     self.input_state[name] = 0
         finally:
             os.chdir(prev_dir)
@@ -194,8 +210,9 @@ class SystemParameters():
 
         # byte 0 and byte 63: the msg signature; can ignore
 
-        # byte 1: analog 0 state
-        self.input_state['analog_0_state'] = struct.unpack_from('H', msg[1:3])[0]
+        # byte 1: reply type
+        self.reply_type = msg[1]
+
 
     def compose_message_content(self):
 
@@ -223,9 +240,9 @@ class SystemParameters():
             content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
 
 
-def enum_dict(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return enums
+# def enum_dict(*sequential, **named):
+#     enums = dict(zip(sequential, range(len(sequential))), **named)
+#     return enums
 
 if __name__ == '__main__':
     def print_data(data, raw_dec=False):
