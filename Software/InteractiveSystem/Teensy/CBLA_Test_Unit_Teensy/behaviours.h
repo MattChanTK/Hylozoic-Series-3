@@ -19,7 +19,7 @@ class TentacleVar{
 		
 		//~~Accelerometer~~
 		// {x,y,z}
-		uint16_t tentacle_acc_state[3] = {0, 0, 0};
+		int16_t tentacle_acc_state[3] = {0, 0, 0};
 		
 		//----OUTPUT (internal variables)----
 		
@@ -149,7 +149,7 @@ class Behaviours : public TeensyUnit{
 		
 		//>>> Network Activities <<<
 		
-		//----INPUT----
+		//----OUTPUT (internal variables)----
 		uint8_t neighbour_activation_state = 0;
 		
 		//>>> Wave Forms <<<

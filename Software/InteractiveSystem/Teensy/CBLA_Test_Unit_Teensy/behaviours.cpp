@@ -22,7 +22,8 @@ void Behaviours::parse_msg(){
         
 	switch (request_type){
 	
-		case 0: { // basic
+		// Basic
+		case 0: { 
 		
 			// >>>>>> byte 2 to 9: ON-BOARD <<<<<<<
 			
@@ -35,7 +36,15 @@ void Behaviours::parse_msg(){
 			  indicator_led_blink_period += recv_data_buff[3+i] << (8*i);
 			
 			// >>>> byte 10: CONFIG VARIABLES <<<<<
+			
+			// byte 10 ---- operation mode
 			operation_mode = recv_data_buff[10];
+			
+			// byte 11 ---- reply message type
+			reply_type = recv_data_buff[11];
+			
+			// >>>>> byte 30 to byte 39:
+			neighbour_activation_state = recv_data_buff[30];
 			
 			break;
 		}
@@ -191,74 +200,66 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 	// sample the sensors
 	this->sample_inputs();
 		
-
-	switch (request_type){
-	
-		default:
-		{
 		
-			// byte 1 --- type of reply
-			recv_data_buff[1] = reply_type;		
+	// byte 1 --- type of reply
+	recv_data_buff[1] = reply_type;		
 
-			switch (reply_type){
-			
-				default:
-				{
-					// >>>>> byte 2 to byte 9: Protocell 0 and 1
+	switch (reply_type){
+	
+		case 0:	{
+		
+			// >>>>> byte 2 to byte 9: Protocell 0 and 1
+		
+			// byte 2 --- ambient light sensor 0 state
+			for (uint8_t i = 0; i < 2; i++)
+				recv_data_buff[2+i] = protocell_var[0].protocell_als_state >> (8*i); 
 				
-					// byte 2 --- ambient light sensor 0 state
-					for (uint8_t i = 0; i < 2; i++)
-						recv_data_buff[2+i] = protocell_var[0].protocell_als_state >> (8*i); 
-						
-					// byte 4 --- ambient light sensor 1 state
-					for (uint8_t i = 0; i < 2; i++)
-						recv_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
-						
-						
-					// >>>>> byte 10 to byte 19: TENTACLE 0
-					// >>>>> byte 20 to byte 29: TENTACLE 1
-					// >>>>> byte 30 to byte 39: TENTACLE 2		
-					// >>>>> byte 40 to byte 49: TENTACLE 3
-						
-					for (uint8_t j = 0; j < 4; j++){
-						
-						const uint8_t byte_offset = 10*(j) + 10;
-						
-						// byte x0 --- IR 0 sensor state
-						for (uint8_t i = 0; i < 2; i++)
-							recv_data_buff[byte_offset+0+i] = tentacle_var[j].tentacle_ir_state[0] >> (8*i); 
-						
-						// byte x2 --- IR 1 sensor state
-						for (uint8_t i = 0; i < 2; i++)
-							recv_data_buff[byte_offset+2+i] = tentacle_var[j].tentacle_ir_state[1] >> (8*i); 
+			// byte 4 --- ambient light sensor 1 state
+			for (uint8_t i = 0; i < 2; i++)
+				recv_data_buff[4+i] = protocell_var[1].protocell_als_state >> (8*i);
 				
-							
-						// byte x4 -- Accelerometer state (x-axis)
-						for (uint8_t i = 0; i < 2; i++)
-							recv_data_buff[byte_offset+4+i] = tentacle_var[j].tentacle_acc_state[0] >> (8*i); 
+				
+			// >>>>> byte 10 to byte 19: TENTACLE 0
+			// >>>>> byte 20 to byte 29: TENTACLE 1
+			// >>>>> byte 30 to byte 39: TENTACLE 2		
+			// >>>>> byte 40 to byte 49: TENTACLE 3
+				
+			for (uint8_t j = 0; j < 4; j++){
+				
+				const uint8_t byte_offset = 10*(j) + 10;
+				
+				// byte x0 --- IR 0 sensor state
+				for (uint8_t i = 0; i < 2; i++)
+					recv_data_buff[byte_offset+0+i] = tentacle_var[j].tentacle_ir_state[0] >> (8*i); 
+				
+				// byte x2 --- IR 1 sensor state
+				for (uint8_t i = 0; i < 2; i++)
+					recv_data_buff[byte_offset+2+i] = tentacle_var[j].tentacle_ir_state[1] >> (8*i); 
+		
 					
-						// byte x6 -- Accelerometer state (y-axis)
-						for (uint8_t i = 0; i < 2; i++)
-							recv_data_buff[byte_offset+6+i] = tentacle_var[j].tentacle_acc_state[1] >> (8*i); 
-						
-						// byte x8 -- Accelerometer state (z-axis)
-						for (uint8_t i = 0; i < 2; i++)
-							recv_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
+				// byte x4 -- Accelerometer state (x-axis)
+				for (uint8_t i = 0; i < 2; i++)
+					recv_data_buff[byte_offset+4+i] = tentacle_var[j].tentacle_acc_state[0] >> (8*i); 
 			
-					}
-					
-
-					// >>>>> byte 50 to byte 59:
-					recv_data_buff[50] = neighbour_activation_state;
-					
-					break;
-				}		
-
+				// byte x6 -- Accelerometer state (y-axis)
+				for (uint8_t i = 0; i < 2; i++)
+					recv_data_buff[byte_offset+6+i] = tentacle_var[j].tentacle_acc_state[1] >> (8*i); 
+				
+				// byte x8 -- Accelerometer state (z-axis)
+				for (uint8_t i = 0; i < 2; i++)
+					recv_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
+	
 			}
 			break;
 		}
 		
+		default: {
+			break;
+		}
+
 	}
+
+		
 
 }
 
@@ -269,23 +270,44 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 //--- Sampling function ---
 void Behaviours::sample_inputs(){
 
-	// const uint8_t read_buff_num = 20;
-	// //>>>tentacle<<<
+	const uint8_t read_buff_num = 4;
 	
-	// //~~IR sensors state~~
-	// for (uint8_t i = 0; i<3; i++){
-		// for (uint8_t j=0; j<2; j++){
-			// uint16_t read_buff = 0;
-			// for (uint8_t k=0; k<read_buff_num; k++){
-				// read_buff += tentacle[i].read_analog_state(j);
-			// }
-			// tentacle_ir_state[i][j] = (uint8_t) (read_buff/read_buff_num);
-		// }
-	// }
-
-
+	//>>>Tentacle<<<
 	
-
+	for (uint8_t j=0; j<4; j++){
+	
+		//~~IR sensors state~~
+		for (uint8_t i=0; i<2; i++){
+		
+			uint32_t read_buff = 0;
+			for (uint8_t k=0; k<read_buff_num; k++){
+				read_buff += tentacle[j].read_analog_state(i);
+			}
+			tentacle_var[j].tentacle_ir_state[i] = (uint16_t) (read_buff/read_buff_num);
+		}
+	
+	
+		//~~Accelerometer~~		
+		tentacle[j].read_acc_state(tentacle_var[j].tentacle_acc_state[0], 
+								   tentacle_var[j].tentacle_acc_state[1], 
+								   tentacle_var[j].tentacle_acc_state[2]);
+		
+		
+		
+	}
+	
+	
+	//>>>Protocell<<<
+	for (uint8_t j = 0; j<2; j++){
+	
+		//~~Ambient Light Sensor~~
+		uint32_t read_buff = 0;
+		for (uint8_t k=0; k<read_buff_num; k++){
+			read_buff += protocell[j].read_analog_state();
+		}
+		protocell_var[j].protocell_als_state = (uint16_t) (read_buff/read_buff_num);
+	}
+	
 	if (Wire.frozen){
 		//digitalWrite(PGM_DO_pin, 1);
 		digitalWrite(13, 1);
