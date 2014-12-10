@@ -13,7 +13,18 @@ class InteractiveCmd():
         if self.multithread_mode:
             self.start_get_input_states_threads(self.teensy_manager.get_teensy_name_list())
 
+    def update_output_params(self, teensy_names):
+
+        for teensy_name in list(teensy_names):
+            Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
+
+            for request_type in Teensy_thread.param.request_types.keys():
+                cmd_obj = command_object(teensy_name, request_type)
+                self.enter_command(cmd_obj)
+        self.send_commands()
+
     def run(self):
+
 
         while self.teensy_manager.get_num_teensy_thread() > 0:
             self.enter_command()
@@ -54,6 +65,14 @@ class InteractiveCmd():
             applying_cmd = str(param_cmd_list[0])
             if applying_cmd == ">>read" or applying_cmd == ">>Read":
                 self.update_input_states(self.teensy_manager.get_teensy_name_list())
+                return 1
+
+
+            # check if it's the "update" command
+
+            applying_cmd = str(param_cmd_list[0])
+            if applying_cmd == ">>update" or applying_cmd == ">>Update":
+                self.update_output_params(self.teensy_manager.get_teensy_name_list())
                 return 1
 
 

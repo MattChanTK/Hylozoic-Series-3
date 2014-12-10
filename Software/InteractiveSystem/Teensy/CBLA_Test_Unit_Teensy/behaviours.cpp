@@ -191,9 +191,9 @@ void Behaviours::parse_msg(){
 			
 			if (wave_type < num_wave){
 				
-				// byte 3 to 35 --- indicator LED wave 
+				// byte 12 to 43 --- indicator LED wave 
 				for (uint8_t i = 0; i < wave_size; i++)
-					wave[wave_type].waveform[i] = recv_data_buff[i+3];
+					wave[wave_type].waveform[i] = recv_data_buff[i+12];
 			}
 			break;
 		}

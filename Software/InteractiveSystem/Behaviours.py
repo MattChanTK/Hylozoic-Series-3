@@ -13,11 +13,17 @@ class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
         pass
 
 
+
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
+
 
     def run(self):
 
         teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        # initially update the Teensys with all the output parameters here
+        self.update_output_params(teensy_names)
+
 
         indicator_led_period = dict()
         indicator_led_on = dict()
@@ -26,7 +32,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 1
 
         loop = 0
-        num_loop = 10000
+        num_loop = 1
         while loop < num_loop:
             start_time = clock()
 
@@ -51,16 +57,19 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     self.enter_command(cmd_obj)
 
-                    #=== tentacle high_level commands"
-                    cmd_obj = command_object(teensy_name, 'basic')
 
+                    #=== change wave command====
+                    cmd_obj = command_object(teensy_name, 'wave_change')
 
-                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*50)
-
-                    cmd_obj.add_param_change('reply_type_request', 0)
-
+                    wave = ""
+                    cmd_obj.add_param_change('wave_type', 1)
+                    pt = 0
+                    for i in range(32):
+                        pt += int(255/32)
+                        wave += (str(pt) + '_')
+                    cmd_obj.add_param_change('new_wave', wave)
                     self.enter_command(cmd_obj)
+
 
 
             self.send_commands()

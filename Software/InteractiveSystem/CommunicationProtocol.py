@@ -155,10 +155,11 @@ class CBLATestBed(SysParam.SystemParameters):
         elif self.request_type == 'prgm':
             content[0] = self.output_param['program_teensy']
 
-        # elif self.request_type == 'wave':
-        #
-        #     # byte 0 to 32: indicator led wave
-        #     content[0:32] = self.output_param['indicator_led_wave']
+        elif self.request_type == 'wave_change':
+            # byte 2: wave type
+            content[0] = self.output_param['wave_type']
+            # byte 12 to 43: indicator led wave
+            content[10:42] = self.output_param['new_wave']
 
     def __set_int8_array(self, input_type, raw_input):
 
