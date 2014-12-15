@@ -123,7 +123,7 @@ class TeensyUnit{
 				void set_led_level(const uint8_t id, const uint8_t level);
 				
 				//~~inputs~~
-				uint8_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
+				uint16_t read_analog_state(const uint8_t id);  //{IR 0, IR 1}
 				bool read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z);  // return array:{x, y, z}
 				
 				
@@ -186,7 +186,7 @@ class TeensyUnit{
 				void set_led_level(const uint8_t level);
 				
 				//~~inputs~~
-				uint8_t read_analog_state(); 
+				uint16_t read_analog_state(); 
 				
 				
 				//~~configurations~~

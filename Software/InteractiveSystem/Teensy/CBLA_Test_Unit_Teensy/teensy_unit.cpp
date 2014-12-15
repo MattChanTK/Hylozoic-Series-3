@@ -225,8 +225,8 @@ void TeensyUnit::TentaclePort::set_led_level(const uint8_t id, const uint8_t lev
 }
 
 //~~inputs~~
-uint8_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
-	return (uint8_t) analogRead(analog_pins[id]);
+uint16_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
+	return (uint16_t) analogRead(analog_pins[id]);
 }
 
 bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}
@@ -323,8 +323,8 @@ void TeensyUnit::ProtocellPort::set_led_level(const uint8_t level){
 }
 
 //~~inputs~~
-uint8_t TeensyUnit::ProtocellPort::read_analog_state(){  
-	return (uint8_t) analogRead(analog_pin);
+uint16_t TeensyUnit::ProtocellPort::read_analog_state(){  
+	return (uint16_t) analogRead(analog_pin);
 }
 
 
