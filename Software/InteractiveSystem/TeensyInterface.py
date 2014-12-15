@@ -21,7 +21,7 @@ class TeensyManager():
 
         # configuration of the Teensy threads
         self.unit_config_default = 'DEFAULT'
-        self.print_to_term_default = True
+        self.print_to_term_default = False
         self.import_config = import_config
 
         self.create_teensy_threads()
@@ -251,7 +251,7 @@ class TeensyInterface(threading.Thread):
                 # waiting for reply
                 received_reply = False
                 #start_time = clock()
-                data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
+                data = self.listen_to_Teensy(timeout=300, byte_num=TeensyInterface.packet_size_in)
                 #print("Listen time: ", clock()-start_time)
                 invalid_reply_counter = 0
 

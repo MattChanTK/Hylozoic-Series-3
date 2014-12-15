@@ -3,7 +3,7 @@ from TeensyInterface import TeensyManager
 import cProfile
 from pstats import Stats
 
-behaviours_config = 0
+behaviours_config = 2
 
 
 if behaviours_config == 0:
@@ -11,6 +11,8 @@ if behaviours_config == 0:
 elif behaviours_config == 1:
     from Behaviours import ProgrammUpload as cmd
 elif behaviours_config == 2:
+    from Behaviours import Default_Behaviour as cmd
+elif behaviours_config == 3:
     from Behaviours import Test_Behaviours as cmd
 else:
     from InteractiveCmd import InteractiveCmd as cmd

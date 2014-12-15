@@ -49,12 +49,32 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     #=== basic commands"
                     cmd_obj = command_object(teensy_name, 'basic')
 
-
-                    cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
-                    cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*50)
+                    #
+                    # cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
+                    # cmd_obj.add_param_change('indicator_led_period', int(indicator_led_period[teensy_name])*50)
 
                     cmd_obj.add_param_change('reply_type_request', 0)
 
+                    self.enter_command(cmd_obj)
+
+                    #=== tentacle low-level commands"
+                    cmd_obj = command_object(teensy_name, 'tentacle_low_level')
+
+
+                    cmd_obj.add_param_change('tentacle_0_sma_0_level',  0)#int((loop*2)%255))
+                    cmd_obj.add_param_change('tentacle_0_sma_1_level', 0)# int((loop*2)%255))
+                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_0_level',  int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  int((loop*6+80)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_1_level', int((loop*6+80)%128))
+
+
+                    self.enter_command(cmd_obj)
+                    #=== protocell command====
+                    cmd_obj = command_object(teensy_name, 'protocell')
+                    cmd_obj.add_param_change('protocell_1_led_level', int((loop*30)%128))
                     self.enter_command(cmd_obj)
 
 
@@ -99,6 +119,15 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
             print("Loop Time:", clock() - start_time)
             loop += 1
+            sleep(0.1)
+
+class Default_Behaviour(InteractiveCmd.InteractiveCmd):
+
+    def run(self):
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        # initially update the Teensys with all the output parameters here
+        self.update_output_params(teensy_names)
 
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):
