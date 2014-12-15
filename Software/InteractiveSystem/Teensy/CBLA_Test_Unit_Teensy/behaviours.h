@@ -123,6 +123,9 @@ class Behaviours : public TeensyUnit{
 		void led_blink_behaviour(const uint32_t &curr_time);
 		void led_wave_behaviour(const uint32_t &curr_time);
 		
+		//---- low-level control ---
+		void low_level_control_behaviour(const uint32_t &curr_time);
+		
 
 		
 		//===============================================

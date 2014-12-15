@@ -139,7 +139,7 @@ class CBLATestBed(SysParam.SystemParameters):
             # (15 bytes each)
             # >>>>> byte 2 to byte 16: PROTOCELL 0
             # >>>>> byte 17 to byte 31: PROTOCELL 1
-            for j in range(4):
+            for j in range(2):
                 device_header = 'protocell_%d_' % j
                 byte_offset = 15*j
 

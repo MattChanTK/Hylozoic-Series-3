@@ -154,7 +154,7 @@ void Behaviours::parse_msg(){
 			// (15 bytes each)
 			// >>>>> byte 2 to byte 16: PROTOCELL 0
 			// >>>>> byte 17 to byte 31: PROTOCELL 1
-			for (uint8_t j = 0; j < 4; j++){
+			for (uint8_t j = 0; j < 2; j++){
 						
 				const uint8_t byte_offset = 15*(j) + 2;
 				
@@ -445,3 +445,26 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 }
 
 
+//----- LOW-LEVEL CONTROL -------
+void Behaviours::low_level_control_behaviour(const uint32_t &curr_time){
+	
+	static uint32_t low_level_control_on_timer = 0;
+	static uint32_t low_level_control_off_timer = 0;
+	
+	
+	//>>>> TENTACLE <<<<<
+	for (uint8_t j=0; j<4;j++){
+		
+		tentacle[j].set_sma_level(0, tentacle_var[j].tentacle_sma_level[0]);
+		tentacle[j].set_sma_level(1, tentacle_var[j].tentacle_sma_level[1]);
+		tentacle[j].set_led_level(0, tentacle_var[j].tentacle_reflex_level[0]);
+		tentacle[j].set_led_level(1, tentacle_var[j].tentacle_reflex_level[1]);
+	}
+	
+	//>>>> PROTOCELL <<<<<
+	for (uint8_t j=0; j<2;j++){
+	
+		protocell[j].set_led_level(protocell_var[j].protocell_led_level);
+	}
+
+}
