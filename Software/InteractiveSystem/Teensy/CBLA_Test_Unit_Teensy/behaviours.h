@@ -26,7 +26,7 @@ class TentacleVar{
 		
 		//~~IR sensors activation threshold~~
 		// {bottom IR, tip IR}
-		uint16_t tentacle_ir_threshold[2] = {50, 80};
+		uint16_t tentacle_ir_threshold[2] = {1200, 1200};
 
 		
 		//~~~ON and OFF periods of the Tentacle arm activation here~~~
@@ -46,7 +46,7 @@ class TentacleVar{
 		uint8_t tentacle_sma_level[2] = {0, 0};
 
 		//~~Tentacle motion activation~~
-		uint8_t tentacle_motion_on = 0;
+		uint8_t tentacle_motion_on = 1;
 	
 		//~~Reflex actuation level~~
 		// {channel 1, channel 2}
@@ -54,7 +54,7 @@ class TentacleVar{
 	
 		//~~Reflex wave type~~
 		// {channel 1, channel 2}
-		uint8_t tentacle_reflex_wave_type[2] =  {0, 0};
+		uint8_t tentacle_reflex_wave_type[2] =  {0, 1};
 
 };
 
@@ -126,6 +126,9 @@ class Behaviours : public TeensyUnit{
 		//---- low-level control ---
 		void low_level_control_behaviour(const uint32_t &curr_time);
 		
+		//---- high-level control ---
+		void high_level_control_tentacle_arm_behaviour(const uint32_t &curr_time);
+		void high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================
@@ -137,7 +140,7 @@ class Behaviours : public TeensyUnit{
 		
 		//----OUTPUT----
 		//~~indicator LED on~~
-		bool indicator_led_on = true; //exposed
+		bool indicator_led_on = false; //exposed
 		//~~indicator LED blink~~
 		uint16_t indicator_led_blink_period = 1000; //exposed
 	

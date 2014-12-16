@@ -447,10 +447,7 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 
 //----- LOW-LEVEL CONTROL -------
 void Behaviours::low_level_control_behaviour(const uint32_t &curr_time){
-	
-	static uint32_t low_level_control_on_timer = 0;
-	static uint32_t low_level_control_off_timer = 0;
-	
+
 	
 	//>>>> TENTACLE <<<<<
 	for (uint8_t j=0; j<4;j++){
@@ -466,5 +463,158 @@ void Behaviours::low_level_control_behaviour(const uint32_t &curr_time){
 	
 		protocell[j].set_led_level(protocell_var[j].protocell_led_level);
 	}
+	
 
+
+}
+
+//----- HIGH-LEVEL CONTROL -------
+void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_time){
+	
+	
+	//---- Tentacle cycling variables -----
+	static bool high_level_ctrl_tentacle_cycling[3] = {false, false, false};
+	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
+	static bool high_level_ctrl_tentacle_on[3] = {false, false, false};
+
+	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
+	
+
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t j=0; j<3; j++){
+		
+		if (tentacle_var[j].tentacle_motion_on < 1){
+		
+			tentacle[j].set_sma_level(0, 0);
+			tentacle[j].set_sma_level(1, 0);
+			continue;
+		}
+		
+		uint8_t sma_action_type = 0; 
+		if (tentacle_var[j].tentacle_ir_state[1] > tentacle_var[j].tentacle_ir_threshold[1]){
+			
+			high_level_ctrl_tentacle_on[j] = true;
+			
+			// determine the adjacent tentacle
+			uint8_t adj_id;
+			if (j==0){
+				adj_id = 2;
+			}
+			else{
+				adj_id = j-1;
+			}
+			
+			
+			if (tentacle_var[j].tentacle_ir_state[0] > tentacle_var[j].tentacle_ir_threshold[0]){
+				sma_action_type = 1;
+			}
+			else if (tentacle_var[adj_id].tentacle_ir_state[0] > tentacle_var[adj_id].tentacle_ir_threshold[0]){
+				sma_action_type = 2;
+			}
+			
+		}
+
+		
+		if (high_level_ctrl_tentacle_on[j]){
+			
+			// starting a cycle
+			if (high_level_ctrl_tentacle_cycling[j] == false){
+				
+				// if setting type to 255, the actual type will be random
+				if (sma_action_type == 255){
+					sma_action_type = random(0,3);
+				}
+				// behaviour Type
+				switch (sma_action_type){
+					case 1:
+						high_level_ctrl_sma0[j] = 0;
+						high_level_ctrl_sma1[j] = 0;
+					break;
+					case 2:
+						high_level_ctrl_sma0[j] = 1;
+						high_level_ctrl_sma1[j] = 1;
+					break;
+					default:
+						high_level_ctrl_sma0[j] = 0;
+						high_level_ctrl_sma1[j] = 1;
+					break;
+				}
+				high_level_ctrl_tentacle_cycling[j] = true;
+				high_level_ctrl_tentacle_phase_time[j] = millis();  
+				
+				// turn on the first sma
+				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
+				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
+			}
+			else if (high_level_ctrl_tentacle_cycling[j] == true){
+				
+				
+				volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
+				
+				// if reaches the full period, restart cycle
+				if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+					high_level_ctrl_tentacle_cycling[j]  = false;
+					high_level_ctrl_tentacle_on[j] = false;
+				}
+				
+				//if reaches the on period 
+				else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+					tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+					tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+	
+				}
+					
+			}
+		}
+
+	}
+}
+
+void Behaviours::high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time){
+
+
+	//---- Tentacle cycling variables -----
+	static uint16_t high_level_ctrl_tentacle_reflex_period[3] = {1000, 1000, 1000};
+	
+	for (uint8_t j=0; j<4; j++){
+	
+		
+		bool reflex_led_on = false;
+		
+		//if something is very close
+		if (tentacle_var[j].tentacle_ir_state[0] > tentacle_var[j].tentacle_ir_threshold[0]){
+			reflex_led_on = true;
+			high_level_ctrl_tentacle_reflex_period[j] = tentacle_var[j].tentacle_reflex_period[0];
+		}		
+		//if there is no object detected
+		else{
+			reflex_led_on = false;
+		}
+		
+		for (uint8_t i=0; i<2; i++){	
+			
+			//Actuation
+			
+			if (reflex_led_on){
+				tentacle[j].set_led_level(i, 128);
+				// wave[tentacle_var[j].tentacle_reflex_wave_type[i]].set_duration(tentacle_var[j].tentacle_reflex_period[i]);
+				// uint8_t reflex_led_level = wave[tentacle_var[j].tentacle_reflex_wave_type[i]].wave_function(curr_time);
+				// tentacle[j].set_led_level(i, reflex_led_level);
+			}
+			else{
+				tentacle[j].set_led_level(i, 0);
+
+				// uint8_t reflex_led_level = 0; 
+				
+				// tentacle[j].set_led_level(i, reflex_led_level);
+				// wave[tentacle_var[j].tentacle_reflex_wave_type[i]].restart_wave_function();
+			}
+		}
+		
+	}
+
+
+	
 }
