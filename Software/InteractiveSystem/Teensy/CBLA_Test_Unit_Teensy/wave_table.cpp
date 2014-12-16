@@ -36,6 +36,7 @@ uint8_t WaveTable::wave_function(const uint32_t& curr_time) {
 	// starting a wave cycle
 	if (wave_function_cycling == false){
 		wave_function_cycling = true;
+		num_cycles++;
 		wave_function_phase_time = millis();
 		step_duration_100 = duration*100/(wave_size) ;
 		step_count = 1;
@@ -76,6 +77,7 @@ uint8_t WaveTable::wave_function(const uint32_t& curr_time) {
 	return pwm_output;
 }
 
+
 //--- getter for pwm output ----
 uint8_t WaveTable::get_pwm_output(){
 
@@ -115,5 +117,9 @@ void WaveTable::restart_wave_function(){
 	step_count = 1;
 	pwm_output = 0;
 	
+}
+
+uint32_t WaveTable::get_num_cycles(){
+	return num_cycles;
 }
 		

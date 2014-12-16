@@ -38,6 +38,9 @@ class WaveTable{
 		
 		//--- restart the wave ---
 		void restart_wave_function();
+		
+		//--- get number of cycle ---
+		uint32_t get_num_cycles();
 
 	
 	private:
@@ -57,6 +60,8 @@ class WaveTable{
 		uint16_t gran_count= 0;
 		
 		uint8_t pwm_output = 0; //assumes 8-bit
+		
+		uint32_t num_cycles = 0;
 	
 		
 		
