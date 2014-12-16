@@ -32,7 +32,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             indicator_led_on[teensy_name] = 1
 
         loop = 0
-        num_loop = 1
+        num_loop = 1000
         while loop < num_loop:
             start_time = clock()
 
@@ -129,6 +129,40 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(teensy_names)
 
+        # poll input
+        loop = 0
+        num_loop = 1000
+        while loop < num_loop:
+            start_time = clock()
+
+            if self.teensy_manager.get_num_teensy_thread() == 0:
+                return
+
+            self.update_input_states(teensy_names)
+
+            all_input_states = self.get_input_states(teensy_names, ('all', ))
+            for teensy_name, input_states in all_input_states.items():
+                sample = input_states[0]
+                is_new_update = input_states[1]
+
+                print("[", teensy_name, "]")
+
+                for j in range(4):
+                    device_header = 'tentacle_%d_' % j
+                    print("Tentacle %d" % j, end=" ---\t")
+                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")", end="  \t")
+                    print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'], ', ', sample[device_header + 'acc_z_state'], ")" )
+
+                for j in range(2):
+                    device_header = 'protocell_%d_' % j
+                    print("Protocell %d" % j, end=" ---\t")
+                    print("ALS (", sample[device_header + 'als_state'], ")")
+                print('')
+
+            print("Loop Time:", clock() - start_time)
+            loop += 1
+            sleep(0.1)
+
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 
@@ -155,4 +189,4 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
-            sleep(3)
+            sleep(5)
