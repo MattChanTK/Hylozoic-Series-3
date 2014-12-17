@@ -138,6 +138,85 @@ Source: www.tycoelectronics.com .. ENG_DS_1654001_1099_RJ_L_0507.pdf</descriptio
 <hole x="5.715" y="0" drill="3.2512"/>
 <wire x1="-7.62" y1="-5.715" x2="7.62" y2="-5.715" width="0.127" layer="21"/>
 </package>
+<package name="DIL18">
+<description>&lt;b&gt;Dual In Line Package&lt;/b&gt;</description>
+<wire x1="11.43" y1="2.921" x2="-11.43" y2="2.921" width="0.1524" layer="21"/>
+<wire x1="-11.43" y1="-2.921" x2="11.43" y2="-2.921" width="0.1524" layer="21"/>
+<wire x1="11.43" y1="2.921" x2="11.43" y2="-2.921" width="0.1524" layer="21"/>
+<wire x1="-11.43" y1="2.921" x2="-11.43" y2="1.016" width="0.1524" layer="21"/>
+<wire x1="-11.43" y1="-2.921" x2="-11.43" y2="-1.016" width="0.1524" layer="21"/>
+<wire x1="-11.43" y1="1.016" x2="-11.43" y2="-1.016" width="0.1524" layer="21" curve="-180"/>
+<pad name="1" x="-10.16" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="2" x="-7.62" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="7" x="5.08" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="8" x="7.62" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="3" x="-5.08" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="4" x="-2.54" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="6" x="2.54" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="5" x="0" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="9" x="10.16" y="-3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="10" x="10.16" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="11" x="7.62" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="12" x="5.08" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="13" x="2.54" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="14" x="0" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="15" x="-2.54" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="16" x="-5.08" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="17" x="-7.62" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<pad name="18" x="-10.16" y="3.81" drill="0.8128" shape="long" rot="R90"/>
+<text x="-11.684" y="-3.048" size="1.27" layer="25" ratio="10" rot="R90">&gt;NAME</text>
+<text x="-9.525" y="-0.635" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
+</package>
+<package name="SOP18">
+<description>&lt;b&gt;SMALL OUTLINE PACKAGE&lt;/b&gt;</description>
+<wire x1="-6.9" y1="4.9" x2="6.9" y2="4.9" width="0.1998" layer="39"/>
+<wire x1="6.9" y1="4.9" x2="6.9" y2="-4.9" width="0.1998" layer="39"/>
+<wire x1="-6.9" y1="-4.9" x2="-6.9" y2="4.9" width="0.1998" layer="39"/>
+<wire x1="6.88" y1="3.01" x2="6.88" y2="-3.01" width="0.2032" layer="51"/>
+<wire x1="6.9" y1="-4.9" x2="-6.9" y2="-4.9" width="0.1998" layer="39"/>
+<wire x1="6.88" y1="-3.01" x2="-6.88" y2="-3.01" width="0.2032" layer="51"/>
+<wire x1="-6.88" y1="-3.01" x2="-6.88" y2="3.01" width="0.2032" layer="51"/>
+<wire x1="-6.88" y1="3.01" x2="6.88" y2="3.01" width="0.2032" layer="51"/>
+<smd name="1" x="-5.08" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="2" x="-3.81" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="3" x="-2.54" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="4" x="-1.27" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="5" x="0" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="6" x="1.27" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="7" x="2.54" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="8" x="3.81" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="9" x="5.08" y="-3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="10" x="5.08" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="11" x="3.81" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="12" x="2.54" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="13" x="1.27" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="14" x="0" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="15" x="-1.27" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="16" x="-2.54" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="17" x="-3.81" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<smd name="18" x="-5.08" y="3.6" dx="0.6" dy="2.2" layer="1"/>
+<text x="-4.175" y="-1.65" size="1.27" layer="25">&gt;NAME</text>
+<text x="-4.175" y="0.38" size="1.27" layer="27">&gt;VALUE</text>
+<text x="-4.445" y="-2.54" size="1.27" layer="21" rot="R90">1</text>
+<rectangle x1="-5.3299" y1="-4.4399" x2="-4.8301" y2="-3.11" layer="51"/>
+<rectangle x1="-4.0599" y1="-4.4399" x2="-3.5601" y2="-3.11" layer="51"/>
+<rectangle x1="-2.7899" y1="-4.4399" x2="-2.2901" y2="-3.11" layer="51"/>
+<rectangle x1="-1.5199" y1="-4.4399" x2="-1.0201" y2="-3.11" layer="51"/>
+<rectangle x1="-0.2499" y1="-4.4399" x2="0.2499" y2="-3.11" layer="51"/>
+<rectangle x1="1.0201" y1="-4.4399" x2="1.5199" y2="-3.11" layer="51"/>
+<rectangle x1="2.2901" y1="-4.4399" x2="2.7899" y2="-3.11" layer="51"/>
+<rectangle x1="3.5601" y1="-4.4399" x2="4.0599" y2="-3.11" layer="51"/>
+<rectangle x1="4.8301" y1="-4.4399" x2="5.3299" y2="-3.11" layer="51"/>
+<rectangle x1="4.8301" y1="3.11" x2="5.3299" y2="4.4399" layer="51"/>
+<rectangle x1="3.5601" y1="3.11" x2="4.0599" y2="4.4399" layer="51"/>
+<rectangle x1="2.2901" y1="3.11" x2="2.7899" y2="4.4399" layer="51"/>
+<rectangle x1="1.0201" y1="3.11" x2="1.5199" y2="4.4399" layer="51"/>
+<rectangle x1="-0.2499" y1="3.11" x2="0.2499" y2="4.4399" layer="51"/>
+<rectangle x1="-1.5199" y1="3.11" x2="-1.0201" y2="4.4399" layer="51"/>
+<rectangle x1="-2.7899" y1="3.11" x2="-2.2901" y2="4.4399" layer="51"/>
+<rectangle x1="-4.0599" y1="3.11" x2="-3.5601" y2="4.4399" layer="51"/>
+<rectangle x1="-5.3299" y1="3.11" x2="-4.8301" y2="4.4399" layer="51"/>
+</package>
 </packages>
 <symbols>
 <symbol name="JACK8">
@@ -200,6 +279,32 @@ Source: www.tycoelectronics.com .. ENG_DS_1654001_1099_RJ_L_0507.pdf</descriptio
 <pin name="7" x="-2.54" y="-7.62" visible="pad" length="short" direction="pas" swaplevel="1"/>
 <pin name="8" x="-2.54" y="-10.16" visible="pad" length="short" direction="pas" swaplevel="1"/>
 </symbol>
+<symbol name="2801A">
+<wire x1="-7.62" y1="12.7" x2="7.62" y2="12.7" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="-12.7" x2="7.62" y2="12.7" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="-12.7" x2="-7.62" y2="-12.7" width="0.4064" layer="94"/>
+<wire x1="-7.62" y1="12.7" x2="-7.62" y2="-12.7" width="0.4064" layer="94"/>
+<text x="-7.62" y="13.462" size="1.778" layer="95">&gt;NAME</text>
+<text x="-7.62" y="-15.24" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="I1" x="-12.7" y="10.16" length="middle" direction="in"/>
+<pin name="I2" x="-12.7" y="7.62" length="middle" direction="in"/>
+<pin name="I3" x="-12.7" y="5.08" length="middle" direction="in"/>
+<pin name="I4" x="-12.7" y="2.54" length="middle" direction="in"/>
+<pin name="I5" x="-12.7" y="0" length="middle" direction="in"/>
+<pin name="I6" x="-12.7" y="-2.54" length="middle" direction="in"/>
+<pin name="I7" x="-12.7" y="-5.08" length="middle" direction="in"/>
+<pin name="I8" x="-12.7" y="-7.62" length="middle" direction="in"/>
+<pin name="O8" x="12.7" y="-7.62" length="middle" direction="oc" rot="R180"/>
+<pin name="O1" x="12.7" y="10.16" length="middle" direction="oc" rot="R180"/>
+<pin name="O2" x="12.7" y="7.62" length="middle" direction="oc" rot="R180"/>
+<pin name="O3" x="12.7" y="5.08" length="middle" direction="oc" rot="R180"/>
+<pin name="O4" x="12.7" y="2.54" length="middle" direction="oc" rot="R180"/>
+<pin name="O5" x="12.7" y="0" length="middle" direction="oc" rot="R180"/>
+<pin name="O6" x="12.7" y="-2.54" length="middle" direction="oc" rot="R180"/>
+<pin name="O7" x="12.7" y="-5.08" length="middle" direction="oc" rot="R180"/>
+<pin name="CD+" x="12.7" y="-10.16" length="middle" direction="pas" rot="R180"/>
+<pin name="GND" x="-12.7" y="-10.16" length="middle" direction="pwr"/>
+</symbol>
 </symbols>
 <devicesets>
 <deviceset name="RJ45" prefix="X">
@@ -257,6 +362,64 @@ Source: www.tycoelectronics.com .. ENG_DS_1654001_1099_RJ_L_0507.pdf</descriptio
 <attribute name="OC_FARNELL" value="unknown" constant="no"/>
 <attribute name="OC_NEWARK" value="16R6101" constant="no"/>
 </technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="ULN2803A" prefix="IC" uservalue="yes">
+<description>&lt;b&gt;DRIVER ARRAY&lt;/b&gt;</description>
+<gates>
+<gate name="G$1" symbol="2801A" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="DIL18">
+<connects>
+<connect gate="G$1" pin="CD+" pad="10"/>
+<connect gate="G$1" pin="GND" pad="9"/>
+<connect gate="G$1" pin="I1" pad="1"/>
+<connect gate="G$1" pin="I2" pad="2"/>
+<connect gate="G$1" pin="I3" pad="3"/>
+<connect gate="G$1" pin="I4" pad="4"/>
+<connect gate="G$1" pin="I5" pad="5"/>
+<connect gate="G$1" pin="I6" pad="6"/>
+<connect gate="G$1" pin="I7" pad="7"/>
+<connect gate="G$1" pin="I8" pad="8"/>
+<connect gate="G$1" pin="O1" pad="18"/>
+<connect gate="G$1" pin="O2" pad="17"/>
+<connect gate="G$1" pin="O3" pad="16"/>
+<connect gate="G$1" pin="O4" pad="15"/>
+<connect gate="G$1" pin="O5" pad="14"/>
+<connect gate="G$1" pin="O6" pad="13"/>
+<connect gate="G$1" pin="O7" pad="12"/>
+<connect gate="G$1" pin="O8" pad="11"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+<device name="FWG" package="SOP18">
+<connects>
+<connect gate="G$1" pin="CD+" pad="10"/>
+<connect gate="G$1" pin="GND" pad="9"/>
+<connect gate="G$1" pin="I1" pad="1"/>
+<connect gate="G$1" pin="I2" pad="2"/>
+<connect gate="G$1" pin="I3" pad="3"/>
+<connect gate="G$1" pin="I4" pad="4"/>
+<connect gate="G$1" pin="I5" pad="5"/>
+<connect gate="G$1" pin="I6" pad="6"/>
+<connect gate="G$1" pin="I7" pad="7"/>
+<connect gate="G$1" pin="I8" pad="8"/>
+<connect gate="G$1" pin="O1" pad="18"/>
+<connect gate="G$1" pin="O2" pad="17"/>
+<connect gate="G$1" pin="O3" pad="16"/>
+<connect gate="G$1" pin="O4" pad="15"/>
+<connect gate="G$1" pin="O5" pad="14"/>
+<connect gate="G$1" pin="O6" pad="13"/>
+<connect gate="G$1" pin="O7" pad="12"/>
+<connect gate="G$1" pin="O8" pad="11"/>
+</connects>
+<technologies>
+<technology name=""/>
 </technologies>
 </device>
 </devices>
@@ -424,6 +587,9 @@ W = angled&lt;p&gt;
 <part name="SV10" library="con-lstb" deviceset="MA08-1" device=""/>
 <part name="SV11" library="con-lstb" deviceset="MA08-1" device=""/>
 <part name="SV12" library="con-lstb" deviceset="MA08-1" device=""/>
+<part name="IC1" library="CBLA_Test_bed_Library" deviceset="ULN2803A" device="FWG"/>
+<part name="IC2" library="CBLA_Test_bed_Library" deviceset="ULN2803A" device="FWG"/>
+<part name="IC3" library="CBLA_Test_bed_Library" deviceset="ULN2803A" device="FWG"/>
 </parts>
 <sheets>
 <sheet>
@@ -446,6 +612,9 @@ W = angled&lt;p&gt;
 <instance part="SV10" gate="1" x="160.02" y="138.43" rot="MR90"/>
 <instance part="SV11" gate="1" x="189.23" y="138.43" rot="MR90"/>
 <instance part="SV12" gate="1" x="217.17" y="138.43" rot="MR90"/>
+<instance part="IC1" gate="G$1" x="40.64" y="129.54"/>
+<instance part="IC2" gate="G$1" x="38.1" y="81.28"/>
+<instance part="IC3" gate="G$1" x="38.1" y="43.18"/>
 </instances>
 <busses>
 </busses>
