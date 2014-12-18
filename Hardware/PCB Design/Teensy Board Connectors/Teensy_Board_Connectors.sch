@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.0.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="yes"/>
@@ -5510,6 +5510,10 @@ Source: www.kingbright.com</description>
 <wire x1="88.9" y1="142.24" x2="91.44" y2="142.24" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="144.78" x2="91.44" y2="142.24" width="0.1524" layer="91"/>
 <junction x="91.44" y="144.78"/>
+<pinref part="IC1" gate="G$1" pin="CD+"/>
+<wire x1="66.04" y1="139.7" x2="91.44" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="91.44" y1="139.7" x2="91.44" y2="142.24" width="0.1524" layer="91"/>
+<junction x="91.44" y="142.24"/>
 </segment>
 <segment>
 <pinref part="LED9" gate="G$1" pin="A"/>
@@ -5542,6 +5546,10 @@ Source: www.kingbright.com</description>
 <wire x1="88.9" y1="104.14" x2="91.44" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="106.68" x2="91.44" y2="104.14" width="0.1524" layer="91"/>
 <junction x="91.44" y="106.68"/>
+<pinref part="IC2" gate="G$1" pin="CD+"/>
+<wire x1="66.04" y1="101.6" x2="91.44" y2="101.6" width="0.1524" layer="91"/>
+<wire x1="91.44" y1="101.6" x2="91.44" y2="104.14" width="0.1524" layer="91"/>
+<junction x="91.44" y="104.14"/>
 </segment>
 <segment>
 <pinref part="LED17" gate="G$1" pin="A"/>
@@ -5574,6 +5582,10 @@ Source: www.kingbright.com</description>
 <wire x1="88.9" y1="66.04" x2="91.44" y2="66.04" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="68.58" x2="91.44" y2="66.04" width="0.1524" layer="91"/>
 <junction x="91.44" y="68.58"/>
+<pinref part="IC3" gate="G$1" pin="CD+"/>
+<wire x1="66.04" y1="63.5" x2="91.44" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="91.44" y1="63.5" x2="91.44" y2="66.04" width="0.1524" layer="91"/>
+<junction x="91.44" y="66.04"/>
 </segment>
 <segment>
 <pinref part="X2" gate="A" pin="2"/>
