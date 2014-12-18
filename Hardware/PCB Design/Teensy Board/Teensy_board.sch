@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.1.0">
+<eagle version="7.0.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="yes"/>
@@ -15456,6 +15456,7 @@ W = angled&lt;p&gt;
 <part name="R8" library="CBLA_Test_bed_Library" deviceset="R-US_" device="R0603" value="2.2k"/>
 <part name="X7" library="con-wago-508" deviceset="W237-04P" device=""/>
 <part name="X9" library="con-wago-508" deviceset="W237-04P" device=""/>
+<part name="X1" library="CBLA_Test_bed_Library" deviceset="PINHD-1X2" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -15547,6 +15548,7 @@ W = angled&lt;p&gt;
 <instance part="X9" gate="-2" x="261.62" y="44.45" rot="R90"/>
 <instance part="X9" gate="-3" x="257.81" y="44.45" rot="R90"/>
 <instance part="X9" gate="-4" x="257.81" y="67.31" rot="R270"/>
+<instance part="X1" gate="G$1" x="86.36" y="17.78"/>
 </instances>
 <busses>
 </busses>
@@ -15794,6 +15796,11 @@ W = angled&lt;p&gt;
 <pinref part="X9" gate="-2" pin="KL"/>
 <pinref part="X7" gate="-3" pin="KL"/>
 <pinref part="X7" gate="-2" pin="KL"/>
+</segment>
+<segment>
+<pinref part="X1" gate="G$1" pin="2"/>
+<wire x1="83.82" y1="17.78" x2="76.2" y2="17.78" width="0.1524" layer="91"/>
+<label x="73.66" y="17.78" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="+3V3" class="0">
@@ -16538,6 +16545,11 @@ W = angled&lt;p&gt;
 <pinref part="JP2" gate="1" pin="2"/>
 <wire x1="153.67" y1="184.15" x2="189.23" y2="184.15" width="0.1524" layer="91"/>
 <wire x1="189.23" y1="184.15" x2="189.23" y2="158.75" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="X1" gate="G$1" pin="1"/>
+<wire x1="83.82" y1="20.32" x2="76.2" y2="20.32" width="0.1524" layer="91"/>
+<label x="73.66" y="20.32" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PGM" class="0">
