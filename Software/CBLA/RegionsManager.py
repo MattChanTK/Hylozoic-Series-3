@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 
-from RegionSplitter import RegionSplitter_PCA_oudeyer as RegionSplitter
+from RegionSplitter import RegionSplitter_oudeyer as RegionSplitter
 import math
 import random
 from copy import copy
@@ -10,7 +10,7 @@ class Expert():
 
     max_training_data_num = 5000
 
-    def __init__(self, id=0, level=0, split_thres=400, mean_err_thres=1.0):
+    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0):
 
         self.expert_id = id
         self.expert_level = level
@@ -367,10 +367,10 @@ class KGA():
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 100
+        self.delta = 50
 
         # time window
-        self.tau = 30
+        self.tau = 10
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):

@@ -8,6 +8,7 @@ from copy import copy
 import Visualization as Viz
 import os
 import threading
+from time import sleep
 
 from RegionsManager import Expert
 # from SimSystem import DiagonalPlane as Robot
@@ -40,7 +41,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.M0 = (0, )
             self.S = (0, )
             self.teensy_name = teensy_name
-            self.t = 0
+
 
 
         def actuate(self, M):
@@ -58,6 +59,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         def report(self):
 
+            self.interactive_cmd.read_barrier.wait()
+
             with self.interactive_cmd.lock:
                 sample = self.interactive_cmd.get_input_states((self.teensy_name,), ('all',))[self.teensy_name][0]
 
@@ -65,14 +68,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.S = (s,)
             return self.S
 
-        def get_possible_action(self, state=None, num_sample=1000, randomize=True):
+        def get_possible_action(self, state=None, num_sample=1000):
 
             x_dim = 1
 
             X = np.zeros((num_sample, x_dim))
 
             for i in range(num_sample):
-                X[i, x_dim-1] = max(min(self.M0[x_dim-1]-int(num_sample/2) + i, 50), 0)
+                X[i, x_dim-1] = max(min(self.M0[x_dim-1]-int(num_sample/2) + i, 255), 0)
 
             M_candidates = tuple(map(tuple, X))
 
@@ -84,6 +87,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         def __init__(self, robot):
 
             # ~~ configuration ~~
+            self.is_using_saved_expert = 0
 
             # number of time step
             self.sim_duration = 2000
@@ -95,12 +99,28 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.exploring_rate = 0.05
 
 
+
             # ~~ instantiation ~~
+
             self.robot = robot
-            self.expert = Expert()
-            self.action_history = []
-            self.state_history = []
-            self.mean_error_history = []
+
+            # instantiate an Expert
+            if self.is_using_saved_expert:
+                with open('expert_backup.pkl', 'rb') as input:
+                    self.expert = pickle.load(input)
+                with open('action_history_backup.pkl', 'rb') as input:
+                    self.action_history = pickle.load(input)
+                with open('state_history_backup.pkl', 'rb') as input:
+                    self.state_history = pickle.load(input)
+                with open('mean_error_history_backup.pkl', 'rb') as input:
+                    self.mean_error_history = pickle.load(input)
+
+            else:
+
+                self.expert = Expert()
+                self.action_history = []
+                self.state_history = []
+                self.mean_error_history = []
 
 
             # ~~ initiating threads ~~
@@ -137,9 +157,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.action_history.append(M)
                 self.state_history.append(S)
                 self.robot.actuate(M)
+                sleep(0.1)
 
                 # read sensor
                 S1 = self.robot.report()
+                term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
+
 
                 # add exemplar to expert
                 self.expert.append(S + M, S1, S1_predicted)
@@ -157,7 +180,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #START ---- the Oudeyer way ----- START
 
                 # # generate a list of possible action given the state
-                # M_candidates = robot.get_possible_action(state=S1, num_sample=50)
+                # M_candidates = self.robot.get_possible_action(state=S1, num_sample=5)
                 #
                 # if is_exploring:
                 #     M1 = random.choice(M_candidates)
@@ -166,22 +189,22 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #     M1 = 0
                 #     highest_L = float("-inf")
                 #     for M_candidate in M_candidates:
-                #         L = expert.evaluate_action(S1, M_candidate)
+                #         L = self.expert.evaluate_action(S1, M_candidate)
                 #         if L > highest_L:
                 #             M1 = M_candidate
                 #             highest_L = L
-                #
-                #     print("Expected Reward", highest_L)
+                #     term_print_str += ''.join(map(str, ("Expected Reward: ", highest_L, '\n')))
+                #     #print("Expected Reward", highest_L)
                 #     L = highest_L
-                #
-                # print("Next Action", M1)
+                # term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
+                # #print("Next Action", M1)
 
                 #END ---- the Oudeyer way ----- END
 
                 #START ---- the Probabilistic way ----- START
 
                 # generate a list of possible action given the state
-                M_candidates = self.robot.get_possible_action(state=S1, num_sample=10)
+                M_candidates = self.robot.get_possible_action(state=S1, num_sample=150)
 
 
                 L_list = []
@@ -195,9 +218,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 M1 = M_candidates[M_idx]
                 term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
                 #print("Next Action", M1)
-                print(term_print_str)
+
                 #END ---- the Probabilistic way ----- END
 
+                print(term_print_str)
 
                 # update learning rate based on reward
                 if is_exploring and self.adapt_exploring_rate:  # if it was exploring, stick with the original learning rate
@@ -225,6 +249,20 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     M = Mi[t]
                 else:
                     M = M1
+
+                if t % 1000 == 0 or t >= self.sim_duration:
+                    with open('expert_backup.pkl', 'wb') as output:
+                        pickle.dump(self.expert, output, pickle.HIGHEST_PROTOCOL)
+
+                    with open('action_history_backup.pkl', 'wb') as output:
+                        pickle.dump(self.action_history, output, pickle.HIGHEST_PROTOCOL)
+
+                    with open('state_history_backup.pkl', 'wb') as output:
+                        pickle.dump(self.state_history, output, pickle.HIGHEST_PROTOCOL)
+
+                    with open('mean_error_history_backup.pkl', 'wb') as output:
+                        pickle.dump(self.mean_error_history, output, pickle.HIGHEST_PROTOCOL)
+
             self.visualize()
 
 
@@ -259,7 +297,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         # instantiation --- one CBLA engine per node
         self.write_barrier = threading.Barrier(len(teensy_names), action=self.send_commands, timeout=1000)
-        self.read_barrier = threading.Barrier(len(teensy_names), action=self.send_commands, timeout=1000)
+        self.read_barrier = threading.Barrier(len(teensy_names), action=self.read_barrier_action, timeout=1000)
 
         self.lock = threading.Lock()
         self.cbla_engine = dict()
@@ -271,6 +309,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.cbla_engine[teensy_name] = self.CBLA_Engine(robot)
 
 
+    def read_barrier_action(self):
+        self.update_input_states(self.teensy_manager.get_teensy_name_list())
 
 
 # if __name__ == "__main__":
