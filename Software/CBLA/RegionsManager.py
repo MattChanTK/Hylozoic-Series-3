@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 
-from RegionSplitter import RegionSplitter_PCA_oudeyer_modified as RegionSplitter
+from RegionSplitter import RegionSplitter_PCA_oudeyer as RegionSplitter
 import math
 import random
 from copy import copy
@@ -382,8 +382,9 @@ class KGA():
         for i in range(len(S_actual)):
             error += (S_actual[i] - S_predicted[i])**2
         error = math.sqrt(error/len(S_actual))
-        print("Prediction Error: ", error)
+        #print("Prediction Error: ", error)
         self.errors.append(error)
+        return error
 
     def calc_mean_error(self):
 

@@ -12,8 +12,6 @@ class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
     def run(self):
         pass
 
-
-
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
 

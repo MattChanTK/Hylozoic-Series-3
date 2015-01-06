@@ -117,7 +117,7 @@ class RegionSplitter_oudeyer():
 
     def __init__(self, data, label):
 
-        self.cut_dim = 0
+        self.cut_dim = 1
         self.cut_val = 0
         num_candidates = 50
 
@@ -128,7 +128,7 @@ class RegionSplitter_oudeyer():
 
         # sort in each dimension
         dim_min = float("inf")
-        for i in range(data_dim_num):
+        for i in [1]: #range(data_dim_num):
 
             for k in range(num_candidates):
                 # pick a random value

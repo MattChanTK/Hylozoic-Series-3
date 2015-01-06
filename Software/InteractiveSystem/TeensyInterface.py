@@ -140,9 +140,7 @@ class TeensyInterface(threading.Thread):
 
     def __init__(self, serial_num, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID, print_to_term=False, unit_config='default'):
 
-        if unit_config == 'SIMPLIFIED_TEST_UNIT':
-            from CommunicationProtocol import SimplifiedTestUnit as SysParam
-        elif unit_config == 'CBLA_TEST_BED':
+        if unit_config == 'CBLA_TEST_BED':
             from CommunicationProtocol import CBLATestBed as SysParam
         else:
             from SystemParameters import SystemParameters as SysParam
