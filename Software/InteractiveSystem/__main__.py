@@ -1,9 +1,14 @@
 import changePriority
 from TeensyInterface import TeensyManager
+import sys
+import os
 import cProfile
 from pstats import Stats
 
 behaviours_config = 4
+
+# add CBLA folder to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'CBLA'))
 
 if behaviours_config == 0:
     from InteractiveCmd import InteractiveCmd as cmd
