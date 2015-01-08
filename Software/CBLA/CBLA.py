@@ -60,7 +60,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         def report(self):
 
             self.interactive_cmd.read_barrier.wait()
-
+            sleep(0.3)
             with self.interactive_cmd.lock:
                 sample = self.interactive_cmd.get_input_states((self.teensy_name,), ('all',))[self.teensy_name][0]
 
@@ -105,6 +105,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.robot = robot
 
             # instantiate an Expert
+            # TODO add teensy name to filename
+
             if self.is_using_saved_expert:
                 with open('expert_backup.pkl', 'rb') as input:
                     self.expert = pickle.load(input)
@@ -157,7 +159,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.action_history.append(M)
                 self.state_history.append(S)
                 self.robot.actuate(M)
-                sleep(0.1)
+                sleep(0.2)
 
                 # read sensor
                 S1 = self.robot.report()
