@@ -358,8 +358,8 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 	
 	//=== testing Tentacle ===
 	for (uint8_t i=0; i<3; i++){
-		uint8_t ir_range = tentacle[i].read_analog_state(0);
-		if (ir_range > 100){
+		uint16_t ir_range = tentacle[i].read_analog_state(0);
+		if (ir_range > 1200){
 			tentacle[i].set_led_level(0, 250);
 			tentacle[i].set_led_level(1, 250);
 		}
@@ -370,7 +370,7 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		
 		ir_range = tentacle[i].read_analog_state(1);
 		
-		if (ir_range > 100){
+		if (ir_range < 00){
 			tentacle[i].set_sma_level(0, 250);
 			tentacle[i].set_sma_level(1, 250);
 			
@@ -381,7 +381,18 @@ void Behaviours::test_behaviour(const uint32_t &curr_time) {
 		}
 	}		
 	
-
+	
+	//=== testing Protocell
+	for (uint8_t i=0; i<2; i++){
+		uint16_t ir_range = tentacle[i].read_analog_state(0);
+		if (ir_range > 1200){
+			protocell[i].set_led_level(20);
+		}
+		else{
+			protocell[i].set_led_level(0);
+		}
+		
+	}
 	
 }
 
