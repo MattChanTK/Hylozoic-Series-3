@@ -1,7 +1,0 @@
-"Qty";"Value";"Device";"Package";"Parts";"Description";"MF";"MPN";"OC_FARNELL";"OC_NEWARK";
-"1";"";"PINHD-1X3/90";"1X03/90";"X2";"PIN HEADER";"";"";"";"";
-"2";"0.1uF";"C-USC0603";"C0603";"C2, C3";"CAPACITOR, American symbol";"";"";"";"";
-"1";"10uF";"C-USC1206";"C1206";"C1";"CAPACITOR, American symbol";"";"";"";"";
-"2";"2.2k";"R-US_R0603";"R0603";"R1, R2";"RESISTOR, American symbol";"";"";"";"";
-"1";"ADXL345";"ADXL345LONG";"LGA14_LONG";"U1";"";"";"";"";"";
-"1";"RJ45-8X";"RJ45-8X";"RJ45-NO-SHIELD";"X3";"CORCOM Modular RJ Jacks No Shield";"";"RJ45-8X";"unknown";"16R6101";
