@@ -86,7 +86,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 sample = self.sync_barrier.sample[self.teensy_name]
 
             # if the first sample read was unsuccessful, just return the default value
-            if sample = None:
+            if sample is None:
                 print("timed out")
                 return self.S
 
@@ -96,6 +96,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             sample = sample[0]
 
+            # construct the S vector for the node
             s = []
             for var in self.report_vars:
                 s.append(sample[var])
@@ -352,12 +353,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Sync_Barrier():
 
-        def __init__(self, interactive_cmd, num_threads, read_timeout=1):
+        def __init__(self, interactive_cmd, num_threads, barrier_timeout=1, read_timeout=1):
 
             self.interactive_cmd = interactive_cmd
 
-            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=1000)
-            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=1000)
+            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=barrier_timeout)
+            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=barrier_timeout)
 
             self.sample = None
             self.read_timeout = read_timeout
@@ -387,9 +388,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=0.5)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=15)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -398,10 +399,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate robots
             robot_led = CBLA_Behaviours.Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='(LED)')
-            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_led, name='(SMA)')
+            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_sma, name='(SMA)')
 
             # instantiate CBLA Engines
             with self.lock:
                 self.cbla_engine[teensy_name + '_led'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05)
-                self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=0.05)
+                self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2)
 
