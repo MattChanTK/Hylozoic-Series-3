@@ -34,14 +34,13 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Node():
 
-        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, read_timeout=0.5):
+        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=""):
 
 
             self.interactive_cmd = interactive_cmd
             self.teensy_name = teensy_name
             self.sync_barrier = sync_barrier
-            self.read_timeout = read_timeout
-            self.timed_out = False
+            self.name = teensy_name + " " + str(name)
 
             # ToDo need a more encapsulated appraoch
             self.reply_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.reply_types
@@ -52,7 +51,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             self.report_vars = report_vars
             self.S = tuple([0]*len(report_vars))
-
 
 
         def actuate(self, M):
@@ -81,24 +79,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             self.sync_barrier.read_barrier.wait()
 
-            def Timeout_Exception():
-                self.timed_out = True
+            with self.sync_barrier.lock:
+                sample = self.sync_barrier.sample[self.teensy_name]
 
-            with self.interactive_cmd.lock:
-                sample = self.interactive_cmd.get_input_states((self.teensy_name,), self.report_vars)[self.teensy_name]
-
-
-                timeout_timer = threading.Timer(self.read_timeout, Timeout_Exception)
-                timeout_timer.start()
-                while sample[1] == False:
-                    sample = self.interactive_cmd.get_input_states((self.teensy_name,), self.report_vars)[self.teensy_name]
-                    if self.timed_out == True:
-                        print("timed out")
-                        self.timed_out = False
-                        break
-
-                timeout_timer.cancel()
-
+            if sample[1] == False:
+                print("timed out")
 
             sample = sample[0]
 
@@ -206,7 +191,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             while t < self.sim_duration:
 
                 t += 1
-                term_print_str = self.robot.teensy_name
+                term_print_str = self.robot.name
                 term_print_str += ''.join(map(str, ("\nTest case t = ", t, " -- ", S, M, '\n')))
 
 
@@ -285,8 +270,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #print("Next Action", M1)
 
                 #END ---- the Probabilistic way ----- END
-                print(self.loop_delay)
-                print(term_print_str)
+
+
 
                 # update learning rate based on reward
                 if is_exploring and self.adapt_exploring_rate:  # if it was exploring, stick with the original learning rate
@@ -315,6 +300,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 else:
                     M = M1
 
+                # output to terminal
+                print(term_print_str)
+
+                # output to files
                 if t % 1000 == 0 or t >= self.sim_duration:
                     with open('expert_backup.pkl', 'wb') as output:
                         pickle.dump(self.expert, output, pickle.HIGHEST_PROTOCOL)
@@ -354,20 +343,31 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Sync_Barrier():
 
-        def __init__(self, interactive_cmd, num_threads):
+        def __init__(self, interactive_cmd, num_threads, read_timeout=1):
 
             self.interactive_cmd = interactive_cmd
 
             self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=1000)
             self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=1000)
 
+            self.sample = None
+            self.read_timeout = read_timeout
+            self.lock = threading.Lock()
+
         def read_barrier_action(self):
             with self.interactive_cmd.lock:
                 self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list())
 
+            with self.interactive_cmd.lock:
+                with self.lock:
+                    self.sample = self.interactive_cmd.get_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(),
+                                                                        ('all',), timeout=self.read_timeout)
+
         def write_barrier_action(self):
             with self.interactive_cmd.lock:
                 self.interactive_cmd.send_commands()
+
+
 
     def run(self):
 
@@ -377,19 +377,24 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(teensy_names)
 
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, 2)
+        # synchonization barrier for all LEDs
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1)
+        # synchonization barrier for all SMAs
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1)
 
+        # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
         self.cbla_engine = dict()
         for teensy_name in teensy_names:
 
             # instantiate robots
-            robot_led = CBLA_Behaviours.Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led)
-            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_led)
+            robot_led = CBLA_Behaviours.Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='(LED)')
+            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_led, name='(SMA)')
 
             # instantiate CBLA Engines
-            self.cbla_engine[teensy_name + '_led'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.1)
-            self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2)
+            with self.lock:
+                self.cbla_engine[teensy_name + '_led'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05)
+                self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=0.05)
 
 
 
