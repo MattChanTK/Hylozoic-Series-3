@@ -61,12 +61,12 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     cmd_obj.add_param_change('tentacle_0_sma_0_level',  0)#int((loop*2)%255))
                     cmd_obj.add_param_change('tentacle_0_sma_1_level', 0)# int((loop*2)%255))
-                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_0_level',  int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  int((loop*6+80)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_1_level', int((loop*6+80)%128))
+                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  125)#int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', 125)#int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_0_level', 125) #int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', 125)#int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  125)#int((loop*6+80)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_1_level',125)# int((loop*6+80)%128))
 
 
                     self.enter_command(cmd_obj)

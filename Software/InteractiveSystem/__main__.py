@@ -27,7 +27,6 @@ else:
 packet_size_in = 64
 packet_size_out = 64
 
-
 def main():
 
     try:

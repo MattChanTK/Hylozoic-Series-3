@@ -32,40 +32,80 @@ def weighted_choice_sub(weights, min_percent=0.05):
 
 class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
-
     class Node():
 
-        def __init__(self, interactive_cmd,  teensy_name):
+        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, read_timeout=0.5):
+
 
             self.interactive_cmd = interactive_cmd
-            self.M0 = (0, )
-            self.S = (0, )
             self.teensy_name = teensy_name
+            self.sync_barrier = sync_barrier
+            self.read_timeout = read_timeout
+            self.timed_out = False
+
+            # ToDo need a more encapsulated appraoch
+            self.reply_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.reply_types
+            self.request_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.request_types
+
+            self.actuate_vars = actuate_vars
+            self.M0 = tuple([0] * len(actuate_vars))
+
+            self.report_vars = report_vars
+            self.S = tuple([0]*len(report_vars))
 
 
 
         def actuate(self, M):
 
+            if not isinstance(M, tuple):
+                raise (TypeError, "M must be a tuple")
+            if len(M) != len(self.actuate_vars):
+                raise (ValueError, "M must have " + len(self.actuate_vars) +" elements!")
+
             # move tentacle 0 up
-            cmd_obj = command_object(self.teensy_name, 'protocell')
-            cmd_obj.add_param_change('protocell_0_led_level', int(M[0]))
+            for i in range(len(self.actuate_vars)):
+
+                cmd_obj = command_object(self.teensy_name, self.__get_request_type(self.actuate_vars[i]))
+                cmd_obj.add_param_change(self.actuate_vars[i], int(M[i]))
+
             self.M0 = M
 
             with self.interactive_cmd.lock:
                 self.interactive_cmd.enter_command(cmd_obj)
 
-            self.interactive_cmd.write_barrier.wait()
+            self.sync_barrier.write_barrier.wait()
+
 
 
         def report(self):
 
-            self.interactive_cmd.read_barrier.wait()
-            sleep(0.3)
-            with self.interactive_cmd.lock:
-                sample = self.interactive_cmd.get_input_states((self.teensy_name,), ('all',))[self.teensy_name][0]
+            self.sync_barrier.read_barrier.wait()
 
-            s = sample['protocell_0_als_state']
-            self.S = (s,)
+            def Timeout_Exception():
+                self.timed_out = True
+
+            with self.interactive_cmd.lock:
+                sample = self.interactive_cmd.get_input_states((self.teensy_name,), self.report_vars)[self.teensy_name]
+
+
+                timeout_timer = threading.Timer(self.read_timeout, Timeout_Exception)
+                timeout_timer.start()
+                while sample[1] == False:
+                    sample = self.interactive_cmd.get_input_states((self.teensy_name,), self.report_vars)[self.teensy_name]
+                    if self.timed_out == True:
+                        print("timed out")
+                        self.timed_out = False
+                        break
+
+                timeout_timer.cancel()
+
+
+            sample = sample[0]
+
+            s = []
+            for var in self.report_vars:
+                s.append(sample[var])
+            self.S = tuple(s)
             return self.S
 
         def get_possible_action(self, state=None, num_sample=1000):
@@ -81,10 +121,29 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             return M_candidates
 
+        def __get_reply_type(self, var):
+            for reply_type, vars in self.reply_types.items():
+                if var in vars:
+                    return reply_type
+
+            raise (ValueError, "Variable not found!")
+
+        def __get_request_type(self, var):
+            for request_type, vars in self.request_types.items():
+                if var in vars:
+                    return request_type
+
+            raise (ValueError, "Variable not found!")
+
+    class Indicator_Node(Node):
+
+        def get_possible_action(self, state=None, num_sample=2):
+
+            return ((0,),(1,))
 
     class CBLA_Engine(threading.Thread):
 
-        def __init__(self, robot):
+        def __init__(self, robot, loop_delay=0):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = 0
@@ -103,6 +162,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # ~~ instantiation ~~
 
             self.robot = robot
+            self.loop_delay = loop_delay
+
 
             # instantiate an Expert
             # TODO add teensy name to filename
@@ -158,8 +219,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 # do action
                 self.action_history.append(M)
                 self.state_history.append(S)
+
                 self.robot.actuate(M)
-                sleep(0.2)
+
+                sleep(self.loop_delay)
 
                 # read sensor
                 S1 = self.robot.report()
@@ -222,7 +285,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #print("Next Action", M1)
 
                 #END ---- the Probabilistic way ----- END
-
+                print(self.loop_delay)
                 print(term_print_str)
 
                 # update learning rate based on reward
@@ -289,6 +352,23 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             plt.ioff()
             plt.show()
 
+    class Sync_Barrier():
+
+        def __init__(self, interactive_cmd, num_threads):
+
+            self.interactive_cmd = interactive_cmd
+
+            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=1000)
+            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=1000)
+
+        def read_barrier_action(self):
+            with self.interactive_cmd.lock:
+                self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list())
+
+        def write_barrier_action(self):
+            with self.interactive_cmd.lock:
+                self.interactive_cmd.send_commands()
+
     def run(self):
 
 
@@ -297,22 +377,22 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(teensy_names)
 
-        # instantiation --- one CBLA engine per node
-        self.write_barrier = threading.Barrier(len(teensy_names), action=self.send_commands, timeout=1000)
-        self.read_barrier = threading.Barrier(len(teensy_names), action=self.read_barrier_action, timeout=1000)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, 2)
 
         self.lock = threading.Lock()
         self.cbla_engine = dict()
         for teensy_name in teensy_names:
+
             # instantiate robots
-            robot = self.Node(self, teensy_name)
+            robot_led = CBLA_Behaviours.Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led)
+            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_led)
 
             # instantiate CBLA Engines
-            self.cbla_engine[teensy_name] = self.CBLA_Engine(robot)
+            self.cbla_engine[teensy_name + '_led'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.1)
+            self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2)
 
 
-    def read_barrier_action(self):
-        self.update_input_states(self.teensy_manager.get_teensy_name_list())
+
 
 
 # if __name__ == "__main__":
