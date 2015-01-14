@@ -271,6 +271,18 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature){
 					send_data_buff[byte_offset+8+i] = tentacle_var[j].tentacle_acc_state[2] >> (8*i); 
 	
 			}
+			
+			// >>>>> byte 50: TENTACLE 0
+			// >>>>> byte 51: TENTACLE 1
+			// >>>>> byte 52: TENTACLE 2		
+			// >>>>> byte 53: TENTACLE 3
+			for (uint8_t j = 0; j < 4; j++){
+			
+				const uint8_t byte_offset = 50+(j);
+				
+				send_data_buff[byte_offset] = (uint8_t) tentacle_var[j].tentacle_cycling;
+			}
+			
 			break;
 		}
 		
@@ -457,18 +469,20 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 
 
 //----- LOW-LEVEL CONTROL -------
-void Behaviours::low_level_control_behaviour(const uint32_t &curr_time){
+void Behaviours::low_level_control_tentacle_behaviour(const uint32_t &curr_time){
 
 	
 	//>>>> TENTACLE <<<<<
-	for (uint8_t j=0; j<4;j++){
+	for (uint8_t j=0; j<3;j++){
 		
 		tentacle[j].set_sma_level(0, tentacle_var[j].tentacle_sma_level[0]);
 		tentacle[j].set_sma_level(1, tentacle_var[j].tentacle_sma_level[1]);
 		tentacle[j].set_led_level(0, tentacle_var[j].tentacle_reflex_level[0]);
 		tentacle[j].set_led_level(1, tentacle_var[j].tentacle_reflex_level[1]);
 	}
-	
+}
+
+void Behaviours::low_level_control_protocell_behaviour(const uint32_t &curr_time){
 	//>>>> PROTOCELL <<<<<
 	for (uint8_t j=0; j<2;j++){
 	
@@ -502,43 +516,15 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 			tentacle[j].set_sma_level(1, 0);
 			continue;
 		}
-		
-		uint8_t sma_action_type = 0; 
-		if (tentacle_var[j].tentacle_ir_state[1] > tentacle_var[j].tentacle_ir_threshold[1]){
-			
-			high_level_ctrl_tentacle_on[j] = true;
-			
-			// determine the adjacent tentacle
-			uint8_t adj_id;
-			if (j==0){
-				adj_id = 2;
-			}
-			else{
-				adj_id = j-1;
-			}
-			
-			
-			if (tentacle_var[j].tentacle_ir_state[0] > tentacle_var[j].tentacle_ir_threshold[0]){
-				sma_action_type = 1;
-			}
-			else if (tentacle_var[adj_id].tentacle_ir_state[0] > tentacle_var[adj_id].tentacle_ir_threshold[0]){
-				sma_action_type = 2;
-			}
-			
-		}
 
 		
 		if (high_level_ctrl_tentacle_on[j]){
 			
 			// starting a cycle
-			if (high_level_ctrl_tentacle_cycling[j] == false){
+			if (tentacle_var[j].tentacle_cycling == false){
 				
-				// if setting type to 255, the actual type will be random
-				if (sma_action_type == 255){
-					sma_action_type = random(0,3);
-				}
 				// behaviour Type
-				switch (sma_action_type){
+				switch (tentacle_var[j].tentacle_motion_on){
 					case 1:
 						high_level_ctrl_sma0[j] = 0;
 						high_level_ctrl_sma1[j] = 0;
@@ -552,21 +538,21 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 						high_level_ctrl_sma1[j] = 1;
 					break;
 				}
-				high_level_ctrl_tentacle_cycling[j] = true;
+				tentacle_var[j].tentacle_cycling = true;
 				high_level_ctrl_tentacle_phase_time[j] = millis();  
 				
 				// turn on the first sma
 				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
 				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
 			}
-			else if (high_level_ctrl_tentacle_cycling[j] == true){
+			else if (tentacle_var[j].tentacle_cycling == true){
 				
 				
 				volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
 				
 				// if reaches the full period, restart cycle
 				if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
-					high_level_ctrl_tentacle_cycling[j]  = false;
+					tentacle_var[j].tentacle_cycling  = false;
 					high_level_ctrl_tentacle_on[j] = false;
 				}
 				
@@ -589,7 +575,7 @@ void Behaviours::high_level_control_tentacle_reflex_behaviour(const uint32_t &cu
 	//---- Tentacle cycling variables -----
 	static uint16_t high_level_ctrl_tentacle_reflex_period[3] = {1000, 1000, 1000};
 	
-	for (uint8_t j=0; j<4; j++){
+	for (uint8_t j=0; j<3; j++){
 	
 		
 		bool reflex_led_on = false;
@@ -626,6 +612,81 @@ void Behaviours::high_level_control_tentacle_reflex_behaviour(const uint32_t &cu
 		
 	}
 
+
+	
+}
+
+void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t &curr_time){
+	
+	//---- Tentacle cycling variables -----
+	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
+	static bool high_level_ctrl_tentacle_on[3] = {false, false, false};
+
+	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
+	
+
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t j=0; j<3; j++){
+		
+		if (tentacle_var[j].tentacle_motion_on < 1 && tentacle_var[j].tentacle_cycling == false){
+		
+			tentacle[j].set_sma_level(0, 0);
+			tentacle[j].set_sma_level(1, 0);
+			tentacle_var[j].tentacle_cycling  = false;
+			high_level_ctrl_tentacle_on[j] = false;
+			continue;
+		}
+		
+			
+		// starting a cycle
+		if (tentacle_var[j].tentacle_cycling == false){
+			
+			// behaviour Type
+			switch (tentacle_var[j].tentacle_motion_on){
+				case 1:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 0;
+				break;
+				case 2:
+					high_level_ctrl_sma0[j] = 1;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+				default:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+			}
+			tentacle_var[j].tentacle_cycling = true;
+			high_level_ctrl_tentacle_phase_time[j] = millis();  
+			
+			// turn on the first sma
+			tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
+			tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
+		}
+		else{
+			
+			
+			volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
+			
+			// if reaches the full period, restart cycle
+			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+				tentacle_var[j].tentacle_cycling  = false;
+				high_level_ctrl_tentacle_on[j] = false;
+			}
+			
+			//if reaches the on period 
+			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+
+			}
+				
+		}
+		
+
+	}
 
 	
 }

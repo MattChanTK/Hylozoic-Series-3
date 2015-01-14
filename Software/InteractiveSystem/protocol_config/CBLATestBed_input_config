@@ -20,3 +20,7 @@ tentacle_2_acc_z_state		0
 tentacle_3_acc_x_state		0
 tentacle_3_acc_y_state		0
 tentacle_3_acc_z_state		0
+tentacle_0_cycling			0
+tentacle_1_cycling			0
+tentacle_2_cycling			0
+tentacle_3_cycling			0

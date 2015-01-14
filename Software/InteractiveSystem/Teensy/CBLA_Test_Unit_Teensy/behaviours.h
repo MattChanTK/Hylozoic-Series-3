@@ -22,6 +22,9 @@ class TentacleVar{
 		// {x,y,z}
 		int16_t tentacle_acc_state[3] = {0, 0, 0};
 		
+		//~~Tentacle cycling~~
+		bool tentacle_cycling = false;
+		
 		//----OUTPUT (internal variables)----
 		
 		//~~IR sensors activation threshold~~
@@ -124,11 +127,15 @@ class Behaviours : public TeensyUnit{
 		void led_wave_behaviour(const uint32_t &curr_time);
 		
 		//---- low-level control ---
-		void low_level_control_behaviour(const uint32_t &curr_time);
+		void low_level_control_tentacle_behaviour(const uint32_t &curr_time);
+		void low_level_control_protocell_behaviour(const uint32_t &curr_time);
 		
-		//---- high-level control ---
+		//---- high-level pre-programmed control ---
 		void high_level_control_tentacle_arm_behaviour(const uint32_t &curr_time);
 		void high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time);
+		
+		//---- high-level direct control ---
+		void high_level_direct_control_tentacle_arm_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================

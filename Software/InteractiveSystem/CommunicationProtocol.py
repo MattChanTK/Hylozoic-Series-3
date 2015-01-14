@@ -56,6 +56,16 @@ class CBLATestBed(SysParam.SystemParameters):
                 # byte x8 -- Accelerometer state (z-axis)
                 self.input_state[device_header + 'acc_z_state'] = struct.unpack_from('h', msg[byte_offset+8:byte_offset+10])[0]
 
+			# >>>>> byte 50: TENTACLE 0
+			# >>>>> byte 51: TENTACLE 1
+			# >>>>> byte 52: TENTACLE 2
+			# >>>>> byte 53: TENTACLE 3
+
+            for j in range(4):
+                device_header = 'tentacle_%d_' % j
+                byte_offset = j + 50
+
+                self.input_state[device_header + 'cycling'] = msg[byte_offset]
 
     def _compose_outgoing_msg(self, content):
 
