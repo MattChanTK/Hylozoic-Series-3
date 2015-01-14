@@ -9,7 +9,10 @@ import Visualization as Viz
 import os
 import threading
 from time import sleep
+from time import time
 import gmpy2
+import re
+
 
 from RegionsManager import Expert
 # from SimSystem import DiagonalPlane as Robot
@@ -41,7 +44,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.interactive_cmd = interactive_cmd
             self.teensy_name = teensy_name
             self.sync_barrier = sync_barrier
-            self.name = teensy_name + " " + str(name)
+            self.name = teensy_name + str(name)
 
             # ToDo need a more encapsulated appraoch
             self.reply_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.reply_types
@@ -135,17 +138,36 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Tentacle_Arm_Node(Node):
 
+
+        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=""):
+
+            super(CBLA_Behaviours.Tentacle_Arm_Node, self).__init__(interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=name)
+
+            # find indices for the cycling variables
+            self.cycling_id = [0] * 3
+            for i in range(3):
+                self.cycling_id[i] = self.report_vars.index('tentacle_' + str(i) + '_cycling')
+
+
         def get_possible_action(self, state=None, num_sample=4):
+
+            # constructing a list of all possible action
             x_dim = len(self.actuate_vars)
-
-            X = list(range(0, 4**x_dim))
-
+            X = list(range(0, 4 ** x_dim))
             for i in range(len(X)):
-                X[i] = gmpy2.digits(X[i], 3)
-                X[i] = tuple(map(int, X[i].zfill(x_dim)))
+                X[i] = gmpy2.digits(X[i], 4)
+                X[i] = list(map(int, X[i].zfill(x_dim)))
+
+            # check if tentacles are cycling
+            for j in range(x_dim):
+                if state is not None and state[self.cycling_id[j]]==1:
+                    for i in range(len(X)):
+                        X[i][j] = 0
 
 
-            M_candidates = tuple(X)
+            M_candidates = tuple(set(map(tuple, X)))
+            print(state)
+            print(M_candidates)
 
             return M_candidates
 
@@ -208,7 +230,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # initial conditions
             t = 0
             S = self.robot.S
-            M = Mi[0]
+            M = Mi[random.randint(0, len(Mi))]
             L = float("-inf")
 
 
@@ -319,10 +341,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 # set to current state
 
                 S = S1
-                if t < len(Mi):
-                    M = Mi[t]
-                else:
-                    M = M1
+                M = M1
 
                 # output to terminal
                 print(term_print_str)
@@ -389,24 +408,28 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # instantiate robots
-            robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
+           # robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
 
             sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
-            sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state'	)
+            sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state', 'tentacle_0_cycling', 'tentacle_1_cycling', 'tentacle_2_cycling'	)
             robot_sma = CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA')
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=0, use_saved_expert=True, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=12, sim_duration=0, use_saved_expert=True, id=2)
+               # self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=2000, use_saved_expert=False, id=1)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=1, sim_duration=0, use_saved_expert=True, id=2)
 
 
             # waiting for all CBLA engines to terminate to do visualization
-            fig_num = 1
-            for name, engine in self.cbla_engine.items():
 
+
+            name_list = []
+            for name, engine in self.cbla_engine.items():
+                name_list.append(name)
                 engine.join()
 
+            viz_data = dict()
+            for name in name_list:
                 with open(name + '_expert_backup.pkl', 'rb') as input:
                     expert = pickle.load(input)
                 with open(name + '_action_history_backup.pkl', 'rb') as input:
@@ -416,30 +439,86 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 with open(name + '_mean_error_history_backup.pkl', 'rb') as input:
                     mean_error_history = pickle.load(input)
 
-                CBLA_Behaviours.visualize(fig_num, expert, state_history, action_history, mean_error_history)
+                viz_data[name] = [expert, action_history, state_history, mean_error_history]
 
-                fig_num  +=1
+
+            CBLA_Behaviours.visualize(viz_data)
+
             plt.ioff()
             plt.show()
 
-    def visualize(fig_num, expert, state_history, action_history, mean_error_history):
+    def visualize(viz_data):
 
-        expert.print()
+        # ------ plot the led/ambient light sensor data -------
+        fig_num = 1
+        name_list = []
+        for name in viz_data.keys():
+            type = re.split('_', name)[-1]
 
-        # find out what are the ids that existed
-        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+            if type == 'LED':
+                name_list.append(copy(name))
 
-        Viz.plot_expert_tree(expert, region_ids, filename=('Fig_'+str(fig_num)))
-        Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num,subplot_num=261)
-        # Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[1]', y_dim=1, fig_num=fig_num, subplot_num=261)
-        Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[0]', y_dim=0, fig_num=fig_num, subplot_num=262)
-        Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
-        Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
-        try:
-            Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
-            # Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=ig_num, subplot_num=122, data_only=False)
-        except Exception as e:
-            print(e)
+        for name in name_list:
+
+            expert = viz_data[name][0]
+            action_history = viz_data[name][1]
+            state_history = viz_data[name][2]
+            mean_error_history = viz_data[name][3]
+
+            expert.print()
+
+            # find out what are the ids that existed
+            region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+
+            Viz.plot_expert_tree(expert, region_ids, filename=('Fig_' + str(fig_num)))
+            Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num, subplot_num=261)
+            Viz.plot_evolution(action_history, title='Action vs Time', marker_size=3, y_label='M(t)[0]', y_dim=0,
+                               fig_num=fig_num, subplot_num=262)
+            Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
+            Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
+            Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
+            try:
+                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
+            except Exception as e:
+                print(e)
+
+                
+        # ------- plot the tentacle/accelerometer data --------
+        fig_num = 2
+        # find the names associated with the tentacle
+        name_list = []
+        for name in viz_data.keys():
+            type = re.split('_', name)[-1]
+
+            if type == 'SMA':
+                name_list.append(copy(name))
+
+
+        for name in name_list:
+
+            expert = viz_data[name][0]
+            action_history = viz_data[name][1]
+            state_history = viz_data[name][2]
+            mean_error_history = viz_data[name][3]
+
+            expert.print()
+
+            # find out what are the ids that existed
+            region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+
+            Viz.plot_expert_tree(expert, region_ids, filename=('Fig_' + str(fig_num)))
+            Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num, subplot_num=261)
+            Viz.plot_evolution(action_history, title='Action vs Time', marker_size=3, y_label='M(t)[0]', y_dim=0,
+                               fig_num=fig_num, subplot_num=262)
+            Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
+            Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
+            Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
+            try:
+                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
+            except Exception as e:
+                print(e)
+
+        plt.ioff()
+        plt.show()
 
 
