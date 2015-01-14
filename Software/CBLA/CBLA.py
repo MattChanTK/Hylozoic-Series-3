@@ -9,6 +9,7 @@ import Visualization as Viz
 import os
 import threading
 from time import sleep
+import gmpy2
 
 from RegionsManager import Expert
 # from SimSystem import DiagonalPlane as Robot
@@ -58,19 +59,18 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             if not isinstance(M, tuple):
                 raise (TypeError, "M must be a tuple")
             if len(M) != len(self.actuate_vars):
-                raise (ValueError, "M must have " + len(self.actuate_vars) +" elements!")
+                raise (ValueError, "M must have " + str(len(self.actuate_vars)) +" elements!")
 
-            # move tentacle 0 up
             for i in range(len(self.actuate_vars)):
 
                 cmd_obj = command_object(self.teensy_name, self.__get_request_type(self.actuate_vars[i]))
                 cmd_obj.add_param_change(self.actuate_vars[i], int(M[i]))
 
+
+                with self.interactive_cmd.lock:
+                    self.interactive_cmd.enter_command(cmd_obj)
+
             self.M0 = M
-
-            with self.interactive_cmd.lock:
-                self.interactive_cmd.enter_command(cmd_obj)
-
             # wait for other thread in the same sync group to finish
             self.sync_barrier.write_barrier.wait()
 
@@ -103,7 +103,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.S = tuple(s)
             return self.S
 
-        def get_possible_action(self, state=None, num_sample=1000):
+        def get_possible_action(self, state=None, num_sample=100):
 
             x_dim = 1
 
@@ -130,15 +130,28 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             raise (ValueError, "Variable not found!")
 
-    class Indicator_Node(Node):
+    class Protocell_Node(Node):
+        pass
 
-        def get_possible_action(self, state=None, num_sample=2):
+    class Tentacle_Arm_Node(Node):
 
-            return ((0,),(1,))
+        def get_possible_action(self, state=None, num_sample=4):
+            x_dim = len(self.actuate_vars)
+
+            X = list(range(0, 4**x_dim))
+
+            for i in range(len(X)):
+                X[i] = gmpy2.digits(X[i], 3)
+                X[i] = tuple(map(int, X[i].zfill(x_dim)))
+
+
+            M_candidates = tuple(X)
+
+            return M_candidates
 
     class CBLA_Engine(threading.Thread):
 
-        def __init__(self, robot, loop_delay=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05):
+        def __init__(self, robot, loop_delay=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05, id=0):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = use_saved_expert
@@ -158,6 +171,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             self.robot = robot
             self.loop_delay = loop_delay
+            self.engine_id = id
 
 
             # instantiate an Expert
@@ -189,11 +203,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         def run(self):
 
             # initial training action
-            Mi = self.robot.get_possible_action(num_sample=10)
+            Mi = self.robot.get_possible_action()
 
             # initial conditions
             t = 0
-            S = (0,)
+            S = self.robot.S
             M = Mi[0]
             L = float("-inf")
 
@@ -327,29 +341,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     with open(self.robot.name + '_mean_error_history_backup.pkl', 'wb') as output:
                         pickle.dump(self.mean_error_history, output, pickle.HIGHEST_PROTOCOL)
 
-            self.visualize()
-
-
-        def visualize(self):
-
-            self.expert.print()
-
-            # find out what are the ids that existed
-            region_ids = sorted(list(zip(*self.mean_error_history[-1]))[0])
-
-            Viz.plot_expert_tree(self.expert, region_ids)
-            Viz.plot_evolution(self.state_history, title='State vs Time', y_label='S(t)', fig_num=1, subplot_num=261)
-            # Viz.plot_evolution(self.action_history, title='Action vs Time', y_label='M(t)[1]', y_dim=1, fig_num=1, subplot_num=261)
-            Viz.plot_evolution(self.action_history, title='Action vs Time', y_label='M(t)[0]', y_dim=0, fig_num=1, subplot_num=262)
-            Viz.plot_model(self.expert, region_ids, x_idx=1, y_idx=0, fig_num=1, subplot_num=263)
-            Viz.plot_model(self.expert, region_ids, x_idx=0, y_idx=0, fig_num=1, subplot_num=269)
-            Viz.plot_regional_mean_errors(self.mean_error_history, region_ids, fig_num=1, subplot_num=234)
-            Viz.plot_model_3D(self.expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=1, subplot_num=122)
-            # Viz.plot_model_3D(self.expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=1, subplot_num=122, data_only=False)
-
-
-            plt.ioff()
-            plt.show()
 
     class Sync_Barrier():
 
@@ -390,7 +381,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchonization barrier for all LEDs
         self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=0.5)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=15)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -398,11 +389,57 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # instantiate robots
-            robot_led = CBLA_Behaviours.Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='(LED)')
-            robot_sma = CBLA_Behaviours.Indicator_Node(self, teensy_name, ('indicator_led_on',), ('protocell_1_als_state',),  self.sync_barrier_sma, name='(SMA)')
+            robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
+
+            sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
+            sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state'	)
+            robot_sma = CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA')
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_led'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05)
-                self.cbla_engine[teensy_name + '_sma'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=0, use_saved_expert=True, id=1)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=12, sim_duration=0, use_saved_expert=True, id=2)
+
+
+            # waiting for all CBLA engines to terminate to do visualization
+            fig_num = 1
+            for name, engine in self.cbla_engine.items():
+
+                engine.join()
+
+                with open(name + '_expert_backup.pkl', 'rb') as input:
+                    expert = pickle.load(input)
+                with open(name + '_action_history_backup.pkl', 'rb') as input:
+                    action_history = pickle.load(input)
+                with open(name + '_state_history_backup.pkl', 'rb') as input:
+                    state_history = pickle.load(input)
+                with open(name + '_mean_error_history_backup.pkl', 'rb') as input:
+                    mean_error_history = pickle.load(input)
+
+                CBLA_Behaviours.visualize(fig_num, expert, state_history, action_history, mean_error_history)
+
+                fig_num  +=1
+            plt.ioff()
+            plt.show()
+
+    def visualize(fig_num, expert, state_history, action_history, mean_error_history):
+
+        expert.print()
+
+        # find out what are the ids that existed
+        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+
+        Viz.plot_expert_tree(expert, region_ids, filename=('Fig_'+str(fig_num)))
+        Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num,subplot_num=261)
+        # Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[1]', y_dim=1, fig_num=fig_num, subplot_num=261)
+        Viz.plot_evolution(action_history, title='Action vs Time', y_label='M(t)[0]', y_dim=0, fig_num=fig_num, subplot_num=262)
+        Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
+        Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
+        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
+        try:
+            Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
+            # Viz.plot_model_3D(expert, region_ids, x_idx=(1, 2), y_idx=0, fig_num=ig_num, subplot_num=122, data_only=False)
+        except Exception as e:
+            print(e)
+
 

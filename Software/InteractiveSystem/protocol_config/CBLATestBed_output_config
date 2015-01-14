@@ -9,7 +9,7 @@ tentacle_0_arm_cycle_on_period		int8		tentacle_high_level		2	2
 tentacle_0_arm_cycle_off_period		int8		tentacle_high_level		2	15
 tentacle_0_arm_reflex_0_period		int16		tentacle_high_level		2	5000
 tentacle_0_arm_reflex_1_period		int16		tentacle_high_level		2	5000
-tentacle_0_arm_motion_on			int8		tentacle_high_level		2	1
+tentacle_0_arm_motion_on			int8		tentacle_high_level		2	0
 tentacle_0_reflex_0_wave_type		int8		tentacle_high_level		2	0
 tentacle_0_reflex_1_wave_type		int8		tentacle_high_level		2	1
 tentacle_1_ir_0_threshold			int16		tentacle_high_level		2	1200
@@ -18,7 +18,7 @@ tentacle_1_arm_cycle_on_period		int8		tentacle_high_level		2	2
 tentacle_1_arm_cycle_off_period		int8		tentacle_high_level		2	15
 tentacle_1_arm_reflex_0_period		int16		tentacle_high_level		2	5000
 tentacle_1_arm_reflex_1_period		int16		tentacle_high_level		2	5000
-tentacle_1_arm_motion_on			int8		tentacle_high_level		2	1
+tentacle_1_arm_motion_on			int8		tentacle_high_level		2	0
 tentacle_1_reflex_0_wave_type		int8		tentacle_high_level		2	2
 tentacle_1_reflex_1_wave_type		int8		tentacle_high_level		2	3
 tentacle_2_ir_0_threshold			int16		tentacle_high_level		2	1200
@@ -27,7 +27,7 @@ tentacle_2_arm_cycle_on_period		int8		tentacle_high_level		2	2
 tentacle_2_arm_cycle_off_period		int8		tentacle_high_level		2	15
 tentacle_2_arm_reflex_0_period		int16		tentacle_high_level		2	5000
 tentacle_2_arm_reflex_1_period		int16		tentacle_high_level		2	5000
-tentacle_2_arm_motion_on			int8		tentacle_high_level		2	1
+tentacle_2_arm_motion_on			int8		tentacle_high_level		2	0
 tentacle_2_reflex_0_wave_type		int8		tentacle_high_level		2	4
 tentacle_2_reflex_1_wave_type		int8		tentacle_high_level		2	5
 tentacle_3_ir_0_threshold			int16		tentacle_high_level		2	1200
