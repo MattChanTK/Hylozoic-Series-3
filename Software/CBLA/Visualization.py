@@ -14,12 +14,13 @@ def moving_average(interval, window_size, dim=0):
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', y_dim=0, fig_num=1, subplot_num=121):
+def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', marker_size=1.5, y_dim=0, fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
-    plot.plot(moving_average(action_history, 1, dim=y_dim), marker='o', ms=1.5, mew=0, lw=0)
+
+    plot.plot(action_history, marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
     plt.ion()
     plt.show()
     plt.title(title)
@@ -51,7 +52,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         training_label = list(zip(*Expert.training_label))
         X = training_data[x_idx]
         Y = training_label[y_idx]
-        plot.plot(X, Y, marker='o', ms=2, mew=0, lw=0, color=colours[region_ids.index(Expert.expert_id)])
+        plot.plot(X, Y, marker='o', ms=2, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
         num_sample = 100
