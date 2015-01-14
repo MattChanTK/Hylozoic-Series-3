@@ -70,6 +70,16 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
                     self.enter_command(cmd_obj)
+
+                    # === tentacle high-level commands"
+                    cmd_obj = command_object(teensy_name, 'tentacle_high_level')
+
+                    cmd_obj.add_param_change('tentacle_0_arm_motion_on', int(loop % 4))
+                    cmd_obj.add_param_change('tentacle_1_arm_motion_on', int(loop % 4))
+                    cmd_obj.add_param_change('tentacle_2_arm_motion_on', int(loop % 4))
+
+                    self.enter_command(cmd_obj)
+
                     #=== protocell command====
                     cmd_obj = command_object(teensy_name, 'protocell')
                     cmd_obj.add_param_change('protocell_1_led_level', int((loop*30)%128))
@@ -104,12 +114,13 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     print("Tentacle %d" % j, end=" ---\t")
                     print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")", end="  \t")
                     print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'], ', ', sample[device_header + 'acc_z_state'], ")" )
-
                 for j in range(2):
                     device_header = 'protocell_%d_' % j
                     print("Protocell %d" % j, end=" ---\t")
                     print("ALS (", sample[device_header + 'als_state'], ")")
                 print('')
+
+
 
                 # new blink period
                 indicator_led_period[teensy_name] += 0.004
