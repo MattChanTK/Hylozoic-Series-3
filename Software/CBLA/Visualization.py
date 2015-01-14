@@ -160,7 +160,7 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
         plot.plot(range(len(region_error[id])), region_error[id], ls='-', lw=2, color=colours[region_ids.index(id)])
 
 
-def plot_expert_tree(Expert, region_ids, graph=None, level=0):
+def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
 
     # if it is the root
     is_root = False
@@ -204,7 +204,10 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0):
         graph.add_edge(edge_right)
 
     if is_root:
-        graph.write_png('tree_graph.png')
+        if filename is None:
+            graph.write_png('tree_graph.png')
+        else:
+            graph.write_png(filename +'_tree_graph.png')
 
     return this_node
 
