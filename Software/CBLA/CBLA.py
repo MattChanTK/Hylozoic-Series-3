@@ -417,7 +417,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate CBLA Engines
             with self.lock:
                # self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=2000, use_saved_expert=False, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=1, sim_duration=0, use_saved_expert=True, id=2)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
 
 
             # waiting for all CBLA engines to terminate to do visualization
@@ -482,7 +482,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             except Exception as e:
                 print(e)
 
-                
+
         # ------- plot the tentacle/accelerometer data --------
         fig_num = 2
         # find the names associated with the tentacle
@@ -507,14 +507,25 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
             Viz.plot_expert_tree(expert, region_ids, filename=('Fig_' + str(fig_num)))
-            Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num, subplot_num=261)
+            Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num, subplot_num=251)
             Viz.plot_evolution(action_history, title='Action vs Time', marker_size=3, y_label='M(t)[0]', y_dim=0,
-                               fig_num=fig_num, subplot_num=262)
-            Viz.plot_model(expert, region_ids, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
-            Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
-            Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
+                               fig_num=fig_num, subplot_num=252)
+            Viz.plot_model(expert, region_ids, x_idx=6, y_idx=0, fig_num=fig_num, subplot_num=253)
+            Viz.plot_model(expert, region_ids, x_idx=7, y_idx=1, fig_num=fig_num, subplot_num=254)
+            Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
+            Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
+
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(6, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
+            except Exception as e:
+                print(e)
+
+            try:
+                Viz.plot_model_3D(expert, region_ids, x_idx=(7, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
+            except Exception as e:
+                print(e)
+            try:
+                Viz.plot_model_3D(expert, region_ids, x_idx=(8, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
             except Exception as e:
                 print(e)
 
