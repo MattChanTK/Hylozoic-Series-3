@@ -4,7 +4,6 @@ import random
 import pickle
 import numpy as np
 from copy import copy
-import Visualization as Viz
 import os
 import threading
 from time import sleep
