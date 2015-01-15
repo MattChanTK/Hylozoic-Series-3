@@ -213,7 +213,10 @@ def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
     return this_node
 
 
+def plot_show():
 
+    plt.ioff()
+    plt.show()
 
 
 

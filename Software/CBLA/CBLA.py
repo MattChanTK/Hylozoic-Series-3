@@ -1,7 +1,6 @@
 import math
 import random
 
-import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 from copy import copy
@@ -166,9 +165,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
             M_candidates = tuple(set(map(tuple, X)))
-            print(state)
-            print(M_candidates)
-
             return M_candidates
 
     class CBLA_Engine(threading.Thread):
@@ -301,6 +297,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 # generate a list of possible action given the state
                 M_candidates = self.robot.get_possible_action(state=S1, num_sample=150)
+                term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates , '\n')))
 
 
                 L_list = []
@@ -417,12 +414,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate CBLA Engines
             with self.lock:
                # self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=2000, use_saved_expert=False, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=1, use_saved_expert=False, id=2)
 
 
             # waiting for all CBLA engines to terminate to do visualization
-
-
             name_list = []
             for name, engine in self.cbla_engine.items():
                 name_list.append(name)
@@ -442,12 +437,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 viz_data[name] = [expert, action_history, state_history, mean_error_history]
 
 
-            CBLA_Behaviours.visualize(viz_data)
+           # CBLA_Behaviours.visualize(viz_data)
 
-            plt.ioff()
-            plt.show()
+
 
     def visualize(viz_data):
+        import Visualization as Viz
 
         # ------ plot the led/ambient light sensor data -------
         fig_num = 1
@@ -529,7 +524,5 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             except Exception as e:
                 print(e)
 
-        plt.ioff()
-        plt.show()
-
+        Viz.plot_show()
 
