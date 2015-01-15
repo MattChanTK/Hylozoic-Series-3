@@ -1,4 +1,3 @@
-import changePriority
 from TeensyInterface import TeensyManager
 import sys
 import os
@@ -28,12 +27,6 @@ packet_size_in = 64
 packet_size_out = 64
 
 def main():
-
-    try:
-        # change priority of the the Python process to HIGH
-        changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
-    except Exception:
-        print("Cannot change priority; this is not a window machine")
 
 
     # instantiate Teensy Monitor

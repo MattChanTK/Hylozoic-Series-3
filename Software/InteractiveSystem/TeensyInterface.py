@@ -3,7 +3,6 @@ import usb.util
 import threading
 import random
 import struct
-import changePriority
 import sys
 import re
 from time import clock
@@ -215,13 +214,6 @@ class TeensyInterface(threading.Thread):
         self.print_to_term_enabled = print_to_term
 
     def run(self):
-
-
-        try:
-            # change priority of the the Python process to HIGH
-            changePriority.SetPriority(changePriority.Priorities.HIGH_PRIORITY_CLASS)
-        except Exception:
-            print("Cannot change priority; this is not a window machine")
 
 
         no_reply_counter = 0
