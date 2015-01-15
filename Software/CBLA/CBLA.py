@@ -404,7 +404,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=0.5)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=1)
         # synchonization barrier for all SMAs
         self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5)
 

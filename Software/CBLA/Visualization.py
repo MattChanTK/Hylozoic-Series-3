@@ -91,6 +91,12 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         ax.set_zlabel("S(t+1)")
         #ax.set_alpha(0.5)
 
+    # making sure the the first x index and smaller than the second x index
+    if (x_idx[1] < x_idx[0]):
+
+        swapped_x_idx = [x_idx[1], x_idx[0]]
+        x_idx = tuple(swapped_x_idx)
+
 
     # this is leaf node
     if Expert.left is None and Expert.right is None:
@@ -121,8 +127,14 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         m_pad = [0]*(x_idx[1]-x_idx[0]-1)
         b_pad = [0]*(num_dim-x_idx[1]-1)
 
-        zs = np.array([Expert.predict_model.predict(tuple(f_pad + [x] + m_pad + [y] + b_pad))
+
+        zs = np.array([Expert.predict_model.predict(tuple(f_pad + [x] + m_pad + [y] + b_pad)) [y_idx]
                        for x,y in zip(np.ravel(pts[0]), np.ravel(pts[1]))])
+
+        # for x, y in zip(np.ravel(pts[0]), np.ravel(pts[1])):
+        #     zs = Expert.predict_model.predict(tuple(f_pad + [x] + m_pad + [y] + b_pad))
+        # zs = np.array(zs)
+
         z = zs.reshape(pts[0].shape)
         ax.plot_surface(pts[0], pts[1], z, color='k', alpha=0.5, linewidth=0, antialiased=True)
 

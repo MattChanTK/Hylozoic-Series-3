@@ -29,7 +29,6 @@ for teensy_name in teensy_names:
         type = re.sub(teensy_name+'_', '', file)
         type = re.sub('.pkl', '', type)
 
-        print(type)
         if type == 'expert_backup':
             with open (teensy_name+'_'+type+'.pkl', 'rb' ) as input:
                 expert = pickle.load(input)
@@ -47,21 +46,3 @@ for teensy_name in teensy_names:
     viz_data[teensy_name] = [expert, action_history, state_history, mean_error_history]
 
 CBLA_Behaviours.visualize(viz_data)
-
-#
-#
-# for name in file_names:
-#     viz_data = dict()
-#
-#     with open(name, 'rb') as input:
-#         expert = pickle.load(input)
-#     with open(name, 'rb') as input:
-#         action_history = pickle.load(input)
-#     with open(name, 'rb') as input:
-#         state_history = pickle.load(input)
-#     with open(name, 'rb') as input:
-#         mean_error_history = pickle.load(input)
-#
-#     viz_data[name] = [expert, action_history, state_history, mean_error_history]
-#
-#     CBLA_Behaviours.visualize(viz_data)
