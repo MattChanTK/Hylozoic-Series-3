@@ -177,7 +177,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class CBLA_Engine(threading.Thread):
 
-        def __init__(self, robot, loop_delay=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05, id=0):
+        def __init__(self, robot, loop_delay=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05,
+                     id=0):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = use_saved_expert
@@ -413,7 +414,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # instantiate robots
-           # robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
+            robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
 
             sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
             sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state', 'tentacle_0_cycling', 'tentacle_1_cycling', 'tentacle_2_cycling'	)
@@ -421,16 +422,17 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-               # self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=2000, use_saved_expert=False, id=1)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=4000, use_saved_expert=False, id=1)
                 self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
 
 
-            # waiting for all CBLA engines to terminate to do visualization
-            name_list = []
-            for name, engine in self.cbla_engine.items():
-                name_list.append(name)
-                engine.join()
+        # waiting for all CBLA engines to terminate to do visualization
+        name_list = []
+        for name, engine in self.cbla_engine.items():
+            name_list.append(name)
+            engine.join()
 
+        if 0:
             viz_data = dict()
             for name in name_list:
                 with open(name + '_expert_backup.pkl', 'rb') as input:
@@ -442,14 +444,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 with open(name + '_mean_error_history_backup.pkl', 'rb') as input:
                     mean_error_history = pickle.load(input)
 
-                viz_data[name] = [expert, action_history, state_history, mean_error_history]
 
+            viz_data[name] = [expert, action_history, state_history, mean_error_history]
 
-           # CBLA_Behaviours.visualize(viz_data)
-
+            CBLA_Behaviours.visualize(viz_data)
 
 
     def visualize(viz_data):
+
         import Visualization as Viz
 
         # ------ plot the led/ambient light sensor data -------
@@ -485,9 +487,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             except Exception as e:
                 print(e)
 
+            fig_num += 1
 
         # ------- plot the tentacle/accelerometer data --------
-        fig_num = 2
+
         # find the names associated with the tentacle
         name_list = []
         for name in viz_data.keys():
@@ -531,6 +534,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 Viz.plot_model_3D(expert, region_ids, x_idx=(8, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
             except Exception as e:
                 print(e)
+            fig_num += 1
 
         Viz.plot_show()
 
