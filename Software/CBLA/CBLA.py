@@ -8,7 +8,6 @@ import os
 import threading
 from time import sleep
 from time import time
-import gmpy2
 import re
 
 
@@ -31,6 +30,14 @@ def weighted_choice_sub(weights, min_percent=0.05):
             return i
 
     return random.randint(0, len(weights)-1)
+
+def toDigits(n, b):
+    """Convert a positive number n to its digit representation in base b."""
+    digits = []
+    while n > 0:
+        digits.insert(0, n % b)
+        n  = n // b
+    return digits
 
 class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
@@ -153,8 +160,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             x_dim = len(self.actuate_vars)
             X = list(range(0, 4 ** x_dim))
             for i in range(len(X)):
-                X[i] = gmpy2.digits(X[i], 4)
-                X[i] = list(map(int, X[i].zfill(x_dim)))
+                X[i] = toDigits(X[i], 4)
+                filling = [0]*(x_dim - len(X[i]))
+                X[i] = filling + X[i]
+
 
             # check if tentacles are cycling
             for j in range(x_dim):
@@ -413,7 +422,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate CBLA Engines
             with self.lock:
                # self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=2000, use_saved_expert=False, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=1, use_saved_expert=False, id=2)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
 
 
             # waiting for all CBLA engines to terminate to do visualization
