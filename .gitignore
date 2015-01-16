@@ -3,6 +3,7 @@
 #-------------------------#
 
 
+
 # Ignore list for Eagle, a PCB layout tool
 
 *.job
@@ -120,7 +121,8 @@ Thumbs.db
 *.pydevproject
 .project
 .metadata
-bin/
+!bin/
+bin/*
 tmp/
 *.tmp
 *.bak
