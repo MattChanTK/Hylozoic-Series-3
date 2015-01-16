@@ -1,0 +1,59 @@
+Screaming Circuits SMD component position file.
+Created by Centroid_ScreamingCircuits_smd.ulp 1.2.0.
+
+Centroid Data for pc board: "RJ45_Connectors_Board.brd" as of: 2015-01-16 12:28:56 PM
+Measurements are in inches. Comma delimited
+Only surface mount components included
+
+RefDes,Layer,LocationX,LocationY,Rotation
+IC1,Top,1.500,2.520,0
+IC2,Top,1.500,1.710,0
+IC3,Top,1.510,0.940,0
+LED1,Bottom,1.150,2.700,270
+LED2,Bottom,1.230,2.700,270
+LED3,Bottom,1.310,2.700,270
+LED4,Bottom,1.390,2.700,270
+LED5,Bottom,1.570,2.700,270
+LED6,Bottom,1.650,2.700,270
+LED7,Bottom,1.730,2.700,270
+LED8,Bottom,1.810,2.700,270
+LED9,Bottom,1.150,1.900,270
+LED10,Bottom,1.230,1.900,270
+LED11,Bottom,1.310,1.900,270
+LED12,Bottom,1.390,1.900,270
+LED13,Bottom,1.570,1.900,270
+LED14,Bottom,1.650,1.900,270
+LED15,Bottom,1.730,1.900,270
+LED16,Bottom,1.810,1.900,270
+LED17,Bottom,1.150,1.100,270
+LED18,Bottom,1.230,1.100,270
+LED19,Bottom,1.310,1.100,270
+LED20,Bottom,1.390,1.100,270
+LED21,Bottom,1.570,1.100,270
+LED22,Bottom,1.650,1.100,270
+LED23,Bottom,1.730,1.100,270
+LED24,Bottom,1.810,1.100,270
+R1,Top,1.150,2.830,90
+R2,Top,1.230,2.830,90
+R3,Top,1.310,2.830,90
+R4,Top,1.400,2.840,180
+R5,Top,1.520,2.840,0
+R6,Top,1.610,2.810,90
+R7,Top,1.710,2.820,90
+R8,Top,1.780,2.820,90
+R9,Top,1.150,2.000,90
+R10,Top,1.230,2.000,90
+R11,Top,1.310,2.000,90
+R12,Top,1.420,2.040,180
+R13,Top,1.540,2.040,0
+R14,Top,1.650,2.030,90
+R15,Top,1.730,2.030,90
+R16,Top,1.810,2.030,90
+R17,Top,1.150,1.260,90
+R18,Top,1.230,1.260,90
+R19,Top,1.310,1.260,90
+R20,Top,1.420,1.290,180
+R21,Top,1.540,1.290,0
+R22,Top,1.650,1.260,90
+R23,Top,1.730,1.260,90
+R24,Top,1.810,1.260,90

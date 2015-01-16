@@ -1,0 +1,43 @@
+Screaming Circuits SMD component position file.
+Created by Centroid_ScreamingCircuits_smd.ulp 1.2.0.
+
+Centroid Data for pc board: "Device_Module.brd" as of: 2015-01-16 12:26:21 PM
+Measurements are in inches. Comma delimited
+Only surface mount components included
+
+RefDes,Layer,LocationX,LocationY,Rotation
+C2,Bottom,3.030,1.080,0
+C3,Bottom,3.230,0.630,180
+C4,Top,3.250,1.025,0
+C5,Bottom,3.250,0.725,180
+C6,Bottom,2.570,0.320,180
+C7,Bottom,2.680,0.885,0
+C8,Bottom,2.155,0.320,0
+C9,Bottom,2.405,0.885,180
+IC2,Top,3.250,0.875,180
+IC3,Bottom,3.250,0.900,0
+LED1,Top,3.430,1.060,90
+LED2,Top,3.480,0.140,90
+LED3,Top,2.975,0.075,0
+LED4,Top,2.975,1.125,0
+LED5,Top,1.925,0.075,180
+LED6,Top,1.925,1.125,180
+R1,Bottom,3.150,0.350,270
+R2,Top,3.425,0.800,90
+R3,Top,3.545,0.105,270
+R4,Bottom,1.475,0.500,270
+R5,Bottom,1.475,0.825,270
+R6,Top,1.475,0.450,270
+R7,Top,1.475,0.825,270
+R8,Bottom,1.475,0.350,90
+R9,Bottom,1.475,0.675,90
+R10,Top,1.475,0.300,90
+R11,Top,1.475,0.675,90
+R12,Top,2.900,0.175,90
+R13,Top,2.900,1.025,270
+R14,Bottom,1.925,0.075,180
+R15,Bottom,1.925,1.125,180
+T1,Bottom,1.775,0.425,90
+T2,Bottom,1.775,0.775,90
+T3,Top,1.775,0.425,270
+T4,Top,1.775,0.775,270
