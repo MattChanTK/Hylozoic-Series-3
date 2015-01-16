@@ -47,6 +47,7 @@ import usb.util as util
 import copy
 import operator
 import usb._interop as _interop
+import usb._objfinalizer as _objfinalizer
 import usb._lookup as _lu
 import logging
 import array
@@ -644,7 +645,7 @@ class Configuration(object):
             _lu.MAX_POWER_UNITS_USB2p0 * self.bMaxPower)
             # FIXME : add a check for superspeed vs usb 2.0
 
-class Device(object):
+class Device(_objfinalizer.AutoFinalizedObject):
     r"""Device object.
 
     This class contains all fields of the Device Descriptor according to the
@@ -735,7 +736,8 @@ class Device(object):
                     'bNumConfigurations',
                     'address',
                     'bus',
-                    'port_number'
+                    'port_number',
+                    'port_numbers',
                 )
             )
 
@@ -786,6 +788,11 @@ class Device(object):
         if self._manufacturer is None:
             self._manufacturer = util.get_string(self, self.iManufacturer)
         return self._manufacturer
+
+    @property
+    def backend(self):
+        """Return the backend being used by the device."""
+        return self._ctx.backend
 
     def set_configuration(self, configuration = None):
         r"""Set the active configuration.
@@ -1025,7 +1032,7 @@ class Device(object):
         r"""Return the Configuration object in the given position."""
         return Configuration(self, index)
 
-    def __del__(self):
+    def _finalize_object(self):
         self._ctx.dispose(self)
 
     def __get_timeout(self, timeout):

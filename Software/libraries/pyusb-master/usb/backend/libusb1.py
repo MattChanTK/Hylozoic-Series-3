@@ -32,6 +32,7 @@ import sys
 import logging
 from usb._debug import methodtrace
 import usb._interop as _interop
+import usb._objfinalizer as _objfinalizer
 import errno
 import math
 from usb.core import USBError
@@ -95,6 +96,24 @@ LIBUSB_ERROR_NO_MEM = -11
 LIBUSB_ERROR_NOT_SUPPORTED = -12
 LIBUSB_ERROR_OTHER = -99
 
+# map return codes to strings
+_str_error_map = {
+    LIBUSB_SUCCESS:'Success (no error)',
+    LIBUSB_ERROR_IO:'Input/output error',
+    LIBUSB_ERROR_INVALID_PARAM:'Invalid parameter',
+    LIBUSB_ERROR_ACCESS:'Access denied (insufficient permissions)',
+    LIBUSB_ERROR_NO_DEVICE:'No such device (it may have been disconnected)',
+    LIBUSB_ERROR_NOT_FOUND:'Entity not found',
+    LIBUSB_ERROR_BUSY:'Resource busy',
+    LIBUSB_ERROR_TIMEOUT:'Operation timed out',
+    LIBUSB_ERROR_OVERFLOW:'Overflow',
+    LIBUSB_ERROR_PIPE:'Pipe error',
+    LIBUSB_ERROR_INTERRUPTED:'System call interrupted (perhaps due to signal)',
+    LIBUSB_ERROR_NO_MEM:'Insufficient memory',
+    LIBUSB_ERROR_NOT_SUPPORTED:'Operation not supported or unimplemented on this platform',
+    LIBUSB_ERROR_OTHER:'Unknown error'
+}
+
 # map return code to errno values
 _libusb_errno = {
     0:None,
@@ -147,6 +166,12 @@ _transfer_errno = {
     LIBUSB_TRANSFER_NO_DEVICE:errno.__dict__.get('ENODEV', None),
     LIBUSB_TRANSFER_OVERFLOW:errno.__dict__.get('EOVERFLOW', None)
 }
+
+def _strerror(errcode):
+    try:
+        return _lib.libusb_strerror(errcode).decode('utf8')
+    except AttributeError:
+        return _str_error_map[errcode]
 
 # Data structures
 
@@ -449,9 +474,10 @@ def _setup_prototypes(lib):
     # int libusb_submit_transfer(struct libusb_transfer *transfer);
     lib.libusb_submit_transfer.argtypes = [POINTER(_libusb_transfer)]
 
-    # const char *libusb_strerror(enum libusb_error errcode)
-    lib.libusb_strerror.argtypes = [c_uint]
-    lib.libusb_strerror.restype = c_char_p
+    if hasattr(lib, 'libusb_strerror'):
+        # const char *libusb_strerror(enum libusb_error errcode)
+        lib.libusb_strerror.argtypes = [c_uint]
+        lib.libusb_strerror.restype = c_char_p
 
     # int libusb_clear_halt(libusb_device_handle *dev, unsigned char endpoint)
     lib.libusb_clear_halt.argtypes = [_libusb_device_handle, c_ubyte]
@@ -534,11 +560,21 @@ def _setup_prototypes(lib):
     except AttributeError:
         pass
 
+    try:
+        # int libusb_get_port_numbers(libusb_device *dev,
+        #                             uint8_t* port_numbers,
+        #                             int port_numbers_len)
+        lib.libusb_get_port_numbers.argtypes = [
+                c_void_p,
+                POINTER(c_uint8),
+                c_int
+            ]
+        lib.libusb_get_port_numbers.restype = c_int
+    except AttributeError:
+        pass
+
     #int libusb_handle_events(libusb_context *ctx);
     lib.libusb_handle_events.argtypes = [c_void_p]
-
-def _strerror(errcode):
-    return _lib.libusb_strerror(errcode).decode('utf8')
 
 # check a libusb function call
 def _check(ret):
@@ -554,10 +590,10 @@ def _check(ret):
     return ret
 
 # wrap a device
-class _Device(object):
+class _Device(_objfinalizer.AutoFinalizedObject):
     def __init__(self, devid):
         self.devid = _lib.libusb_ref_device(devid)
-    def __del__(self):
+    def _finalize_object(self):
         _lib.libusb_unref_device(self.devid)
 
 # wrap a descriptor and keep a reference to another object
@@ -570,17 +606,17 @@ class _WrapDescriptor(object):
         return getattr(self.desc, name)
 
 # wrap a configuration descriptor
-class _ConfigDescriptor(object):
+class _ConfigDescriptor(_objfinalizer.AutoFinalizedObject):
     def __init__(self, desc):
         self.desc = desc
-    def __del__(self):
+    def _finalize_object(self):
         _lib.libusb_free_config_descriptor(self.desc)
     def __getattr__(self, name):
         return getattr(self.desc.contents, name)
 
 
 # iterator for libusb devices
-class _DevIterator(object):
+class _DevIterator(_objfinalizer.AutoFinalizedObject):
     def __init__(self, ctx):
         self.dev_list = POINTER(c_void_p)()
         self.num_devs = _check(_lib.libusb_get_device_list(
@@ -590,7 +626,7 @@ class _DevIterator(object):
     def __iter__(self):
         for i in range(self.num_devs):
             yield _Device(self.dev_list[i])
-    def __del__(self):
+    def _finalize_object(self):
         _lib.libusb_free_device_list(self.dev_list, 1)
 
 class _DeviceHandle(object):
@@ -599,7 +635,7 @@ class _DeviceHandle(object):
         self.devid = dev.devid
         _check(_lib.libusb_open(self.devid, byref(self.handle)))
 
-class _IsoTransferHandler(object):
+class _IsoTransferHandler(_objfinalizer.AutoFinalizedObject):
     def __init__(self, dev_handle, ep, buff, timeout):
         address, length = buff.buffer_info()
 
@@ -620,7 +656,7 @@ class _IsoTransferHandler(object):
 
         self.__set_packets_length(length, packet_length)
 
-    def __del__(self):
+    def _finalize_object(self):
         _lib.libusb_free_transfer(self.transfer)
 
     def submit(self, ctx = None):
@@ -662,7 +698,7 @@ class _LibUSB(usb.backend.IBackend):
         _check(self.lib.libusb_init(byref(self.ctx)))
 
     @methodtrace(_logger)
-    def __del__(self):
+    def _finalize_object(self):
         self.lib.libusb_exit(self.ctx)
 
 
@@ -682,6 +718,18 @@ class _LibUSB(usb.backend.IBackend):
             dev_desc.port_number = self.lib.libusb_get_port_number(dev.devid)
         except AttributeError:
             dev_desc.port_number = None
+
+        # Only available in newer versions of libusb
+        try:
+            buff = (c_uint8 * 7)()  # USB 3.0 maximum depth is 7
+            written = dev_desc.port_numbers = self.lib.libusb_get_port_numbers(
+                    dev.devid, buff, len(buff))
+            if written > 0:
+                dev_desc.port_numbers = tuple(buff[:written])
+            else:
+                dev_desc.port_numbers = None
+        except AttributeError:
+            dev_desc.port_numbers = None
 
         return dev_desc
 

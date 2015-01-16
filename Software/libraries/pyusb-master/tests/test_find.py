@@ -29,6 +29,7 @@
 import utils
 import usb.backend
 from usb.core import find
+from usb._debug import methodtrace
 import usb.util
 import unittest
 import devinfo
@@ -51,7 +52,8 @@ class _DeviceDescriptor(object):
         self.bDeviceProtocol = 0xff
         self.bus = 1
         self.address = 1
-        self.port_number= None
+        self.port_number = None
+        self.port_numbers = None
 
 # We are only interested in test usb.find() function, we don't need
 # to implement all IBackend stuff
@@ -64,6 +66,7 @@ class _MyBackend(usb.backend.IBackend):
         return self.devices[dev]
 
 class FindTest(unittest.TestCase):
+    @methodtrace(utils.logger)
     def test_find(self):
         b = _MyBackend()
         self.assertEqual(find(backend=b, idVendor=1), None)
