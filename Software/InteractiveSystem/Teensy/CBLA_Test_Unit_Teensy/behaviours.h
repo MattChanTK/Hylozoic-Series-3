@@ -49,7 +49,7 @@ class TentacleVar{
 		uint8_t tentacle_sma_level[2] = {0, 0};
 
 		//~~Tentacle motion activation~~
-		uint8_t tentacle_motion_on = 1;
+		uint8_t tentacle_motion_on = 3;
 	
 		//~~Reflex actuation level~~
 		// {channel 1, channel 2}
@@ -84,7 +84,7 @@ class ProtocellVar{
 		//----OUTPUT (actuators)----
 		
 		//~~high-power LED level~~~		
-		uint8_t protocell_led_level = 0;
+		uint8_t protocell_led_level = 5;
 
 		//~~high-power LED waveform type~~
 		uint8_t protocell_led_wave_type = 0;
@@ -121,6 +121,7 @@ class Behaviours : public TeensyUnit{
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
 		void stress_test_behaviour(const uint32_t &curr_time);
+		void reflex_test_behaviour();
 		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);

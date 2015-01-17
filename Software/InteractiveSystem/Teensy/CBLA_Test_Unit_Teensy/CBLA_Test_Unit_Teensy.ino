@@ -44,6 +44,9 @@ void loop() {
 
 	//teensy_unit.led_wave_behaviour(curr_time);
 	//teensy_unit.test_behaviour((const uint32_t) curr_time);
+	teensy_unit.reflex_test_behaviour();
+
+	
 
 	
 	//teensy_unit.stress_test_behaviour(curr_time);

@@ -467,6 +467,21 @@ void Behaviours::led_wave_behaviour(const uint32_t &curr_time){
 
 }
 
+void Behaviours::reflex_test_behaviour() {
+	
+	//=== testing Tentacle ===
+	for (uint8_t i=0; i<4; i++){
+		uint16_t ir_range = tentacle_var[i].tentacle_ir_state[0];
+		if (ir_range > 1200){
+			tentacle[i].set_led_level(0, 150);
+			tentacle[i].set_led_level(1, 150);
+		}
+		else{
+			tentacle[i].set_led_level(0, 0);
+			tentacle[i].set_led_level(1, 0);
+		}
+	}
+}
 
 //----- LOW-LEVEL CONTROL -------
 void Behaviours::low_level_control_tentacle_behaviour(const uint32_t &curr_time){
@@ -504,7 +519,6 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 
 	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
 	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
-	
 
 	
 	//~~~ tentacle cycle~~~~

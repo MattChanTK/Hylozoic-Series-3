@@ -74,15 +74,15 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     # === tentacle high-level commands"
                     cmd_obj = command_object(teensy_name, 'tentacle_high_level')
 
-                    cmd_obj.add_param_change('tentacle_0_arm_motion_on', int(loop % 4))
-                    cmd_obj.add_param_change('tentacle_1_arm_motion_on', int(loop % 4))
-                    cmd_obj.add_param_change('tentacle_2_arm_motion_on', int(loop % 4))
+                    cmd_obj.add_param_change('tentacle_0_arm_motion_on', 3)#int(loop % 4))
+                    cmd_obj.add_param_change('tentacle_1_arm_motion_on', 3)#int(loop % 4))
+                    cmd_obj.add_param_change('tentacle_2_arm_motion_on', 3)#int(loop % 4))
 
                     self.enter_command(cmd_obj)
 
                     #=== protocell command====
                     cmd_obj = command_object(teensy_name, 'protocell')
-                    cmd_obj.add_param_change('protocell_1_led_level', int((loop*30)%128))
+                    cmd_obj.add_param_change('protocell_0_led_level', int((loop*30)%128))
                     self.enter_command(cmd_obj)
 
 
