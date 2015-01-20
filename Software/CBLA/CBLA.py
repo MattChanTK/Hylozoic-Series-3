@@ -145,13 +145,13 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
     class Tentacle_Arm_Node(Node):
 
 
-        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=""):
+        def __init__(self, interactive_cmd,  teensy_name, tentacle_ids, actuate_vars, report_vars, sync_barrier, name=""):
 
             super(CBLA_Behaviours.Tentacle_Arm_Node, self).__init__(interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=name)
 
             # find indices for the cycling variables
-            self.cycling_id = [0] * 3
-            for i in range(3):
+            self.cycling_id = [0] * len(tentacle_ids)
+            for i in range(len(tentacle_ids)):
                 self.cycling_id[i] = self.report_vars.index('tentacle_' + str(i) + '_cycling')
 
 
@@ -170,7 +170,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             for j in range(x_dim):
                 if state is not None and state[self.cycling_id[j]] > 0:
                     for i in range(len(X)):
-                        X[i][j] = 0
+                        X[i][j] = self.M0[j]
 
 
             M_candidates = tuple(set(map(tuple, X)))
@@ -236,7 +236,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # initial conditions
             t = 0
             S = self.robot.S
-            M = Mi[random.randint(0, len(Mi))]
+            M = Mi[random.randint(0, len(Mi))-1]
             L = float("-inf")
 
 
@@ -337,7 +337,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     else:
                         m = (exploring_rate_range[0] - exploring_rate_range[1])/(reward_range[0] - reward_range[1])
                         b = exploring_rate_range[0] - m*reward_range[0]
-                        exploring_rate = m*L + b
+                        self.exploring_rate = m*L + b
 
                 # record the mean errors of each region
                 mean_errors = []
@@ -418,14 +418,18 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate robots
             robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
 
-            sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
-            sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state', 'tentacle_0_cycling', 'tentacle_1_cycling', 'tentacle_2_cycling'	)
-            robot_sma = CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA')
+            #sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
+            #sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state', 'tentacle_0_cycling', 'tentacle_1_cycling', 'tentacle_2_cycling'	)
+
+            sma_action = ('tentacle_0_arm_motion_on',)
+            sma_sensor = ('tentacle_0_acc_x_state', 'tentacle_0_acc_y_state', 'tentacle_0_acc_z_state', 'tentacle_0_cycling', )
+
+            robot_sma = CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, (0,), sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA')
 
             # instantiate CBLA Engines
             with self.lock:
               #  self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=4000, use_saved_expert=False, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
+                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=0.5, sim_duration=200, use_saved_expert=False, id=2)
 
 
         # waiting for all CBLA engines to terminate to do visualization
@@ -523,9 +527,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
 
 
-            Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=253)
-            Viz.plot_model(expert, region_ids, x_idx=1, y_idx=1, fig_num=fig_num, subplot_num=254)
-            Viz.plot_model(expert, region_ids, x_idx=2, y_idx=2, fig_num=fig_num, subplot_num=255)
+            Viz.plot_model(expert, region_ids, x_idx=4, y_idx=0, fig_num=fig_num, subplot_num=253)
+            Viz.plot_model(expert, region_ids, x_idx=4, y_idx=1, fig_num=fig_num, subplot_num=254)
+            Viz.plot_model(expert, region_ids, x_idx=4, y_idx=2, fig_num=fig_num, subplot_num=255)
 
             Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
             #
@@ -543,8 +547,22 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # except Exception as e:
             #     print(e)
 
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(0, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
+            # except Exception as e:
+            #     print(e)
+            #
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(1, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
+            # except Exception as e:
+            #     print(e)
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(2, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
+            # except Exception as e:
+            #     print(e)
+
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 4), y_idx=0, fig_num=fig_num, subplot_num=246)
             except Exception as e:
                 print(e)
 
@@ -553,9 +571,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             except Exception as e:
                 print(e)
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(2, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(2, 4), y_idx=2, fig_num=fig_num, subplot_num=248)
             except Exception as e:
                 print(e)
+
             fig_num += 1
 
         Viz.plot_show()

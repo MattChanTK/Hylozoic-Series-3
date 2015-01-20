@@ -692,7 +692,7 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 					high_level_ctrl_sma1[j] = 1;
 				break;
 			}
-			tentacle_var[j].tentacle_cycling = tentacle_var[j].tentacle_motion_on;
+			tentacle_var[j].tentacle_cycling = 1; //tentacle_var[j].tentacle_motion_on;
 			high_level_ctrl_tentacle_phase_time[j] = millis();  
 			
 			// turn on the first sma
@@ -707,6 +707,7 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 			// if reaches the full period, restart cycle
 			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
 				tentacle_var[j].tentacle_cycling  = 0;
+				tentacle_var[j].tentacle_motion_on = 0;
 			}
 			
 			//if reaches the on period 
