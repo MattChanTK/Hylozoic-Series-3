@@ -7,7 +7,7 @@ import re
 
 from CBLA import CBLA_Behaviours
 
-teensy_names = ('test_teensy_1_SMA', 'test_teensy_1_LED', 'test_teensy_7_SMA', 'test_teensy_7_LED',)
+teensy_names = ('test_teensy_1_SMA',) # 'test_teensy_1_LED',)
 
 # search for all pickle files
 
@@ -24,7 +24,7 @@ for teensy_name in teensy_names:
     state_history = None
     mearn_error_history = None
 
-    print(file)
+    print(file_names)
     for file in file_names:
         type = re.sub(teensy_name+'_', '', file)
         type = re.sub('.pkl', '', type)

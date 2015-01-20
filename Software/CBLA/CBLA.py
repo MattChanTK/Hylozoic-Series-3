@@ -11,6 +11,7 @@ from time import time
 import re
 
 
+
 from RegionsManager import Expert
 # from SimSystem import DiagonalPlane as Robot
 import InteractiveCmd
@@ -167,7 +168,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # check if tentacles are cycling
             for j in range(x_dim):
-                if state is not None and state[self.cycling_id[j]]==1:
+                if state is not None and state[self.cycling_id[j]] > 0:
                     for i in range(len(X)):
                         X[i][j] = 0
 
@@ -352,6 +353,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 # output to terminal
                 print(term_print_str)
 
+
                 # output to files
                 if t % 1000 == 0 or t >= self.sim_duration:
                     with open(self.robot.name + '_expert_backup.pkl', 'wb') as output:
@@ -422,7 +424,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=4000, use_saved_expert=False, id=1)
+              #  self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=4000, use_saved_expert=False, id=1)
                 self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=2, sim_duration=100, use_saved_expert=False, id=2)
 
 
@@ -516,22 +518,42 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             Viz.plot_evolution(state_history, title='State vs Time', y_label='S(t)', fig_num=fig_num, subplot_num=251)
             Viz.plot_evolution(action_history, title='Action vs Time', marker_size=3, y_label='M(t)[0]', y_dim=0,
                                fig_num=fig_num, subplot_num=252)
-            Viz.plot_model(expert, region_ids, x_idx=6, y_idx=0, fig_num=fig_num, subplot_num=253)
-            Viz.plot_model(expert, region_ids, x_idx=7, y_idx=1, fig_num=fig_num, subplot_num=254)
-            Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
+            # Viz.plot_model(expert, region_ids, x_idx=6, y_idx=0, fig_num=fig_num, subplot_num=253)
+            # Viz.plot_model(expert, region_ids, x_idx=7, y_idx=1, fig_num=fig_num, subplot_num=254)
+            # Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
+
+
+            Viz.plot_model(expert, region_ids, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=253)
+            Viz.plot_model(expert, region_ids, x_idx=1, y_idx=1, fig_num=fig_num, subplot_num=254)
+            Viz.plot_model(expert, region_ids, x_idx=2, y_idx=2, fig_num=fig_num, subplot_num=255)
+
             Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
+            #
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(6, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
+            # except Exception as e:
+            #     print(e)
+            #
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(7, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
+            # except Exception as e:
+            #     print(e)
+            # try:
+            #     Viz.plot_model_3D(expert, region_ids, x_idx=(8, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
+            # except Exception as e:
+            #     print(e)
 
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(6, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(0, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
             except Exception as e:
                 print(e)
 
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(7, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(1, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
             except Exception as e:
                 print(e)
             try:
-                Viz.plot_model_3D(expert, region_ids, x_idx=(8, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
+                Viz.plot_model_3D(expert, region_ids, x_idx=(2, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
             except Exception as e:
                 print(e)
             fig_num += 1

@@ -360,6 +360,26 @@ void Behaviours::sample_inputs(){
 
 }
 
+// void sample_tentacle_sensor_waveform(uint32_t &curr_time){
+
+	
+	// for (uint8_t j=0; j<3; j++){
+		
+		// if (!tentacle_var[j].tentacle_sensor_waveform_cycling){
+			// tentacle_var[j].tentacle_sensor_waveform_cycling = true;
+			// tentacle_var[j].tentacle_sensor_waveform_phase_time = millis();
+			
+			
+		
+		// }
+	
+	
+	// }
+	
+	
+	
+// }
+
 //===========================================================================
 //============ BEHAVIOUR CODES =========
 //===========================================================================
@@ -513,7 +533,6 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 	
 	
 	//---- Tentacle cycling variables -----
-	static bool high_level_ctrl_tentacle_cycling[3] = {false, false, false};
 	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
 	static bool high_level_ctrl_tentacle_on[3] = {false, false, false};
 
@@ -535,7 +554,7 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 		if (high_level_ctrl_tentacle_on[j]){
 			
 			// starting a cycle
-			if (tentacle_var[j].tentacle_cycling == false){
+			if (tentacle_var[j].tentacle_cycling < 1){
 				
 				// behaviour Type
 				switch (tentacle_var[j].tentacle_motion_on){
@@ -552,22 +571,24 @@ void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_
 						high_level_ctrl_sma1[j] = 1;
 					break;
 				}
-				tentacle_var[j].tentacle_cycling = true;
+				tentacle_var[j].tentacle_cycling = tentacle_var[j].tentacle_motion_on;
 				high_level_ctrl_tentacle_phase_time[j] = millis();  
 				
 				// turn on the first sma
 				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
 				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
 			}
-			else if (tentacle_var[j].tentacle_cycling == true){
+			else if (tentacle_var[j].tentacle_cycling > 0){
 				
 				
 				volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
 				
 				// if reaches the full period, restart cycle
 				if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
-					tentacle_var[j].tentacle_cycling  = false;
+					tentacle_var[j].tentacle_cycling  = 0;
 					high_level_ctrl_tentacle_on[j] = false;
+					tentacle_var[j].tentacle_motion_on = 0;
+
 				}
 				
 				//if reaches the on period 
@@ -634,7 +655,7 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 	
 	//---- Tentacle cycling variables -----
 	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
-	static bool high_level_ctrl_tentacle_on[3] = {false, false, false};
+
 
 	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
 	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
@@ -644,18 +665,17 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 	//~~~ tentacle cycle~~~~
 	for (uint8_t j=0; j<3; j++){
 		
-		if (tentacle_var[j].tentacle_motion_on < 1 && tentacle_var[j].tentacle_cycling == false){
+		if (tentacle_var[j].tentacle_motion_on < 1 && tentacle_var[j].tentacle_cycling < 1){
 		
 			tentacle[j].set_sma_level(0, 0);
 			tentacle[j].set_sma_level(1, 0);
-			tentacle_var[j].tentacle_cycling  = false;
-			high_level_ctrl_tentacle_on[j] = false;
+			tentacle_var[j].tentacle_cycling  = 0;
 			continue;
 		}
 		
 			
 		// starting a cycle
-		if (tentacle_var[j].tentacle_cycling == false){
+		if (tentacle_var[j].tentacle_cycling < 1){
 			
 			// behaviour Type
 			switch (tentacle_var[j].tentacle_motion_on){
@@ -672,7 +692,7 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 					high_level_ctrl_sma1[j] = 1;
 				break;
 			}
-			tentacle_var[j].tentacle_cycling = true;
+			tentacle_var[j].tentacle_cycling = tentacle_var[j].tentacle_motion_on;
 			high_level_ctrl_tentacle_phase_time[j] = millis();  
 			
 			// turn on the first sma
@@ -686,8 +706,7 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 			
 			// if reaches the full period, restart cycle
 			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
-				tentacle_var[j].tentacle_cycling  = false;
-				high_level_ctrl_tentacle_on[j] = false;
+				tentacle_var[j].tentacle_cycling  = 0;
 			}
 			
 			//if reaches the on period 

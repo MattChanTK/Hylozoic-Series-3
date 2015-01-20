@@ -22,8 +22,23 @@ class TentacleVar{
 		// {x,y,z}
 		int16_t tentacle_acc_state[3] = {0, 0, 0};
 		
+		//~~Accelerometer wave form~~
+		
+		// uint16_t tentacle_acc_wave_period = 1000;
+		
+		// uint32_t tentacle_acc_wave_abs_sum = 0;
+		
+		// int16_t tentacle_acc_wave_mean = 0;
+		
+		// int16_t tentacle_acc_wave_var = 0;
+		
+		//----internal behaviour variables----
+		uint32_t tentacle_sensor_waveform_phase_time = 0;
+		bool tentacle_sensor_waveform_cycling = 0;
+		
 		//~~Tentacle cycling~~
-		bool tentacle_cycling = false;
+		uint8_t tentacle_cycling = 0;
+		
 		
 		//----OUTPUT (internal variables)----
 		
@@ -113,6 +128,7 @@ class Behaviours : public TeensyUnit{
 		
 		//--- Input functions----
 		void sample_inputs();
+		void sample_tentacle_sensor_waveform(const uint32_t &curr_time);
 		
 		//===============================================
 		//==== BEHAVIOUR functions =====
@@ -144,6 +160,11 @@ class Behaviours : public TeensyUnit{
 		//===============================================
 		
 	
+		//>>> Sensor Input Wave Form <<<<
+		
+
+		
+		
 		//>>> Teensy on-board <<<<
 		
 		//----OUTPUT----

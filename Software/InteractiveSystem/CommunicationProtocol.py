@@ -1,12 +1,21 @@
+from cgi import maxlen
 import SystemParameters as SysParam
 import struct
 import re
+from collections import deque
+import math
 
 
 
 class CBLATestBed(SysParam.SystemParameters):
     def __init__(self):
         super(CBLATestBed, self).__init__()
+
+        # internal variable for high-level input features
+        for j in range(4):
+            device_header = 'tentacle_%d_' % j
+            self.input_state[device_header + "acc_waveform"] = deque(maxlen=100)
+
 
     def additional_config_routine(self):
 
@@ -66,6 +75,24 @@ class CBLATestBed(SysParam.SystemParameters):
                 byte_offset = j + 50
 
                 self.input_state[device_header + 'cycling'] = msg[byte_offset]
+
+            #self.__derive_input_states()
+
+    def __derive_input_states(self):
+
+        # internal variable for high-level input features
+        window = 100
+        for j in range(4):
+            device_header = 'tentacle_%d_' % j
+            acc_state = (self.input_state[device_header + 'acc_x_state'],
+                         self.input_state[device_header + 'acc_y_state'],
+                         self.input_state[device_header + 'acc_z_state'])
+
+            self.input_state[device_header + "acc_waveform"].append(acc_state)
+            #print(self.input_state[device_header + "acc_waveform"])
+
+            self.input_state[device_header + "wave_sum"] = tuple(map(sum, zip(*self.input_state[device_header + "acc_waveform"])))
+            print(self.input_state[device_header + "wave_sum"])
 
     def _compose_outgoing_msg(self, content):
 
