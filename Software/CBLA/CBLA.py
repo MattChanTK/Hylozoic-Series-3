@@ -7,7 +7,7 @@ from copy import copy
 import os
 import threading
 from time import sleep
-from time import time
+from time import clock
 import re
 
 
@@ -85,31 +85,45 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
 
-        def report(self):
+        def report(self, loop_delay=0, read_interval=0.5):
 
-            # wait for other thread in the same sync group to finish
-            self.sync_barrier.read_barrier.wait()
+            t0 = clock()
+            counter = 0
 
-            # collect sample
-            with self.sync_barrier.lock:
-                sample = self.sync_barrier.sample[self.teensy_name]
+            while counter >= 0:
 
-            # if the first sample read was unsuccessful, just return the default value
-            if sample is None:
-                print("timed out")
-                return self.S
 
-            # if the data wasn't new, it means that it timed out
-            if sample[1] == False:
-                print("timed out")
+                if clock() - t0 > loop_delay:
+                    self._set_derive_param(counter)
+                    counter = -99
 
-            sample = sample[0]
+                # wait for other thread in the same sync group to finish
+                self.sync_barrier.read_barrier.wait()
 
-            # construct the S vector for the node
-            s = []
-            for var in self.report_vars:
-                s.append(sample[var])
-            self.S = tuple(s)
+                # collect sample
+                with self.sync_barrier.lock:
+                    sample = self.sync_barrier.sample[self.teensy_name]
+
+                # if the first sample read was unsuccessful, just return the default value
+                if sample is None:
+                    print("timed out")
+                    return self.S
+
+                # if the data wasn't new, it means that it timed out
+                if sample[1] == False:
+                    print("timed out")
+
+                sample = sample[0]
+
+                # construct the S vector for the node
+                s = []
+                for var in self.report_vars:
+                    s.append(sample[var])
+                self.S = tuple(s)
+
+                counter += 1
+                sleep(read_interval)
+
             return self.S
 
         def get_possible_action(self, state=None, num_sample=100):
@@ -124,6 +138,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             M_candidates = tuple(map(tuple, X))
 
             return M_candidates
+
+        def _set_derive_param(self, derive_param):
+            pass
 
         def __get_reply_type(self, var):
             for reply_type, vars in self.reply_types.items():
@@ -152,7 +169,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # find indices for the cycling variables
             self.cycling_id = [0] * len(tentacle_ids)
             for i in range(len(tentacle_ids)):
-                self.cycling_id[i] = self.report_vars.index('tentacle_' + str(i) + '_cycling')
+                self.cycling_id[i] = self.report_vars.index('tentacle_' + str(tentacle_ids[i]) + '_cycling')
 
 
         def get_possible_action(self, state=None, num_sample=4):
@@ -176,10 +193,19 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             M_candidates = tuple(set(map(tuple, X)))
             return M_candidates
 
+        def _set_derive_param(self, counter):
+
+            derive_param = dict()
+            derive_param['acc_mean_window'] = counter
+            derive_param['acc_diff_window'] = counter
+            derive_param['acc_diff_gap'] = 10
+
+            self.sync_barrier.derive_param = derive_param
+
     class CBLA_Engine(threading.Thread):
 
-        def __init__(self, robot, loop_delay=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05,
-                     id=0):
+        def __init__(self, robot, id=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05,
+                     split_thres=1000, mean_err_thres=1.0, saving_freq=250, loop_delay=0, read_interval=0.5):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = use_saved_expert
@@ -199,7 +225,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             self.robot = robot
             self.loop_delay = loop_delay
+            self.read_interval = read_interval
             self.engine_id = id
+            self.saving_freq = saving_freq
 
 
             # instantiate an Expert
@@ -217,7 +245,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             else:
 
-                self.expert = Expert()
+                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres)
                 self.action_history = []
                 self.state_history = []
                 self.mean_error_history = []
@@ -259,10 +287,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 self.robot.actuate(M)
 
-                sleep(self.loop_delay)
-
                 # read sensor
-                S1 = self.robot.report()
+                S1 = self.robot.report(loop_delay=self.loop_delay, read_interval=self.read_interval)
+
                 term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
 
 
@@ -355,7 +382,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
                 # output to files
-                if t % 1000 == 0 or t >= self.sim_duration:
+                if t % self.saving_freq == 0 or t >= self.sim_duration:
                     with open(self.robot.name + '_expert_backup.pkl', 'wb') as output:
                         pickle.dump(self.expert, output, pickle.HIGHEST_PROTOCOL)
 
@@ -367,6 +394,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
                     with open(self.robot.name + '_mean_error_history_backup.pkl', 'wb') as output:
                         pickle.dump(self.mean_error_history, output, pickle.HIGHEST_PROTOCOL)
+
 
 
     class Sync_Barrier():
@@ -381,10 +409,13 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.sample = None
             self.read_timeout = read_timeout
             self.lock = threading.Lock()
+            self.derive_param = None
 
         def read_barrier_action(self):
+
             with self.interactive_cmd.lock:
-                self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list())
+                self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(), self.derive_param)
+            self.derive_param = None
 
             with self.interactive_cmd.lock:
                 with self.lock:
@@ -394,7 +425,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         def write_barrier_action(self):
             with self.interactive_cmd.lock:
                 self.interactive_cmd.send_commands()
-
+            #print("finished write barrier")
 
 
     def run(self):
@@ -406,9 +437,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=1)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5, read_timeout=1)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, barrier_timeout=20, read_timeout=5)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -418,18 +449,26 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate robots
             robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
 
+            # -- raw accelerometer reading with all 3 arms ---
             #sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
             #sma_sensor = ('tentacle_0_acc_z_state', 'tentacle_1_acc_z_state', 'tentacle_2_acc_z_state', 'tentacle_0_cycling', 'tentacle_1_cycling', 'tentacle_2_cycling'	)
 
-            sma_action = ('tentacle_0_arm_motion_on',)
-            sma_sensor = ('tentacle_0_acc_x_state', 'tentacle_0_acc_y_state', 'tentacle_0_acc_z_state', 'tentacle_0_cycling', )
+            # --- one tentacle arm; derived acc features ---
+            robot_sma = []
+            for j in range(3):
+                device_header = 'tentacle_%d_' % j
+                sma_action = (device_header + "arm_motion_on",)
+                sma_sensor = (device_header + 'wave_mean_x', device_header + 'wave_mean_y', device_header + 'wave_mean_z', device_header + 'cycling' )
+                #sma_sensor = (device_header + 'wave_diff_x', device_header + 'wave_diff_y', device_header + 'wave_diff_z', device_header + 'cycling' )
 
-            robot_sma = CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, (0,), sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA')
+                robot_sma.append(CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, (j,), sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA_%d'%j))
 
             # instantiate CBLA Engines
             with self.lock:
-              #  self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, loop_delay=0.05, sim_duration=4000, use_saved_expert=False, id=1)
-                self.cbla_engine[teensy_name + '_SMA'] = CBLA_Behaviours.CBLA_Engine(robot_sma, loop_delay=0.5, sim_duration=200, use_saved_expert=False, id=2)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, loop_delay=0.1, sim_duration=4000, use_saved_expert=False, split_thres=1000, mean_err_thres=30.0, saving_freq=250, read_interval=0.8)
+                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10, read_interval=0.3)
+                self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10, read_interval=0.3)
+                self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10 ,read_interval=0.3)
 
 
         # waiting for all CBLA engines to terminate to do visualization
@@ -438,22 +477,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             name_list.append(name)
             engine.join()
 
-        if 0:
-            viz_data = dict()
-            for name in name_list:
-                with open(name + '_expert_backup.pkl', 'rb') as input:
-                    expert = pickle.load(input)
-                with open(name + '_action_history_backup.pkl', 'rb') as input:
-                    action_history = pickle.load(input)
-                with open(name + '_state_history_backup.pkl', 'rb') as input:
-                    state_history = pickle.load(input)
-                with open(name + '_mean_error_history_backup.pkl', 'rb') as input:
-                    mean_error_history = pickle.load(input)
-
-
-            viz_data[name] = [expert, action_history, state_history, mean_error_history]
-
-            CBLA_Behaviours.visualize(viz_data)
 
 
     def visualize(viz_data):
@@ -500,9 +523,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # find the names associated with the tentacle
         name_list = []
         for name in viz_data.keys():
-            type = re.split('_', name)[-1]
-
-            if type == 'SMA':
+            if 'SMA' in re.split('_', name):
                 name_list.append(copy(name))
 
 

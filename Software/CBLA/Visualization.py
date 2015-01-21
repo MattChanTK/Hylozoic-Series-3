@@ -41,6 +41,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plt.title("Prediction Models")
         plt.xlabel("SM(t) [" + str(x_idx) + "]")
         plt.ylabel("S(t+1) [" + str(y_idx) + "]")
+        #plt.ylim((-200, 200))
 
     # this is leaf node
     if Expert.left is None and Expert.right is None:
@@ -89,6 +90,7 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         ax.set_xlabel("SM(t) [" + str(x_idx[0]) + "]")
         ax.set_ylabel("SM(t) [" + str(x_idx[1]) + "]")
         ax.set_zlabel("S(t+1) [" + str(y_idx) + "]")
+        #plt.ylim((-200, 200))
         #ax.set_alpha(0.5)
 
     # making sure the the first x index and smaller than the second x index

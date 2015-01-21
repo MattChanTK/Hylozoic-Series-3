@@ -140,7 +140,7 @@ class InteractiveCmd():
 
         return 0
 
-    def update_input_states(self, teensy_names):
+    def update_input_states(self, teensy_names, derive_param=None):
         for teensy_name in teensy_names:
             teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
             if teensy_thread is None:
@@ -150,7 +150,16 @@ class InteractiveCmd():
             with teensy_thread.lock:
                 teensy_thread.inputs_sampled_event.clear()
 
-                teensy_thread.param_updated_event.set()
+            # send in an empty read_only command object
+            cmd_obj = command_object(teensy_name, 'read_only')
+            if derive_param is not None and isinstance(derive_param, dict):
+                cmd_obj.add_param_change('derive_inputs', True)
+                for key in derive_param.keys():
+                    cmd_obj.add_param_change(key, derive_param[key])
+
+            self.enter_command(cmd_obj)
+            self.send_commands()
+
 
         return 0
 

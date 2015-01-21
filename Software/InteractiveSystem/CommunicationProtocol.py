@@ -14,7 +14,7 @@ class CBLATestBed(SysParam.SystemParameters):
         # internal variable for high-level input features
         for j in range(4):
             device_header = 'tentacle_%d_' % j
-            self.input_state[device_header + "acc_waveform"] = deque(maxlen=100)
+            self.input_state[device_header + "acc_waveform"] = deque(maxlen=2000)
 
 
     def additional_config_routine(self):
@@ -76,12 +76,15 @@ class CBLATestBed(SysParam.SystemParameters):
 
                 self.input_state[device_header + 'cycling'] = msg[byte_offset]
 
-            #self.__derive_input_states()
 
-    def __derive_input_states(self):
+            self.__store_input_states()
 
-        # internal variable for high-level input features
-        window = 100
+            if self.output_param['derive_inputs'] == True:
+                self.output_param['derive_inputs'] = False
+                self.__derive_input_states()
+
+    def __store_input_states(self):
+
         for j in range(4):
             device_header = 'tentacle_%d_' % j
             acc_state = (self.input_state[device_header + 'acc_x_state'],
@@ -89,10 +92,30 @@ class CBLATestBed(SysParam.SystemParameters):
                          self.input_state[device_header + 'acc_z_state'])
 
             self.input_state[device_header + "acc_waveform"].append(acc_state)
-            #print(self.input_state[device_header + "acc_waveform"])
 
-            self.input_state[device_header + "wave_sum"] = tuple(map(sum, zip(*self.input_state[device_header + "acc_waveform"])))
-            print(self.input_state[device_header + "wave_sum"])
+    def __derive_input_states(self):
+
+        # internal variable for high-level input features
+        for j in range(4):
+            device_header = 'tentacle_%d_' % j
+
+            waveform_zipped = list(zip(*self.input_state[device_header + "acc_waveform"]))
+
+            window = self.output_param['acc_diff_window']
+            gap = self.output_param['acc_diff_gap']
+            self.input_state[device_header + "wave_diff_x"] = sum(waveform_zipped[0][-window:]) - sum(waveform_zipped[0][-(window + gap):-gap])
+            self.input_state[device_header + "wave_diff_y"] = sum(waveform_zipped[1][-window:]) - sum(waveform_zipped[1][-(window + gap):-gap])
+            self.input_state[device_header + "wave_diff_z"] = sum(waveform_zipped[2][-window:]) - sum(waveform_zipped[2][-(window + gap):-gap])
+
+            window = self.output_param['acc_mean_window']
+            self.input_state[device_header + "wave_mean_x"] = sum(waveform_zipped[0][-window:])/window
+            self.input_state[device_header + "wave_mean_y"] = sum(waveform_zipped[1][-window:])/window
+            self.input_state[device_header + "wave_mean_z"] = sum(waveform_zipped[2][-window:])/window
+
+            #print(waveform_zipped[0])
+
+
+
 
     def _compose_outgoing_msg(self, content):
 
@@ -197,6 +220,9 @@ class CBLATestBed(SysParam.SystemParameters):
             content[0] = self.output_param['wave_type']
             # byte 12 to 43: indicator led wave
             content[10:42] = self.output_param['new_wave']
+
+        elif self.request_type == 'read_only':
+            pass
 
     def __set_int8_array(self, input_type, raw_input):
 

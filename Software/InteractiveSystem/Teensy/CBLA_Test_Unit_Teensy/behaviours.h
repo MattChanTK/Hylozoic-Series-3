@@ -49,7 +49,7 @@ class TentacleVar{
 		
 		//~~~ON and OFF periods of the Tentacle arm activation here~~~
 		// {on time, off time} (in second)
-		uint8_t tentacle_arm_cycle_period[2] = {2, 15};
+		uint8_t tentacle_arm_cycle_period[2] = {2, 10};
 
 		
 		//~~~Period of the reflex LED~~~

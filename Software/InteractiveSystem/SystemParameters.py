@@ -41,6 +41,7 @@ class SystemParameters():
         self.request_type_ids = dict()
         self.request_type_ids['basic'] = 0
         self.request_type_ids['prgm'] = 1
+        self.request_type_ids['read_only'] = 255
         self.request_type = 'basic'
 
         #=== reply type ====
@@ -234,10 +235,10 @@ class SystemParameters():
         signature_back = bytearray(chr(0), 'utf-8')
 
         # byte 1: type of request
-        header = bytearray(chr(self.request_type_ids[self.request_type]), 'utf-8')
+        header = bytearray(chr(self.request_type_ids[self.request_type]), 'raw_unicode_escape'        )
 
         # create an 64 - 3 bytes of zeros (w/o the signature and header)
-        content = bytearray(chr(0)*(SystemParameters.msg_length - 3), 'utf-8')
+        content = bytearray(chr(0)*(SystemParameters.msg_length - 3),  'raw_unicode_escape')
 
         self._compose_outgoing_msg(content)
 

@@ -197,6 +197,10 @@ void Behaviours::parse_msg(){
 			}
 			break;
 		}
+		// read-only
+		case 255:{
+			break;
+		}
 		default: {
 			break;
 		}
