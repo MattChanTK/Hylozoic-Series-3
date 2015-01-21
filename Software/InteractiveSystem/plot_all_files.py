@@ -7,7 +7,7 @@ import re
 
 from CBLA import CBLA_Behaviours
 
-teensy_names = ('test_teensy_1_SMA',) # 'test_teensy_1_LED',)
+teensy_names = ('test_teensy_1_SMA_0', 'test_teensy_1_SMA_1', 'test_teensy_1_SMA_2', 'test_teensy_1_LED',)
 
 # search for all pickle files
 
