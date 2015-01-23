@@ -4,7 +4,7 @@ import os
 import cProfile
 from pstats import Stats
 
-behaviours_config = 4
+behaviours_config = 6
 
 if len(sys.argv) > 1:
     behaviours_config = int(sys.argv[1])
@@ -22,6 +22,10 @@ elif behaviours_config == 3:
     from Behaviours import Test_Behaviours as cmd
 elif behaviours_config == 4:
     from CBLA import CBLA_Behaviours as cmd
+elif behaviours_config == 5:
+    from Behaviours import Internode_Test_Behaviour as cmd
+elif behaviours_config == 6:
+    from Behaviours import System_Identification_Behaviour as cmd
 else:
     from InteractiveCmd import InteractiveCmd as cmd
 

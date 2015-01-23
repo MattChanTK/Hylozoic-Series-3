@@ -7,11 +7,6 @@ from time import sleep
 import math
 
 
-class Hardcoded_Behaviours(InteractiveCmd.InteractiveCmd):
-
-    def run(self):
-        pass
-
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
@@ -129,6 +124,151 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             print("Loop Time:", clock() - start_time)
             loop += 1
             sleep(0.1)
+
+class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
+
+    def run(self):
+
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+        self.update_input_states(teensy_names)
+        self.update_output_params(teensy_names)
+
+        loop = 0
+        num_loop = 10000
+        tentacle_action = [0, 0.3, 0.6, 1]
+        protocell_brightness = [0, 0]
+        while loop < num_loop:
+
+            if self.teensy_manager.get_num_teensy_thread() == 0:
+                return
+
+            self.update_input_states(teensy_names)
+
+            all_input_states = self.get_input_states(teensy_names, ('all', ))
+
+
+            for teensy_name in list(teensy_names):
+
+                input_states = all_input_states[teensy_name]
+                sample = input_states[0]
+                is_new_update = input_states[1]
+
+                print("[", teensy_name, "]")
+
+                # === tentacle high-level commands"
+                cmd_obj_1 = command_object(teensy_name, 'tentacle_high_level')
+                cmd_obj_2 = command_object(teensy_name, 'tentacle_low_level')
+                for j in range(4):
+
+                    device_header = 'tentacle_%d_' % j
+
+                    # cycling the tentacle
+                    if sample[device_header + 'cycling'] == 0:
+                        cmd_obj_1.add_param_change('tentacle_%d_arm_motion_on' % j, int(tentacle_action[j])%4)
+                        tentacle_action[j] += 0.1
+                        print(tentacle_action[j])
+
+
+                    # reflex sensor trigger LED and vibration motor
+                    if (sample[device_header + 'ir_0_state']) > 1200:
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                    else:
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+
+
+                    # output the reading
+                    print("Tentacle %d" % j, end=" ---\t")
+                    print("Action (", tentacle_action, ")", end="  \n")
+                    print("Cycling (", sample[device_header + 'cycling'], ")", end="  \t")
+                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
+                          end="  \t")
+                    print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'],
+                          ', ', sample[device_header + 'acc_z_state'], ")")
+
+                self.enter_command(cmd_obj_1)
+                self.enter_command(cmd_obj_2)
+
+                # ==== protocell low-level command
+                cmd_obj = command_object(teensy_name, 'protocell')
+                for j in range(2):
+
+                    device_header = 'protocell_%d_' % j
+                    # cycling the protocell
+                    cmd_obj.add_param_change(device_header + 'led_level', int(protocell_brightness[j]) % 128)
+                    protocell_brightness[j] += 0.1
+
+
+                    print("Protocell %d" % j, end=" ---\t")
+                    print("ALS (", sample[device_header + 'als_state'], ")")
+
+                self.enter_command(cmd_obj)
+                print('')
+
+
+        self.send_commands()
+
+
+class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
+
+    def run(self):
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+        self.update_input_states(teensy_names)
+        self.update_output_params(teensy_names)
+
+        loop = 0
+        num_loop = 10000
+        while loop < num_loop:
+
+            if self.teensy_manager.get_num_teensy_thread() == 0:
+                return
+
+            self.update_input_states(teensy_names)
+
+            all_input_states = self.get_input_states(teensy_names, ('all', ))
+
+            teensy_names_list = list(teensy_names)
+
+            for teensy_name in teensy_names_list:
+                input_states = all_input_states[teensy_name]
+                sample = input_states[0]
+                is_new_update = input_states[1]
+
+                print("[", teensy_name, "]")
+
+
+                next_teensy = teensy_names_list[(teensy_names_list.index(teensy_name)+1)%len(teensy_names)]
+                print("Controlling --- [", next_teensy, "]")
+
+                # === tentacle high-level commands"
+                cmd_obj_1 = command_object(next_teensy, 'tentacle_high_level')
+                cmd_obj_2 = command_object(next_teensy, 'tentacle_low_level')
+                for j in range(4):
+
+                    device_header = 'tentacle_%d_' % j
+                    if (sample[device_header + 'ir_0_state']) > 1200:
+
+                        cmd_obj_1.add_param_change('tentacle_%d_arm_motion_on' %j, 3)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                    else:
+                        cmd_obj_1.add_param_change('tentacle_%d_arm_motion_on' %j, 0)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
+                        cmd_obj_2.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+
+                    print("Tentacle %d" % j, end=" ---\t")
+                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
+                          end="  \n")
+
+                self.enter_command(cmd_obj_1)
+                self.enter_command(cmd_obj_2)
+
+
+            self.send_commands()
+
+
+
 
 class Default_Behaviour(InteractiveCmd.InteractiveCmd):
 

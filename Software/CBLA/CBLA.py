@@ -179,8 +179,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             X = list(range(0, 4 ** x_dim))
             for i in range(len(X)):
                 X[i] = toDigits(X[i], 4)
-                filling = [0]*(x_dim - len(X[i]))
+                filling = [3]*(x_dim - len(X[i]))
                 X[i] = filling + X[i]
+                #X[i] = [3] * x_dim
 
 
             # check if tentacles are cycling
