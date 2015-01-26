@@ -520,6 +520,16 @@ void Behaviours::low_level_control_tentacle_behaviour(const uint32_t &curr_time)
 		tentacle[j].set_led_level(1, tentacle_var[j].tentacle_reflex_level[1]);
 	}
 }
+void Behaviours::low_level_control_tentacle_reflex_led_behaviour(const uint32_t &curr_time){
+
+	
+	//>>>> TENTACLE <<<<<
+	for (uint8_t j=0; j<4;j++){
+		
+		tentacle[j].set_led_level(0, tentacle_var[j].tentacle_reflex_level[0]);
+		tentacle[j].set_led_level(1, tentacle_var[j].tentacle_reflex_level[1]);
+	}
+}
 
 void Behaviours::low_level_control_protocell_behaviour(const uint32_t &curr_time){
 	//>>>> PROTOCELL <<<<<

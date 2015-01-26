@@ -5,6 +5,7 @@ from copy import copy
 from time import clock
 from time import sleep
 import math
+import pickle
 
 
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
@@ -135,16 +136,23 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
         loop = 0
         num_loop = 10000
-        tentacle_action = [0, 0.3, 0.6, 1]
+        tentacle_action = [0, 0, 0, 0]
+        tentacle_time = [0, 0, 0, 0]
         protocell_brightness = [0, 0]
+        protocell_time = [0,0]
+
+
+        state_history = dict()
+
         while loop < num_loop:
+
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
 
             self.update_input_states(teensy_names)
 
-            all_input_states = self.get_input_states(teensy_names, ('all', ))
+            all_input_states = self.get_input_states(teensy_names, ('all', ), timeout=2)
 
 
             for teensy_name in list(teensy_names):
@@ -153,20 +161,27 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 sample = input_states[0]
                 is_new_update = input_states[1]
 
+
+
                 print("[", teensy_name, "]")
+                print('t = %f' % clock())
 
                 # === tentacle high-level commands"
                 cmd_obj_1 = command_object(teensy_name, 'tentacle_high_level')
                 cmd_obj_2 = command_object(teensy_name, 'tentacle_low_level')
-                for j in range(4):
+                for j in range(3):
+
+                    t = clock()
 
                     device_header = 'tentacle_%d_' % j
 
                     # cycling the tentacle
                     if sample[device_header + 'cycling'] == 0:
-                        cmd_obj_1.add_param_change('tentacle_%d_arm_motion_on' % j, int(tentacle_action[j])%4)
-                        tentacle_action[j] += 0.1
-                        print(tentacle_action[j])
+                        cmd_obj_1.add_param_change('tentacle_%d_arm_motion_on' % j, tentacle_action[j]%4)
+
+                    if t - tentacle_time[j] > 60 + j*3:
+                        tentacle_action[j] += 1
+                        tentacle_time[j] = t - j*3
 
 
                     # reflex sensor trigger LED and vibration motor
@@ -180,34 +195,63 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
                     # output the reading
                     print("Tentacle %d" % j, end=" ---\t")
-                    print("Action (", tentacle_action, ")", end="  \n")
+                    print("Action (", tentacle_action[j], ")", end="  \n")
                     print("Cycling (", sample[device_header + 'cycling'], ")", end="  \t")
                     print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
                           end="  \t")
                     print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'],
                           ', ', sample[device_header + 'acc_z_state'], ")")
 
+                    state = [t, tentacle_action[j]%4, sample[device_header + 'cycling'],
+                             sample[device_header + 'ir_0_state'], sample[device_header + 'ir_1_state'],
+                             sample[device_header + 'acc_x_state'], sample[device_header + 'acc_y_state'], sample[device_header + 'acc_z_state']]
+
+                    try:
+                        state_history[teensy_name + '_tentacle_' + str(j)].append(copy(state))
+                    except KeyError:
+                        state_history[teensy_name + '_tentacle_' + str(j)] = []
+                        state_history[teensy_name + '_tentacle_' + str(j)].append(copy(state))
+
                 self.enter_command(cmd_obj_1)
                 self.enter_command(cmd_obj_2)
 
                 # ==== protocell low-level command
                 cmd_obj = command_object(teensy_name, 'protocell')
-                for j in range(2):
+                for j in range(1):
+
+                    t = clock()
 
                     device_header = 'protocell_%d_' % j
                     # cycling the protocell
-                    cmd_obj.add_param_change(device_header + 'led_level', int(protocell_brightness[j]) % 128)
-                    protocell_brightness[j] += 0.1
+                    cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 255)
 
+                    if t - protocell_time[j] > 2 + j:
+                        protocell_brightness[j] += 1
+                        protocell_time[j] = t - j
 
                     print("Protocell %d" % j, end=" ---\t")
                     print("ALS (", sample[device_header + 'als_state'], ")")
+
+                    state = [t, protocell_brightness[j]%255 , sample[device_header + 'als_state']]
+
+                    try:
+                        state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
+                    except KeyError:
+                        state_history[teensy_name + '_protocell_' + str(j)] = []
+                        state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
 
                 self.enter_command(cmd_obj)
                 print('')
 
 
-        self.send_commands()
+            self.send_commands()
+
+            # output to files
+            for device, states in state_history.items():
+                with open(str(device) + '_state_history.pkl', 'wb') as output:
+                    pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+
+
 
 
 class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
@@ -244,7 +288,7 @@ class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
                 # === tentacle high-level commands"
                 cmd_obj_1 = command_object(next_teensy, 'tentacle_high_level')
                 cmd_obj_2 = command_object(next_teensy, 'tentacle_low_level')
-                for j in range(4):
+                for j in range(3):
 
                     device_header = 'tentacle_%d_' % j
                     if (sample[device_header + 'ir_0_state']) > 1200:
@@ -266,7 +310,6 @@ class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
 
 
             self.send_commands()
-
 
 
 

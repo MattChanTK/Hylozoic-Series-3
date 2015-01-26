@@ -18,6 +18,31 @@ void setup() {
 
 }
 
+//===== Behaviours Sets ======
+void internode_test() {
+
+	uint32_t curr_time = millis();
+	teensy_unit.sample_inputs();
+	
+	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour(curr_time);
+
+	
+
+}
+
+void system_identification() {
+
+	uint32_t curr_time = millis();
+	teensy_unit.sample_inputs();
+	
+	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour(curr_time);
+	teensy_unit.low_level_control_protocell_behaviour(curr_time);
+	
+
+}
+
 //===== MAIN LOOP =====
 
 void loop() {
@@ -31,26 +56,29 @@ void loop() {
 
 	}
 
+	
+	//internode_test();
+	
+	system_identification();
 
-	uint32_t curr_time = millis();
-	teensy_unit.sample_inputs();
 	
 	//teensy_unit.led_blink_behaviour(curr_time);
 	//teensy_unit.low_level_control_tentacle_behaviour(curr_time);
 	//teensy_unit.high_level_control_tentacle_arm_behaviour(curr_time);
 	//teensy_unit.high_level_control_tentacle_reflex_behaviour(curr_time);
 	
-	teensy_unit.low_level_control_protocell_behaviour(curr_time);
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
+	//teensy_unit.low_level_control_protocell_behaviour(curr_time);
+
 
 	//teensy_unit.led_wave_behaviour(curr_time);
 	//teensy_unit.test_behaviour((const uint32_t) curr_time);
 	//teensy_unit.reflex_test_behaviour();
 
 	
-
+		
 	
 	//teensy_unit.stress_test_behaviour(curr_time);
 	
 			
 }
+
