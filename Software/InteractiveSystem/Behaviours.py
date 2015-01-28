@@ -195,7 +195,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
                     # output the reading
                     print("Tentacle %d" % j, end=" ---\t")
-                    print("Action (", tentacle_action[j], ")", end="  \n")
+                    print("Action (", tentacle_action[j] % 4, ")", end="  \n")
                     print("Cycling (", sample[device_header + 'cycling'], ")", end="  \t")
                     print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
                           end="  \t")
@@ -225,11 +225,12 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     # cycling the protocell
                     cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 255)
 
-                    if t - protocell_time[j] > 2 + j:
+                    if t - protocell_time[j] > 1 + j:
                         protocell_brightness[j] += 1
                         protocell_time[j] = t - j
 
                     print("Protocell %d" % j, end=" ---\t")
+                    #print("Brightness (%d)" % protocell_brightness[j]%255)
                     print("ALS (", sample[device_header + 'als_state'], ")")
 
                     state = [t, protocell_brightness[j]%255 , sample[device_header + 'als_state']]
@@ -245,11 +246,11 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
 
             self.send_commands()
-
-            # output to files
-            for device, states in state_history.items():
-                with open(str(device) + '_state_history.pkl', 'wb') as output:
-                    pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+            #
+            # # output to files
+            # for device, states in state_history.items():
+            #     with open(str(device) + '_state_history.pkl', 'wb') as output:
+            #         pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
 
 
 

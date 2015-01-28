@@ -7,14 +7,17 @@ import re
 
 from CBLA import CBLA_Behaviours
 
-teensy_names = ('test_teensy_1_SMA_0', 'test_teensy_1_SMA_1', 'test_teensy_1_SMA_2', 'test_teensy_1_LED',)
+teensy_names = (  'HK_teensy_2_LED',)#'HK_teensy_2_SMA_0',
 
 # search for all pickle files
 
 file_names = []
 
 for file in glob.glob("*.pkl"):
-    file_names.append(file)
+    try:
+        file_names.append(file)
+    except FileNotFoundError:
+        continue
 
 viz_data = dict()
 for teensy_name in teensy_names:
@@ -24,8 +27,8 @@ for teensy_name in teensy_names:
     state_history = None
     mearn_error_history = None
 
-    print(file_names)
     for file in file_names:
+        print(file)
         type = re.sub(teensy_name+'_', '', file)
         type = re.sub('.pkl', '', type)
 
