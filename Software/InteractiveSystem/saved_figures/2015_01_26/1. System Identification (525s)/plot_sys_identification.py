@@ -2,8 +2,8 @@ import pickle
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-#teensy_names = ('test_teensy_7', 'test_teensy_1',)
-teensy_names = ('HK_teensy_1','HK_teensy_2', 'HK_teensy_3')
+teensy_names = ('test_teensy_7', 'test_teensy_1',)
+
 
 figure_num = 1
 for teensy_name in teensy_names:
@@ -14,10 +14,7 @@ for teensy_name in teensy_names:
         state = None
         try:
             with open(filename, 'rb') as input:
-                try:
-                    state = pickle.load(input)
-                except EOFError:
-                    continue
+                state = pickle.load(input)
         except FileNotFoundError:
             continue
 
@@ -44,13 +41,13 @@ for teensy_name in teensy_names:
 
 
         # time vs cycling
-        # ax = fig.add_subplot(222)
-        # plt.title("Time vs Cycling")
-        # ax.plot(time, cycling)
-        # ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        # plt.xlabel('time(s)')
-        # plt.ylabel('Cycle [0,1]')
-        # plt.ylim((-1, 2))
+        ax = fig.add_subplot(222)
+        plt.title("Time vs Cycling")
+        ax.plot(time, cycling)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlabel('time(s)')
+        plt.ylabel('Cycle [0,1]')
+        plt.ylim((-1, 2))
 
 
         # time vs IR states
@@ -66,7 +63,7 @@ for teensy_name in teensy_names:
         plt.ylim((-1, max(list(map(max, ir_state)))+1))
 
 
-        ax = fig.add_subplot(122)
+        ax = fig.add_subplot(224)
         plt.title("Time vs Accelerometer states")
         for j in range(len(acc_state)):
             ax.plot(time, acc_state[j], label='Acc %d' %j)
