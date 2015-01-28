@@ -138,6 +138,7 @@ class Behaviours : public TeensyUnit{
 		void test_behaviour(const uint32_t &curr_time);
 		void stress_test_behaviour(const uint32_t &curr_time);
 		void reflex_test_behaviour();
+		void tentacle_arm_test_behaviour(const uint32_t &curr_time);
 		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);

@@ -16,6 +16,7 @@ void setup() {
 	teensy_unit.init();
 	randomSeed(analogRead(A0));
 
+
 }
 
 //===== Behaviours Sets ======
@@ -43,6 +44,25 @@ void system_identification() {
 
 }
 
+void cbla(){
+	int32_t curr_time = millis();
+	teensy_unit.sample_inputs();
+	
+	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour(curr_time);
+	teensy_unit.low_level_control_protocell_behaviour(curr_time);
+
+}
+
+void self_running_test(){
+	int32_t curr_time = millis();
+	teensy_unit.sample_inputs();
+
+	teensy_unit.tentacle_arm_test_behaviour(curr_time);
+	teensy_unit.reflex_test_behaviour();
+	teensy_unit.low_level_control_protocell_behaviour(curr_time);
+}
+
 //===== MAIN LOOP =====
 
 void loop() {
@@ -56,10 +76,13 @@ void loop() {
 
 	}
 
+	//delay(random(0, 100));
 	
 	//internode_test();
 	
-	system_identification();
+	//system_identification();
+	
+	self_running_test();
 
 	
 	//teensy_unit.led_blink_behaviour(curr_time);
@@ -71,7 +94,6 @@ void loop() {
 
 
 	//teensy_unit.led_wave_behaviour(curr_time);
-	//teensy_unit.test_behaviour((const uint32_t) curr_time);
 	//teensy_unit.reflex_test_behaviour();
 
 	
