@@ -10,7 +10,7 @@ class Expert():
 
     max_training_data_num = 5000
 
-    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0):
+    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0, kga_delta=50, kga_tau=10):
 
         self.expert_id = id
         self.expert_level = level
@@ -37,7 +37,7 @@ class Expert():
         self.mean_error = float("inf")
 
         # knowledge gain assessor
-        self.kga = KGA(self.mean_error)
+        self.kga = KGA(self.mean_error, delta=kga_delta, tau=kga_tau)
 
         # historical reward history
         self.rewards_history = [0]
@@ -361,16 +361,16 @@ class Expert():
 
 class KGA():
 
-    def __init__(self, e0):
+    def __init__(self, e0, delta=50, tau=10):
         if not isinstance(e0, float):
             raise(TypeError, "e0 must be a float")
         self.errors = [e0]
 
         # smoothing parameter
-        self.delta = 50
+        self.delta = delta
 
         # time window
-        self.tau = 10
+        self.tau = tau
 
     def append_error(self, S_actual, S_predicted):
         if not isinstance(S_actual, tuple):
