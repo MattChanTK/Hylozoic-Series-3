@@ -135,7 +135,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             for i in range(num_sample):
                 X[i, x_dim-1] = max(min(self.M0[x_dim-1]-int(num_sample/2) + i, 255), 0)
 
-            M_candidates = tuple(map(tuple, X))
+            M_candidates = tuple(set((map(tuple, X))))
 
             return M_candidates
 
@@ -206,7 +206,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
     class CBLA_Engine(threading.Thread):
 
         def __init__(self, robot, id=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05,
-                     split_thres=1000, mean_err_thres=1.0, saving_freq=250, loop_delay=0, read_interval=0.5):
+                     split_thres=1000, mean_err_thres=1.0, kga_delta=50, kga_tau=10,
+                     saving_freq=250, loop_delay=0, read_interval=0.5):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = use_saved_expert
@@ -246,7 +247,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             else:
 
-                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres)
+                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres, kga_delta=kga_delta, kga_tau=kga_tau)
                 self.action_history = []
                 self.state_history = []
                 self.mean_error_history = []
@@ -438,9 +439,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5, read_timeout=1)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, 1 +0*len(teensy_names)*1, barrier_timeout=5, read_timeout=1)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, barrier_timeout=20, read_timeout=5)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=50, read_timeout=5)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -466,12 +467,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, loop_delay=0.1, sim_duration=4000, use_saved_expert=False, split_thres=1000, mean_err_thres=30.0, saving_freq=250, read_interval=0.8)
-                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10, read_interval=0.3)
-                self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10, read_interval=0.3)
-                self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=50, mean_err_thres=2.0, saving_freq=10 ,read_interval=0.3)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, loop_delay=0.1, sim_duration=4000, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=100, read_interval=0.01)
+               # self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, loop_delay=12, sim_duration=300, use_saved_expert=True, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10, read_interval=0.3)
+               # self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10, read_interval=0.3)
+                #self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10 ,read_interval=0.3)
 
-
+            break
         # waiting for all CBLA engines to terminate to do visualization
         name_list = []
         for name, engine in self.cbla_engine.items():
