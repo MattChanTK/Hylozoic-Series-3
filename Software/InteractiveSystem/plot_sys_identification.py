@@ -1,9 +1,11 @@
 import pickle
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import os
 
 #teensy_names = ('test_teensy_7', 'test_teensy_1',)
 teensy_names = ('HK_teensy_1','HK_teensy_2', 'HK_teensy_3')
+os.chdir("pickle_jar")
 
 figure_num = 1
 for teensy_name in teensy_names:

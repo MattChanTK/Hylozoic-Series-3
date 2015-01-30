@@ -6,7 +6,7 @@ from time import clock
 from time import sleep
 import math
 import pickle
-
+import os
 
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
@@ -253,11 +253,14 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
             self.send_commands()
             #print("t cmd", clock() - t_cmd)
 
-            #
-            # # output to files
-            # for device, states in state_history.items():
-            #     with open(str(device) + '_state_history.pkl', 'wb') as output:
-            #         pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+
+            # output to files
+            for device, states in state_history.items():
+                curr_dir = os.curdir()
+                os.chdir("pickle_jar")
+                with open(str(device) + '_state_history.pkl', 'wb') as output:
+                    pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+                os.chdir(curr_dir)
 
             t0 = clock()
 
