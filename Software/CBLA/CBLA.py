@@ -52,6 +52,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.sync_barrier = sync_barrier
             self.name = teensy_name + str(name)
 
+
             # ToDo need a more encapsulated appraoch
             self.reply_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.reply_types
             self.request_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.request_types
@@ -76,6 +77,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 cmd_obj.add_param_change(self.actuate_vars[i], int(M[i]))
 
 
+
                 with self.interactive_cmd.lock:
                     self.interactive_cmd.enter_command(cmd_obj)
 
@@ -85,15 +87,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
 
-        def report(self, loop_delay=0, read_interval=0.5):
 
-            t0 = clock()
+        def report(self):
+
+
             counter = 0
-
             while counter >= 0:
-
-
-                if clock() - t0 > loop_delay:
+                t_sample = clock()
+                if self.sync_barrier.sample_interval_finished:
                     self._set_derive_param(counter)
                     counter = -99
 
@@ -101,8 +102,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.sync_barrier.read_barrier.wait()
 
                 # collect sample
-                with self.sync_barrier.lock:
-                    sample = self.sync_barrier.sample[self.teensy_name]
+                sample = self.sync_barrier.sample[self.teensy_name]
 
                 # if the first sample read was unsuccessful, just return the default value
                 if sample is None:
@@ -122,7 +122,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.S = tuple(s)
 
                 counter += 1
-                sleep(read_interval)
+
+                while clock() - t_sample < self.sync_barrier.sample_period:
+                    pass
+
 
             return self.S
 
@@ -207,7 +210,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         def __init__(self, robot, id=0, use_saved_expert=False, sim_duration=2000, exploring_rate=0.05,
                      split_thres=1000, mean_err_thres=1.0, kga_delta=50, kga_tau=10,
-                     saving_freq=250, loop_delay=0, read_interval=0.5):
+                     saving_freq=250):
 
             # ~~ configuration ~~
             self.is_using_saved_expert = use_saved_expert
@@ -226,8 +229,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # ~~ instantiation ~~
 
             self.robot = robot
-            self.loop_delay = loop_delay
-            self.read_interval = read_interval
             self.engine_id = id
             self.saving_freq = saving_freq
 
@@ -273,6 +274,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             while t < self.sim_duration:
 
                 t += 1
+
                 term_print_str = self.robot.name
                 term_print_str += ''.join(map(str, ("\nTest case t = ", t, " -- ", S, M, '\n')))
 
@@ -283,14 +285,15 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 term_print_str += ''.join(map(str, ("Predicted S1: ", S1_predicted, '\n')))
 
 
-                # do action
+
                 self.action_history.append(M)
                 self.state_history.append(S)
 
+                # do action
                 self.robot.actuate(M)
 
                 # read sensor
-                S1 = self.robot.report(loop_delay=self.loop_delay, read_interval=self.read_interval)
+                S1 = self.robot.report()
 
                 term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
 
@@ -380,8 +383,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 M = M1
 
                 # output to terminal
-                print(term_print_str)
-
+                print(term_print_str +'\n')
 
                 # output to files
                 if t % self.saving_freq == 0 or t >= self.sim_duration:
@@ -401,33 +403,55 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Sync_Barrier():
 
-        def __init__(self, interactive_cmd, num_threads, barrier_timeout=1, read_timeout=1):
+        def __init__(self, interactive_cmd, num_threads, barrier_timeout=1, read_timeout=1, sample_period=0, sample_interval=0.4):
 
             self.interactive_cmd = interactive_cmd
 
             self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=barrier_timeout)
             self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=barrier_timeout)
 
+
             self.sample = None
             self.read_timeout = read_timeout
-            self.lock = threading.Lock()
             self.derive_param = None
+            self.sample_period = sample_period
+            self.sample_interval = sample_interval
+            self.t0 = clock()
+            self.sample_interval_finished = False
 
         def read_barrier_action(self):
 
+            if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished:
+                self.sample_interval_finished = True
+            elif clock() - self.t0 >= self.sample_interval and self.sample_interval_finished:
+                self.sample_interval_finished = False
+                self.t0 = clock()
+
+            #print("waiting 1", self.sample_interval)
             with self.interactive_cmd.lock:
+                #print("acquired 1", self.sample_interval)
                 self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(), self.derive_param)
             self.derive_param = None
+            #print("released 1", self.sample_interval)
+
+            #print("waiting 2", self.sample_interval)
 
             with self.interactive_cmd.lock:
-                with self.lock:
-                    self.sample = self.interactive_cmd.get_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(),
+               # print("acquired 2", self.sample_interval)
+                self.sample = self.interactive_cmd.get_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(),
                                                                         ('all',), timeout=self.read_timeout)
 
+            #print("released 2", self.sample_interval)
+
+
         def write_barrier_action(self):
+            #print("write barrier waiting lock", self.sample_interval)
             with self.interactive_cmd.lock:
+                #print("write barrier acquired lock", self.sample_interval)
+
                 self.interactive_cmd.send_commands()
-            #print("finished write barrier")
+
+            #print("write barrier released lock", self.sample_interval)
 
 
     def run(self):
@@ -439,9 +463,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, 1 +0*len(teensy_names)*1, barrier_timeout=5, read_timeout=1)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=1, read_timeout=0.3,
+                                                             sample_interval=0.1, sample_period=0.01)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=50, read_timeout=5)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=5, read_timeout=1,
+                                                             sample_interval=12, sample_period=0.3)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -467,12 +493,13 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, loop_delay=0.1, sim_duration=4000, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=100, read_interval=0.01)
-               # self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, loop_delay=12, sim_duration=300, use_saved_expert=True, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10, read_interval=0.3)
-               # self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10, read_interval=0.3)
-                #self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, loop_delay=12, sim_duration=300, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10 ,read_interval=0.3)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, sim_duration=500, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=100)
 
-            break
+                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, sim_duration=10, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
+                # self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, sim_duration=10, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
+                # self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, sim_duration=3, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
+
+
         # waiting for all CBLA engines to terminate to do visualization
         name_list = []
         for name, engine in self.cbla_engine.items():

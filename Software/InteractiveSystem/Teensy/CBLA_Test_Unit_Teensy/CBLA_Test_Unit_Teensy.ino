@@ -80,9 +80,9 @@ void loop() {
 	
 	//internode_test();
 	
-	//system_identification();
+	system_identification();
 	
-	self_running_test();
+	//self_running_test();
 
 	
 	//teensy_unit.led_blink_behaviour(curr_time);

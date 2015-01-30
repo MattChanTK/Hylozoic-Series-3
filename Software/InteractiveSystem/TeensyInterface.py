@@ -213,6 +213,7 @@ class TeensyInterface(threading.Thread):
         # print to terminal or not
         self.print_to_term_enabled = print_to_term
 
+
     def run(self):
 
 
@@ -220,6 +221,7 @@ class TeensyInterface(threading.Thread):
         while True:
 
             if self.param_updated_event.wait(timeout=1):
+
                 self.param_updated_event.clear()
 
                 with self.lock:
