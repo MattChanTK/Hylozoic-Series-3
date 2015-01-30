@@ -112,6 +112,15 @@ class TeensyManager():
             print(teensy_name + ' does not exist!')
             return -1
 
+    def kill_teensy_thread(self, teensy_name):
+        try:
+            self.teensy_thread_table[teensy_name].killed = True
+            print(teensy_name + ' is killed.')
+            return 0
+        except KeyError:
+            print(teensy_name + ' does not exist!')
+            return -1
+
     def is_teensy_thread_alive(self, teensy_name):
         try:
             return self.teensy_thread_table[teensy_name].is_alive()
@@ -152,6 +161,7 @@ class TeensyInterface(threading.Thread):
 
         self.serial_number = serial_num
         self.connected = True
+        self.killed = False
 
         # set the active configuration. With no arguments, the first
         # configuration will be the active one
@@ -206,8 +216,10 @@ class TeensyInterface(threading.Thread):
 
         # start thread
         threading.Thread.__init__(self)
-        self.daemon = False
+        self.daemon = True
         self.start()
+
+
 
 
         # print to terminal or not
@@ -218,7 +230,7 @@ class TeensyInterface(threading.Thread):
 
 
         no_reply_counter = 0
-        while True:
+        while not self.killed:
 
             if self.param_updated_event.wait(timeout=1):
 
