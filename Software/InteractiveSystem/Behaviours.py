@@ -144,13 +144,16 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
         state_history = dict()
 
+        t0 = clock()
         while loop < num_loop:
 
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
 
+            #t_update = clock()
             self.update_input_states(teensy_names)
+            #print("t update", clock()-t_update)
 
             all_input_states = self.get_input_states(teensy_names, ('all', ), timeout=2)
 
@@ -165,6 +168,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
                 print("[", teensy_name, "]")
                 print('t = %f' % clock())
+                print('delta t = %f'%(clock()-t0))
 
                 # === tentacle high-level commands"
                 cmd_obj_1 = command_object(teensy_name, 'tentacle_high_level')
@@ -244,15 +248,17 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 self.enter_command(cmd_obj)
                 print('')
 
-
+            #t_cmd = clock()
             self.send_commands()
+            #print("t cmd", clock() - t_cmd)
+
             #
             # # output to files
             # for device, states in state_history.items():
             #     with open(str(device) + '_state_history.pkl', 'wb') as output:
             #         pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
 
-
+            t0 = clock()
 
 
 class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
