@@ -20,7 +20,7 @@ class SystemParameters():
 
         #~~~~ variable type ~~~~
         self.var_list = dict()
-        self.var_list["bool"] = set(('program_teensy', 'indicator_led_on',))
+        self.var_list["bool"] = set(('program_teensy', 'indicator_led_on'))
         self.var_list["int8"] = set()
         self.var_list["int16"] = set(('indicator_led_period',))
 
@@ -48,6 +48,9 @@ class SystemParameters():
         self.reply_types = dict()
         self.reply_types[0] = set()
         self.reply_type = 0
+
+        #=== footer ====
+        self.write_only = 0
 
         # import parameters from files
         self.output_param_config_filename = 'default_output_config'
@@ -150,6 +153,10 @@ class SystemParameters():
         self.request_type = change_request_type
         return self.request_type
 
+    def set_write_only(self, write_only):
+        self.write_only = write_only
+        return self.write_only
+
     def set_output_param(self, param_type, param_val):
 
         try:
@@ -235,14 +242,17 @@ class SystemParameters():
         signature_back = bytearray(chr(0), 'utf-8')
 
         # byte 1: type of request
-        header = bytearray(chr(self.request_type_ids[self.request_type]), 'raw_unicode_escape'        )
+        header = bytearray(chr(self.request_type_ids[self.request_type]), 'raw_unicode_escape')
 
-        # create an 64 - 3 bytes of zeros (w/o the signature and header)
-        content = bytearray(chr(0)*(SystemParameters.msg_length - 3),  'raw_unicode_escape')
+        # byte 62: write-only or not
+        footer = bytearray(chr(self.write_only), 'raw_unicode_escape')
+
+        # create an 64 - 4 bytes of zeros (w/o the signature and header)
+        content = bytearray(chr(0)*(SystemParameters.msg_length - 4),  'raw_unicode_escape')
 
         self._compose_outgoing_msg(content)
 
-        return signature_front + header + content + signature_back
+        return signature_front + header + content + footer + signature_back
 
     def _compose_outgoing_msg(self, content):
 

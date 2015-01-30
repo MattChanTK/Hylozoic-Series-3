@@ -122,7 +122,7 @@ class CBLATestBed(SysParam.SystemParameters):
     def _compose_outgoing_msg(self, content):
 
         # NOTE: contents is two bytes offset for the header
-        # max 61 bytes in content
+        # max 60 bytes in content
 
         if self.request_type == 'basic':
 
@@ -144,16 +144,14 @@ class CBLATestBed(SysParam.SystemParameters):
             content[28] = self.output_param['neighbour_activation_state']
 
         elif self.request_type == 'tentacle_high_level':
-
-            # (15 bytes each)
-            # >>>>> byte 2 to byte 16: TENTACLE 0
-            # >>>>> byte 17 to byte 31: TENTACLE 1
-            # >>>>> byte 32 to byte 46: TENTACLE 2
-            # >>>>> byte 47 to byte 61: TENTACLE 3
+            # (14 bytes each)
+            # >>>>> byte 2 to byte 15: TENTACLE 0
+            # >>>>> byte 16 to byte 29: TENTACLE 1
+            # >>>>> byte 30 to byte 43: TENTACLE 2
+            # >>>>> byte 44 to byte 57: TENTACLE 3
             for j in range(4):
                 device_header = 'tentacle_%d_' % j
-                byte_offset = 15*j
-                content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
+                byte_offset = 14*j
 
                 # byte x0 --- IR sensor 0 activation threshold
                 content[byte_offset+0:byte_offset+2] = struct.pack('H', self.output_param[device_header+'ir_0_threshold'])
@@ -179,14 +177,14 @@ class CBLATestBed(SysParam.SystemParameters):
                 content[byte_offset+12] = self.output_param[device_header+'reflex_1_wave_type']
 
         elif self.request_type == 'tentacle_low_level':
-            # (15 bytes each)
-            # >>>>> byte 2 to byte 16: TENTACLE 0
-            # >>>>> byte 17 to byte 31: TENTACLE 1
-            # >>>>> byte 32 to byte 46: TENTACLE 2
-            # >>>>> byte 47 to byte 61: TENTACLE 3
+            # 14 bytes each)
+            # >>>>> byte 2 to byte 15: TENTACLE 0
+            # >>>>> byte 16 to byte 29: TENTACLE 1
+            # >>>>> byte 30 to byte 43: TENTACLE 2
+            # >>>>> byte 44 to byte 57: TENTACLE 3
             for j in range(4):
                 device_header = 'tentacle_%d_' % j
-                byte_offset = 15*j
+                byte_offset = 14*j
 
                 # byte x0 --- tentacle SMA wire 0
                 content[byte_offset+0] = self.output_param[device_header+'sma_0_level']

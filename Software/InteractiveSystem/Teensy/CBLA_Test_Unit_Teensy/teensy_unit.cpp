@@ -133,9 +133,12 @@ bool TeensyUnit::receive_msg(){
 		// extract the front and end signatures
 		byte front_signature = recv_data_buff[0];
 		byte back_signature = recv_data_buff[num_incoming_byte-1];
+		
+		// check if it's a write-only message
+		byte write_only = recv_data_buff[num_incoming_byte-2];
 
 		// compose reply message
-		this->compose_reply(front_signature, back_signature);
+		this->compose_reply(front_signature, back_signature, write_only);
 		send_msg();
 		return true;
 	}

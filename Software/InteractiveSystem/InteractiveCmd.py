@@ -133,6 +133,7 @@ class InteractiveCmd(threading.Thread):
             teensy_thread.inputs_sampled_event.clear()
 
             request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
+            teensy_thread.param.set_write_only(cmd_obj.write_only)
 
             #cmd_obj.print()
             for param_type, param_val in cmd_obj.change_request.items():
@@ -241,7 +242,7 @@ class InteractiveCmd(threading.Thread):
 
 class command_object():
 
-    def __init__(self, teensy_name, change_request_type):
+    def __init__(self, teensy_name, change_request_type, write_only=False):
         if not isinstance(teensy_name, str):
             raise TypeError("Teensy Name must be a string!")
 
@@ -251,6 +252,7 @@ class command_object():
         self.teensy_name = teensy_name
         self.change_request = dict()
         self.change_request_type = change_request_type
+        self.write_only = write_only
 
     def add_param_change(self, type, value):
         if isinstance(type, str):

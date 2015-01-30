@@ -15,6 +15,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
+
         # initially update the Teensys with all the output parameters here
         self.update_output_params(teensy_names)
 
@@ -152,7 +153,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 return
 
             #t_update = clock()
-            self.update_input_states(teensy_names)
+            #self.update_input_states(teensy_names)
             #print("t update", clock()-t_update)
 
             all_input_states = self.get_input_states(teensy_names, ('all', ), timeout=2)
@@ -171,8 +172,8 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 print('delta t = %f'%(clock()-t0))
 
                 # === tentacle high-level commands"
-                cmd_obj_1 = command_object(teensy_name, 'tentacle_high_level')
-                cmd_obj_2 = command_object(teensy_name, 'tentacle_low_level')
+                cmd_obj_1 = command_object(teensy_name, 'tentacle_high_level', write_only=True)
+                cmd_obj_2 = command_object(teensy_name, 'tentacle_low_level', write_only=True)
                 for j in range(3):
 
                     t = clock()
@@ -220,7 +221,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 self.enter_command(cmd_obj_2)
 
                 # ==== protocell low-level command
-                cmd_obj = command_object(teensy_name, 'protocell')
+                cmd_obj = command_object(teensy_name, 'protocell', write_only=False)
                 for j in range(1):
 
                     t = clock()

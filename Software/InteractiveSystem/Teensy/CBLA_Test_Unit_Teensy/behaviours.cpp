@@ -64,14 +64,14 @@ void Behaviours::parse_msg(){
 		//Tentacles high level requests
 		case 2: {
 		
-			// (15 bytes each)
-			// >>>>> byte 2 to byte 16: TENTACLE 0
-			// >>>>> byte 17 to byte 31: TENTACLE 1
-			// >>>>> byte 32 to byte 46: TENTACLE 2	
-			// >>>>> byte 47 to byte 61: TENTACLE 3			
+			// (14 bytes each)
+			// >>>>> byte 2 to byte 15: TENTACLE 0
+			// >>>>> byte 16 to byte 29: TENTACLE 1
+			// >>>>> byte 30 to byte 43: TENTACLE 2	
+			// >>>>> byte 44 to byte 57: TENTACLE 3			
 			for (uint8_t j = 0; j < 4; j++){
 						
-				const uint8_t byte_offset = 15*(j) + 2;
+				const uint8_t byte_offset = 14*(j) + 2;
 			
 				//--- internal variables---
 				
@@ -125,14 +125,15 @@ void Behaviours::parse_msg(){
 		// Tentacles low level requests
 		case 3: {
 		
-			// (15 bytes each)
-			// >>>>> byte 2 to byte 16: TENTACLE 0
-			// >>>>> byte 17 to byte 31: TENTACLE 1
-			// >>>>> byte 32 to byte 46: TENTACLE 2	
-			// >>>>> byte 47 to byte 61: TENTACLE 3			
+			// (14 bytes each)
+			// >>>>> byte 2 to byte 15: TENTACLE 0
+			// >>>>> byte 16 to byte 29: TENTACLE 1
+			// >>>>> byte 30 to byte 43: TENTACLE 2	
+			// >>>>> byte 44 to byte 57: TENTACLE 3		
+			
 			for (uint8_t j = 0; j < 4; j++){
 				
-				const uint8_t byte_offset = 15*(j) + 2;
+				const uint8_t byte_offset = 14*(j) + 2;
 						
 				// byte x0 --- tentacle SMA wire 0
 				tentacle_var[j].tentacle_sma_level[0] = recv_data_buff[byte_offset+0];
@@ -215,16 +216,18 @@ void Behaviours::parse_msg(){
 //====== COMMUNICATION Protocol ======
 //===========================================================================
 
-void Behaviours::compose_reply(byte front_signature, byte back_signature){
+void Behaviours::compose_reply(byte front_signature, byte back_signature, byte write_only){
 
 
 	// add the signatures to first and last byte
 	send_data_buff[0] = front_signature;
 	send_data_buff[num_outgoing_byte-1] = back_signature;
 	
-	// sample the sensors
-	//this->sample_inputs();
+	if (write_only == 0){
+		// sample the sensors
+		this->sample_inputs();
 		
+	}
 		
 	// byte 1 --- type of reply
 	send_data_buff[1] =  reply_type;		
