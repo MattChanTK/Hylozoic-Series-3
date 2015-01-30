@@ -3,16 +3,19 @@ import queue
 from time import clock
 import inspect
 
-class InteractiveCmd():
+class InteractiveCmd(threading.Thread):
 
-    def __init__(self, Teensy_manager, multithread_mode=False):
+    def __init__(self, Teensy_manager):
 
         # command queue
         self.cmd_q = queue.Queue()
         self.teensy_manager = Teensy_manager
-        self.multithread_mode = multithread_mode
-        if self.multithread_mode:
-            self.start_get_input_states_threads(self.teensy_manager.get_teensy_name_list())
+
+        # start thread
+        threading.Thread.__init__(self)
+        self.daemon = False
+        self.start()
+
 
     def update_output_params(self, teensy_names):
 
@@ -187,25 +190,10 @@ class InteractiveCmd():
 
         for teensy_name in list(teensy_names):
 
-             if not self.multithread_mode:
-
-                result = self.__get_input_states_func(teensy_name, input_types, timeout)
-                if result:
-                    all_input_states[result[0]] = [result[1], result[2]]
-
-             else:
-
-                with self.get_input_states_threads[teensy_name].lock:
-                    self.get_input_states_threads[teensy_name].input_types_requested = input_types
-                    self.get_input_states_threads[teensy_name].get_inputs_requested_event.set()
-
-        if self.multithread_mode:
-            # wait until all thread have submitted their results
-            while self.result_queue.qsize() < len(teensy_names):
-                pass
-            while not self.result_queue.empty():
-                result = self.result_queue.get()
+            result = self.__get_input_states_func(teensy_name, input_types, timeout)
+            if result:
                 all_input_states[result[0]] = [result[1], result[2]]
+
 
         return all_input_states
 
@@ -249,72 +237,6 @@ class InteractiveCmd():
 
         return teensy_name, requested_inputs, new_sample_received
 
-
-class GetInputStateThread(threading.Thread):
-
-    def __init__(self, result_queue, teensy_name, teensy_thread, timeout):
-        self.get_inputs_requested_event = threading.Event()
-        self.lock = threading.Lock()
-
-        self.teensy_name = teensy_name
-        self.result_queue = result_queue
-        self.timeout = timeout
-        self.input_types_requested = None
-
-        if not isinstance(teensy_name, str):
-            raise TypeError("Teensy Name must be a string!")
-
-        self.teensy_thread = teensy_thread
-
-        # start thread
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self.start()
-
-    def run(self):
-
-        while True:
-
-            # wait for an input request event
-            self.get_inputs_requested_event.wait()
-
-
-            with self.lock:
-                self.get_inputs_requested_event.clear()
-
-
-            if self.teensy_thread is None:
-                print(self.teensy_name + " does not exist!")
-                return
-
-            with self.lock:
-                input_types = self.input_types_requested
-
-            if input_types == 'all':
-                input_types = ('all',)
-            if not isinstance(input_types, tuple):
-                raise TypeError("'Input Types' must be inputted as tuple of strings!")
-            #start_time = clock()
-            new_sample_received = self.teensy_thread.inputs_sampled_event.wait(timeout=self.timeout)
-            #print(clock() - start_time)
-            # clear the input_sampled_event flag
-            if new_sample_received:
-                # acquiring the lock for the Teensy thread, so that value cannot change while reading
-                with self.teensy_thread.lock:
-                    self.teensy_thread.inputs_sampled_event.clear()
-
-            requested_inputs = dict()
-            for input_type in input_types:
-                if not isinstance(input_type, str):
-                    raise TypeError("'Input type' must be a string!")
-
-                with self.teensy_thread.lock:
-                    if input_type == 'all':
-                        requested_inputs = self.teensy_thread.param.input_state
-                    else:
-                        requested_inputs[input_type] = self.teensy_thread.param.get_input_state(input_type)
-
-            self.result_queue.put([self.teensy_name, requested_inputs, new_sample_received])
 
 
 class command_object():

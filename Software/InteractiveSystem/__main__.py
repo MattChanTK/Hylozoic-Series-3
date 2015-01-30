@@ -45,8 +45,11 @@ def main():
 
 
     # interactive code
+
     behaviours = cmd(teensy_manager)
-    behaviours.run()
+    from CBLA import CBLA_Behaviours as cmd2
+    cmd2(teensy_manager)
+    #behaviours.run()
 
     if teensy_manager.get_num_teensy_thread() <= 0:
         print("All threads terminated")
