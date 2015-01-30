@@ -1,6 +1,7 @@
 import threading
 import queue
 from time import clock
+import inspect
 
 class InteractiveCmd():
 
@@ -21,6 +22,7 @@ class InteractiveCmd():
             for request_type in Teensy_thread.param.request_types.keys():
                 cmd_obj = command_object(teensy_name, request_type)
                 self.enter_command(cmd_obj)
+
         self.send_commands()
 
     def run(self):
@@ -105,13 +107,16 @@ class InteractiveCmd():
         return 0
 
     def send_commands(self):
+
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
-
             self.apply_change_request(cmd_obj)
 
 
+
     def apply_change_request(self, cmd_obj):
+
+
         #print("apply change request")
         teensy_thread = self.teensy_manager.get_teensy_thread(cmd_obj.teensy_name)
         if teensy_thread is None:
@@ -120,7 +125,8 @@ class InteractiveCmd():
 
         with teensy_thread.lock:
 
-            teensy_thread.lock_received = False
+
+            #teensy_thread.lock_received = False
             teensy_thread.inputs_sampled_event.clear()
 
             request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
@@ -132,6 +138,7 @@ class InteractiveCmd():
                     print(param_type, " is not a ", request_type, " request. Change request did not apply.")
                 elif y == -1:
                     print("Request Type ", request_type, " does not exist! Change request did not apply.")
+            #print("set event updated")
             teensy_thread.param_updated_event.set()
             #print(">>>>> sent command to Teensy #" + cmd_obj.teensy_name)
 
@@ -158,8 +165,8 @@ class InteractiveCmd():
                     cmd_obj.add_param_change(key, derive_param[key])
 
             self.enter_command(cmd_obj)
-            self.send_commands()
 
+        self.send_commands()
 
         return 0
 
@@ -218,9 +225,10 @@ class InteractiveCmd():
         if teensy_thread is None:
             print(teensy_name + " does not exist!")
             return None
-        #start_time = clock()
+        # start_time = clock()
         new_sample_received = teensy_thread.inputs_sampled_event.wait(timeout=timeout)
-        #print(clock()-start_time)
+        # print(input_types)
+        # print(clock()-start_time)
 
         # clear the input_sampled_event flag
         if new_sample_received:
