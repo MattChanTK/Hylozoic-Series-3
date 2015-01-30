@@ -4,7 +4,7 @@ import os
 import cProfile
 from pstats import Stats
 
-behaviours_config = 6
+behaviours_config = 4
 
 if len(sys.argv) > 1:
     behaviours_config = int(sys.argv[1])
@@ -38,6 +38,8 @@ def main():
 
     # instantiate Teensy Monitor
     teensy_manager = TeensyManager(import_config=True)
+    # teensy_manager.kill_teensy_thread('HK_teensy_2')
+    # teensy_manager.kill_teensy_thread('HK_teensy_3')
 
     # find all the Teensy
 
@@ -47,12 +49,13 @@ def main():
     # interactive code
 
     behaviours = cmd(teensy_manager)
-    from CBLA import CBLA_Behaviours as cmd2
-    cmd2(teensy_manager)
-    #behaviours.run()
 
-    if teensy_manager.get_num_teensy_thread() <= 0:
-        print("All threads terminated")
+    for teensy_thread in teensy_manager._get_teensy_thread_list():
+        teensy_thread.join()
+
+    print("All Teensy threads terminated")
+
+
 
 
 
