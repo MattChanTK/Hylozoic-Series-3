@@ -256,8 +256,8 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
             # output to files
             for device, states in state_history.items():
-                curr_dir = os.curdir()
-                os.chdir("pickle_jar")
+                curr_dir = os.getcwd()
+                os.chdir(os.path.join(curr_dir, 'pickle_jar'))
                 with open(str(device) + '_state_history.pkl', 'wb') as output:
                     pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
                 os.chdir(curr_dir)

@@ -9,6 +9,7 @@ import threading
 from time import sleep
 from time import clock
 import re
+import queue
 
 from RegionsManager import Expert
 # from SimSystem import DiagonalPlane as Robot
@@ -42,18 +43,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Node():
 
-        def __init__(self, interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=""):
+        def __init__(self, actuate_vars, report_vars, sync_barrier, name=""):
 
-
-            self.interactive_cmd = interactive_cmd
-            self.teensy_name = teensy_name
             self.sync_barrier = sync_barrier
-            self.name = teensy_name + str(name)
-
-
-            # ToDo need a more encapsulated appraoch
-            self.reply_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.reply_types
-            self.request_types = self.interactive_cmd.teensy_manager.get_teensy_thread(self.teensy_name).param.request_types
+            self.name = str(name)
 
             self.actuate_vars = actuate_vars
             self.M0 = tuple([0] * len(actuate_vars))
@@ -69,61 +62,50 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 raise (ValueError, "M must have " + str(len(self.actuate_vars)) +" elements!")
 
             for i in range(len(self.actuate_vars)):
-
-                cmd_obj = command_object(self.teensy_name, self.__get_request_type(self.actuate_vars[i]))
-                cmd_obj.add_param_change(self.actuate_vars[i], int(M[i]))
-
-
-
-                with self.interactive_cmd.lock:
-                    self.interactive_cmd.enter_command(cmd_obj)
+                self.sync_barrier.action_q.put((self.actuate_vars[i][0], (self.actuate_vars[i][1], M[i])))
 
             self.M0 = M
             # wait for other thread in the same sync group to finish
             self.sync_barrier.write_barrier.wait()
 
-        def report(self):
+        def report(self) -> tuple:
 
+            #wait for all thread to start at the same time
+            self.sync_barrier.start_to_read_barrier.wait()
 
-            counter = 0
-            while counter >= 0:
+            while not self.sync_barrier.sample_interval_finished:
+
                 t_sample = clock()
-                if self.sync_barrier.sample_interval_finished:
-                    self._set_derive_param(counter)
-                    counter = -99
 
                 # wait for other thread in the same sync group to finish
                 self.sync_barrier.read_barrier.wait()
 
                 # collect sample
-                sample = self.sync_barrier.sample[self.teensy_name]
+                sample = self.sync_barrier.sample
 
                 # if the first sample read was unsuccessful, just return the default value
                 if sample is None:
-                    print("timed out")
+                    print("unsuccessful read")
                     return self.S
 
-                # if the data wasn't new, it means that it timed out
-                if sample[1] == False:
-                    print("timed out")
+                # if any one of those data wasn't new, it means that it timed out
+                for teensy_name, sample_teensy in sample.items():
 
-                sample = sample[0]
+                    if not sample_teensy[1]:
+                        print(teensy_name + " has timed out")
 
                 # construct the S vector for the node
                 s = []
                 for var in self.report_vars:
-                    s.append(sample[var])
+                    s.append(sample[var[0]][0][var[1]])
                 self.S = tuple(s)
 
-                counter += 1
-
-                while clock() - t_sample < self.sync_barrier.sample_period:
-                    pass
-
+                while clock() - t_sample < self.sync_barrier.sample_period and not self.sync_barrier.sample_interval_finished:
+                    pass  #do nothing and wait
 
             return self.S
 
-        def get_possible_action(self, state=None, num_sample=100):
+        def get_possible_action(self, state=None, num_sample=100) -> tuple:
 
             x_dim = 1
 
@@ -136,38 +118,17 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             return M_candidates
 
-        def _set_derive_param(self, derive_param):
-            pass
+        @staticmethod
+        def _return_derive_param(counter) -> dict:
+            return None
 
-        def __get_reply_type(self, var):
-            for reply_type, vars in self.reply_types.items():
-                if var in vars:
-                    return reply_type
-
-            raise (ValueError, "Variable not found!")
-
-        def __get_request_type(self, var):
-            for request_type, vars in self.request_types.items():
-                if var in vars:
-                    return request_type
-
-            raise (ValueError, "Variable not found!")
 
     class Protocell_Node(Node):
         pass
 
     class Tentacle_Arm_Node(Node):
 
-        def __init__(self, interactive_cmd,  teensy_name, tentacle_ids, actuate_vars, report_vars, sync_barrier, name=""):
-
-            super(CBLA_Behaviours.Tentacle_Arm_Node, self).__init__(interactive_cmd,  teensy_name, actuate_vars, report_vars, sync_barrier, name=name)
-
-            # find indices for the cycling variables
-            self.cycling_id = [0] * len(tentacle_ids)
-            for i in range(len(tentacle_ids)):
-                self.cycling_id[i] = self.report_vars.index('tentacle_' + str(tentacle_ids[i]) + '_cycling')
-
-        def get_possible_action(self, state=None, num_sample=4):
+        def get_possible_action(self, state=None, num_sample=4) -> tuple:
 
             # constructing a list of all possible action
             x_dim = len(self.actuate_vars)
@@ -180,23 +141,25 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
             # check if tentacles are cycling
+
             for j in range(x_dim):
-                if state is not None and state[self.cycling_id[j]] > 0:
+                cycling_id = self.report_vars.index((self.actuate_vars[j][0], re.sub('arm_motion_on', 'cycling', self.actuate_vars[j][1])))
+                if state is not None and state[cycling_id] > 0:
                     for i in range(len(X)):
                         X[i][j] = self.M0[j]
-
 
             M_candidates = tuple(set(map(tuple, X)))
             return M_candidates
 
-        def _set_derive_param(self, counter):
+        @staticmethod
+        def _return_derive_param(counter):
 
             derive_param = dict()
             derive_param['acc_mean_window'] = counter
             derive_param['acc_diff_window'] = counter
             derive_param['acc_diff_gap'] = 10
 
-            self.sync_barrier.derive_param = derive_param
+            return derive_param
 
     class CBLA_Engine(threading.Thread):
 
@@ -220,17 +183,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # ~~ instantiation ~~
 
-            self.robot = robot
+            self.robot = copy(robot)
             self.engine_id = id
             self.saving_freq = saving_freq
 
 
             # instantiate an Expert
-            # TODO add teensy name to filename
 
             if self.is_using_saved_expert:
-                curr_dir = os.curdir()
-                os.chdir("pickle_jar")
 
                 with open(self.robot.name + '_expert_backup.pkl', 'rb') as input:
                     self.expert = pickle.load(input)
@@ -240,7 +200,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     self.state_history = pickle.load(input)
                 with open(self.robot.name + '_mean_error_history_backup.pkl', 'rb') as input:
                     self.mean_error_history = pickle.load(input)
-                os.chdir(curr_dir)
 
             else:
 
@@ -384,8 +343,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 # output to files
                 if t % self.saving_freq == 0 or t >= self.sim_duration:
-                    curr_dir = os.curdir()
-                    os.chdir("pickle_jar")
 
                     with open(self.robot.name + '_expert_backup.pkl', 'wb') as output:
                         pickle.dump(self.expert, output, pickle.HIGHEST_PROTOCOL)
@@ -399,7 +356,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     with open(self.robot.name + '_mean_error_history_backup.pkl', 'wb') as output:
                         pickle.dump(self.mean_error_history, output, pickle.HIGHEST_PROTOCOL)
 
-                    os.chdir(curr_dir)
 
                 real_time = clock()
                 term_print_str += ("Time Step = %fs" % (real_time - real_time_0))  # output to terminal
@@ -409,59 +365,101 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Sync_Barrier():
 
-        def __init__(self, interactive_cmd, num_threads, barrier_timeout=1, read_timeout=1, sample_period=0, sample_interval=0.4):
+        def __init__(self, behaviour_cmd, num_threads, node_type, sample_period=0.1, sample_interval=0.4):
 
-            self.interactive_cmd = interactive_cmd
+            self.cmd = behaviour_cmd
+            self.node_type = node_type
 
-            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=barrier_timeout)
-            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=barrier_timeout)
+            # barrier which ensure all threads read and write at the same time
+            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=sample_interval)
+            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=sample_interval)
+            self.start_to_read_barrier = threading.Barrier(num_threads, action=self.start_to_read_barrier_action)
 
+            # queue that store action pending from all threads
+            self.action_q = queue.Queue()
+
+            self.sample_counter = 0
 
             self.sample = None
-            self.read_timeout = read_timeout
-            self.derive_param = None
             self.sample_period = sample_period
             self.sample_interval = sample_interval
             self.t0 = clock()
             self.sample_interval_finished = False
 
+        def start_to_read_barrier_action(self):
+
+            self.t0 = clock()
+            self.sample_interval_finished = False
+            self.sample_counter = 0
+
+
         def read_barrier_action(self):
 
+            self.sample_counter += 1
+
+            # when sampling interval is reached
             if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished:
+                derive_param = self.node_type._return_derive_param(self.sample_counter)
                 self.sample_interval_finished = True
-            elif clock() - self.t0 >= self.sample_interval and self.sample_interval_finished:
-                self.sample_interval_finished = False
-                self.t0 = clock()
+                #print(self.sample_counter)
+            else:
+                derive_param = None
 
-            #print("waiting 1", self.sample_interval)
-            with self.interactive_cmd.lock:
-                #print("acquired 1", self.sample_interval)
-                self.interactive_cmd.update_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(), self.derive_param)
-            self.derive_param = None
-            #print("released 1", self.sample_interval)
+            # during the sampling interval
+            with self.cmd.lock:
+                self.cmd.update_input_states(self.cmd.teensy_manager.get_teensy_name_list(), derive_param=derive_param)
 
-            #print("waiting 2", self.sample_interval)
-
-            with self.interactive_cmd.lock:
-               # print("acquired 2", self.sample_interval)
-                self.sample = self.interactive_cmd.get_input_states(self.interactive_cmd.teensy_manager.get_teensy_name_list(),
-                                                                        ('all',), timeout=self.read_timeout)
-
-            #print("released 2", self.sample_interval)
-
+            with self.cmd.lock:
+                # print("acquired 2", self.sample_interval)
+                self.sample = self.cmd.get_input_states(self.cmd.teensy_manager.get_teensy_name_list(), ('all',),
+                                                            timeout=max(0.04, self.sample_interval))
 
         def write_barrier_action(self):
-            #print("write barrier waiting lock", self.sample_interval)
-            with self.interactive_cmd.lock:
-                #print("write barrier acquired lock", self.sample_interval)
 
-                self.interactive_cmd.send_commands()
+            # categorize action in action_q based on teensy_name
+            change_requests = dict()
+            while not self.action_q.empty():
+                action = self.action_q.get()
+                try:
+                    change_requests[action[0]].append(action[1])
+                except KeyError:
+                    change_requests[action[0]] = [action[1]]
 
-            #print("write barrier released lock", self.sample_interval)
+
+            for teensy_name, output_params in change_requests.items():
+
+                request_types = self.cmd.teensy_manager.get_teensy_thread(teensy_name).param.request_types
+                cmd_obj_table = dict()
+                for param in output_params:
+                    request_type = CBLA_Behaviours.Sync_Barrier.__get_type(param[0], request_types)
+
+                    try:
+                        cmd_obj_table[request_type].add_param_change(param[0], param[1])
+                    except KeyError:
+                        cmd_obj_table[request_type] = command_object(teensy_name, request_type, write_only=True)
+                        cmd_obj_table[request_type].add_param_change(param[0], param[1])
+
+                with self.cmd.lock:
+                    for cmd_obj in cmd_obj_table.values():
+                        self.cmd.enter_command(cmd_obj)
+
+            with self.cmd.lock:
+                self.cmd.send_commands()
+
+        @staticmethod
+        def __get_type(var, all_types):
+            for type, vars in all_types.items():
+                if var in vars:
+                    return type
+
+            raise (ValueError, "Variable not found!")
+
 
 
     def run(self):
 
+        curr_dir = os.getcwd()
+        os.chdir(os.path.join(curr_dir, "pickle_jar"))
 
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
@@ -469,11 +467,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         self.update_output_params(teensy_names)
 
         # synchonization barrier for all LEDs
-        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, barrier_timeout=1, read_timeout=0.3,
-                                                             sample_interval=0.2, sample_period=0.15)
+        self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, node_type=CBLA_Behaviours.Protocell_Node,
+                                                             sample_interval=0.0, sample_period=0.05)
         # synchonization barrier for all SMAs
-        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, barrier_timeout=5, read_timeout=1,
-                                                             sample_interval=12, sample_period=0.3)
+        self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, node_type=CBLA_Behaviours.Tentacle_Arm_Node,
+                                                             sample_interval=2, sample_period=0.25)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -481,7 +479,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # instantiate robots
-            robot_led = CBLA_Behaviours.Protocell_Node(self, teensy_name, ('protocell_0_led_level',), ('protocell_0_als_state',),  self.sync_barrier_led, name='_LED')
+            protocell_action = ((teensy_name, 'protocell_0_led_level'),)
+            protocell_sensor =  ((teensy_name, 'protocell_0_als_state'),)
+            robot_led = CBLA_Behaviours.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led, name=(teensy_name + '_LED'))
 
             # -- raw accelerometer reading with all 3 arms ---
             #sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
@@ -491,11 +491,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             robot_sma = []
             for j in range(3):
                 device_header = 'tentacle_%d_' % j
-                sma_action = (device_header + "arm_motion_on",)
-                sma_sensor = (device_header + 'wave_mean_x', device_header + 'wave_mean_y', device_header + 'wave_mean_z', device_header + 'cycling' )
+                sma_action = ((teensy_name, device_header + "arm_motion_on"),)
+                sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
+                              (teensy_name, device_header + 'wave_mean_y'),
+                              (teensy_name, device_header + 'wave_mean_z'),
+                              (teensy_name, device_header + 'cycling'))
                 #sma_sensor = (device_header + 'wave_diff_x', device_header + 'wave_diff_y', device_header + 'wave_diff_z', device_header + 'cycling' )
 
-                robot_sma.append(CBLA_Behaviours.Tentacle_Arm_Node(self, teensy_name, (j,), sma_action, sma_sensor,  self.sync_barrier_sma, name='_SMA_%d'%j))
+                robot_sma.append(CBLA_Behaviours.Tentacle_Arm_Node(sma_action, sma_sensor,  self.sync_barrier_sma, name=(teensy_name + '_LED''_SMA_%d' % j)))
 
             # instantiate CBLA Engines
             with self.lock:

@@ -22,8 +22,10 @@ class InteractiveCmd(threading.Thread):
         for teensy_name in list(teensy_names):
             Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
-            for request_type in Teensy_thread.param.request_types.keys():
-                cmd_obj = command_object(teensy_name, request_type)
+            for request_type, vars in Teensy_thread.param.request_types.items():
+                cmd_obj = command_object(teensy_name, request_type, write_only=True)
+                for var in vars:
+                    cmd_obj.add_param_change(var, Teensy_thread.param.output_param[var])
                 self.enter_command(cmd_obj)
 
         self.send_commands()
@@ -72,14 +74,12 @@ class InteractiveCmd(threading.Thread):
                 self.update_input_states(self.teensy_manager.get_teensy_name_list())
                 return 1
 
-
             # check if it's the "update" command
 
             applying_cmd = str(param_cmd_list[0])
             if applying_cmd == ">>update" or applying_cmd == ">>Update":
                 self.update_output_params(self.teensy_manager.get_teensy_name_list())
                 return 1
-
 
             # extract the Teensy ID
             try:
@@ -113,21 +113,20 @@ class InteractiveCmd(threading.Thread):
 
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
+
             self.apply_change_request(cmd_obj)
-
-
 
     def apply_change_request(self, cmd_obj):
 
-
-        #print("apply change request")
+        #print("applying change request")
         teensy_thread = self.teensy_manager.get_teensy_thread(cmd_obj.teensy_name)
         if teensy_thread is None:
             print(cmd_obj.teensy_name + " does not exist!")
             return -1
 
         with teensy_thread.lock:
-
+            # print("sending... ", end="")
+            # cmd_obj.print()
 
             #teensy_thread.lock_received = False
             teensy_thread.inputs_sampled_event.clear()
@@ -146,8 +145,10 @@ class InteractiveCmd(threading.Thread):
             teensy_thread.param_updated_event.set()
             #print(">>>>> sent command to Teensy #" + cmd_obj.teensy_name)
 
-        if not teensy_thread.lock_received_event.wait(0.1):
+        if not teensy_thread.lock_received_event.wait(0.5):
             print("Teensy thread ", cmd_obj.teensy_name, " is not responding.")
+        else:
+            teensy_thread.lock_received_event.clear()
 
         return 0
 
@@ -157,9 +158,6 @@ class InteractiveCmd(threading.Thread):
             if teensy_thread is None:
                 print(teensy_name + " does not exist!")
                 return -1
-
-            with teensy_thread.lock:
-                teensy_thread.inputs_sampled_event.clear()
 
             # send in an empty read_only command object
             cmd_obj = command_object(teensy_name, 'read_only')
@@ -174,16 +172,6 @@ class InteractiveCmd(threading.Thread):
 
         return 0
 
-    def start_get_input_states_threads(self, teensy_names, timeout=0.005):
-
-        self.get_input_states_threads = dict()
-        # for input results
-        self.result_queue = queue.Queue()
-
-        for teensy_name in list(teensy_names):
-            teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
-            self.get_input_states_threads[teensy_name] = GetInputStateThread(self.result_queue, teensy_name, teensy_thread, timeout)
-
     def get_input_states(self, teensy_names, input_types='all', timeout=0.005):
 
 
@@ -197,7 +185,6 @@ class InteractiveCmd(threading.Thread):
 
 
         return all_input_states
-
 
     def __get_input_states_func(self,teensy_name, input_types, timeout):
 
@@ -215,7 +202,9 @@ class InteractiveCmd(threading.Thread):
             print(teensy_name + " does not exist!")
             return None
         # start_time = clock()
+
         new_sample_received = teensy_thread.inputs_sampled_event.wait(timeout=timeout)
+
         # print(input_types)
         # print(clock()-start_time)
 

@@ -230,8 +230,11 @@ class CBLATestBed(SysParam.SystemParameters):
             raise TypeError("The array must not be empty.")
 
         # extract the numbers from the string
-        input = re.split('_*', raw_input)
-        input = list(filter(None, input))
+        if isinstance(raw_input, str):
+            input = re.split('_*', raw_input)
+            input = list(filter(None, input))
+        else:
+            input = raw_input
 
         for i in range(len(input)):
             try:
