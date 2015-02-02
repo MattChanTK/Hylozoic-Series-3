@@ -1,6 +1,3 @@
-import InteractiveCmd
-from InteractiveCmd import command_object
-
 from copy import copy
 from time import clock
 from time import sleep
@@ -8,8 +5,11 @@ import math
 import pickle
 import os
 
-class Test_Behaviours(InteractiveCmd.InteractiveCmd):
+from interactive_system import InteractiveCmd
+from interactive_system.InteractiveCmd import command_object
 
+
+class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
     def run(self):
 
@@ -126,6 +126,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             print("Loop Time:", clock() - start_time)
             loop += 1
             sleep(0.1)
+
 
 class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
@@ -323,7 +324,6 @@ class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
             self.send_commands()
 
 
-
 class Default_Behaviour(InteractiveCmd.InteractiveCmd):
 
     def run(self):
@@ -393,3 +393,4 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
             sleep(5)
+

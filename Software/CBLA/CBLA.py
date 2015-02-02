@@ -1,8 +1,6 @@
 import math
 import random
-
 import pickle
-import numpy as np
 from copy import copy
 import os
 import threading
@@ -11,10 +9,13 @@ from time import clock
 import re
 import queue
 
+import numpy as np
+
 from RegionsManager import Expert
+
 # from SimSystem import DiagonalPlane as Robot
-import InteractiveCmd
-from InteractiveCmd import command_object
+from interactive_system import InteractiveCmd
+from interactive_system.InteractiveCmd import command_object
 
 
 def weighted_choice_sub(weights, min_percent=0.05):
@@ -412,7 +413,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             with self.cmd.lock:
                 # print("acquired 2", self.sample_interval)
                 self.sample = self.cmd.get_input_states(self.cmd.teensy_manager.get_teensy_name_list(), ('all',),
-                                                            timeout=max(0.04, self.sample_interval))
+                                                            timeout=max(0.1, self.sample_interval))
 
         def write_barrier_action(self):
 
@@ -468,10 +469,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         # synchonization barrier for all LEDs
         self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, node_type=CBLA_Behaviours.Protocell_Node,
-                                                             sample_interval=0.0, sample_period=0.05)
+                                                             sample_interval=0, sample_period=0.05)
         # synchonization barrier for all SMAs
         self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, node_type=CBLA_Behaviours.Tentacle_Arm_Node,
-                                                             sample_interval=2, sample_period=0.25)
+                                                             sample_interval=12, sample_period=0.33)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -502,11 +503,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, sim_duration=500, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=100)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, sim_duration=4000, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=10)
 
-                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, sim_duration=10, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
-                self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, sim_duration=10, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
-                self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, sim_duration=10, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=10)
+                # self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
+                # self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
+                # self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
 
 
         # waiting for all CBLA engines to terminate to do visualization
