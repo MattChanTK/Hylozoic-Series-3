@@ -76,7 +76,6 @@ void loop() {
 
 	}
 
-	//delay(random(0, 100));
 	
 	//internode_test();
 	
@@ -85,22 +84,6 @@ void loop() {
 	//self_running_test();
 
 	
-	//teensy_unit.led_blink_behaviour(curr_time);
-	//teensy_unit.low_level_control_tentacle_behaviour(curr_time);
-	//teensy_unit.high_level_control_tentacle_arm_behaviour(curr_time);
-	//teensy_unit.high_level_control_tentacle_reflex_behaviour(curr_time);
-	
-	//teensy_unit.low_level_control_protocell_behaviour(curr_time);
-
-
-	//teensy_unit.led_wave_behaviour(curr_time);
-	//teensy_unit.reflex_test_behaviour();
-
-	
 		
-	
-	//teensy_unit.stress_test_behaviour(curr_time);
-	
-			
 }
 

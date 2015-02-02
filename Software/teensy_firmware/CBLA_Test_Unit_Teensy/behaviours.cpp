@@ -367,25 +367,7 @@ void Behaviours::sample_inputs(){
 
 }
 
-// void sample_tentacle_sensor_waveform(uint32_t &curr_time){
 
-	
-	// for (uint8_t j=0; j<3; j++){
-		
-		// if (!tentacle_var[j].tentacle_sensor_waveform_cycling){
-			// tentacle_var[j].tentacle_sensor_waveform_cycling = true;
-			// tentacle_var[j].tentacle_sensor_waveform_phase_time = millis();
-			
-			
-		
-		// }
-	
-	
-	// }
-	
-	
-	
-// }
 
 //===========================================================================
 //============ BEHAVIOUR CODES =========
@@ -510,12 +492,6 @@ void Behaviours::tentacle_arm_test_behaviour(const uint32_t &curr_time){
 	}
 
 	
-}
-
-void Behaviours::stress_test_behaviour(const uint32_t &curr_time)
-{
-
-
 }
 
 
