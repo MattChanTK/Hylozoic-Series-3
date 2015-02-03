@@ -380,7 +380,12 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
             Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
             # check if the thread is still alive
+            counter = 0
             while Teensy_thread is not None:
+
+                if counter > 5:
+                    print("Cannot program ", teensy_name)
+                    break
 
                 #=== programming command ===
                 cmd_obj = command_object(teensy_name, 'prgm')
@@ -391,6 +396,9 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
                 self.send_commands()
 
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
+                counter += 1
+
+
 
             sleep(5)
 
