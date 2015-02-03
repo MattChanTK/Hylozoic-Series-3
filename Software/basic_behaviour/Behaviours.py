@@ -1,9 +1,11 @@
 from copy import copy
 from time import clock
 from time import sleep
+import time
 import math
 import pickle
 import os
+import sys
 
 from interactive_system import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
@@ -392,6 +394,107 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
             print("Loop Time:", clock() - start_time)
             loop += 1
             sleep(0.1)
+
+
+class Quality_Assurance(InteractiveCmd.InteractiveCmd):
+
+    def run(self):
+
+        # save to a text file
+        now = time.strftime("%y-%m-%d %H-%M-%S", time.localtime())
+        log_file_name = 'log (%s).txt' % now
+        log_file = open(os.path.join(os.getcwd(), "qa_log", log_file_name), 'w')
+
+
+        # get Teensy names
+        teensy_names = self.teensy_manager.get_teensy_name_list()
+
+        # initially update the Teensys with all the output parameters here
+        self.update_output_params(teensy_names)
+
+        if self.teensy_manager.get_num_teensy_thread() == 0:
+            return
+
+        tester_name = input("\nPlease enter your name: ")
+
+        ## Display current date and time from now variable
+        start_time = time.strftime("%c")
+        print("Test's start time: %s" % start_time)
+
+        for teensy_name in teensy_names:
+
+           # set to QA mode
+            cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+            cmd_obj.add_param_change('operation_mode', 6)
+            self.enter_command(cmd_obj)
+
+        self.send_commands()
+
+        # testing each Tentacle one by one
+        for teensy_name in teensy_names:
+
+            print("\n........ Testing ", teensy_name, '........')
+
+            for j in range(3):
+
+                # turn on Tentacle arm
+                cmd_obj = command_object(teensy_name, 'tentacle_high_level', write_only=True)
+                cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, 3)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+                # prompt user
+                print("\nTentacle %d's frond is activated" % j)
+                input("Enter [y] if passed and [f] if failed\t")
+
+                # turn off Tentalce arm
+                cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, 0)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+                # turn on reflex actuators
+                cmd_obj = command_object(teensy_name, 'tentacle_low_level', write_only=True)
+                cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
+                cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+                # prompt user
+                print("Tentacle %d's reflex actuators are activated" % j)
+                input("Enter [y] if passed and [f] if failed\t")
+
+                # turn off reflex actuator
+                cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
+                cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+
+
+            cmd_obj = command_object(teensy_name, 'protocell', write_only=True)
+            for j in range(1):
+
+                # turn on protocell
+                cmd_obj.add_param_change('protocell_%d_led_level' % j, 100)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+                print("\nProtocell %d's LED is activated" % j)
+                input("Enter [y] if passed and [f] if failed\t")
+
+                # turn off protocell
+                cmd_obj.add_param_change('protocell_%d_led_level' % j, 0)
+                self.enter_command(cmd_obj)
+                self.send_commands()
+
+
+        # terminate all threads
+        print("\nTest Completed\n\n")
+        for teensy_name in teensy_names:
+            self.teensy_manager.kill_teensy_thread(teensy_name)
+
+
+
 
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):

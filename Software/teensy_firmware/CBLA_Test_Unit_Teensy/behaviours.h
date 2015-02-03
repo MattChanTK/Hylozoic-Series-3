@@ -140,11 +140,12 @@ class Behaviours : public TeensyUnit{
 		void low_level_control_protocell_behaviour(const uint32_t &curr_time);
 		
 		//---- high-level pre-programmed control ---
-		void high_level_control_tentacle_arm_behaviour(const uint32_t &curr_time);
 		void high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time);
 		
 		//---- high-level direct control ---
 		void high_level_direct_control_tentacle_arm_behaviour(const uint32_t &curr_time);
+		void high_level_direct_control_tentacle_arm_behaviour_continuous(const uint32_t &curr_time);
+
 
 		
 		//===============================================

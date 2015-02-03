@@ -599,81 +599,6 @@ void Behaviours::low_level_control_protocell_behaviour(const uint32_t &curr_time
 }
 
 //----- HIGH-LEVEL CONTROL -------
-void Behaviours::high_level_control_tentacle_arm_behaviour(const uint32_t &curr_time){
-	
-	
-	//---- Tentacle cycling variables -----
-	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
-	static bool high_level_ctrl_tentacle_on[3] = {false, false, false};
-
-	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
-	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
-
-	
-	//~~~ tentacle cycle~~~~
-	for (uint8_t j=0; j<3; j++){
-		
-		if (tentacle_var[j].tentacle_motion_on < 1){
-		
-			tentacle[j].set_sma_level(0, 0);
-			tentacle[j].set_sma_level(1, 0);
-			continue;
-		}
-
-		
-		if (high_level_ctrl_tentacle_on[j]){
-			
-			// starting a cycle
-			if (tentacle_var[j].tentacle_cycling < 1){
-				
-				// behaviour Type
-				switch (tentacle_var[j].tentacle_motion_on){
-					case 1:
-						high_level_ctrl_sma0[j] = 0;
-						high_level_ctrl_sma1[j] = 0;
-					break;
-					case 2:
-						high_level_ctrl_sma0[j] = 1;
-						high_level_ctrl_sma1[j] = 1;
-					break;
-					default:
-						high_level_ctrl_sma0[j] = 0;
-						high_level_ctrl_sma1[j] = 1;
-					break;
-				}
-				tentacle_var[j].tentacle_cycling = tentacle_var[j].tentacle_motion_on;
-				high_level_ctrl_tentacle_phase_time[j] = millis();  
-				
-				// turn on the first sma
-				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
-				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
-			}
-			else if (tentacle_var[j].tentacle_cycling > 0){
-				
-				
-				volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
-				
-				// if reaches the full period, restart cycle
-				if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
-					tentacle_var[j].tentacle_cycling  = 0;
-					high_level_ctrl_tentacle_on[j] = false;
-					tentacle_var[j].tentacle_motion_on = 0;
-
-				}
-				
-				//if reaches the on period 
-				else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
-					tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
-					tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
-	
-				}
-					
-			}
-		}
-
-	}
-}
-
 void Behaviours::high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time){
 
 
@@ -778,6 +703,78 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
 				tentacle_var[j].tentacle_cycling  = 0;
 				tentacle_var[j].tentacle_motion_on = 0;
+			}
+			
+			//if reaches the on period 
+			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+
+			}
+				
+		}
+		
+
+	}
+
+	
+}
+
+void Behaviours::high_level_direct_control_tentacle_arm_behaviour_continuous(const uint32_t &curr_time){
+	
+	//---- Tentacle cycling variables -----
+	static uint32_t high_level_ctrl_tentacle_phase_time[3] = {0, 0, 0};
+
+
+	static uint8_t high_level_ctrl_sma0[3] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[3] = {1, 1, 1};
+	
+
+	
+	//~~~ tentacle cycle~~~~
+	for (uint8_t j=0; j<3; j++){
+		
+		if (tentacle_var[j].tentacle_motion_on < 1){
+		
+			tentacle[j].set_sma_level(0, 0);
+			tentacle[j].set_sma_level(1, 0);
+			continue;
+		}
+		
+			
+		// starting a cycle
+		if (tentacle_var[j].tentacle_cycling < 1){
+			
+			// behaviour Type
+			switch (tentacle_var[j].tentacle_motion_on){
+				case 1:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 0;
+				break;
+				case 2:
+					high_level_ctrl_sma0[j] = 1;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+				default:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+			}
+			tentacle_var[j].tentacle_cycling = 1; //tentacle_var[j].tentacle_motion_on;
+			high_level_ctrl_tentacle_phase_time[j] = millis();  
+			
+			// turn on the first sma
+			tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
+			tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
+		}
+		else{
+			
+			
+			volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
+			
+			// if reaches the full period, restart cycle
+			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+				tentacle_var[j].tentacle_cycling  = 0;
 			}
 			
 			//if reaches the on period 

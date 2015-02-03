@@ -73,6 +73,15 @@ void self_running_test(){
 	teensy_unit.low_level_control_protocell_behaviour(curr_time);
 }
 
+void quality_assurance(){
+
+	uint32_t curr_time = millis();
+	
+	teensy_unit.high_level_direct_control_tentacle_arm_behaviour_continuous(curr_time);
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour(curr_time);
+	teensy_unit.low_level_control_protocell_behaviour(curr_time);
+}	
+
 void preprogrammed_behaviour(){
 
 }
@@ -114,6 +123,9 @@ void loop() {
 			break;
 		case 5:
 			preprogrammed_behaviour();
+			break;
+		case 6:
+			quality_assurance();
 			break;
 		default:
 			inactive_mode();
