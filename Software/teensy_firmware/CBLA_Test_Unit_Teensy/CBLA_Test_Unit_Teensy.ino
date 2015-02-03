@@ -94,11 +94,7 @@ void loop() {
 
 	}
 
-	
-	//internode_test();
-	
-	//system_identification();
-	
+
 	switch (teensy_unit.operation_mode){
 	
 		case 0: 
@@ -126,10 +122,5 @@ void loop() {
 	}
 	
 
-	
-	//self_running_test();
-
-	
-		
 }
 
