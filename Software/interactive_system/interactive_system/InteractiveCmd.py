@@ -1,5 +1,6 @@
 import threading
 import queue
+from copy import copy
 from time import clock
 import inspect
 
@@ -111,10 +112,27 @@ class InteractiveCmd(threading.Thread):
 
     def send_commands(self):
 
+        cmd_obj_lists = dict()
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
+            try:
+                cmd_obj_lists[cmd_obj.teensy_name].put(copy(cmd_obj))
+            except KeyError:
+                cmd_obj_lists[cmd_obj.teensy_name] = queue.Queue()
+                cmd_obj_lists[cmd_obj.teensy_name].put(copy(cmd_obj))
 
-            self.apply_change_request(cmd_obj)
+        while len(cmd_obj_lists) > 0:
+            cmd_obj_lists_copy = copy(cmd_obj_lists)
+            for teensy_name, cmd_obj_q in cmd_obj_lists_copy.items():
+                try:
+                    cmd_obj = cmd_obj_q.get_nowait()
+                except queue.Empty:
+                    cmd_obj_lists.pop(teensy_name)
+                else:
+                    self.apply_change_request(cmd_obj)
+
+                #cmd_obj = self.cmd_q.get()
+                #self.apply_change_request(cmd_obj)
 
     def apply_change_request(self, cmd_obj):
 
