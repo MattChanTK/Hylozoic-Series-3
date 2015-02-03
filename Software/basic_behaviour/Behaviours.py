@@ -36,6 +36,12 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
             for teensy_name in list(teensy_names):
 
+                # first loop only
+                if loop == 0:
+                    cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+                    cmd_obj.add_param_change('operation_mode', 1)
+                    self.enter_command(cmd_obj)
+
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
                 # check if the thread is still alive
@@ -162,6 +168,12 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
             for teensy_name in list(teensy_names):
 
+                # first loop only
+                if loop == 0:
+                    cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+                    cmd_obj.add_param_change('operation_mode', 2)
+                    self.enter_command(cmd_obj)
+
                 input_states = all_input_states[teensy_name]
                 sample = input_states[0]
                 is_new_update = input_states[1]
@@ -287,6 +299,13 @@ class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
             teensy_names_list = list(teensy_names)
 
             for teensy_name in teensy_names_list:
+
+                # first loop only
+                if loop == 0:
+                    cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+                    cmd_obj.add_param_change('operation_mode', 4)
+                    self.enter_command(cmd_obj)
+
                 input_states = all_input_states[teensy_name]
                 sample = input_states[0]
                 is_new_update = input_states[1]
@@ -340,6 +359,14 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
 
             if self.teensy_manager.get_num_teensy_thread() == 0:
                 return
+
+            for teensy_name in teensy_names:
+
+                # first loop only
+                if loop == 0:
+                    cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+                    cmd_obj.add_param_change('operation_mode', 1)
+                    self.enter_command(cmd_obj)
 
             self.update_input_states(teensy_names)
 

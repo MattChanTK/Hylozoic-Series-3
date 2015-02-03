@@ -20,6 +20,16 @@ void setup() {
 }
 
 //===== Behaviours Sets ======
+
+void manual_control(){
+	uint32_t curr_time = millis();
+	
+	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour(curr_time);
+	teensy_unit.low_level_control_protocell_behaviour(curr_time);
+
+}
+
 void internode_test() {
 
 	uint32_t curr_time = millis();
@@ -63,6 +73,14 @@ void self_running_test(){
 	teensy_unit.low_level_control_protocell_behaviour(curr_time);
 }
 
+void preprogrammed_behaviour(){
+
+}
+
+void inactive_mode(){
+
+}
+
 //===== MAIN LOOP =====
 
 void loop() {
@@ -79,7 +97,35 @@ void loop() {
 	
 	//internode_test();
 	
-	system_identification();
+	//system_identification();
+	
+	switch (teensy_unit.operation_mode){
+	
+		case 0: 
+			self_running_test();
+			break;
+		case 1:
+			manual_control();
+			break;
+		case 2:
+			system_identification();
+			break;
+		case 3:
+			cbla();
+			break;
+		case 4:
+			internode_test();
+			break;
+		case 5:
+			preprogrammed_behaviour();
+			break;
+		default:
+			inactive_mode();
+			break;
+	
+	}
+	
+
 	
 	//self_running_test();
 

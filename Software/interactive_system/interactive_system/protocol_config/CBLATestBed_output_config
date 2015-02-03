@@ -1,6 +1,6 @@
 indicator_led_on					bool		basic					0	False
 indicator_led_period 				int16 		basic					0	180			
-operation_mode						int8		basic					0	0
+operation_mode						int8		basic					0	1
 reply_type_request					int8		basic					0	0
 neighbour_activation_state			int8		basic 					0	0
 tentacle_0_ir_0_threshold			int16		tentacle_high_level		2	1200
