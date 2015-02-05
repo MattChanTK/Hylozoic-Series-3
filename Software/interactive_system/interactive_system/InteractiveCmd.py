@@ -112,27 +112,44 @@ class InteractiveCmd(threading.Thread):
 
     def send_commands(self):
 
-        cmd_obj_lists = dict()
+        # split them based on their type
+        cmd_obj_qs = dict()
+
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
-            try:
-                cmd_obj_lists[cmd_obj.teensy_name].put(copy(cmd_obj))
-            except KeyError:
-                cmd_obj_lists[cmd_obj.teensy_name] = queue.Queue()
-                cmd_obj_lists[cmd_obj.teensy_name].put(copy(cmd_obj))
 
-        while len(cmd_obj_lists) > 0:
-            cmd_obj_lists_copy = copy(cmd_obj_lists)
+            cmds_by_type = dict()
+
+            if cmd_obj.change_request_type is None:
+                for var, value in cmd_obj.change_request.items():
+                    request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)
+                    try:
+                        cmds_by_type[request_type].add_param_change(var, value)
+                    except KeyError:
+                        cmds_by_type[request_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.write_only)
+                        cmds_by_type[request_type].add_param_change(var, value)
+            else:
+                cmds_by_type[cmd_obj.change_request_type] = copy(cmd_obj)
+
+            # split cmd_obj based on their destination
+            for cmd_by_type in cmds_by_type.values():
+                try:
+                    cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
+                except KeyError:
+                    cmd_obj_qs[cmd_by_type.teensy_name] = queue.Queue()
+                    cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
+
+        # send them out one Teensy by one Teensy
+        while len(cmd_obj_qs) > 0:
+            cmd_obj_lists_copy = copy(cmd_obj_qs)
             for teensy_name, cmd_obj_q in cmd_obj_lists_copy.items():
                 try:
                     cmd_obj = cmd_obj_q.get_nowait()
                 except queue.Empty:
-                    cmd_obj_lists.pop(teensy_name)
+                    cmd_obj_qs.pop(teensy_name)
                 else:
                     self.apply_change_request(cmd_obj)
 
-                #cmd_obj = self.cmd_q.get()
-                #self.apply_change_request(cmd_obj)
 
     def apply_change_request(self, cmd_obj):
 
@@ -246,19 +263,25 @@ class InteractiveCmd(threading.Thread):
         return teensy_name, requested_inputs, new_sample_received
 
 
+    def __get_type(self, var, teensy_name, param_type=0):
+
+        return self.teensy_manager.get_param_type(teensy_name, var, param_type)
 
 class command_object():
 
-    def __init__(self, teensy_name, change_request_type, write_only=False):
+    def __init__(self, teensy_name, change_request_type=None, write_only=False):
         if not isinstance(teensy_name, str):
             raise TypeError("Teensy Name must be a string!")
 
         if not isinstance(change_request_type, str):
-            raise TypeError("Change Request Type must be a string!")
+            self.change_request_type = None
+        else:
+            self.change_request_type = change_request_type
 
         self.teensy_name = teensy_name
+
         self.change_request = dict()
-        self.change_request_type = change_request_type
+
         self.write_only = write_only
 
     def add_param_change(self, type, value):

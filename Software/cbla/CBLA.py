@@ -439,32 +439,15 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             for teensy_name, output_params in change_requests.items():
 
-                request_types = self.cmd.teensy_manager.get_teensy_thread(teensy_name).param.request_types
-                cmd_obj_table = dict()
+                cmd_obj = command_object(teensy_name, write_only=True)
                 for param in output_params:
-                    request_type = CBLA_Behaviours.Sync_Barrier.__get_type(param[0], request_types)
-
-                    try:
-                        cmd_obj_table[request_type].add_param_change(param[0], param[1])
-                    except KeyError:
-                        cmd_obj_table[request_type] = command_object(teensy_name, request_type, write_only=True)
-                        cmd_obj_table[request_type].add_param_change(param[0], param[1])
+                    cmd_obj.add_param_change(param[0], param[1])
 
                 with self.cmd.lock:
-                    for cmd_obj in cmd_obj_table.values():
-                        self.cmd.enter_command(cmd_obj)
+                    self.cmd.enter_command(cmd_obj)
 
             with self.cmd.lock:
                 self.cmd.send_commands()
-
-        @staticmethod
-        def __get_type(var, all_types):
-            for type, vars in all_types.items():
-                if var in vars:
-                    return type
-
-            raise (ValueError, "Variable not found!")
-
 
 
     def run(self):

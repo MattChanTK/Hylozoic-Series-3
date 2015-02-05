@@ -106,6 +106,12 @@ class TeensyManager():
     def get_teensy_name_list(self):
         return self.teensy_thread_table.keys()
 
+    def get_param_type(self, teensy_name, var, param_type=0)->dict:
+        if param_type == 1:
+            return self.get_teensy_thread(teensy_name).param.get_reply_type(var)
+        else:
+            return self.get_teensy_thread(teensy_name).param.get_request_type(var)
+
     def remove_teensy_thread(self, teensy_name):
         try:
             del self.teensy_thread_table[teensy_name]

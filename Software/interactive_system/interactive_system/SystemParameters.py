@@ -211,14 +211,14 @@ class SystemParameters():
         else:
             raise TypeError(input_type + " must either be 'True' or 'False'.")
 
-    def get_reply_type(self, var):
+    def get_reply_type(self, var) -> dict:
         for reply_type, vars in self.reply_types.items():
             if var in vars:
                 return reply_type
 
         raise(ValueError, "Variable not found!")
 
-    def get_request_type(self, var):
+    def get_request_type(self, var) -> dict:
         for request_type, vars in self.request_types.items():
             if var in vars:
                 return request_type
