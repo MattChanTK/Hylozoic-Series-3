@@ -3,12 +3,16 @@ from interactive_system import TeensyManager
 from interactive_system.InteractiveCmd import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
 
+from time import clock
+
 # class that polls the IR sensor
 class read_ir_sensors(InteractiveCmd):
 
     def run(self):
 
         while True:
+
+            t0 = clock()
 
             # if all the Teensy threads are dead, terminate the program
             if self.teensy_manager.get_num_teensy_thread() == 0:
@@ -41,6 +45,8 @@ class read_ir_sensors(InteractiveCmd):
                     print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
                           end="  \t")
                 print('\n')
+
+            print("Loop Time: %f" % (clock()-t0))
 
 
 if __name__ == "__main__":
