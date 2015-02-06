@@ -216,16 +216,16 @@ void Behaviours::parse_msg(){
 //====== COMMUNICATION Protocol ======
 //===========================================================================
 
-void Behaviours::compose_reply(byte front_signature, byte back_signature, byte write_only){
+void Behaviours::compose_reply(byte front_signature, byte back_signature, byte msg_setting){
 
 
 	// add the signatures to first and last byte
 	send_data_buff[0] = front_signature;
 	send_data_buff[num_outgoing_byte-1] = back_signature;
 	
-	if (write_only == 0){
+	if (msg_setting == 0){
 		// sample the sensors
-		this->sample_inputs();
+		//this->sample_inputs();
 		
 	}
 		
@@ -322,6 +322,9 @@ void Behaviours::sample_inputs(){
 
 	const uint8_t read_buff_num = 4;
 	
+	// turn of interrupt
+	noInterrupts();
+	
 	//>>>Tentacle<<<
 	
 	for (uint8_t j=0; j<4; j++){
@@ -358,11 +361,16 @@ void Behaviours::sample_inputs(){
 		protocell_var[j].protocell_als_state = (uint16_t) (read_buff/read_buff_num);
 	}
 	
+	
+	interrupts();
+	
 	if (Wire.frozen){
 		//digitalWrite(PGM_DO_pin, 1);
 		digitalWrite(13, 1);
 	}
 		
+		
+	
 
 
 }

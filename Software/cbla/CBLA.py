@@ -401,11 +401,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         def read_barrier_action(self):
 
-
             self.sample_counter += 1
 
             # when sampling interval is reached
-            if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished:
+            if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished  \
+               or self.sample_interval <= self.sample_period:
+
                 derive_param = self.node_type._return_derive_param(self.sample_counter)
                 self.sample_interval_finished = True
                 #print(self.sample_counter)
@@ -439,7 +440,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             for teensy_name, output_params in change_requests.items():
 
-                cmd_obj = command_object(teensy_name, write_only=True)
+                cmd_obj = command_object(teensy_name)
                 for param in output_params:
                     cmd_obj.add_param_change(param[0], param[1])
 
@@ -462,10 +463,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         # synchonization barrier for all LEDs
         self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, node_type=CBLA_Behaviours.Protocell_Node,
-                                                             sample_interval=0, sample_period=0.05)
+                                                             sample_interval=0, sample_period=0.1)
         # synchonization barrier for all SMAs
         self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, node_type=CBLA_Behaviours.Tentacle_Arm_Node,
-                                                             sample_interval=5, sample_period=0.33)
+                                                             sample_interval=5, sample_period=0.66)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -473,7 +474,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # set mode
-            cmd_obj = command_object(teensy_name, 'basic', write_only=True)
+            cmd_obj = command_object(teensy_name, 'basic')
             cmd_obj.add_param_change('operation_mode', 3)
             self.enter_command(cmd_obj)
 

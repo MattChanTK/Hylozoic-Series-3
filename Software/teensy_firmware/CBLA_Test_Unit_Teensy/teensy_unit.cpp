@@ -135,10 +135,10 @@ bool TeensyUnit::receive_msg(){
 		byte back_signature = recv_data_buff[num_incoming_byte-1];
 		
 		// check if it's a write-only message
-		byte write_only = recv_data_buff[num_incoming_byte-2];
+		byte msg_setting = recv_data_buff[num_incoming_byte-2];
 
 		// compose reply message
-		this->compose_reply(front_signature, back_signature, write_only);
+		this->compose_reply(front_signature, back_signature, msg_setting);
 		send_msg();
 		return true;
 	}

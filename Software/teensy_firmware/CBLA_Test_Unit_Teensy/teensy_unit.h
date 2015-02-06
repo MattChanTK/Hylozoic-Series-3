@@ -85,7 +85,7 @@ class TeensyUnit{
 		bool receive_msg();
 		void send_msg();
 		virtual void parse_msg() = 0;
-		virtual void compose_reply(byte front_signature, byte back_signature, byte write_only) = 0;
+		virtual void compose_reply(byte front_signature, byte back_signature, byte msg_setting) = 0;
 		
 		
 	protected:

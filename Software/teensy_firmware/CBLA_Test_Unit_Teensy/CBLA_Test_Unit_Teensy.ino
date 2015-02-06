@@ -1,4 +1,3 @@
-
 #include "behaviours.h"
 #include "teensy_unit.h"
 
@@ -10,14 +9,33 @@
 
 Behaviours teensy_unit;
 
+//===== check for messages periodically =====
+
+// Create an IntervalTimer object 
+IntervalTimer msg_recv_timer;
+
+//check for new messages
+void check_msg(){
+
+	if (teensy_unit.receive_msg()){
+			
+		// parse the message and save to parameters
+		teensy_unit.parse_msg();
+
+	}
+}
+
 void setup() {
 	
 	//--- Teensy Unit ---
 	teensy_unit.init();
 	randomSeed(analogRead(A0));
-
-
+	
+	//--- check msg timer ---
+	//set timer in microsecond
+	msg_recv_timer.begin(check_msg, 500); 
 }
+
 
 //===== Behaviours Sets ======
 
@@ -95,14 +113,15 @@ void inactive_mode(){
 void loop() {
 	
 	
-	//check for new messages
-	if (teensy_unit.receive_msg()){
+	// //check for new messages
+	// if (teensy_unit.receive_msg()){
 			
-		// parse the message and save to parameters
-		teensy_unit.parse_msg();
+		// // parse the message and save to parameters
+		// teensy_unit.parse_msg();
 
-	}
+	// }
 
+	teensy_unit.sample_inputs();
 
 	switch (teensy_unit.operation_mode){
 	

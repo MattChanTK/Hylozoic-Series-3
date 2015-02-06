@@ -24,7 +24,7 @@ class InteractiveCmd(threading.Thread):
             Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
             for request_type, vars in Teensy_thread.param.request_types.items():
-                cmd_obj = command_object(teensy_name, request_type, write_only=True)
+                cmd_obj = command_object(teensy_name, request_type)
                 for var in vars:
                     cmd_obj.add_param_change(var, Teensy_thread.param.output_param[var])
                 self.enter_command(cmd_obj)
@@ -126,7 +126,7 @@ class InteractiveCmd(threading.Thread):
                     try:
                         cmds_by_type[request_type].add_param_change(var, value)
                     except KeyError:
-                        cmds_by_type[request_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.write_only)
+                        cmds_by_type[request_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.msg_setting)
                         cmds_by_type[request_type].add_param_change(var, value)
             else:
                 cmds_by_type[cmd_obj.change_request_type] = copy(cmd_obj)
@@ -167,7 +167,7 @@ class InteractiveCmd(threading.Thread):
             teensy_thread.inputs_sampled_event.clear()
 
             request_type = teensy_thread.param.set_request_type(cmd_obj.change_request_type)
-            teensy_thread.param.set_write_only(cmd_obj.write_only)
+            teensy_thread.param.set_msg_setting(cmd_obj.msg_setting)
 
             #cmd_obj.print()
             for param_type, param_val in cmd_obj.change_request.items():
@@ -269,7 +269,7 @@ class InteractiveCmd(threading.Thread):
 
 class command_object():
 
-    def __init__(self, teensy_name, change_request_type=None, write_only=False):
+    def __init__(self, teensy_name, change_request_type=None, msg_setting=0):
         if not isinstance(teensy_name, str):
             raise TypeError("Teensy Name must be a string!")
 
@@ -282,7 +282,7 @@ class command_object():
 
         self.change_request = dict()
 
-        self.write_only = write_only
+        self.msg_setting = msg_setting
 
     def add_param_change(self, type, value):
         if isinstance(type, str):

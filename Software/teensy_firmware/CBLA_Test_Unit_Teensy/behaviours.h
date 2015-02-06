@@ -115,7 +115,7 @@ class Behaviours : public TeensyUnit{
 		//===============================================
 			
 		void parse_msg();
-		void compose_reply(byte front_signature, byte back_signature, byte write_only);
+		void compose_reply(byte front_signature, byte back_signature, byte msg_setting);
 		
 		//--- Input functions----
 		void sample_inputs();

@@ -51,7 +51,7 @@ class SystemParameters():
         self.reply_type = 0
 
         #=== footer ====
-        self.write_only = 0
+        self.msg_setting = 0
 
         # import parameters from files
         self.output_param_config_filename = 'default_output_config'
@@ -151,9 +151,9 @@ class SystemParameters():
         self.request_type = change_request_type
         return self.request_type
 
-    def set_write_only(self, write_only):
-        self.write_only = write_only
-        return self.write_only
+    def set_msg_setting(self, msg_setting):
+        self.msg_setting = msg_setting
+        return self.msg_setting
 
     def set_output_param(self, param_type, param_val):
 
@@ -243,7 +243,7 @@ class SystemParameters():
         header = bytearray(chr(self.request_type_ids[self.request_type]), 'raw_unicode_escape')
 
         # byte 62: write-only or not
-        footer = bytearray(chr(self.write_only), 'raw_unicode_escape')
+        footer = bytearray(chr(self.msg_setting), 'raw_unicode_escape')
 
         # create an 64 - 4 bytes of zeros (w/o the signature and header)
         content = bytearray(chr(0)*(SystemParameters.msg_length - 4),  'raw_unicode_escape')
