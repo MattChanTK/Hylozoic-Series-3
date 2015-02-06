@@ -101,9 +101,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                     s.append(sample[var[0]][0][var[1]])
                 self.S = tuple(s)
 
-                while clock() - t_sample < self.sync_barrier.sample_period and not self.sync_barrier.sample_interval_finished:
-                    pass  #do nothing and wait
+                sleep(max(0, self.sync_barrier.sample_period - (clock()-t_sample)))
 
+                #print(self.name, 'sample period ',clock()-t_sample)
             return self.S
 
         def get_possible_action(self, state=None, num_sample=100) -> tuple:
@@ -226,6 +226,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             M = Mi[random.randint(0, len(Mi))-1]
             L = float("-inf")
 
+            #t0= clock()
             while t < self.sim_duration:
 
 
@@ -246,18 +247,19 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 self.action_history.append(M)
                 self.state_history.append(S)
+                #print(self.robot.name, "CBLA Time", clock()-t0)
 
                 # do action
                 #t0 = clock()
                 self.robot.actuate(M)
-                #print("Write Time", clock() - t0)
+                #print(self.robot.name, "Write Time", clock() - t0)
 
                 # read sensor
                 #t0 = clock()
                 S1 = self.robot.report()
-                #print("Read Time", clock() - t0)
+                #print(self.robot.name, "Read Time", clock() - t0)
 
-
+                #t0 = clock()
                 term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
 
 
@@ -377,8 +379,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             self.node_type = node_type
 
             # barrier which ensure all threads read and write at the same time
-            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action, timeout=max(0.5, sample_interval))
-            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action, timeout=max(0.5, sample_interval))
+            self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action)
+            self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action)
             self.start_to_read_barrier = threading.Barrier(num_threads, action=self.start_to_read_barrier_action)
 
             # queue that store action pending from all threads
@@ -403,7 +405,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             self.sample_counter += 1
 
-            # when sampling interval is reached
+              # when sampling interval is reached
             if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished  \
                or self.sample_interval <= self.sample_period:
 
@@ -413,9 +415,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             else:
                 derive_param = None
 
-
             # during the sampling interval
             with self.cmd.lock:
+
                 #t0 = clock()
                 self.cmd.update_input_states(self.cmd.teensy_manager.get_teensy_name_list(), derive_param=derive_param)
                 #print("read barrier 1 time: ", clock() - t0)
@@ -463,10 +465,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         # synchonization barrier for all LEDs
         self.sync_barrier_led = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*1, node_type=CBLA_Behaviours.Protocell_Node,
-                                                             sample_interval=0, sample_period=0.1)
+                                                             sample_interval=0, sample_period=0.05)
         # synchonization barrier for all SMAs
         self.sync_barrier_sma = CBLA_Behaviours.Sync_Barrier(self, len(teensy_names)*3, node_type=CBLA_Behaviours.Tentacle_Arm_Node,
-                                                             sample_interval=5, sample_period=0.66)
+                                                             sample_interval=5, sample_period=0.33)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -502,11 +504,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # instantiate CBLA Engines
             with self.lock:
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, sim_duration=4000, use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=10)
+                self.cbla_engine[teensy_name + '_LED'] = CBLA_Behaviours.CBLA_Engine(robot_led, id=1, sim_duration=float('inf'), use_saved_expert=False, split_thres=400, mean_err_thres=30.0, kga_delta=5, kga_tau=2, saving_freq=10)
 
-                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
-                self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
-                self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, sim_duration=100, use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
+                self.cbla_engine[teensy_name + '_SMA_0'] = CBLA_Behaviours.CBLA_Engine(robot_sma[0], id=2, sim_duration=float('inf'), use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
+                self.cbla_engine[teensy_name + '_SMA_1'] = CBLA_Behaviours.CBLA_Engine(robot_sma[1], id=3, sim_duration=float('inf'), use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
+                self.cbla_engine[teensy_name + '_SMA_2'] = CBLA_Behaviours.CBLA_Engine(robot_sma[2], id=4, sim_duration=float('inf'), use_saved_expert=False, split_thres=10, mean_err_thres=2.0, kga_delta=1, kga_tau=1, saving_freq=1)
 
 
         # waiting for all CBLA engines to terminate to do visualization
