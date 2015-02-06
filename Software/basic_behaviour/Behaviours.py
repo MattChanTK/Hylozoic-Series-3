@@ -507,10 +507,7 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
 
                 self.send_commands()
 
+                sleep(1)
+
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
                 counter += 1
-
-
-
-            sleep(5)
-
