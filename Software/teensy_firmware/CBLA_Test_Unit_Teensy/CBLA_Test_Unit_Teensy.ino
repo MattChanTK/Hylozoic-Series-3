@@ -33,7 +33,7 @@ void setup() {
 	
 	//--- check msg timer ---
 	//set timer in microsecond
-	msg_recv_timer.begin(check_msg, 500); 
+	msg_recv_timer.begin(check_msg, 50); 
 }
 
 
@@ -84,7 +84,7 @@ void cbla(){
 
 void self_running_test(){
 	int32_t curr_time = millis();
-	teensy_unit.sample_inputs();
+	//teensy_unit.sample_inputs();
 
 	teensy_unit.tentacle_arm_test_behaviour(curr_time);
 	teensy_unit.reflex_test_behaviour();

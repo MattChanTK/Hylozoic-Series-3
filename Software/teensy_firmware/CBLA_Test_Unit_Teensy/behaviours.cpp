@@ -320,10 +320,7 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature, byte m
 //--- Sampling function ---
 void Behaviours::sample_inputs(){
 
-	const uint8_t read_buff_num = 4;
-	
-	// turn of interrupt
-	noInterrupts();
+	const uint8_t read_buff_num = 1;
 	
 	//>>>Tentacle<<<
 	
@@ -336,14 +333,23 @@ void Behaviours::sample_inputs(){
 			for (uint8_t k=0; k<read_buff_num; k++){
 				read_buff += tentacle[j].read_analog_state(i);
 			}
+			noInterrupts()
 			tentacle_var[j].tentacle_ir_state[i] = (uint16_t) (read_buff/read_buff_num);
+			interrupts()
 		}
 	
 	
 		//~~Accelerometer~~		
-		tentacle[j].read_acc_state(tentacle_var[j].tentacle_acc_state[0], 
-								   tentacle_var[j].tentacle_acc_state[1], 
-								   tentacle_var[j].tentacle_acc_state[2]);
+		int16_t acc_reading[3] = {0, 0, 0};
+		tentacle[j].read_acc_state(acc_reading[0], 
+								   acc_reading[1], 
+								   acc_reading[2]);	
+								   
+		noInterrupts();
+		for (uint8_t axis=0; axis<3; axis++){
+			tentacle_var[j].tentacle_acc_state[axis] = acc_reading[axis];
+		}
+		interrupts();
 		
 		
 		
@@ -358,11 +364,12 @@ void Behaviours::sample_inputs(){
 		for (uint8_t k=0; k<read_buff_num; k++){
 			read_buff += protocell[j].read_analog_state();
 		}
+		noInterrupts();
 		protocell_var[j].protocell_als_state = (uint16_t) (read_buff/read_buff_num);
+		interrupts();
 	}
 	
 	
-	interrupts();
 	
 	if (Wire.frozen){
 		//digitalWrite(PGM_DO_pin, 1);
