@@ -24,7 +24,7 @@ class InteractiveCmd(threading.Thread):
             Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
 
             for request_type, vars in Teensy_thread.param.request_types.items():
-                cmd_obj = command_object(teensy_name, request_type)
+                cmd_obj = command_object(teensy_name, request_type, msg_setting=1)
                 for var in vars:
                     cmd_obj.add_param_change(var, Teensy_thread.param.output_param[var])
                 self.enter_command(cmd_obj)

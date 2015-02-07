@@ -44,10 +44,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     class Node():
 
-        def __init__(self, actuate_vars, report_vars, sync_barrier, name=""):
+        def __init__(self, actuate_vars, report_vars, sync_barrier, name="", msg_setting=0):
 
             self.sync_barrier = sync_barrier
             self.name = str(name)
+            self.msg_setting = msg_setting
 
             self.actuate_vars = actuate_vars
             self.M0 = tuple([0] * len(actuate_vars))
@@ -442,7 +443,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             for teensy_name, output_params in change_requests.items():
 
-                cmd_obj = command_object(teensy_name)
+                cmd_obj = command_object(teensy_name, msg_setting=1)
                 for param in output_params:
                     cmd_obj.add_param_change(param[0], param[1])
 
@@ -483,7 +484,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # instantiate robots
             protocell_action = ((teensy_name, 'protocell_0_led_level'),)
             protocell_sensor =  ((teensy_name, 'protocell_0_als_state'),)
-            robot_led = CBLA_Behaviours.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led, name=(teensy_name + '_LED'))
+            robot_led = CBLA_Behaviours.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led, name=(teensy_name + '_LED'), msg_setting=2)
 
             # -- raw accelerometer reading with all 3 arms ---
             #sma_action = ('tentacle_0_arm_motion_on','tentacle_1_arm_motion_on','tentacle_2_arm_motion_on',)
@@ -500,7 +501,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                               (teensy_name, device_header + 'cycling'))
                 #sma_sensor = (device_header + 'wave_diff_x', device_header + 'wave_diff_y', device_header + 'wave_diff_z', device_header + 'cycling' )
 
-                robot_sma.append(CBLA_Behaviours.Tentacle_Arm_Node(sma_action, sma_sensor,  self.sync_barrier_sma, name=(teensy_name + '_SMA_%d' % j)))
+                robot_sma.append(CBLA_Behaviours.Tentacle_Arm_Node(sma_action, sma_sensor,  self.sync_barrier_sma, name=(teensy_name + '_SMA_%d' % j), msg_setting=1))
 
             # instantiate CBLA Engines
             with self.lock:

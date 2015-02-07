@@ -19,6 +19,7 @@ void Behaviours::parse_msg(){
 	
 	// byte 1 --- type of request
 	request_type = recv_data_buff[1];
+	
     
 	uint16_t temp_val = 0;
 	
@@ -222,15 +223,16 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature, byte m
 	// add the signatures to first and last byte
 	send_data_buff[0] = front_signature;
 	send_data_buff[num_outgoing_byte-1] = back_signature;
-	
+		
 	if (msg_setting == 0){
 		// sample the sensors
-		//this->sample_inputs();
-		
+		this->sample_inputs();	
 	}
-		
+	
 	// byte 1 --- type of reply
-	send_data_buff[1] =  reply_type;		
+	send_data_buff[1] =  reply_type;	
+
+
 
 	switch (reply_type){
 	
@@ -320,10 +322,15 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature, byte m
 //--- Sampling function ---
 void Behaviours::sample_inputs(){
 
+	sample_inputs(0);
+}
+
+void Behaviours::sample_inputs(const uint8_t setting){
+
 	const uint8_t read_buff_num = 1;
 	
 	//>>>Tentacle<<<
-	
+			
 	for (uint8_t j=0; j<4; j++){
 	
 		//~~IR sensors state~~
@@ -338,25 +345,27 @@ void Behaviours::sample_inputs(){
 			interrupts()
 		}
 	
-	
-		//~~Accelerometer~~		
-		int16_t acc_reading[3] = {0, 0, 0};
-		tentacle[j].read_acc_state(acc_reading[0], 
-								   acc_reading[1], 
-								   acc_reading[2]);	
-								   
-		noInterrupts();
-		for (uint8_t axis=0; axis<3; axis++){
-			tentacle_var[j].tentacle_acc_state[axis] = acc_reading[axis];
-		}
-		interrupts();
 		
+		//~~Accelerometer~~		
+		noInterrupts();
+		tentacle[j].read_acc_state(tentacle_var[j].tentacle_acc_state[0], 
+								   tentacle_var[j].tentacle_acc_state[1], 
+								   tentacle_var[j].tentacle_acc_state[2]);	
+								   
+		interrupts();
 		
 		
 	}
 	
+	if (Wire.frozen){
+		//digitalWrite(PGM_DO_pin, 1);
+		digitalWrite(13, 1);
+	}
+		
+	
 	
 	//>>>Protocell<<<
+
 	for (uint8_t j = 0; j<2; j++){
 	
 		//~~Ambient Light Sensor~~
@@ -368,16 +377,6 @@ void Behaviours::sample_inputs(){
 		protocell_var[j].protocell_als_state = (uint16_t) (read_buff/read_buff_num);
 		interrupts();
 	}
-	
-	
-	
-	if (Wire.frozen){
-		//digitalWrite(PGM_DO_pin, 1);
-		digitalWrite(13, 1);
-	}
-		
-		
-	
 
 
 }
@@ -579,7 +578,7 @@ void Behaviours::reflex_test_behaviour() {
 }
 
 //----- LOW-LEVEL CONTROL -------
-void Behaviours::low_level_control_tentacle_behaviour(const uint32_t &curr_time){
+void Behaviours::low_level_control_tentacle_behaviour(){
 
 	
 	//>>>> TENTACLE <<<<<
@@ -591,7 +590,7 @@ void Behaviours::low_level_control_tentacle_behaviour(const uint32_t &curr_time)
 		tentacle[j].set_led_level(1, tentacle_var[j].tentacle_reflex_level[1]);
 	}
 }
-void Behaviours::low_level_control_tentacle_reflex_led_behaviour(const uint32_t &curr_time){
+void Behaviours::low_level_control_tentacle_reflex_led_behaviour(){
 
 	
 	//>>>> TENTACLE <<<<<
@@ -602,7 +601,7 @@ void Behaviours::low_level_control_tentacle_reflex_led_behaviour(const uint32_t 
 	}
 }
 
-void Behaviours::low_level_control_protocell_behaviour(const uint32_t &curr_time){
+void Behaviours::low_level_control_protocell_behaviour(){
 	//>>>> PROTOCELL <<<<<
 	for (uint8_t j=0; j<2;j++){
 	

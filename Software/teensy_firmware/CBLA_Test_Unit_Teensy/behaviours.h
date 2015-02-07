@@ -119,6 +119,7 @@ class Behaviours : public TeensyUnit{
 		
 		//--- Input functions----
 		void sample_inputs();
+		void sample_inputs(const uint8_t setting);
 		void sample_tentacle_sensor_waveform(const uint32_t &curr_time);
 		
 		//===============================================
@@ -135,9 +136,9 @@ class Behaviours : public TeensyUnit{
 		void led_wave_behaviour(const uint32_t &curr_time);
 		
 		//---- low-level control ---
-		void low_level_control_tentacle_behaviour(const uint32_t &curr_time);
-		void low_level_control_tentacle_reflex_led_behaviour(const uint32_t &curr_time);
-		void low_level_control_protocell_behaviour(const uint32_t &curr_time);
+		void low_level_control_tentacle_behaviour();
+		void low_level_control_tentacle_reflex_led_behaviour();
+		void low_level_control_protocell_behaviour();
 		
 		//---- high-level pre-programmed control ---
 		void high_level_control_tentacle_reflex_behaviour(const uint32_t &curr_time);

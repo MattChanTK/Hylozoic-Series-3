@@ -111,8 +111,10 @@ void TeensyUnit::init(){
 void TeensyUnit::spwm_init(uint16_t freq){
 
 	//----- Begin slow PWM driver ----
+	noInterrupts();
 	spwm.begin();
 	spwm.setPWMFreq(freq);  // This is the maximum PWM frequency
+	interrupts();
 
 }
 
@@ -155,7 +157,12 @@ void TeensyUnit::send_msg(){
 	interrupts();
 }
 
+uint8_t TeensyUnit::get_msg_setting(){
 
+	return msg_setting;
+
+
+}
 
 //===========================================================================
 //====== Tentacle Port ======
@@ -213,14 +220,18 @@ void TeensyUnit::TentaclePort::init(){
 }
 //~~outputs~~
 void TeensyUnit::TentaclePort::set_sma_level(const uint8_t id, const uint8_t level){
-
+	
+	noInterrupts();
 	teensy_unit.spwm.setPWMFast(sma_pins[id], 16*level);
+	interrupts();
 	
 }
 void TeensyUnit::TentaclePort::set_led_level(const uint8_t id, const uint8_t level){
 
 	if (is_all_slow){
+		noInterrupts();
 		teensy_unit.spwm.setPWMFast(led_pins[id], 16*level);
+		interrupts();
 	}
 	else{
 		analogWrite(led_pins[id], level);
@@ -233,7 +244,8 @@ uint16_t TeensyUnit::TentaclePort::read_analog_state(const uint8_t id){  //{IR 0
 }
 
 bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}
-
+	
+	noInterrupts();
 	switchToAccel();
 
 	teensy_unit.Wire.beginTransmission(ACCEL);
@@ -252,6 +264,8 @@ bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 		buffer[i] = teensy_unit.Wire.read();
 		i++;
 	}
+			
+	interrupts();
 
 	accel_x = buffer[1] << 8 | buffer[0];
 	accel_y = buffer[3] << 8 | buffer[2];
@@ -266,7 +280,7 @@ bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 //~~accelerometer~~
 // switching to the proper accel
 void TeensyUnit::TentaclePort::switchToAccel() {
-  
+
 	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[0], (acc_pin & 1) > 0);
 	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[1], (acc_pin & 2) > 0);
 	digitalWrite (teensy_unit.I2C_MUL_ADR_pin[2], (acc_pin & 4) > 0);
@@ -277,10 +291,12 @@ void TeensyUnit::TentaclePort::switchToAccel() {
 void TeensyUnit::TentaclePort::writeToAccel(const byte address, const byte val) {
 
 	switchToAccel();
+	noInterrupts();
 	teensy_unit.Wire.beginTransmission(ACCEL); // start transmission to device 
 	teensy_unit.Wire.write(address);            // send register address
 	teensy_unit.Wire.write(val);                // send value to write
 	teensy_unit.Wire.endTransmission(I2C_NOSTOP, i2c_timeout);         // end transmission
+	interrupts();
 }
 
 
@@ -299,7 +315,6 @@ TeensyUnit::ProtocellPort::ProtocellPort(TeensyUnit& teensy_parent, const uint8_
 	
 	if (is_slow){
 		led_pin = teensy_unit.SPWM_pin[port_id][0];
-
 	}
 	else{
 		led_pin = teensy_unit.FPWM_pin[port_id][0];
@@ -318,7 +333,9 @@ TeensyUnit::ProtocellPort::~ProtocellPort(){
 void TeensyUnit::ProtocellPort::set_led_level(const uint8_t level){
 
 	if (is_slow){
+		noInterrupts();
 		teensy_unit.spwm.setPWMFast(led_pin, 16*level);
+		interrupts();
 	}
 	else{
 		analogWrite(led_pin, level);

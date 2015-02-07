@@ -84,6 +84,7 @@ class TeensyUnit{
 		//--- Communication functions ----
 		bool receive_msg();
 		void send_msg();
+		uint8_t get_msg_setting();
 		virtual void parse_msg() = 0;
 		virtual void compose_reply(byte front_signature, byte back_signature, byte msg_setting) = 0;
 		
@@ -101,6 +102,7 @@ class TeensyUnit{
 		byte recv_data_buff[packet_size];
 		uint8_t request_type = 0;
 		uint8_t reply_type = 0;
+		uint8_t msg_setting = 0;
 		
 		//=== initialize slow pwm ===
 		PWMDriver spwm;	

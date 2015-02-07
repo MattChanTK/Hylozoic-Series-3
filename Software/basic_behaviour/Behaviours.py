@@ -40,7 +40,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
                 # first loop only
                 if loop == 0:
-                    cmd_obj = command_object(teensy_name)
+                    cmd_obj = command_object(teensy_name, msg_setting=1)
                     cmd_obj.add_param_change('operation_mode', 1)
                     self.enter_command(cmd_obj)
 
@@ -50,7 +50,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 if Teensy_thread is not None:
 
                     #=== basic commands"
-                    cmd_obj = command_object(teensy_name)
+                    cmd_obj = command_object(teensy_name, msg_setting=1)
 
                     #
                     # cmd_obj.add_param_change('indicator_led_on',  indicator_led_on[teensy_name])
@@ -59,14 +59,14 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     cmd_obj.add_param_change('reply_type_request', 0)
 
                     #=== tentacle low-level commands"
-                    cmd_obj.add_param_change('tentacle_0_sma_0_level',  0)#int((loop*2)%255))
-                    cmd_obj.add_param_change('tentacle_0_sma_1_level', 0)# int((loop*2)%255))
-                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  125)#int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', 125)#int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_0_level', 125) #int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', 125)#int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  125)#int((loop*6+80)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_1_level',125)# int((loop*6+80)%128))
+                    # cmd_obj.add_param_change('tentacle_0_sma_0_level',  int((loop*2)%255))
+                    # cmd_obj.add_param_change('tentacle_0_sma_1_level', int((loop*2)%255))
+                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', int((loop*6+40)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_0_level', int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', int((loop*6)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  int((loop*6+80)%128))
+                    cmd_obj.add_param_change('tentacle_2_reflex_1_level', int((loop*6+80)%128))
 
                     # === tentacle high-level commands"
                     cmd_obj.add_param_change('tentacle_0_arm_motion_on', 3)#int(loop % 4))
@@ -78,7 +78,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                     self.enter_command(cmd_obj)
 
                     #=== change wave command====
-                    cmd_obj = command_object(teensy_name)
+                    cmd_obj = command_object(teensy_name, msg_setting=0)
 
                     wave = ""
                     cmd_obj.add_param_change('wave_type', 1)
@@ -159,7 +159,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
                 # first loop only
                 if loop == 0:
-                    cmd_obj = command_object(teensy_name)
+                    cmd_obj = command_object(teensy_name, msg_setting=1)
                     cmd_obj.add_param_change('operation_mode', 2)
                     self.enter_command(cmd_obj)
 
@@ -168,13 +168,12 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 is_new_update = input_states[1]
 
 
-
                 print("[", teensy_name, "]")
                 print('t = %f' % clock())
                 print('delta t = %f'%(clock()-t0))
 
                 # === tentacle high-level commands"
-                cmd_obj = command_object(teensy_name)
+                cmd_obj = command_object(teensy_name, msg_setting=1)
                 for j in range(3):
 
                     t = clock()
@@ -221,7 +220,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 self.enter_command(cmd_obj)
 
                 # ==== protocell low-level command
-                cmd_obj = command_object(teensy_name)
+                cmd_obj = command_object(teensy_name, msg_setting=0)
                 for j in range(1):
 
                     t = clock()
@@ -500,14 +499,14 @@ class ProgrammUpload(InteractiveCmd.InteractiveCmd):
                     break
 
                 #=== programming command ===
-                cmd_obj = command_object(teensy_name, 'prgm')
+                cmd_obj = command_object(teensy_name, 'prgm', msg_setting=1)
                 cmd_obj.add_param_change('program_teensy', 1)
 
                 self.enter_command(cmd_obj)
 
                 self.send_commands()
 
-                sleep(1)
+                sleep(2)
 
                 Teensy_thread = self.teensy_manager.get_teensy_thread(teensy_name)
                 counter += 1
