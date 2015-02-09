@@ -6,10 +6,13 @@ import math
 import pickle
 import os
 import sys
+import numpy as np
 
 from interactive_system import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
 
+ACC_MG_PER_LSB = 3.9
+ADC_RES = 2**12
 
 class Test_Behaviours(InteractiveCmd.InteractiveCmd):
 
@@ -104,12 +107,19 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
                 for j in range(4):
                     device_header = 'tentacle_%d_' % j
                     print("Tentacle %d" % j, end=" ---\t")
-                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")", end="  \t")
-                    print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'], ', ', sample[device_header + 'acc_z_state'], ")" )
+                    ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
+                                                 sample[device_header + 'ir_1_state'])) / ADC_RES * 100)
+                    print("IR ( %.2f%%, %.2f%% )" % ir_percent, end="  \t")
+                    acc_g = tuple(np.array((sample[device_header + 'acc_x_state'],
+                                            sample[device_header + 'acc_y_state'],
+                                            sample[device_header + 'acc_z_state'])) * ACC_MG_PER_LSB)
+                    print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
+
                 for j in range(2):
                     device_header = 'protocell_%d_' % j
                     print("Protocell %d" % j, end=" ---\t")
-                    print("ALS (", sample[device_header + 'als_state'], ")")
+                    als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
+                    print("ALS ( %.2f%% )" % als_percent)
                 print('')
 
 
@@ -202,10 +212,15 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     print("Tentacle %d" % j, end=" ---\t")
                     print("Action (", tentacle_action[j] % 4, ")", end="  \n")
                     print("Cycling (", sample[device_header + 'cycling'], ")", end="  \t")
-                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
-                          end="  \t")
-                    print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'],
-                          ', ', sample[device_header + 'acc_z_state'], ")")
+
+                    ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
+                                                 sample[device_header + 'ir_1_state'])) / ADC_RES * 100)
+                    print("IR ( %.2f%%, %.2f%% )" % ir_percent, end="  \t")
+                    acc_g = tuple(np.array((sample[device_header + 'acc_x_state'],
+                                            sample[device_header + 'acc_y_state'],
+                                            sample[device_header + 'acc_z_state'])) * ACC_MG_PER_LSB)
+                    print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
+
 
                     state = [t, tentacle_action[j]%4, sample[device_header + 'cycling'],
                              sample[device_header + 'ir_0_state'], sample[device_header + 'ir_1_state'],
@@ -235,7 +250,8 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
                     print("Protocell %d" % j, end=" ---\t")
                     #print("Brightness (%d)" % protocell_brightness[j]%255)
-                    print("ALS (", sample[device_header + 'als_state'], ")")
+                    als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
+                    print("ALS ( %.2f%% )" % als_percent)
 
                     state = [t, protocell_brightness[j]%255 , sample[device_header + 'als_state']]
 
@@ -336,7 +352,7 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
 
         # poll input
         loop = 0
-        num_loop = 1000
+        num_loop = 10000
         while loop < num_loop:
             start_time = clock()
 
@@ -363,13 +379,19 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
                 for j in range(4):
                     device_header = 'tentacle_%d_' % j
                     print("Tentacle %d" % j, end=" ---\t")
-                    print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")", end="  \t")
-                    print("ACC (", sample[device_header + 'acc_x_state'], ', ', sample[device_header + 'acc_y_state'], ', ', sample[device_header + 'acc_z_state'], ")" )
+                    ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
+                                                 sample[device_header + 'ir_1_state']))/ADC_RES*100)
+                    print("IR ( %.2f%%, %.2f%% )" % ir_percent, end="  \t")
+                    acc_g = tuple(np.array((sample[device_header + 'acc_x_state'],
+                                            sample[device_header + 'acc_y_state'],
+                                            sample[device_header + 'acc_z_state']))*ACC_MG_PER_LSB)
+                    print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
 
                 for j in range(2):
                     device_header = 'protocell_%d_' % j
                     print("Protocell %d" % j, end=" ---\t")
-                    print("ALS (", sample[device_header + 'als_state'], ")")
+                    als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
+                    print("ALS ( %.2f%% )" % als_percent)
                 print('')
 
             print("Loop Time:", clock() - start_time)
@@ -397,10 +419,12 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
             return
 
         tester_name = input("\nPlease enter your name: ")
+        log_file.write("Tester: %s\n" % tester_name)
 
         ## Display current date and time from now variable
         start_time = time.strftime("%c")
         print("Test's start time: %s" % start_time)
+        log_file.write("Date: %s\n" % start_time)
 
         for teensy_name in teensy_names:
 
@@ -411,10 +435,12 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
 
         self.send_commands()
 
+        log_file.write("\n====== Test Results =======\n")
         # testing each Tentacle one by one
         for teensy_name in teensy_names:
 
             print("\n........ Testing ", teensy_name, '........')
+            log_file.write("\n------ %s ------" % teensy_name)
 
             for j in range(3):
 
@@ -426,7 +452,8 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
 
                 # prompt user
                 print("\nTentacle %d's frond is activated" % j)
-                input("Enter [y] if passed and [f] if failed\t")
+                result = input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nTentacle %d's frond:\t%s" % (j, result))
 
                 # turn off Tentalce arm
                 cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, 0)
@@ -442,7 +469,8 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
 
                 # prompt user
                 print("Tentacle %d's reflex actuators are activated" % j)
-                input("Enter [y] if passed and [f] if failed\t")
+                result = input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nTentacle %d's reflex actuators:\t%s" % (j, result))
 
                 # turn off reflex actuator
                 cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
@@ -450,7 +478,48 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
+                # +++testing the IR sensors++++
+                self.update_input_states((teensy_name,))
 
+                # specify the desired measurements
+                input_type = ('tentacle_%d_ir_0_state'%j, 'tentacle_%d_ir_1_state'%j)
+
+                # retrieve the desired measurements
+                input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
+                sample, is_new_update = input_states[teensy_name]
+
+                device_header = 'tentacle_%d_' % j
+                print("Sampled Tentacle %d's IR sensors" % j, end=":\t")
+                ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
+                                             sample[device_header + 'ir_1_state'])) / ADC_RES * 100)
+
+                print("( %.2f%%, %.2f%% )" % ir_percent, end="\n")
+
+
+                result = input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nTentacle %d's IR Sensors (%.2f%%, %.2f%%):\t%s" % ((j,) + ir_percent + (result,)))
+
+                # +++testing the Accelerometers++++
+                self.update_input_states((teensy_name,))
+
+                # specify the desired measurements
+                input_type = ('tentacle_%d_acc_x_state' % j, 'tentacle_%d_acc_y_state' % j,
+                              'tentacle_%d_acc_z_state' % j)
+
+                # retrieve the desired measurements
+                input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
+                sample, is_new_update = input_states[teensy_name]
+
+                device_header = 'tentacle_%d_' % j
+                print("Sampled Tentacle %d's Accelerometers" % j, end=":\t")
+
+                acc_g = tuple(np.array((sample[device_header + 'acc_x_state'],
+                                        sample[device_header + 'acc_y_state'],
+                                        sample[device_header + 'acc_z_state'])) * ACC_MG_PER_LSB)
+
+                print("( %.2f, %.2f, %.2f ) " % acc_g)
+                result = input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nTentacle %d's Accelerometers (%.2f, %.2f, %.2f):\t%s" % ((j,) +acc_g + (result,)))
 
             cmd_obj = command_object(teensy_name)
             for j in range(1):
@@ -462,20 +531,41 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
 
                 print("\nProtocell %d's LED is activated" % j)
                 input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nProtocell %d's LED:\t%s" % (j, result))
 
                 # turn off protocell
                 cmd_obj.add_param_change('protocell_%d_led_level' % j, 0)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
+                # +++testing the Ambient light sensors++++
+                self.update_input_states((teensy_name,))
+
+                # specify the desired measurements
+                input_type = ('protocell_%d_als_state' % j,)
+
+                # retrieve the desired measurements
+                input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
+                sample, is_new_update = input_states[teensy_name]
+
+                device_header = 'protocell_%d_' % j
+                print("Sampled Protocell %d's ambient light sensors" % j, end=":\t")
+                als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
+                print("ALS ( %.2f%% )" % als_percent)
+
+                result = input("Enter [y] if passed and [f] if failed\t")
+                log_file.write("\nProtocell %d's Ambient Light Sensors (%.2f%%):\t%s" % ((j,) + (als_percent,) + (result,)))
+
 
         # terminate all threads
-        print("\nTest Completed\n\n")
+        # Display current date and time from now variable
+        end_time = time.strftime("%c")
+        print("\nTest Completed at %s \n\n" % end_time)
+
+        log_file.write("\nTest Completed at %s \n\n" % end_time)
         for teensy_name in teensy_names:
             self.teensy_manager.kill_teensy_thread(teensy_name)
-
-
-
+        log_file.close()
 
 
 class ProgrammUpload(InteractiveCmd.InteractiveCmd):

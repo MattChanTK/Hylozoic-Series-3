@@ -61,7 +61,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             if not isinstance(M, tuple):
                 raise (TypeError, "M must be a tuple")
             if len(M) != len(self.actuate_vars):
-                raise (ValueError, "M must have " + str(len(self.actuate_vars)) +" elements!")
+                raise (ValueError, "M must have " + str(len(self.actuate_vars)) + " elements!")
 
             for i in range(len(self.actuate_vars)):
                 self.sync_barrier.action_q.put((self.actuate_vars[i][0], (self.actuate_vars[i][1], M[i])))
