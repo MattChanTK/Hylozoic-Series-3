@@ -35,7 +35,7 @@ class TentacleVar{
 		
 		//~~IR sensors activation threshold~~
 		// {bottom IR, tip IR}
-		uint16_t tentacle_ir_threshold[2] = {1200, 1200};
+		uint16_t tentacle_ir_threshold[2] = {1400, 1400};
 
 		
 		//~~~ON and OFF periods of the Tentacle arm activation here~~~
