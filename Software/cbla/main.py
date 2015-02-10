@@ -3,7 +3,7 @@ from interactive_system import TeensyManager
 # import os
 # import cProfile
 
-from CBLA import CBLA_Behaviours as cmd
+from CBLA_System import CBLA_Behaviours as cmd
 
 
 packet_size_in = 64
