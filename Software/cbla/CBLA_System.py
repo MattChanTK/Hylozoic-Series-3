@@ -4,7 +4,7 @@ import threading
 
 from interactive_system import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
-from cbla_engine import CBLA_Engine
+from CBLA_Engine import CBLA_Engine
 
 import Robot
 # from SimSystem import DiagonalPlane as Robot
