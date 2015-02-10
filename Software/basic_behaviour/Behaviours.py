@@ -152,6 +152,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
         state_history = dict()
 
         t0 = clock()
+        t_pre_output = 0
         while loop < num_loop:
 
 
@@ -191,12 +192,12 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     device_header = 'tentacle_%d_' % j
 
                     # cycling the tentacle
-                    if sample[device_header + 'cycling'] == 0:
-                        cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, tentacle_action[j]%4)
+                    #if sample[device_header + 'cycling'] == :
+                    cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, tentacle_action[j]%4)
 
-                    if t - tentacle_time[j] > 60 + j*3:
+                    if t - tentacle_time[j] > 60:
                         tentacle_action[j] += 1
-                        tentacle_time[j] = t - j*3
+                        tentacle_time[j] = t
 
 
                     # reflex sensor trigger LED and vibration motor
@@ -270,12 +271,14 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
 
             # output to files
-            for device, states in state_history.items():
-                curr_dir = os.getcwd()
-                os.chdir(os.path.join(curr_dir, 'pickle_jar'))
-                with open(str(device) + '_state_history.pkl', 'wb') as output:
-                    pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
-                os.chdir(curr_dir)
+            if t - t_pre_output > 3:
+                t_pre_output = clock()
+                for device, states in state_history.items():
+                    curr_dir = os.getcwd()
+                    os.chdir(os.path.join(curr_dir, 'pickle_jar'))
+                    with open(str(device) + '_state_history.pkl', 'wb') as output:
+                        pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+                    os.chdir(curr_dir)
 
             t0 = clock()
 
