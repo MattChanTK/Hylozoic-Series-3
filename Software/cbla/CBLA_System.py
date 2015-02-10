@@ -9,11 +9,13 @@ from CBLA_Engine import CBLA_Engine
 import Robot
 # from SimSystem import DiagonalPlane as Robot
 
+
 class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
     # ========= the Run function for the entire CBLA behaviour =====
     def run(self):
 
+        # change folder to "pickle_jar". This is where al the data will be stored
         curr_dir = os.getcwd()
         os.chdir(os.path.join(curr_dir, "pickle_jar"))
 

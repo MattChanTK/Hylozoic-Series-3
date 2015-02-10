@@ -124,6 +124,7 @@ class TeensyManager():
         try:
             self.teensy_thread_table[teensy_name].killed = True
             print(teensy_name + ' is killed.')
+            self.remove_teensy_thread(teensy_name)
             return 0
         except KeyError:
             print(teensy_name + ' does not exist!')
@@ -309,6 +310,8 @@ class TeensyInterface(threading.Thread):
                                 print("Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter))
 
                     #print(self.serial_number, " - Echo time: ", clock() - start_time)
+
+        print('finished')
 
 
     def compose_msg(self, rand_signature=True):

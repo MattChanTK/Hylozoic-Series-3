@@ -105,7 +105,7 @@ class SystemParameters():
 
                     self.var_encode_func[var_type](name, init_val)
 
-        print("Output parameters: ", list(self.output_param.keys()))
+        # print("Output parameters: ", list(self.output_param.keys()))
 
     def __import_input_param(self, filename):
 
@@ -136,7 +136,7 @@ class SystemParameters():
 
                     self.input_state[name] = 0
 
-        print("Input parameters: ", list(self.input_state.keys()))
+        # print("Input parameters: ", list(self.input_state.keys()))
 
     def get_input_state(self, state_type):
         if isinstance(state_type, str):

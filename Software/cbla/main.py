@@ -1,29 +1,47 @@
-from interactive_system import TeensyManager
 # import sys
 # import os
 # import cProfile
 
+from interactive_system import TeensyManager
 from CBLA_System import CBLA_Behaviours as cmd
 
 
 packet_size_in = 64
 packet_size_out = 64
 
-def main():
+#==== CBLA Behaviour Setting ======
 
+# None means all Teensy's connected will be active; otherwise should be a tuple of names
+ACTIVE_TEENSY_NAMES = None #('test_teensy_88',)
+MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
+
+
+def main():
 
     # instantiate Teensy Monitor
     teensy_manager = TeensyManager(import_config=True)
-    # teensy_manager.kill_teensy_thread('HK_teensy_2')
-    # teensy_manager.kill_teensy_thread('HK_teensy_3')
 
     # find all the Teensy
-
     print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))
+
+    # only leave those specified in ACTIVE _TEENSY_NAMES
+    all_teensy_names = list(teensy_manager.get_teensy_name_list())
+    if isinstance(ACTIVE_TEENSY_NAMES, tuple):
+        for teensy_name in all_teensy_names:
+            if teensy_name not in ACTIVE_TEENSY_NAMES:
+                teensy_manager.kill_teensy_thread(teensy_name)
+
+    # kill
+    if isinstance(MANDATORY_TEENSY_NAMES, tuple):
+        for teensy_name in ACTIVE_TEENSY_NAMES:
+            if teensy_name not in all_teensy_names:
+                raise Exception('%s is missing!!' % teensy_name)
+
+    # find all the Teensy
+    print("Number of active Teensy devices: %s\n" % str(teensy_manager.get_num_teensy_thread()))
 
 
     # interactive code
-
     behaviours = cmd(teensy_manager)
 
     for teensy_thread in teensy_manager._get_teensy_thread_list():
