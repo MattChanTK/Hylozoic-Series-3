@@ -553,6 +553,10 @@ def _setup_prototypes(lib):
     lib.libusb_get_device_address.argtypes = [c_void_p]
     lib.libusb_get_device_address.restype = c_uint8
 
+    # uint8_t libusb_get_device_speed(libusb_device *dev)
+    lib.libusb_get_device_speed.argtypes = [c_void_p]
+    lib.libusb_get_device_speed.restype = c_uint8
+
     try:
         # uint8_t libusb_get_port_number(libusb_device *dev)
         lib.libusb_get_port_number.argtypes = [c_void_p]
@@ -666,6 +670,12 @@ class _IsoTransferHandler(_objfinalizer.AutoFinalizedObject):
         while not self.__callback_done:
             _check(_lib.libusb_handle_events(ctx))
 
+        status = int(self.transfer.contents.status)
+        if status != LIBUSB_TRANSFER_COMPLETED:
+            raise usb.USBError(_str_transfer_error[status],
+                               status,
+                               _transfer_errno[status])
+
         return self.__compute_size_transf_data()
 
     def __compute_size_transf_data(self):
@@ -677,16 +687,13 @@ class _IsoTransferHandler(_objfinalizer.AutoFinalizedObject):
         r = n % packet_length
         if r:
             iso_packets = _get_iso_packet_list(self.transfer.contents)
-            iso_packets[-1].length = r
+            # When the device is disconnected, this list may
+            # return with length 0
+            if len(iso_packets):
+                iso_packets[-1].length = r
 
     def __callback(self, transfer):
-        if transfer.contents.status == LIBUSB_TRANSFER_COMPLETED:
-            self.__callback_done = 1
-        else:
-            status = int(transfer.contents.status)
-            raise usb.USBError(_str_transfer_error[status],
-                               status,
-                               _transfer_errno[status])
+        self.__callback_done = 1
 
 # implementation of libusb 1.0 backend
 class _LibUSB(usb.backend.IBackend):
@@ -712,6 +719,7 @@ class _LibUSB(usb.backend.IBackend):
         _check(self.lib.libusb_get_device_descriptor(dev.devid, byref(dev_desc)))
         dev_desc.bus = self.lib.libusb_get_bus_number(dev.devid)
         dev_desc.address = self.lib.libusb_get_device_address(dev.devid)
+        dev_desc.speed = self.lib.libusb_get_device_speed(dev.devid)
 
         # Only available in newer versions of libusb
         try:
