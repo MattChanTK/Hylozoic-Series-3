@@ -1,4 +1,3 @@
-
 import threading
 from datetime import datetime
 import queue
@@ -14,12 +13,6 @@ class DataCollection(object):
     @property
     def data(self):
         return self.__data
-
-    @data.setter
-    def data(self, val):
-        self.__data = val
-
-
 
 class DataCollector(object):
 
@@ -38,11 +31,11 @@ class DataCollector(object):
         self.data_q.put_nowait((robot_name, var_name, val, time))
 
 
-    def append(self, max_save=20):
+    def append(self):
 
         with self.lock:
-            counter = 0
-            while (not self.data_q.empty()) and counter < max_save:
+
+            while not self.data_q.empty():
 
                 data_package = self.data_q.get()
                 robot_name = data_package[0]
@@ -65,8 +58,6 @@ class DataCollector(object):
                     self.data_collection.data[robot_name][var_name] = [(val, time)]
 
                 self.data_collection.data[robot_name][var_name].append((val, time))
-
-                counter += 1
 
 
     def __get_element(self, robot_name: str, var_name: str, index='all', return_type=0, ):
@@ -103,5 +94,3 @@ class DataCollector(object):
 
     def get_data(self, robot_name: str, var_name: str):
         return self.__get_element(robot_name, var_name, index='all')
-
-

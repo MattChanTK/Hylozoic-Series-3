@@ -15,7 +15,7 @@ import Robot
 
 
 # ======= CBLA Engine Settings ==========
-USING_SAVED_EXPERTS = True
+USING_SAVED_EXPERTS = False
 EXPERT_FILE_NAME = None
 #========================================
 
@@ -124,10 +124,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                                    split_thres=10,
                                                                                    mean_err_thres=2.0, kga_delta=1,
                                                                                    kga_tau=1, saving_freq=1)
-                # ~~~~ starting the CBLA engines ~~~~~
-                for cbla_thread in self.cbla_engine.values():
-                    cbla_thread.daemon = True
-                    cbla_thread.start()
+        # ~~~~ starting the CBLA engines ~~~~~
+        for cbla_thread in self.cbla_engine.values():
+            cbla_thread.start()
 
         # create new file if we didn't import data
         if filename is None:
@@ -139,24 +138,29 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         threading.Thread(target=input_thread, args=(kill_program,), daemon=True).start()
 
         # saving the data every 2s
-        while True:
+        end_program = False
+        while not end_program:
 
-            data_collector.append()
+            if kill_program:
+
+                # killing each of the threads
+                for cbla_thread in self.cbla_engine.values():
+                    cbla_thread.killed = True
+
+                # waiting for the threads to die
+                for cbla_thread in self.cbla_engine.values():
+                    cbla_thread.join()
+
+
+                end_program = True
+
+                # save all data
+                data_collector.append()
 
             with open(filename, 'wb') as output:
                 pickle.dump(data_collector.data_collection, output, pickle.HIGHEST_PROTOCOL)
 
             time.sleep(2)
-
-            if kill_program:
-                break
-
-        # killing each of the threads
-        for cbla_thread in self.cbla_engine.values():
-            cbla_thread.killed = True
-        # waiting for the threads to die
-        for cbla_thread in self.cbla_engine.values():
-            cbla_thread.join()
 
         print("CBLA Behaviours Finished")
 
