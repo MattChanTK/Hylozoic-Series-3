@@ -4,27 +4,58 @@ import pickle
 import glob
 import os
 import re
-import Visualization as Viz
 from copy import copy
 
-
-teensy_names = ('HK_teensy_2_LED',)#'HK_teensy_2_SMA_0',
-os.chdir("pickle_jar")
-
-# search for all pickle files
-
-file_names = []
+import Visualization as Viz
+from DataCollector import DataCollector
 
 
-for file in glob.glob("*.pkl"):
+def main():
+
+    os.chdir("pickle_jar")
+
+    EXPERT_FILE_NAME = None
+
     try:
-        file_names.append(file)
-    except FileNotFoundError:
-        continue
+        if EXPERT_FILE_NAME is None:
+            # get the newest file
+            data_file_name = max(glob.iglob('cbla_data*.[Pp][Kk][Ll]'), key=os.path.getctime)
+        else:
+            data_file_name = EXPERT_FILE_NAME
 
+    except FileNotFoundError:
+        raise FileNotFoundError("Cannot find any data in %s" % os.getcwd())
+
+    else:
+        with open(data_file_name, 'rb') as input:
+            data_import = pickle.load(input)
+
+        try:
+            data_collector = DataCollector(data_import)
+        except TypeError:
+            print("Invalid data format!")
+
+    # iterate through the saved data
+    viz_data = dict()
+    for robot_name in data_collector.robot_names:
+        print(robot_name)
+
+        # extracting data
+        expert = data_collector.get_element_val(robot_name, 'expert')
+        action_history = list(zip(*data_collector.get_var_data(robot_name, 'action')))[0]
+        prediction_history = list(zip(*data_collector.get_var_data(robot_name, 'prediction')))[0]
+        state_history = list(zip(*data_collector.get_var_data(robot_name, 'state')))[0]
+        error_history = list(zip(*data_collector.get_var_data(robot_name, 'mean_error')))[0]
+
+
+        try:
+            viz_data[robot_name] = [expert, action_history, state_history, error_history]
+        except NameError:
+            pass
+
+    visualize_CBLA(viz_data)
 
 def visualize_CBLA(viz_data):
-
 
     # ------ plot the led/ambient light sensor data -------
     fig_num = 1
@@ -143,37 +174,6 @@ def visualize_CBLA(viz_data):
     Viz.plot_show()
 
 
-viz_data = dict()
-for teensy_name in teensy_names:
 
-    expert = None
-    action_history = None
-    state_history = None
-    mearn_error_history = None
-
-    for file in file_names:
-        print(file)
-        type = re.sub(teensy_name+'_', '', file)
-        type = re.sub('.pkl', '', type)
-
-        if type == 'expert_backup':
-            with open (teensy_name+'_'+type+'.pkl', 'rb' ) as input:
-                expert = pickle.load(input)
-        elif type == 'action_history_backup':
-            with open(teensy_name + '_' + type + '.pkl', 'rb') as input:
-                action_history = pickle.load(input)
-        elif type == 'state_history_backup':
-            with open(teensy_name + '_' + type + '.pkl', 'rb') as input:
-                state_history = pickle.load(input)
-        elif type == 'mean_error_history_backup':
-            with open(teensy_name + '_' + type + '.pkl', 'rb') as input:
-                mean_error_history = pickle.load(input)
-
-    try:
-        viz_data[teensy_name] = [expert, action_history, state_history, mean_error_history]
-    except NameError:
-        pass
-
-visualize_CBLA(viz_data)
-
-
+if __name__ == "__main__":
+    main()

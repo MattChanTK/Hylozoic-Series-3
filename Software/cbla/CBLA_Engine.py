@@ -166,7 +166,7 @@ class CBLA_Engine(threading.Thread):
             mean_errors = []
             region_ids = []
             self.expert.save_mean_errors(mean_errors)
-            self.data_collect.enqueue(self.robot.name, 'mean_error', copy(self.expert), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'expert', copy(self.expert), time=datetime.now())
             self.data_collect.enqueue(self.robot.name, 'mean_error', copy(mean_errors), time=datetime.now())
 
             # set to current state

@@ -27,6 +27,14 @@ class DataCollector(object):
             raise TypeError("Data must be in DataCollection class")
         self.data_collection = data
 
+    @property
+    def data(self) -> dict:
+        return self.data_collection.data
+
+    @property
+    def creation_date(self) -> datetime:
+        return self.data_collection.creation_date
+
     def enqueue(self, robot_name: str, var_name: str, val, time=None):
         self.data_q.put_nowait((robot_name, var_name, val, time))
 
@@ -92,5 +100,9 @@ class DataCollector(object):
     def get_element_time(self, robot_name: str, var_name: str, index: int=-1):
         return self.__get_element(robot_name, var_name, index, 1)
 
-    def get_data(self, robot_name: str, var_name: str):
+    def get_var_data(self, robot_name: str, var_name: str):
         return self.__get_element(robot_name, var_name, index='all')
+
+    @property
+    def robot_names(self):
+        return list(self.data_collection.data.keys())
