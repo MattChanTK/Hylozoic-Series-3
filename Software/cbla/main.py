@@ -9,12 +9,9 @@ from CBLA_System import CBLA_Behaviours as cmd
 packet_size_in = 64
 packet_size_out = 64
 
-#==== CBLA Behaviour Setting ======
-
 # None means all Teensy's connected will be active; otherwise should be a tuple of names
 ACTIVE_TEENSY_NAMES = None #('test_teensy_88',)
 MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
-
 
 def main():
 
@@ -48,9 +45,6 @@ def main():
         teensy_thread.join()
 
     print("All Teensy threads terminated")
-
-
-
 
 
 if __name__ == '__main__':
