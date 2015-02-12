@@ -14,22 +14,32 @@ def moving_average(interval, window_size, dim=0):
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, title='Action vs Time', y_label='M(t)', marker_size=1.5, y_dim=0, fig_num=1, subplot_num=121):
+def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M(t)', marker_size=1.5, fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
 
-    plot.plot(action_history, marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
+    counter = 0
+    action_history = list(zip(*action_history))
+    for history in action_history:
+        if time is None:
+            plot.plot(range(len(history)), history, label=y_label[counter], marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
+            plt.xlabel("time step")
+        else:
+            time_delta_s = [step.total_seconds() for step in (np.array(time) - time[0])]
+            plot.plot(time_delta_s, history, label=y_label[counter], marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
+            plt.xlabel("s")
+        counter += 1
     plt.ion()
     plt.show()
     plt.title(title)
-    plt.xlabel("Time Step")
-    plt.ylabel(y_label)
+    plt.ylabel('M(t)')
+    plt.legend(loc=2,prop={'size':6})
 
     return plot
 
-def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122):
+def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, m_label=None, s_label=None):
 
     # plot configuration
     if plot is None:
@@ -39,8 +49,12 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
-        plt.xlabel("SM(t) [" + str(x_idx) + "]")
-        plt.ylabel("S(t+1) [" + str(y_idx) + "]")
+        if s_label is None or m_label is None:
+            plt.xlabel("SM(t) [" + str(x_idx) + "]")
+            plt.ylabel("S(t+1) [" + str(y_idx) + "]")
+        else:
+            plt.xlabel((s_label+m_label)[x_idx], fontsize=10)
+            plt.ylabel(s_label[y_idx], fontsize=10)
         #plt.ylim((-200, 200))
 
     # this is leaf node
@@ -77,7 +91,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plot_model(Expert.left, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
         plot_model(Expert.right, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
 
-def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False):
+def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False, m_label=None, s_label=None):
 
     # plot configuration
     if ax is None:
@@ -87,9 +101,17 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
-        ax.set_xlabel("SM(t) [" + str(x_idx[0]) + "]")
-        ax.set_ylabel("SM(t) [" + str(x_idx[1]) + "]")
-        ax.set_zlabel("S(t+1) [" + str(y_idx) + "]")
+
+        if s_label is None or m_label is None:
+            ax.set_xlabel("SM(t) [" + str(x_idx[0]) + "]")
+            ax.set_ylabel("SM(t) [" + str(x_idx[1]) + "]")
+            ax.set_zlabel("S(t+1) [" + str(y_idx) + "]")
+        else:
+            ax.set_xlabel((s_label+m_label)[x_idx[0]], fontsize=10)
+            ax.set_ylabel((s_label+m_label)[x_idx[1]], fontsize=10)
+            ax.set_zlabel(s_label[y_idx], fontsize=10)
+
+
         #plt.ylim((-200, 200))
         #ax.set_alpha(0.5)
 
@@ -160,8 +182,10 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
 
     # creating an empty list for each region
     region_error = dict()
+    region_error_time = dict()
     for id in region_ids:
         region_error[id] = [None]*len(mean_error_history)
+        region_error_time[id] = [None]*len(mean_error_history)
 
     # group errors into groups corresponding to their region ids
     for t in range(len(mean_error_history)):
