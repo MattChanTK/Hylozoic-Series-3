@@ -15,7 +15,7 @@ def main():
 
     os.chdir("pickle_jar")
 
-    EXPERT_FILE_NAME = None
+    EXPERT_FILE_NAME = None #'cbla_data_15-02-11_20-02-39.pkl'
 
     try:
         if EXPERT_FILE_NAME is None:
@@ -49,10 +49,11 @@ def main():
         error_history = data_collector.get_named_var_data(robot_name, 'mean_error')['val']
         action_labels = data_collector.data_collection.get_robot_actuator_labels(robot_name)
         state_labels = data_collector.data_collection.get_robot_sensor_labels(robot_name)
+        reward_history = data_collector.get_named_var_data(robot_name, 'reward')['val']
 
 
         try:
-            viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels]
+            viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels, reward_history]
         except NameError:
             pass
 
@@ -77,6 +78,7 @@ def visualize_CBLA(viz_data):
         mean_error_history = viz_data[name][3]
         action_label = list(zip(*viz_data[name][4]))[1]
         state_label = list(zip(*viz_data[name][5]))[1]
+        reward_history = viz_data[name][6]
 
         expert.print()
 
@@ -88,8 +90,10 @@ def visualize_CBLA(viz_data):
         Viz.plot_evolution(action_history['val'], time=None, title='Action vs Time', marker_size=3, y_label=action_label,
                            fig_num=fig_num, subplot_num=262)
         Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=263)
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=234)
+        #Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
+        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
+        Viz.plot_evolution(zip(*[reward_history]), time=None, title='Reward vs Time', linestyle='-', y_label=['reward'], fig_num=fig_num, subplot_num=246)
+
         try:
             Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0, fig_num=fig_num, subplot_num=122)
         except Exception as e:
@@ -114,6 +118,7 @@ def visualize_CBLA(viz_data):
         mean_error_history = viz_data[name][3]
         action_label = list(zip(*viz_data[name][4]))[1]
         state_label = list(zip(*viz_data[name][5]))[1]
+        reward_history = viz_data[name][6]
 
         expert.print()
 
@@ -121,59 +126,34 @@ def visualize_CBLA(viz_data):
         region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
 
         Viz.plot_expert_tree(expert, region_ids, filename=('Fig_' + str(fig_num)))
-        Viz.plot_evolution(state_history['val'], time=None, title='State vs Time', y_label=state_label, fig_num=fig_num, subplot_num=251)
+        Viz.plot_evolution(state_history['val'], time=None, title='State vs Time', y_label=state_label, fig_num=fig_num, subplot_num=221)
         Viz.plot_evolution(action_history['val'], time=None, title='Action vs Time', marker_size=3, y_label=action_label,
-                           fig_num=fig_num, subplot_num=252)
+                           fig_num=fig_num, subplot_num=222)
         # Viz.plot_model(expert, region_ids, x_idx=6, y_idx=0, fig_num=fig_num, subplot_num=253)
         # Viz.plot_model(expert, region_ids, x_idx=7, y_idx=1, fig_num=fig_num, subplot_num=254)
         # Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
 
 
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=0, fig_num=fig_num, subplot_num=253)
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=1, fig_num=fig_num, subplot_num=254)
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=2, fig_num=fig_num, subplot_num=255)
+        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=0, fig_num=fig_num, subplot_num=253, x_lim=(-1,4))
+        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=1, fig_num=fig_num, subplot_num=254, x_lim=(-1,4))
+        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=2, fig_num=fig_num, subplot_num=255, x_lim=(-1,4))
 
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
-        #
-        # try:
-        # Viz.plot_model_3D(expert, region_ids, x_idx=(6, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
-        # except Exception as e:
-        #     print(e)
-        #
-        # try:
-        #     Viz.plot_model_3D(expert, region_ids, x_idx=(7, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
-        # except Exception as e:
-        #     print(e)
-        # try:
-        #     Viz.plot_model_3D(expert, region_ids, x_idx=(8, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
-        # except Exception as e:
-        #     print(e)
+        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=223)
+        Viz.plot_evolution(zip(*[reward_history]), time=None, title='Reward vs Time', linestyle='-', y_label='reward', fig_num=fig_num, subplot_num=224)
 
-        # try:
-        #     Viz.plot_model_3D(expert, region_ids, x_idx=(0, 3), y_idx=0, fig_num=fig_num, subplot_num=246)
-        # except Exception as e:
-        #     print(e)
-        #
-        # try:
-        #     Viz.plot_model_3D(expert, region_ids, x_idx=(1, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
-        # except Exception as e:
-        #     print(e)
-        # try:
-        #     Viz.plot_model_3D(expert, region_ids, x_idx=(2, 5), y_idx=2, fig_num=fig_num, subplot_num=248)
-        # except Exception as e:
-        #     print(e)
+        fig_num += 1
 
         try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 4), y_idx=0, fig_num=fig_num, subplot_num=246)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=0, fig_num=fig_num, subplot_num=131)
         except Exception as e:
             print(e)
 
         try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(1, 4), y_idx=1, fig_num=fig_num, subplot_num=247)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=1, fig_num=fig_num, subplot_num=132)
         except Exception as e:
             print(e)
         try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(2, 4), y_idx=2, fig_num=fig_num, subplot_num=248)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2, fig_num=fig_num, subplot_num=133)
         except Exception as e:
             print(e)
 

@@ -70,7 +70,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchronization barrier for all SMAs
         self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
                                                    node_type=Robot.Tentacle_Arm_Node,
-                                                   sample_interval=5, sample_period=0.33)
+                                                   sample_interval=12, sample_period=0.33)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -97,12 +97,18 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             robot_sma = []
             for j in range(3):
                 device_header = 'tentacle_%d_' % j
+
+                # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
+                # sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
+                #               (teensy_name, device_header + 'wave_mean_y'),
+                #               (teensy_name, device_header + 'wave_mean_z'),
+                #               (teensy_name, device_header + 'cycling'))
+
                 sma_action = ((teensy_name, device_header + "arm_motion_on"),)
-                sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
-                              (teensy_name, device_header + 'wave_mean_y'),
-                              (teensy_name, device_header + 'wave_mean_z'),
+                sma_sensor = ((teensy_name, device_header + 'wave_diff_x'),
+                              (teensy_name, device_header + 'wave_diff_y'),
+                              (teensy_name, device_header + 'wave_diff_z'),
                               (teensy_name, device_header + 'cycling'))
-                # sma_sensor = (device_header + 'wave_diff_x', device_header + 'wave_diff_y', device_header + 'wave_diff_z', device_header + 'cycling' )
 
                 robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, self.sync_barrier_sma,
                                                          name=(teensy_name + '_SMA_%d' % j), msg_setting=1))
@@ -115,14 +121,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      id=1,
                                                                      sim_duration=float('inf'),
                                                                      split_thres=400,
-                                                                     mean_err_thres=30.0, kga_delta=5,
+                                                                     mean_err_thres=100.0, kga_delta=5,
                                                                      kga_tau=2, saving_freq=10)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
                                                                                    sim_duration=float('inf'),
                                                                                    split_thres=10,
-                                                                                   mean_err_thres=2.0, kga_delta=1,
+                                                                                   mean_err_thres=0.2, kga_delta=1,
                                                                                    kga_tau=1, saving_freq=1)
         # ~~~~ starting the CBLA engines ~~~~~
         for cbla_thread in self.cbla_engine.values():

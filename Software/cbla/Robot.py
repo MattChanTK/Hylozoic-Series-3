@@ -123,7 +123,7 @@ class Tentacle_Arm_Node(Node):
     def _return_derive_param(counter):
 
         derive_param = dict()
-        derive_param['acc_mean_window'] = counter
+        derive_param['acc_mean_window'] = int(counter/3)
         derive_param['acc_diff_window'] = counter
         derive_param['acc_diff_gap'] = 10
 

@@ -98,6 +98,11 @@ class CBLA_Engine(threading.Thread):
             # add exemplar to expert
             self.expert.append(S + M, S1, S1_predicted)
 
+            try:
+                self.data_collect.enqueue(self.robot.name, 'reward', copy(self.expert.rewards_history[-1]), time=datetime.now())
+            except TypeError:
+                pass
+
             # split is being done within append
             # expert.split()  # won't actually split if the condition is not met
 
@@ -107,7 +112,7 @@ class CBLA_Engine(threading.Thread):
             is_exploring = (random.random() < self.exploring_rate)
 
             #START ---- the Oudeyer way ----- START
-
+            #
             # # generate a list of possible action given the state
             # M_candidates = self.robot.get_possible_action(state=S1, num_sample=5)
             #
@@ -164,7 +169,6 @@ class CBLA_Engine(threading.Thread):
                     m = (exploring_rate_range[0] - exploring_rate_range[1]) / (reward_range[0] - reward_range[1])
                     b = exploring_rate_range[0] - m * reward_range[0]
                     self.exploring_rate = m * L + b
-
             # record the mean errors of each region
             mean_errors = []
             region_ids = []

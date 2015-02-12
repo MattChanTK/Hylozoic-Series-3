@@ -14,7 +14,7 @@ def moving_average(interval, window_size, dim=0):
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M(t)', marker_size=1.5, fig_num=1, subplot_num=121):
+def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M(t)', linestyle='None', marker='o', marker_size=1.5, fig_num=1, subplot_num=121):
 
     # plot configuration
     fig = plt.figure(fig_num)
@@ -24,11 +24,11 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
     action_history = list(zip(*action_history))
     for history in action_history:
         if time is None:
-            plot.plot(range(len(history)), history, label=y_label[counter], marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
+            plot.plot(range(len(history)), history, label=y_label[counter], linestyle=linestyle, marker=marker, ms=marker_size, mew=0.01, fillstyle='full', lw=0)
             plt.xlabel("time step")
         else:
             time_delta_s = [step.total_seconds() for step in (np.array(time) - time[0])]
-            plot.plot(time_delta_s, history, label=y_label[counter], marker='o', ms=marker_size, mew=0.01, fillstyle='full', lw=0)
+            plot.plot(time_delta_s, history, label=y_label[counter], linestyle=linestyle,marker=marker, ms=marker_size, mew=0.01, fillstyle='full', lw=0)
             plt.xlabel("s")
         counter += 1
     plt.ion()
@@ -37,9 +37,10 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
     plt.ylabel('M(t)')
     plt.legend(loc=2,prop={'size':6})
 
+
     return plot
 
-def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, m_label=None, s_label=None):
+def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None):
 
     # plot configuration
     if plot is None:
@@ -55,7 +56,10 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         else:
             plt.xlabel((s_label+m_label)[x_idx], fontsize=10)
             plt.ylabel(s_label[y_idx], fontsize=10)
-        #plt.ylim((-200, 200))
+        if y_lim is not None:
+            plt.ylim(y_lim)
+        if x_lim is not None:
+            plt.xlim(x_lim)
 
     # this is leaf node
     if Expert.left is None and Expert.right is None:
@@ -67,7 +71,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         training_label = list(zip(*Expert.training_label))
         X = training_data[x_idx]
         Y = training_label[y_idx]
-        plot.plot(X, Y, marker='o', ms=2, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
+        plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
 
         # plot the model
         num_sample = 100
