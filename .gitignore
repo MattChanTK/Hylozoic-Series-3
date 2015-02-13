@@ -1,3 +1,7 @@
+
+*.png
+*.jpg
+
 #-------------------------#
 # Hardware's Ignore Files #
 #-------------------------#
@@ -63,6 +67,8 @@ eagle.epf
 # Software's Ignore Files #
 #-------------------------#
 
+
+!Software/documentation/diagrams/*
 
 .idea/
 Bradon_IRtracking/
@@ -330,5 +336,4 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-*.png
 InteractiveSystem_test/exportToHTML/InteractiveCmd.py.html
