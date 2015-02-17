@@ -32,7 +32,7 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
             plt.xlabel("s")
         counter += 1
     plt.ion()
-    plt.show()
+    #plt.show()
     plt.title(title)
     plt.ylabel('M(t)')
     plt.legend(loc=2,prop={'size':6})
@@ -47,7 +47,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         fig = plt.figure(fig_num)
         plot = fig.add_subplot(subplot_num)
         plt.ion()
-        plt.show()
+        #plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
         if s_label is None or m_label is None:
@@ -102,7 +102,7 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         fig = plt.figure(fig_num)
         ax = fig.add_subplot(subplot_num, projection='3d')
         plt.ion()
-        plt.show()
+        #plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
 
@@ -177,7 +177,7 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
     fig = plt.figure(fig_num)
     plot = fig.add_subplot(subplot_num)
     plt.ion()
-    plt.show()
+    #plt.show()
     plt.hold(True)
     plt.title("Mean Error vs Time")
     plt.xlabel("Time Step")
@@ -221,7 +221,7 @@ def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
         for c in range(len(colour)-1):
             colour[c] = round(colour[c]*0xFF)
 
-        this_node = pydot.Node('Node %d.%d\nErr=%.*f\nER=%f\n# data=%d\n# new data=%d' % (level, Expert.expert_id,
+        this_node = pydot.Node('Node %d.%d\nErr=%.*f\nVal=%f\n# data=%d\n# new data=%d' % (level, Expert.expert_id,
                                                                        2, Expert.mean_error, Expert.rewards_history[-1],
                                                                        len(Expert.training_data), Expert.training_count),
                                style="filled", fillcolor="#%x%x%x%x"%(colour[0], colour[1], colour[2], colour[3]))

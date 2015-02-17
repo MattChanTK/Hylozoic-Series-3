@@ -10,7 +10,7 @@ class Expert():
 
     max_training_data_num = 5000
 
-    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0, kga_delta=50, kga_tau=10):
+    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0, learning_rate=0.25, kga_delta=50, kga_tau=10):
 
         self.expert_id = id
         self.expert_level = level
@@ -34,13 +34,17 @@ class Expert():
         self.sm_relation = linear_model.LinearRegression()
 
         # error is max at first
-        self.mean_error = float("inf")
+        self.mean_error = 0.0 #float("inf")
+
+        # expected reward - action-value
+        self.learning_rate = learning_rate
+        self.action_value = 0.0
 
         # knowledge gain assessor
         self.kga = KGA(self.mean_error, delta=kga_delta, tau=kga_tau)
 
         # historical reward history
-        self.rewards_history = [0]
+        self.rewards_history = [self.action_value]
         self.rewards_smoothing = 1
 
         # number of re-training
@@ -78,6 +82,7 @@ class Expert():
                 self.mean_error = self.kga.calc_mean_error()  # used to determine if splitting is necessary
                 self.rewards_history.append(self.kga.calc_reward())
                 self.rewards_history = self.rewards_history[-self.rewards_smoothing:]
+                self.update_action_value()
 
             # #split if necessary
             self.split()
@@ -144,9 +149,11 @@ class Expert():
 
                 # instantiate the left and right expert
                 self.right = Expert(id=(self.expert_id + (1 << self.expert_level)), level=self.expert_level+1,
-                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres)
+                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres,
+                                    learning_rate=self.learning_rate, kga_tau=self.kga.tau, kga_delta=self.kga.delta)
                 self.left = Expert(id=self.expert_id,  level=self.expert_level+1,
-                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres)
+                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres,
+                                    learning_rate=self.learning_rate, kga_tau=self.kga.tau, kga_delta=self.kga.delta)
 
                 # split the data to the correct region
                 for i in range(len(self.training_data)):
@@ -198,54 +205,10 @@ class Expert():
             # delegate to child nodes
             self.right.split()
             self.left.split()
-    def calc_expected_reward(self):
-        return math.fsum(self.rewards_history[-self.rewards_smoothing:])/len(self.rewards_history[-self.rewards_smoothing:])
 
-    def get_next_action(self, S1, is_exploring, candidates=[]):
-
-        if not isinstance(S1, tuple):
-            raise(TypeError, "S1 must be a tuple")
-
-        # this is leaf node
-        if self.left is None and self.right is None:
-            #print("Mean Error", self.mean_error)
-
-            if len(self.training_data) == 0:
-                raise(Exception, "This node has no training data!")
-
-            if self.is_relevant(S1):
-                # reward is just the reward in the most recent time region
-                expected_reward = self.calc_expected_reward()
-
-            else:
-                expected_reward = -float("inf")
-
-            M1 = self.get_possible_action(S1)
-
-            if is_exploring and expected_reward > -float('inf'):
-                candidates.append(copy(M1))
-
-            return (M1, expected_reward)
-
-        # Cases when only one of the child is NONE
-        elif self.left is None and self.right is None:
-            raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
-
-        else:
-            # return the child node with the largest reward
-            next_action_L = self.left.get_next_action(S1, is_exploring, candidates)
-            next_action_R = self.right.get_next_action(S1, is_exploring, candidates)
-
-            if (is_exploring and next_action_L[1] > -float("inf") and next_action_R[1] > -float("inf"))\
-                or (next_action_L[1] == -float("inf") and next_action_L[1] == -float("inf")):
-                if random.random() < 0.5:
-                    return next_action_L
-                else:
-                    return next_action_R
-            if next_action_L[1] > next_action_R[1]:
-                return next_action_L
-            else:
-                return next_action_R
+    def update_action_value(self):
+        self.action_value += self.learning_rate*(math.fsum(self.rewards_history[-self.rewards_smoothing:])/len(self.rewards_history[-self.rewards_smoothing:]))
+        return self.action_value
 
     def evaluate_action(self, S1, M1):
 
@@ -261,9 +224,7 @@ class Expert():
             if len(self.training_data) == 0:
                 raise(Exception, "This node has no training data!")
 
-            expected_reward = self.calc_expected_reward()
-
-            return expected_reward
+            return self.action_value
 
         # Cases when only one of the child is NONE
         elif self.left is None and self.right is None:
@@ -415,43 +376,3 @@ class KGA():
         if math.isnan(reward):  # happens when it's inf - inf
             reward = 0
         return reward
-
-
-if __name__ == "__main__":
-
-    # generating exemplars
-    exemplars = []
-    for i in range(1,15):
-        exemplar = ((math.floor(100*math.sin(math.pi*i/4)),),
-                    (math.floor(100*math.sin(math.pi*i/3)),),
-                    (math.floor(100*math.sin(math.pi*i/2)),))
-        exemplars.append(exemplar)
-    print("Generated exemplars: ", exemplars)
-
-    # instantiate an Expert
-    expert = Expert()
-
-    # appending data to expert
-    for exemplar in exemplars:
-
-        S = exemplar[0]
-        M = exemplar[1]
-        S1 = exemplar[2]
-        print("\n Test case ", S, M, S1)
-
-        # have the expert make prediction
-        S1_predicted = expert.predict(S, M)
-        print(S1_predicted)
-
-        # do action
-
-
-        # add exemplar to expert
-        expert.append(S + M, S1, S1_predicted)
-        expert.split()  # won't actually split if the condition is not met
-
-        M1, L = expert.get_next_action(S1)
-        print("Expected Reward", L)
-        print("Next Action", M1)
-
-    expert.print()

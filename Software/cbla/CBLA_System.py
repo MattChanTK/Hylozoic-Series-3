@@ -120,16 +120,19 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
                                                                      id=1,
                                                                      sim_duration=float('inf'),
-                                                                     split_thres=400,
-                                                                     mean_err_thres=100.0, kga_delta=5,
-                                                                     kga_tau=2, saving_freq=10)
-                for j in range(len(robot_sma)):
-                    self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
-                                                                                   id=2 + j,
-                                                                                   sim_duration=float('inf'),
-                                                                                   split_thres=10,
-                                                                                   mean_err_thres=0.2, kga_delta=1,
-                                                                                   kga_tau=1, saving_freq=1)
+                                                                     split_thres=100,
+                                                                     mean_err_thres=25.0,
+                                                                     kga_delta=15, kga_tau=5,
+                                                                     learning_rate=0.25,
+                                                                     saving_freq=10)
+                # for j in range(len(robot_sma)):
+                #     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
+                #                                                                    id=2 + j,
+                #                                                                    sim_duration=float('inf'),
+                #                                                                    split_thres=10, learning_rate=0.25
+                #                                                                    mean_err_thres=0.2, kga_delta=1,
+                #                                                                    kga_tau=1, saving_freq=1)
+
         # ~~~~ starting the CBLA engines ~~~~~
         for cbla_thread in self.cbla_engine.values():
             cbla_thread.start()
@@ -145,6 +148,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
         # saving the data every 2s
         end_program = False
+        max_save = 200
         while not end_program:
 
             if kill_program:
@@ -159,14 +163,16 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
                 end_program = True
+                #save all data
+                max_save=float('inf')
 
-                # save all data
-                data_collector.append()
+            # save data
+            data_collector.append(max_save=max_save)
 
             with open(filename, 'wb') as output:
                 pickle.dump(data_collector.data_collection, output, pickle.HIGHEST_PROTOCOL)
 
-            time.sleep(2)
+            #time.sleep(2)
 
         print("CBLA Behaviours Finished")
 

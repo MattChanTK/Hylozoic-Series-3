@@ -1,5 +1,6 @@
 import random
 from copy import copy
+from copy import deepcopy
 import os
 import threading
 from time import sleep
@@ -12,8 +13,8 @@ from DataCollector import DataCollector
 
 
 class CBLA_Engine(threading.Thread):
-    def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration: int=2000, exploring_rate: float=0.05,
-                 split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10,
+    def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000, exploring_rate: float=0.15,
+                 split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10, learning_rate=0.25,
                  saving_freq: int=250):
 
         # ~~ configuration ~~
@@ -23,7 +24,7 @@ class CBLA_Engine(threading.Thread):
         self.sim_duration = sim_duration
 
         # use adaptive learning rate
-        self.adapt_exploring_rate = False
+        self.adapt_exploring_rate = True
 
         # exploring rate
         self.exploring_rate = exploring_rate
@@ -41,8 +42,9 @@ class CBLA_Engine(threading.Thread):
                 self.expert = data_collect.get_element_val(self.robot.name, 'expert')
 
             except KeyError:
-                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres, kga_delta=kga_delta,
-                                     kga_tau=kga_tau)
+                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres,
+                                     learning_rate=learning_rate,
+                                     kga_delta=kga_delta, kga_tau=kga_tau)
         else:
             self.data_collect = DataCollector
 
@@ -66,7 +68,10 @@ class CBLA_Engine(threading.Thread):
         M = Mi[random.randint(0, len(Mi)) - 1]
         L = float("-inf")
 
+
         # t0= clock()
+        is_exploring_count = 0
+
         while t < self.sim_duration and self.killed == False:
 
 
@@ -91,6 +96,18 @@ class CBLA_Engine(threading.Thread):
 
             # read sensor
             S1 = self.robot.report()
+
+            # artificially inject noise
+            noise = 0
+            if M[0] < 50:
+                noise = 1000
+            elif M[0] < 100:
+                noise = 500
+            S1 = list(S1)
+            S1[0] += random.gauss(0, noise)
+            S1 = tuple(S1)
+            S1 = tuple(S1)
+
             self.data_collect.enqueue(self.robot.name, 'state', copy(S1), time=datetime.now())
 
             term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
@@ -101,66 +118,73 @@ class CBLA_Engine(threading.Thread):
             try:
                 self.data_collect.enqueue(self.robot.name, 'reward', copy(self.expert.rewards_history[-1]), time=datetime.now())
             except TypeError:
-                pass
+                self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=datetime.now())
 
             # split is being done within append
             # expert.split()  # won't actually split if the condition is not met
 
             # random action or the best action
-            term_print_str += ''.join(map(str, ("Exploring Rate: ", self.exploring_rate, '\n')))
+            term_print_str += ''.join(map(str, ("Expected exploring Rate: ", self.exploring_rate, '\n')))
             #print("Exploring Rate: ", self.exploring_rate)
             is_exploring = (random.random() < self.exploring_rate)
+            is_exploring_count += is_exploring
+            term_print_str += ''.join(map(str, ("Overall exploring Rate: ", is_exploring_count / t, '\n')))
 
             #START ---- the Oudeyer way ----- START
-            #
-            # # generate a list of possible action given the state
-            # M_candidates = self.robot.get_possible_action(state=S1, num_sample=5)
-            #
-            # if is_exploring:
-            #     M1 = random.choice(M_candidates)
-            #
-            # else:
-            #     M1 = 0
-            #     highest_L = float("-inf")
-            #     for M_candidate in M_candidates:
-            #         L = self.expert.evaluate_action(S1, M_candidate)
-            #         if L > highest_L:
-            #             M1 = M_candidate
-            #             highest_L = L
-            #     term_print_str += ''.join(map(str, ("Expected Reward: ", highest_L, '\n')))
-            #     #print("Expected Reward", highest_L)
-            #     L = highest_L
-            # term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
-            # #print("Next Action", M1)
+
+            # generate a list of possible action given the state
+            M_candidates = self.robot.get_possible_action(state=S1, num_sample=255)
+            term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
+
+            if is_exploring:
+                M1 = random.choice(M_candidates)
+
+            else:
+                M1 = [0]
+                highest_L = -float("inf")
+                for M_candidate in M_candidates:
+                    L = self.expert.evaluate_action(S1, M_candidate)
+                    if L > highest_L:
+                        M1 = [M_candidate]
+                        highest_L = L
+                    elif L == highest_L:
+                        M1.append(M_candidate)
+                term_print_str += ''.join(map(str, ("Expected Reward: ", highest_L, '\n')))
+                #print("Expected Reward", highest_L)
+                L = highest_L
+                M1 = random.choice(M1)
+
+            term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
+            #print("Next Action", M1)
 
             #END ---- the Oudeyer way ----- END
 
             #START ---- the Probabilistic way ----- START
 
-            # generate a list of possible action given the state
-            M_candidates = self.robot.get_possible_action(state=S1, num_sample=150)
-            term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
-
-            L_list = []
-            for M_candidate in M_candidates:
-                L_list.append(self.expert.evaluate_action(S1, M_candidate))
-
-            M_idx = weighted_choice_sub(L_list, min_percent=self.exploring_rate)
-            L = max(L_list)
-            term_print_str += ''.join(map(str, ("Highest Expected Reward: ", L, '\n')))
-            #print("Highest Expected Reward", L)
-            M1 = M_candidates[M_idx]
-            term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
-            #print("Next Action", M1)
+            # # generate a list of possible action given the state
+            # M_candidates = self.robot.get_possible_action(state=S1, num_sample=150)
+            # term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
+            #
+            # L_list = []
+            # for M_candidate in M_candidates:
+            #     L_list.append(self.expert.evaluate_action(S1, M_candidate))
+            #
+            # M_idx = weighted_choice_sub(L_list, min_percent=self.exploring_rate)
+            # L = max(L_list)
+            # term_print_str += ''.join(map(str, ("Highest Expected Reward: ", L, '\n')))
+            # #print("Highest Expected Reward", L)
+            # M1 = M_candidates[M_idx]
+            # term_print_str += ''.join(map(str, ("Next Action: ", M1, '\n')))
+            # #print("Next Action", M1)
 
             #END ---- the Probabilistic way ----- END
 
 
 
             # update learning rate based on reward
-            if is_exploring and self.adapt_exploring_rate:  # if it was exploring, stick with the original learning rate
-                exploring_rate_range = [0.5, 0.01]
-                reward_range = [0.01, 100.0]
+            if self.adapt_exploring_rate:  # if it was exploring, stick with the original learning rate
+                exploring_rate_range = [0.8, 0.05]
+                reward_range = [-1000.0, 1000.0]
                 if L < reward_range[0]:
                     self.exploring_rate = exploring_rate_range[0]
                 elif L > reward_range[1]:
