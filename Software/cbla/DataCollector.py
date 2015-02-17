@@ -78,18 +78,23 @@ class DataCollection(object):
         if var_name not in self.__data[robot_name]:
             raise KeyError("Variable %s does not exist in %s!" % (var_name, robot_name))
 
-        if return_type not in self.type_index.keys():
+        if return_type is not None and return_type not in self.type_index.keys():
             raise KeyError("Return Type %s does not exist" % str(return_type))
 
         # return data in the right format
         if isinstance(index, int):
             if index >= len(self.__data[robot_name][var_name]):
                 return None
-
-            return self.__data[robot_name][var_name][index][self.index[return_type]]
+            if return_type is None:
+                return self.__data[robot_name][var_name][index]
+            else:
+                return self.__data[robot_name][var_name][index][self.index[return_type]]
 
         elif isinstance(index, tuple) and len(index) == 2:
-            return list(zip(*self.__data[robot_name][var_name][index[0]:index[1]]))[self.index[return_type]]
+            if return_type is None:
+                return list(zip(*self.__data[robot_name][var_name][index[0]:index[1]]))
+            else:
+                return list(zip(*self.__data[robot_name][var_name][index[0]:index[1]]))[self.index[return_type]]
 
         elif index == 'all':
             return self.__data[robot_name][var_name]
@@ -124,11 +129,12 @@ class DataCollector(object):
     def enqueue(self, robot_name: str, var_name: str, val, time=None):
         self.data_q.put_nowait((robot_name, var_name, val, time))
 
-    def append(self):
+    def append(self, max_save=float('inf')):
 
         with self.lock:
 
-            while not self.data_q.empty():
+            count = 0
+            while not self.data_q.empty() and count < max_save:
 
                 data_package = self.data_q.get()
                 robot_name = data_package[0]
@@ -137,6 +143,7 @@ class DataCollector(object):
                 time = data_package[3]
 
                 self.data_collection.append_data(robot_name, var_name, val, time)
+                count += 1
 
 
     def __get_element(self, robot_name: str, var_name: str, index='all', return_type='val'):
@@ -152,10 +159,10 @@ class DataCollector(object):
     def get_var_data(self, robot_name: str, var_name: str):
         return self.__get_element(robot_name, var_name, index='all')
 
-    def get_named_var_data(self, robot_name: str, var_name: str):
+    def get_named_var_data(self, robot_name: str, var_name: str, max_idx: int=-1):
         named_var_data = dict()
         type_index = self.data_collection.type_index
-        var_all_data = self.__get_element(robot_name, var_name, index='all_zip')
+        var_all_data = self.__get_element(robot_name, var_name, index=(0, max_idx), return_type=None)
         for type, index in type_index.items():
             named_var_data[type] = var_all_data[index]
 
