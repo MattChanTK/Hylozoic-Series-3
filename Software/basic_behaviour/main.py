@@ -4,7 +4,7 @@ import os
 import cProfile
 from pstats import Stats
 
-behaviours_config = 5
+behaviours_config = 2
 
 if len(sys.argv) > 1:
     behaviours_config = int(sys.argv[1])

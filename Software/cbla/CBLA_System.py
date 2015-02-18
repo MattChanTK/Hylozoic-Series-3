@@ -15,7 +15,7 @@ import Robot
 
 
 # ======= CBLA Engine Settings ==========
-USING_SAVED_EXPERTS = False
+USING_SAVED_EXPERTS = True
 EXPERT_FILE_NAME = None
 #========================================
 
@@ -119,9 +119,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 # ~~~~ creating CBLA Engines ~~~~
                 self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
                                                                      id=1,
-                                                                     sim_duration=float('inf'),
-                                                                     split_thres=100,
-                                                                     mean_err_thres=25.0,
+                                                                     sim_duration=4000, #float('inf'),
+                                                                     split_thres=400,
+                                                                     mean_err_thres=20.0,
                                                                      kga_delta=15, kga_tau=5,
                                                                      learning_rate=0.25,
                                                                      saving_freq=10)
