@@ -50,6 +50,9 @@ class Expert():
         # number of re-training
         self.training_count = 0
 
+        # number of times that action associated with this region has been selected
+        self.action_count = 0
+
         # the splitting thresholds
         self.split_thres = split_thres
         self.mean_error_thres = mean_err_thres
@@ -65,6 +68,7 @@ class Expert():
             raise(TypeError, "S1_predicted must be a tuple")
 
         self.training_count += 1
+        self.action_count += 1
         if self.left is None and self.right is None:
             self.training_data.append(SM)
             self.training_label.append(S1)
@@ -87,15 +91,17 @@ class Expert():
             # #split if necessary
             self.split()
 
+            return self.expert_id
+
         # Cases when only one of the child is NONE
         elif self.left is None or self.right is None:
             raise(Exception, "Expert's Tree structure is corrupted! One child branch is missing")
 
         # delegate to child nodes
         elif self.region_splitter.classify(SM):
-            self.right.append(SM, S1, S1_predicted)
+            return self.right.append(SM, S1, S1_predicted)
         else:
-            self.left.append(SM, S1, S1_predicted)
+            return self.left.append(SM, S1, S1_predicted)
 
     def train(self):
         try:
@@ -181,12 +187,14 @@ class Expert():
                 self.right.prediction_model = copy(self.predict_model)
                 self.right.kga.errors = copy(self.kga.errors)
                 self.right.training_count = 0
+                self.right.action_count = self.action_count
                 self.left.train()
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
                 self.left.prediction_model = copy(self.predict_model)
                 self.left.kga.errors = copy(self.kga.errors)
                 self.left.training_count = 0
+                self.left.action_count = self.action_count
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
@@ -316,8 +324,23 @@ class Expert():
             self.left.save_mean_errors(mean_errors)
             self.right.save_mean_errors(mean_errors)
 
+    def save_action_values(self, values):
 
+        # this is leaf node
+        if self.left is None and self.right is None:
+            values.append((self.expert_id, self.action_value))
+        else:
+            self.left.save_action_values(values)
+            self.right.save_action_values(values)
 
+    def save_action_count(self, action_count):
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+            action_count.append((self.expert_id, self.action_count))
+        else:
+            self.left.save_action_count(action_count)
+            self.right.save_action_count(action_count)
 
 
 class KGA():
