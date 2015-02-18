@@ -3,6 +3,7 @@ import threading
 import glob
 import pickle
 import time
+import shutil
 import copy
 
 from interactive_system import InteractiveCmd
@@ -15,7 +16,7 @@ import Robot
 
 
 # ======= CBLA Engine Settings ==========
-USING_SAVED_EXPERTS = True
+USING_SAVED_EXPERTS = False
 EXPERT_FILE_NAME = None
 #========================================
 
@@ -127,7 +128,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      saving_freq=10)
                 # for j in range(len(robot_sma)):
                 #     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
-                #                                                                    id=2 + j,
+                #                                       g                            id=2 + j,
                 #                                                                    sim_duration=float('inf'),
                 #                                                                    split_thres=10, learning_rate=0.25
                 #                                                                    mean_err_thres=0.2, kga_delta=1,
@@ -169,8 +170,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # save data
             data_collector.append(max_save=max_save)
 
-            with open(filename, 'wb') as output:
-                pickle.dump(data_collector.data_collection, output, pickle.HIGHEST_PROTOCOL)
+            save_to_file(filename, data_collector.data_collection)
 
             #time.sleep(2)
 
@@ -179,3 +179,16 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 def input_thread(L):
     input()
     L.append('Kill')
+
+def save_to_file(filename, data):
+
+    # create a temp file
+    temp_filename = "__%s.tmp" % filename
+    with open(temp_filename, 'wb') as output:
+        pickle.dump(data, output, pickle.HIGHEST_PROTOCOL)
+
+        output.flush()
+        os.fsync(output.fileno())
+
+    # move original file
+    shutil.move(temp_filename, filename)
