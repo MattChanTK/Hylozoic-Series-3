@@ -91,7 +91,18 @@ class Node():
 
 
 class Protocell_Node(Node):
-    pass
+
+    def get_possible_action(self, state=None, num_sample=100) -> tuple:
+        x_dim = 1
+
+        X = np.zeros((num_sample, x_dim))
+
+        for i in range(num_sample):
+            X[i, x_dim - 1] = max(min(self.M0[x_dim - 1] - int(num_sample / 2) + i, 100), 0)
+
+        M_candidates = tuple(set((map(tuple, X))))
+
+        return M_candidates
 
 
 class Tentacle_Arm_Node(Node):
