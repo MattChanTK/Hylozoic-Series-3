@@ -40,7 +40,7 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
 
     return plot
 
-def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None):
+def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None, title="Prediction Models"):
 
     # plot configuration
     if plot is None:
@@ -49,7 +49,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         plt.ion()
         #plt.show()
         plt.hold(True)
-        plt.title("Prediction Models")
+        plt.title(title)
         if s_label is None or m_label is None:
             plt.xlabel("SM(t) [" + str(x_idx) + "]")
             plt.ylabel("S(t+1) [" + str(y_idx) + "]")
@@ -171,7 +171,7 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         plot_model_3D(Expert.left, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
         plot_model_3D(Expert.right, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
 
-def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot_num=111):
+def _plot_regional_data(data, region_ids, fig_num=2, subplot_num=111, title="", y_label="", x_label="Time Step"):
 
      # plot configuration
     fig = plt.figure(fig_num)
@@ -179,29 +179,47 @@ def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot
     plt.ion()
     #plt.show()
     plt.hold(True)
-    plt.title("Mean Error vs Time")
-    plt.xlabel("Time Step")
-    plt.ylabel("Mean Error")
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
 
 
     # creating an empty list for each region
-    region_error = dict()
-    region_error_time = dict()
+    region_data = dict()
+    region_data_time = dict()
     for id in region_ids:
-        region_error[id] = [None]*len(mean_error_history)
-        region_error_time[id] = [None]*len(mean_error_history)
+        region_data[id] = [None]*len(data)
+        region_data_time[id] = [None]*len(data)
 
-    # group errors into groups corresponding to their region ids
-    for t in range(len(mean_error_history)):
-        for mean_error in mean_error_history[t]:
-            if mean_error[0] in region_ids:
-                region_error[mean_error[0]][t] = mean_error[1]
+    # group data into groups corresponding to their region ids
+    for t in range(len(data)):
+        for val in data[t]:
+            if val[0] in region_ids:
+                region_data[val[0]][t] = val[1]
 
 
     colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
-    for id in region_error:
-        plot.plot(range(len(region_error[id])), region_error[id], ls='-', lw=2, color=colours[region_ids.index(id)])
+    for id in region_data:
+        plot.plot(range(len(region_data[id])), region_data[id], ls='-', lw=2, color=colours[region_ids.index(id)])
 
+def plot_regional_mean_errors(mean_error_history, region_ids, fig_num=2, subplot_num=111):
+    _plot_regional_data(mean_error_history, region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Mean Error vs Time", y_label="Mean Error", x_label="Time Step")
+
+def plot_regional_action_values(value_history, region_ids, fig_num=1, subplot_num=111):
+    _plot_regional_data(value_history, region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Action Value vs Time", y_label="Action Value", x_label="Time Step")
+
+def plot_regional_action_rate(action_count_history, region_ids, fig_num=1, subplot_num=111):
+
+    action_rate_history = []
+    for action_count in action_count_history:
+        action_count = list(zip(*action_count))
+        region_id = action_count[0]
+        action_count = action_count[1]
+        total_count = sum(action_count)
+        action_rate = np.array(action_count)/total_count
+        action_rate_history.append(tuple(zip(region_id, action_rate)))
+
+    _plot_regional_data(tuple(action_rate_history), region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Action Rate vs Time", y_label="Action Rate", x_label="Time Step")
 
 def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
 

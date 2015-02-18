@@ -44,22 +44,112 @@ def main():
 
         # extracting data
         expert = data_collector.get_element_val(robot_name, 'expert', index=time_range)
-        # expert_time = data_collector.get_element_time(robot_name, 'expert', index=time_range)
+        expert_history = data_collector.get_named_var_data(robot_name, 'expert', max_idx=time_range)['val']
+
         action_history = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
         prediction_history = data_collector.get_named_var_data(robot_name, 'prediction', max_idx=time_range)
         state_history = data_collector.get_named_var_data(robot_name, 'state', max_idx=time_range)
-        error_history = data_collector.get_named_var_data(robot_name, 'mean_error', max_idx=time_range)['val']
-        # error_history_time = data_collector.get_named_var_data(robot_name, 'mean_error', max_idx=time_range)['time']
+        error_history = data_collector.get_named_var_data(robot_name, 'mean error', max_idx=time_range)['val']
+        value_history = data_collector.get_named_var_data(robot_name, 'action value', max_idx=time_range)['val']
+        action_count_history = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)['val']
         action_labels = data_collector.data_collection.get_robot_actuator_labels(robot_name)
         state_labels = data_collector.data_collection.get_robot_sensor_labels(robot_name)
         reward_history = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
+        best_action_history = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)['val']
 
         try:
-            viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels, reward_history]
+            viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels,
+                                    reward_history, value_history, action_count_history, best_action_history, expert_history]
         except NameError:
             pass
     file_name = re.sub('/.[pP][kK][lL]$', '', data_file_name)
-    visualize_CBLA(viz_data, file_name)
+    #visualize_CBLA(viz_data, file_name)
+
+    fig_num = 1
+    fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num)
+    fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
+    Viz.plot_show()
+
+def visualize_CBLA_exploration(viz_data, fig_num=1):
+
+    fig_num = fig_num
+
+    for name in viz_data.keys():
+        expert = viz_data[name][0]
+        action_history = viz_data[name][1]
+        state_history = viz_data[name][2]
+        mean_error_history = viz_data[name][3]
+        action_label = list(zip(*viz_data[name][4]))[1]
+        state_label = list(zip(*viz_data[name][5]))[1]
+        reward_history = viz_data[name][6]
+        value_history = viz_data[name][7]
+        action_count_history = viz_data[name][8]
+        best_action_history = viz_data[name][9]
+
+        # plot prediction error
+        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
+        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=231)
+
+        # plot action value over time
+        region_ids = sorted(list(zip(*value_history[-1]))[0])
+        Viz.plot_regional_action_values(value_history, region_ids, fig_num=fig_num, subplot_num=232)
+
+        # plot action count over time
+        region_ids = sorted(list(zip(*action_count_history[-1]))[0])
+        Viz.plot_regional_action_rate(action_count_history, region_ids, fig_num=fig_num, subplot_num=234)
+
+        # plot best action over time
+        region_ids = sorted(list(zip(*action_count_history[-1]))[0])
+        Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label='Best action', marker_size=4, fig_num=fig_num, subplot_num=235)
+
+        # plot the model - 2D
+        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
+                       subplot_num=133)
+        fig_num +=1
+
+    return fig_num
+
+def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
+    fig_num = fig_num
+
+    for name in viz_data.keys():
+        expert = viz_data[name][0]
+        action_history = viz_data[name][1]
+        state_history = viz_data[name][2]
+        mean_error_history = viz_data[name][3]
+        action_label = list(zip(*viz_data[name][4]))[1]
+        state_label = list(zip(*viz_data[name][5]))[1]
+        reward_history = viz_data[name][6]
+        value_history = viz_data[name][7]
+        action_count_history = viz_data[name][8]
+        best_action_history = viz_data[name][9]
+        expert_history = viz_data[name][10]
+
+        i = 1
+        time_gap = 50
+        while True:
+
+            index = i*time_gap
+            try:
+                region_ids = sorted(list(zip(*mean_error_history[index]))[0])
+            except IndexError:
+                index = len(mean_error_history)-1
+                region_ids = sorted(list(zip(*mean_error_history[index]))[0])
+                break
+            finally:
+
+                Viz.plot_model(expert_history[index], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
+                               subplot_num=(240 + (i-1) % 8 + 1), title='Prediction Models (t=%d)'%(index))
+
+                Viz.plot_expert_tree(expert_history[index], region_ids, filename=(file_name + ' (t=%d)'%(index)))
+
+
+            i += 1
+            time_gap = int(time_gap * 1.2)
+
+            if (i - 1) % 8 == 0:
+                fig_num += 1
+
 
 def visualize_CBLA(viz_data, file_name=''):
 
