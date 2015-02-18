@@ -35,7 +35,7 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
     #plt.show()
     plt.title(title)
     plt.ylabel('M(t)')
-    plt.legend(loc=2,prop={'size':6})
+    plt.legend(loc=2, prop={'size':12})
 
 
     return plot

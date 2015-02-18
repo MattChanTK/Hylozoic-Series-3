@@ -99,8 +99,8 @@ def visualize_CBLA_exploration(viz_data, fig_num=1):
         Viz.plot_regional_action_rate(action_count_history, region_ids, fig_num=fig_num, subplot_num=234)
 
         # plot best action over time
-        region_ids = sorted(list(zip(*action_count_history[-1]))[0])
-        Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label='Best action', marker_size=4, fig_num=fig_num, subplot_num=235)
+        Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), marker_size=3, fig_num=fig_num, subplot_num=235)
+        Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
 
         # plot the model - 2D
         Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
