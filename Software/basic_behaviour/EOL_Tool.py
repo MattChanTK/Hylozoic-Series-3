@@ -62,6 +62,14 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
             cmd_obj.add_param_change('operation_mode', 6)
             self.enter_command(cmd_obj)
 
+           # ------ configuration ------
+           # set the Tentacle on/off periods
+            cmd_obj = command_object(teensy_name, 'tentacle_high_level')
+            for j in range(3):
+                device_header = 'tentacle_%d_' % j
+                cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
+                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
+            self.enter_command(cmd_obj)
         self.send_commands()
 
         log_file.write("\n====== Test Results =======\n")
@@ -166,7 +174,7 @@ class Quality_Assurance(InteractiveCmd.InteractiveCmd):
                 self.send_commands()
 
                 print("\nProtocell %d's LED is activated" % j)
-                input("Enter [y] if passed or [f] if failed\t")
+                result = input("Enter [y] if passed or [f] if failed\t")
                 log_file.write("\nProtocell %d's LED:\t%s" % (j, result))
 
                 # turn off protocell
