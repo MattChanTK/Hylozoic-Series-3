@@ -488,13 +488,13 @@ void Behaviours::tentacle_arm_test_behaviour(const uint32_t &curr_time){
 			volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
 			
 			// if reaches the full period, restart cycle
-			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *100)){
 				tentacle_var[j].tentacle_cycling  = 0;
 				tentacle_var[j].tentacle_motion_on = 0;
 			}
 			
 			//if reaches the on period 
-			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*100)){
 				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
 				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
 
@@ -714,13 +714,13 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour(const uint32_t
 			volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
 			
 			// if reaches the full period, restart cycle
-			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *100)){
 				tentacle_var[j].tentacle_cycling  = 0;
 				tentacle_var[j].tentacle_motion_on = 0;
 			}
 			
 			//if reaches the on period 
-			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*100)){
 				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
 				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
 
@@ -787,12 +787,12 @@ void Behaviours::high_level_direct_control_tentacle_arm_behaviour_continuous(con
 			volatile uint32_t cycle_time = curr_time - high_level_ctrl_tentacle_phase_time[j];
 			
 			// if reaches the full period, restart cycle
-			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *1000)){
+			if (cycle_time > ((tentacle_var[j].tentacle_arm_cycle_period[1] + tentacle_var[j].tentacle_arm_cycle_period[0]) *100)){
 				tentacle_var[j].tentacle_cycling  = 0;
 			}
 			
 			//if reaches the on period 
-			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*1000)){
+			else if (cycle_time > (tentacle_var[j].tentacle_arm_cycle_period[0]*100)){
 				tentacle[j].set_sma_level(high_level_ctrl_sma1[j], 0);
 				tentacle[j].set_sma_level(high_level_ctrl_sma0[j], 0);
 

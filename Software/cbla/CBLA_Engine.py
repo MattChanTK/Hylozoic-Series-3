@@ -13,15 +13,20 @@ from DataCollector import DataCollector
 
 
 class CBLA_Engine(threading.Thread):
-    def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000, exploring_rate: float=0.15,
-                 split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10, learning_rate=0.25,
-                 expert_save_period: float=2):
+    def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000,
+                 target_loop_period: float=0.1,
+                 exploring_rate: float=0.15, learning_rate=0.25,
+                 split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10,
+                 snapshot_period: float=2):
 
         # ~~ configuration ~~
         self.data_collect = data_collect
 
         # number of time step
         self.sim_duration = sim_duration
+
+        # target loop speed
+        self.target_loop_period = target_loop_period
 
         # use adaptive learning rate
         self.adapt_exploring_rate = True
@@ -33,15 +38,15 @@ class CBLA_Engine(threading.Thread):
 
         self.robot = copy(robot)
         self.engine_id = id
-        self.expert_save_period = expert_save_period
+        self.snapshot_period = snapshot_period
         self.expert_ids = [0]
 
         # instantiate an Expert
         if self.data_collect is not None and isinstance(self.data_collect, DataCollector):
 
             try:
-                self.expert = data_collect.get_element_val(self.robot.name, 'expert')
-                self.t0 = data_collect.get_element_val(self.robot, 'time_step', 'val')
+                self.expert = data_collect.get_assigned_element(self.robot.name, 'expert', 'val')
+                self.t0 = data_collect.get_assigned_element(self.robot.name, 'expert', 'step')
 
             except KeyError:
                 self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres,
@@ -50,7 +55,7 @@ class CBLA_Engine(threading.Thread):
 
                 self.t0 = 0
         else:
-            self.data_collect = DataCollector
+            self.data_collect = DataCollector()
 
         self.data_collect.data_collection.set_robot_actuator_labels(self.robot.name, self.robot.actuate_vars)
         self.data_collect.data_collection.set_robot_sensor_labels(self.robot.name, self.robot.report_vars)
@@ -59,7 +64,7 @@ class CBLA_Engine(threading.Thread):
         self.killed = False
         threading.Thread.__init__(self)
         self.daemon = True
-        #self.start()
+        # self.start()
 
     def run(self):
 
@@ -173,36 +178,42 @@ class CBLA_Engine(threading.Thread):
             # record the mean errors of each region
             mean_errors = []
             self.expert.save_mean_errors(mean_errors)
-            self.data_collect.enqueue(self.robot.name, 'mean error', mean_errors, time=curr_datetime, step=t)
+            self.data_collect.enqueue(self.robot.name, 'mean error', val=mean_errors, time=curr_datetime, step=t)
 
             # record the values of each region
             action_values = []
             self.expert.save_action_values(action_values)
-            self.data_collect.enqueue(self.robot.name, 'action value', action_values, time=curr_datetime, step=t)
+            self.data_collect.enqueue(self.robot.name, 'action value', val=action_values, time=curr_datetime, step=t)
 
             # record the action count of each region
             action_count = []
             self.expert.save_action_count(action_count)
-            self.data_collect.enqueue(self.robot.name, 'action count', action_count, time=curr_datetime, step=t)
+            self.data_collect.enqueue(self.robot.name, 'action count', val=action_count, time=curr_datetime, step=t)
 
 
             # store the expert
-            self.data_collect.enqueue_assign(self.robot.name, 'expert', self.expert, time=curr_datetime, step=t)
+            self.data_collect.enqueue_assign(self.robot.name, 'expert', val=self.expert, time=curr_datetime, step=t)
 
             # record expert_history periodcally
-            if real_time_0 - last_expert_save_time > self.expert_save_period:
+            if real_time_0 - last_expert_save_time > self.snapshot_period:
                 # update expert ids
                 expert_ids = []
                 self.expert.save_expert_ids(expert_ids)
-                self.data_collect.enqueue(self.robot.name, 'region ids history', expert_ids, time=curr_datetime, step=t)
+                self.data_collect.enqueue(self.robot.name, 'region ids history', val=expert_ids, time=curr_datetime, step=t)
 
                 # deepcoying experts
-                self.data_collect.enqueue(self.robot.name, 'expert history', deepcopy(self.expert), time=curr_datetime, step=t)
+                self.data_collect.enqueue(self.robot.name, 'expert history', val=deepcopy(self.expert), time=curr_datetime, step=t)
                 last_expert_save_time = real_time_0
+
+                # make snapshot_period slight longer over time
+                self.snapshot_period = min(900, self.snapshot_period*1.2)
 
             # set to current state
             S = S1
             M = M1
+
+            # wait until loop time reaches target loop period
+            sleep(max(0, self.target_loop_period - (clock() - real_time_0)))
 
             real_time = clock()
             term_print_str += ("Time Step = %fs" % (real_time - real_time_0))  # output to terminal

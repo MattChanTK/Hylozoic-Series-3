@@ -8,7 +8,7 @@ from sklearn import linear_model
 
 class Expert():
 
-    max_training_data_num = 5000
+    max_training_data_num = 1000
 
     def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0, learning_rate=0.25, kga_delta=50, kga_tau=10):
 
@@ -73,9 +73,10 @@ class Expert():
             self.training_data.append(SM)
             self.training_label.append(S1)
 
-            if len(self.training_data) > Expert.max_training_data_num:
+            if len(self.training_data) > max(self.split_thres, Expert.max_training_data_num):
                 self.training_data.pop(0)
                 self.training_label.pop(0)
+                print("reach max Training data")
 
             # update prediction model
             self.train()

@@ -102,8 +102,7 @@ class CBLATestBed(SystemParameters):
             device_header = 'tentacle_%d_' % j
 
             waveform_zipped = list(zip(*self.input_state[device_header + "acc_waveform"]))
-            # with open(str(j) + '_acc_reading.pkl', 'wb') as output:
-            #     pickle.dump(waveform_zipped , output, pickle.HIGHEST_PROTOCOL)
+
             window = self.output_param['acc_diff_window']
             gap = self.output_param['acc_diff_gap']
             self.input_state[device_header + "wave_diff_x"] = sum(waveform_zipped[0][-window:]) - sum(waveform_zipped[0][-(window + gap):-gap])

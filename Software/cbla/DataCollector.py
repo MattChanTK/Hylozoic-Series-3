@@ -133,7 +133,7 @@ class DataCollection(object):
 
 class DataCollector(object):
 
-    def __init__(self, data: DataCollection):
+    def __init__(self, data: DataCollection=None):
 
         self.data_q = queue.Queue()
         self.data_q_assign = queue.Queue()
