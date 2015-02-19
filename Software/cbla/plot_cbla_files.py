@@ -34,33 +34,36 @@ def main():
         try:
             data_collector = DataCollector(data_import)
         except TypeError:
-            print("Invalid data format!")
+            raise TypeError("Invalid data format!")
 
     # iterate through the saved data
     viz_data = dict()
+    print("Robots in the data files:")
     for robot_name in data_collector.robot_names:
-        print(robot_name)
+        print('\t' + robot_name)
 
-        # extracting data
-        expert = data_collector.get_assigned_element(robot_name, 'expert', 'val')
+        # extracting data in the right format
+        viz_data[robot_name] = dict()
 
-        expert_history = data_collector.get_named_var_data(robot_name, 'expert history')['val']
-        region_ids_history = data_collector.get_named_var_data(robot_name, 'region ids history')
+        # assigned data
+        viz_data[robot_name]['expert'] = data_collector.get_assigned_element(robot_name, 'expert', 'val')
+        viz_data[robot_name]['m label'] = data_collector.data_collection.get_robot_actuator_labels(robot_name)
+        viz_data[robot_name]['s label'] = data_collector.data_collection.get_robot_sensor_labels(robot_name)
 
-        action_history = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
-        prediction_history = data_collector.get_named_var_data(robot_name, 'prediction', max_idx=time_range)
-        state_history = data_collector.get_named_var_data(robot_name, 'state', max_idx=time_range)
-        error_history = data_collector.get_named_var_data(robot_name, 'mean error', max_idx=time_range)['val']
-        value_history = data_collector.get_named_var_data(robot_name, 'action value', max_idx=time_range)['val']
-        action_count_history = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)['val']
-        action_labels = data_collector.data_collection.get_robot_actuator_labels(robot_name)
-        state_labels = data_collector.data_collection.get_robot_sensor_labels(robot_name)
-        reward_history = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
-        best_action_history = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)['val']
+        # snapshot data
+        viz_data[robot_name]['expert snapshot'] = data_collector.get_named_var_data(robot_name, 'expert history')['val']
+        viz_data[robot_name]['region ids snapshot'] = data_collector.get_named_var_data(robot_name, 'region ids history')
 
-        viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels,
-                                reward_history, value_history, action_count_history, best_action_history, expert_history,
-                                region_ids_history]
+        # continuous recording data
+        viz_data[robot_name]['action'] = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
+        viz_data[robot_name]['prediction'] = data_collector.get_named_var_data(robot_name, 'prediction', max_idx=time_range)
+        viz_data[robot_name]['state'] = data_collector.get_named_var_data(robot_name, 'state', max_idx=time_range)
+        viz_data[robot_name]['mean error'] = data_collector.get_named_var_data(robot_name, 'mean error', max_idx=time_range)['val']
+        viz_data[robot_name]['action value'] = data_collector.get_named_var_data(robot_name, 'action value', max_idx=time_range)['val']
+        viz_data[robot_name]['action count'] = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)['val']
+        viz_data[robot_name]['reward'] = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
+        viz_data[robot_name]['best action'] = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)['val']
+
 
     file_name = re.sub('/.[pP][kK][lL]$', '', data_file_name)
     #visualize_CBLA(viz_data, file_name)
@@ -75,16 +78,24 @@ def visualize_CBLA_exploration(viz_data, fig_num=1):
     fig_num = fig_num
 
     for name in viz_data.keys():
-        expert = viz_data[name][0]
-        action_history = viz_data[name][1]
-        state_history = viz_data[name][2]
-        mean_error_history = viz_data[name][3]
-        action_label = list(zip(*viz_data[name][4]))[1]
-        state_label = list(zip(*viz_data[name][5]))[1]
-        reward_history = viz_data[name][6]
-        value_history = viz_data[name][7]
-        action_count_history = viz_data[name][8]
-        best_action_history = viz_data[name][9]
+
+        if 'SMA' in re.split('_', name):
+            type = 'SMA'
+        elif 'LED' in re.split('_', name):
+            type = 'LED'
+        else:
+            type = None
+
+        expert = viz_data[name]['expert']
+        action_history = viz_data[name]['action']
+        state_history = viz_data[name]['state']
+        mean_error_history = viz_data[name]['mean error']
+        action_label = list(zip(*viz_data[name]['m label']))[1]
+        state_label = list(zip(*viz_data[name]['s label']))[1]
+        reward_history = viz_data[name]['reward']
+        value_history = viz_data[name]['action value']
+        action_count_history = viz_data[name]['action count']
+        best_action_history = viz_data[name]['best action']
 
         # plot prediction error
         region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
@@ -103,43 +114,85 @@ def visualize_CBLA_exploration(viz_data, fig_num=1):
         Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
 
         # plot the model - 2D
-        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
-        #                subplot_num=133)
-        # plot the model - 3D
-        Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
-                          fig_num=fig_num, subplot_num=133)
+        if type is 'LED':
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0,
+                           fig_num=fig_num, subplot_num=133)
+        elif type is 'SMA':
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=0,
+                           fig_num=fig_num, subplot_num=333)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=1,
+                           fig_num=fig_num, subplot_num=336)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=2,
+                           fig_num=fig_num, subplot_num=339)
+
+        #plot the model - 3D
+        # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
+        #                    fig_num=fig_num, subplot_num=133)
         fig_num +=1
 
+        print("Plotted %s's CBLA exploration graphs" % name)
     return fig_num
 
 def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
     fig_num = fig_num
 
     for name in viz_data.keys():
-        expert = viz_data[name][0]
-        action_history = viz_data[name][1]
-        state_history = viz_data[name][2]
-        mean_error_history = viz_data[name][3]
-        action_label = list(zip(*viz_data[name][4]))[1]
-        state_label = list(zip(*viz_data[name][5]))[1]
-        reward_history = viz_data[name][6]
-        value_history = viz_data[name][7]
-        action_count_history = viz_data[name][8]
-        best_action_history = viz_data[name][9]
-        expert_history = viz_data[name][10]
-        region_ids_history = viz_data[name][11]
 
-        for i in range(0, len(expert_history)):
-            region_ids = sorted(region_ids_history['val'][i])
-            time_step = region_ids_history['step'][i]
+        if 'SMA' in re.split('_', name):
+            type = 'SMA'
+        elif 'LED' in re.split('_', name):
+            type = 'LED'
+        else:
+            type = None
 
-            Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
-                           subplot_num=(240 + i%8 + 1), title='Prediction Models (t=%d)'%time_step)
+        action_label = list(zip(*viz_data[name]['m label']))[1]
+        state_label = list(zip(*viz_data[name]['s label']))[1]
 
-            Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name, filename=('t=%d region' % time_step))
+        expert_history = viz_data[name]['expert snapshot']
+        region_ids_history = viz_data[name]['region ids snapshot']
 
-            if (i + 1)% 8  == 0:
-                fig_num += 1
+        if type == 'LED':
+            for i in range(0, len(expert_history)):
+                region_ids = sorted(region_ids_history['val'][i])
+                time_step = region_ids_history['step'][i]
+
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0,
+                               fig_num=fig_num, subplot_num=(2, 4, i % 8 + 1), title='Prediction Models (t=%d)' % time_step)
+
+                Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
+                                     filename='%s_%d t=%d region' % (type, i, time_step))
+
+                if (i + 1) % 8 == 0:
+                    fig_num += 1
+
+        elif type == 'SMA':
+
+            for i in range(0, len(expert_history)):
+                region_ids = sorted(region_ids_history['val'][i])
+                time_step = region_ids_history['step'][i]
+
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
+                               y_idx=0,
+                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
+                               title='Prediction Models (t=%d)' % time_step)
+
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
+                               y_idx=1,
+                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
+                               title='Prediction Models (t=%d)' % time_step)
+
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
+                               y_idx=2,
+                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
+                               title='Prediction Models (t=%d)' % time_step)
+
+                Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
+                                     filename='%s_%d t=%d region' % (type, i, time_step))
+
+                if (i + 1) % 4 == 0:
+                    fig_num += 1
+        fig_num += 1
+        print("Plotted %s's CBLA model and tree evolution"%name)
 
 
 def visualize_CBLA(viz_data, file_name=''):

@@ -46,7 +46,10 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
     # plot configuration
     if plot is None:
         fig = plt.figure(fig_num)
-        plot = fig.add_subplot(subplot_num)
+        if isinstance(subplot_num, tuple):
+            plot = fig.add_subplot(subplot_num[0], subplot_num[1], subplot_num[2])
+        else:
+            plot = fig.add_subplot(subplot_num)
         plt.ion()
         #plt.show()
         plt.hold(True)
@@ -72,11 +75,14 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
         training_label = list(zip(*Expert.training_label))
         X = training_data[x_idx]
         Y = training_label[y_idx]
-        plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
+        try:
+            plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
+        except ValueError:
+            pass
 
         # plot the model
         num_sample = 100
-        pts = [[1000]*num_sample]*len(Expert.training_data[0])
+        pts = [[0]*num_sample]*len(Expert.training_data[0])
         max_val = round(max(training_data[x_idx]))
         min_val = round(min(training_data[x_idx]))
         try:
@@ -216,7 +222,7 @@ def plot_regional_action_rate(action_count_history, region_ids, fig_num=1, subpl
         action_count = list(zip(*action_count))
         region_id = action_count[0]
         action_count = action_count[1]
-        total_count = sum(action_count)
+        total_count = 1 #sum(action_count)
         action_rate = np.array(action_count)/total_count
         action_rate_history.append(tuple(zip(region_id, action_rate)))
 
@@ -227,7 +233,7 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, 
     # if it is the root
     is_root = False
     if graph is None:
-        graph = pydot.Dot(graph_type='graph')
+        graph = pydot.Dot(graph_type='graph', ordering='out')
         is_root = True
 
     # this is leaf node
@@ -240,16 +246,21 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, 
         for c in range(len(colour)-1):
             colour[c] = round(colour[c]*0xFF)
 
-        this_node = pydot.Node('Node %d.%d\nErr=%.*f\nVal=%f\n# data=%d\n# new data=%d' % (level, Expert.expert_id,
-                                                                       2, Expert.mean_error, Expert.rewards_history[-1],
-                                                                       len(Expert.training_data), Expert.training_count),
+        this_node = pydot.Node('Node %d.%d'%(level, Expert.expert_id),
+                               label='Err=%.2f\nVal=%.2f\n# data=%d\n# new data=%d' %
+                                     (Expert.mean_error, Expert.rewards_history[-1], len(Expert.training_data), Expert.training_count),
                                style="filled", fillcolor="#%x%x%x%x"%(colour[0], colour[1], colour[2], colour[3]))
+
+        if is_root:
+            graph.add_node(this_node)
+
     # if not a left node
     else:
         # create the node
         #this_node = pydot.Node('%d. %d' % (level, Expert.expert_id))
         try:
-            this_node = pydot.Node('Node %d.%d\ncut dim=%d \ncut val=%.*f' % (level, Expert.expert_id,Expert.region_splitter.cut_dim, 2, Expert.region_splitter.cut_val))
+            this_node = pydot.Node('Node %d.%d'%(level, Expert.expert_id),
+                                    label='cut dim=%d \ncut val=%.*f' % (Expert.region_splitter.cut_dim, 2, Expert.region_splitter.cut_val))
         except AttributeError:
             this_node = pydot.Node('Node %d.%d'% (level, Expert.expert_id))
         graph.add_node(this_node)
@@ -260,12 +271,14 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, 
         graph.add_node(left_node)
         graph.add_node(right_node)
 
-        edge_left = pydot.Edge(this_node, left_node)
+        edge_left = pydot.Edge(this_node, left_node, label='<=')
         graph.add_edge(edge_left)
-        edge_right = pydot.Edge(this_node, right_node)
+        edge_right = pydot.Edge(this_node, right_node, label='>')
         graph.add_edge(edge_right)
 
     if is_root:
+
+
         folder = os.path.join(os.getcwd(), '%s tree_graphs' % folder_name )
         if not os.path.exists(folder):
             os.makedirs(folder)
