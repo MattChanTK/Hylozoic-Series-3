@@ -314,6 +314,15 @@ class Expert():
             print((" ")*len(" L ** ")*level, "R ** ", end="")
             self.right.print(level+1)
 
+    def save_expert_ids(self, expert_ids):
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+            expert_ids.append(self.expert_id)
+        else:
+            self.left.save_expert_ids(expert_ids)
+            self.right.save_expert_ids(expert_ids)
+
     def save_mean_errors(self, mean_errors):
 
         # this is leaf node

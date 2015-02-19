@@ -15,7 +15,7 @@ from DataCollector import DataCollector
 class CBLA_Engine(threading.Thread):
     def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000, exploring_rate: float=0.15,
                  split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10, learning_rate=0.25,
-                 saving_freq: int=250):
+                 expert_save_period: float=2):
 
         # ~~ configuration ~~
         self.data_collect = data_collect
@@ -33,18 +33,22 @@ class CBLA_Engine(threading.Thread):
 
         self.robot = copy(robot)
         self.engine_id = id
-        self.saving_freq = saving_freq
+        self.expert_save_period = expert_save_period
+        self.expert_ids = [0]
 
         # instantiate an Expert
         if self.data_collect is not None and isinstance(self.data_collect, DataCollector):
 
             try:
                 self.expert = data_collect.get_element_val(self.robot.name, 'expert')
+                self.t0 = data_collect.get_element_val(self.robot, 'time_step', 'val')
 
             except KeyError:
                 self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres,
                                      learning_rate=learning_rate,
                                      kga_delta=kga_delta, kga_tau=kga_tau)
+
+                self.t0 = 0
         else:
             self.data_collect = DataCollector
 
@@ -63,7 +67,10 @@ class CBLA_Engine(threading.Thread):
         Mi = self.robot.get_possible_action()
 
         # initial conditions
-        t = 0
+        t = self.t0
+        self.time_step = t
+
+        last_expert_save_time = 0
         S = self.robot.S
         M = Mi[random.randint(0, len(Mi)) - 1]
         val_best = float("-inf")
@@ -76,8 +83,12 @@ class CBLA_Engine(threading.Thread):
 
 
             real_time_0 = clock()
+            curr_datetime = datetime.now()
 
             t += 1
+
+            # save the current time step
+            self.data_collect.enqueue_assign(self.robot.name, 'time_step', t, time=curr_datetime, step=t)
 
             term_print_str = self.robot.name
             term_print_str += ''.join(map(str, ("\nTest case t = ", t, " -- ", S, M, '\n')))
@@ -88,8 +99,8 @@ class CBLA_Engine(threading.Thread):
 
             term_print_str += ''.join(map(str, ("Predicted S1: ", S1_predicted, '\n')))
 
-            self.data_collect.enqueue(self.robot.name, 'action', copy(M), time=datetime.now())
-            self.data_collect.enqueue(self.robot.name, 'prediction', copy(S1_predicted), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'action', M, time=curr_datetime, step=t)
+            self.data_collect.enqueue(self.robot.name, 'prediction', S1_predicted, time=curr_datetime, step=t)
 
             # do action
             self.robot.actuate(M)
@@ -107,19 +118,19 @@ class CBLA_Engine(threading.Thread):
             # S1[0] += random.gauss(0, noise)
             # S1 = tuple(S1)
 
-
-            self.data_collect.enqueue(self.robot.name, 'state', copy(S1), time=datetime.now())
+            curr_datetime = datetime.now()
+            self.data_collect.enqueue(self.robot.name, 'state', S1, time=curr_datetime, step=t)
 
             term_print_str += ''.join(map(str, ("Actual S1: ", S1, '\n')))
 
             # add exemplar to expert
             selected_expert = self.expert.append(S + M, S1, S1_predicted)
-            self.data_collect.enqueue(self.robot.name, 'selected expert', copy(selected_expert), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'selected expert', selected_expert, time=curr_datetime, step=t)
 
             try:
-                self.data_collect.enqueue(self.robot.name, 'reward', copy(self.expert.rewards_history[-1]), time=datetime.now())
+                self.data_collect.enqueue(self.robot.name, 'reward', self.expert.rewards_history[-1], time=curr_datetime, step=t)
             except TypeError:
-                self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=datetime.now())
+                self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=curr_datetime, step=t)
 
             # generate a list of possible action given the state
             M_candidates = self.robot.get_possible_action(state=S1, num_sample=255)
@@ -129,7 +140,7 @@ class CBLA_Engine(threading.Thread):
             # Oudeyer's way of action selection
             M1, M_best, val_best, is_exploring = self.action_selection_oudeyer(S1, M_candidates)
 
-            self.data_collect.enqueue(self.robot.name, 'best action', copy(M_best), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'best action', M_best, time=curr_datetime, step=t)
 
             term_print_str += ''.join(map(str, ("Best Action: ", M_best, '\n')))
             term_print_str += ''.join(map(str, ("Highest Value: ", val_best, '\n')))
@@ -162,20 +173,32 @@ class CBLA_Engine(threading.Thread):
             # record the mean errors of each region
             mean_errors = []
             self.expert.save_mean_errors(mean_errors)
-            self.data_collect.enqueue(self.robot.name, 'mean error', copy(mean_errors), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'mean error', mean_errors, time=curr_datetime, step=t)
 
             # record the values of each region
             action_values = []
             self.expert.save_action_values(action_values)
-            self.data_collect.enqueue(self.robot.name, 'action value', copy(action_values), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'action value', action_values, time=curr_datetime, step=t)
 
             # record the action count of each region
             action_count = []
             self.expert.save_action_count(action_count)
-            self.data_collect.enqueue(self.robot.name, 'action count', copy(action_count), time=datetime.now())
+            self.data_collect.enqueue(self.robot.name, 'action count', action_count, time=curr_datetime, step=t)
 
-            self.data_collect.enqueue(self.robot.name, 'expert', deepcopy(self.expert), time=datetime.now())
 
+            # store the expert
+            self.data_collect.enqueue_assign(self.robot.name, 'expert', self.expert, time=curr_datetime, step=t)
+
+            # record expert_history periodcally
+            if real_time_0 - last_expert_save_time > self.expert_save_period:
+                # update expert ids
+                expert_ids = []
+                self.expert.save_expert_ids(expert_ids)
+                self.data_collect.enqueue(self.robot.name, 'region ids history', expert_ids, time=curr_datetime, step=t)
+
+                # deepcoying experts
+                self.data_collect.enqueue(self.robot.name, 'expert history', deepcopy(self.expert), time=curr_datetime, step=t)
+                last_expert_save_time = real_time_0
 
             # set to current state
             S = S1

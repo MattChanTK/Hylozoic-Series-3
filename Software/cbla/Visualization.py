@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pydot
 import itertools
+import os
 
 
 
@@ -75,7 +76,7 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
 
         # plot the model
         num_sample = 100
-        pts = [[0]*num_sample]*len(Expert.training_data[0])
+        pts = [[1000]*num_sample]*len(Expert.training_data[0])
         max_val = round(max(training_data[x_idx]))
         min_val = round(min(training_data[x_idx]))
         try:
@@ -221,7 +222,7 @@ def plot_regional_action_rate(action_count_history, region_ids, fig_num=1, subpl
 
     _plot_regional_data(tuple(action_rate_history), region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Action Rate vs Time", y_label="Action Rate", x_label="Time Step")
 
-def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
+def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, filename=None, ):
 
     # if it is the root
     is_root = False
@@ -265,10 +266,14 @@ def plot_expert_tree(Expert, region_ids, filename=None, graph=None, level=0):
         graph.add_edge(edge_right)
 
     if is_root:
+        folder = os.path.join(os.getcwd(), '%s tree_graphs' % folder_name )
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
         if filename is None:
-            graph.write_png('tree_graph.png')
+            graph.write_png(os.path.join(folder, 'tree_graph.png'))
         else:
-            graph.write_png(filename +'_tree_graph.png')
+            graph.write_png(os.path.join(folder, filename +'_tree_graph.png'))
 
     return this_node
 

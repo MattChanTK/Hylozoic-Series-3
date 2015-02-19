@@ -125,7 +125,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      mean_err_thres=20.0,
                                                                      kga_delta=15, kga_tau=5,
                                                                      learning_rate=0.25,
-                                                                     saving_freq=10)
+                                                                     expert_save_period=10)
                 # for j in range(len(robot_sma)):
                 #     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                 #                                       g                            id=2 + j,
@@ -174,6 +174,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             #time.sleep(2)
 
+        # remove tmp files
+        temp_files = glob.glob("*.tmp")
+        for temp_file in temp_files:
+            os.remove(temp_file)
         print("CBLA Behaviours Finished")
 
 def input_thread(L):
@@ -191,4 +195,4 @@ def save_to_file(filename, data):
         os.fsync(output.fileno())
 
     # move original file
-    shutil.move(temp_filename, filename)
+    shutil.copy(temp_filename, filename)

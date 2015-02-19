@@ -15,7 +15,7 @@ def main():
 
     os.chdir("pickle_jar")
 
-    EXPERT_FILE_NAME = None #'cbla_data_15-02-11_21-35-54.pkl'
+    EXPERT_FILE_NAME = None
     time_range = -1
 
     try:
@@ -24,7 +24,6 @@ def main():
             data_file_name = max(glob.iglob('cbla_data*.[Pp][Kk][Ll]'), key=os.path.getctime)
         else:
             data_file_name = EXPERT_FILE_NAME
-
     except FileNotFoundError:
         raise FileNotFoundError("Cannot find any data in %s" % os.getcwd())
 
@@ -43,8 +42,10 @@ def main():
         print(robot_name)
 
         # extracting data
-        expert = data_collector.get_element_val(robot_name, 'expert', index=time_range)
-        expert_history = data_collector.get_named_var_data(robot_name, 'expert', max_idx=time_range)['val']
+        expert = data_collector.get_assigned_element(robot_name, 'expert', 'val')
+
+        expert_history = data_collector.get_named_var_data(robot_name, 'expert history')['val']
+        region_ids_history = data_collector.get_named_var_data(robot_name, 'region ids history')
 
         action_history = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
         prediction_history = data_collector.get_named_var_data(robot_name, 'prediction', max_idx=time_range)
@@ -57,11 +58,10 @@ def main():
         reward_history = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
         best_action_history = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)['val']
 
-        try:
-            viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels,
-                                    reward_history, value_history, action_count_history, best_action_history, expert_history]
-        except NameError:
-            pass
+        viz_data[robot_name] = [expert, action_history, state_history, error_history, action_labels, state_labels,
+                                reward_history, value_history, action_count_history, best_action_history, expert_history,
+                                region_ids_history]
+
     file_name = re.sub('/.[pP][kK][lL]$', '', data_file_name)
     #visualize_CBLA(viz_data, file_name)
 
@@ -103,8 +103,11 @@ def visualize_CBLA_exploration(viz_data, fig_num=1):
         Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
 
         # plot the model - 2D
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
-                       subplot_num=133)
+        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
+        #                subplot_num=133)
+        # plot the model - 3D
+        Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
+                          fig_num=fig_num, subplot_num=133)
         fig_num +=1
 
     return fig_num
@@ -124,30 +127,18 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
         action_count_history = viz_data[name][8]
         best_action_history = viz_data[name][9]
         expert_history = viz_data[name][10]
+        region_ids_history = viz_data[name][11]
 
-        i = 1
-        time_gap = 50
-        while True:
+        for i in range(0, len(expert_history)):
+            region_ids = sorted(region_ids_history['val'][i])
+            time_step = region_ids_history['step'][i]
 
-            index = i*time_gap
-            try:
-                region_ids = sorted(list(zip(*mean_error_history[index]))[0])
-            except IndexError:
-                index = len(mean_error_history)-1
-                region_ids = sorted(list(zip(*mean_error_history[index]))[0])
-                break
-            finally:
+            Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
+                           subplot_num=(240 + i%8 + 1), title='Prediction Models (t=%d)'%time_step)
 
-                Viz.plot_model(expert_history[index], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
-                               subplot_num=(240 + (i-1) % 8 + 1), title='Prediction Models (t=%d)'%(index))
+            Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name, filename=('t=%d region' % time_step))
 
-                Viz.plot_expert_tree(expert_history[index], region_ids, filename=(file_name + ' (t=%d)'%(index)))
-
-
-            i += 1
-            time_gap = int(time_gap * 1.2)
-
-            if (i - 1) % 8 == 0:
+            if (i + 1)% 8  == 0:
                 fig_num += 1
 
 
