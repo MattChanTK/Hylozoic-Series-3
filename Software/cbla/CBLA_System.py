@@ -16,8 +16,8 @@ import Robot
 
 
 # ======= CBLA Engine Settings ==========
-USING_SAVED_EXPERTS = False
-EXPERT_FILE_NAME = None
+USING_SAVED_EXPERTS = True
+EXPERT_FILE_NAME = 'cbla_data_15-02-21_16-09-54.pkl'
 #========================================
 
 class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
@@ -71,7 +71,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchronization barrier for all SMAs
         self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
                                                    node_type=Robot.Tentacle_Arm_Node,
-                                                   sample_interval=4.0, sample_period=0.33)
+                                                   sample_interval=12.0, sample_period=0.33)
 
         # semaphore for restricting only one thread to access this thread at any given time
         self.lock = threading.Lock()
@@ -111,8 +111,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 sma_action = ((teensy_name, device_header + "arm_motion_on"),)
                 sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
                               (teensy_name, device_header + 'wave_mean_y'),
-                              (teensy_name, device_header + 'wave_mean_z'),
-                              (teensy_name, device_header + 'cycling'))
+                              (teensy_name, device_header + 'wave_mean_z'),)
+                sma_hidden = ((teensy_name, device_header + 'cycling'),)
 
                 # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
                 # sma_sensor = ((teensy_name, device_header + 'wave_diff_x'),
@@ -121,7 +121,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #               (teensy_name, device_header + 'cycling'))
 
                 robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, self.sync_barrier_sma,
-                                                         name=(teensy_name + '_SMA_%d' % j), msg_setting=1))
+                                                         name=(teensy_name + '_SMA_%d' % j), msg_setting=1,
+                                                         hidden_vars=sma_hidden))
 
             # -------- instantiate CBLA Engines ----------------
             with self.lock:
@@ -131,20 +132,24 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      id=1,
                                                                      sim_duration=float('inf'),
                                                                      target_loop_period=0.05,
-                                                                     split_thres=400,
+                                                                     split_thres=300,
+                                                                     split_thres_growth_rate=1.5,
                                                                      mean_err_thres=20.0,
-                                                                     kga_delta=15, kga_tau=25,
+                                                                     kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
-                                                                     snapshot_period=10)
+                                                                     snapshot_period=10,
+                                                                     print_to_terminal=False)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
                                                                                    sim_duration=float('inf'),
-                                                                                   target_loop_period=12,
-                                                                                   split_thres=10, mean_err_thres=1.8,
+                                                                                   target_loop_period=12.5,
+                                                                                   split_thres=50,
+                                                                                   split_thres_growth_rate=1.2,
+                                                                                   mean_err_thres=1.8,
                                                                                    kga_delta=3, kga_tau=5,
                                                                                    learning_rate=0.7,
-                                                                                   snapshot_period=60)
+                                                                                   snapshot_period=30)
 
         # ~~~~ starting the CBLA engines ~~~~~
         for cbla_thread in self.cbla_engine.values():

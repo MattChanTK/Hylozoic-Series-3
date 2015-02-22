@@ -1,11 +1,16 @@
 __author__ = 'Matthew'
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pydot
 import itertools
 import os
+from save_figure import save
 
+
+fig_size = (11, 8.5)
 
 
 def moving_average(interval, window_size, dim=0):
@@ -15,10 +20,10 @@ def moving_average(interval, window_size, dim=0):
     return np.convolve(interval, window, 'same')
 
 
-def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M(t)', linestyle='None', marker='o', marker_size=1.5, fig_num=1, subplot_num=121):
+def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M(t)', y_lim=None, linestyle='None', marker='o', marker_size=1.5, fig_num=1, subplot_num=121):
 
     # plot configuration
-    fig = plt.figure(fig_num)
+    fig = plt.figure(fig_num, figsize=fig_size)
     plot = fig.add_subplot(subplot_num)
 
     counter = 0
@@ -32,25 +37,27 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
             plot.plot(time_delta_s, history, label=y_label[counter], linestyle=linestyle,marker=marker, ms=marker_size, mew=0.01, fillstyle='full', lw=0)
             plt.xlabel("s")
         counter += 1
-    plt.ion()
+    #plt.ion()
     #plt.show()
     plt.title(title)
     plt.ylabel('M(t)')
     plt.legend(loc=2, prop={'size':12})
+    if y_lim is not None and isinstance(y_lim, tuple):
+        plt.ylim(y_lim)
 
 
     return plot
 
-def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None, title="Prediction Models"):
+def plot_model(Expert, region_ids, plot=None, show_model=True, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None, title="Prediction Models"):
 
     # plot configuration
     if plot is None:
-        fig = plt.figure(fig_num)
+        fig = plt.figure(fig_num, figsize=fig_size)
         if isinstance(subplot_num, tuple):
             plot = fig.add_subplot(subplot_num[0], subplot_num[1], subplot_num[2])
         else:
             plot = fig.add_subplot(subplot_num)
-        plt.ion()
+        #plt.ion()
         #plt.show()
         plt.hold(True)
         plt.title(title)
@@ -81,34 +88,35 @@ def plot_model(Expert, region_ids, plot=None, x_idx=1, y_idx=0, fig_num=1, subpl
             pass
 
         # plot the model
-        num_sample = 100
-        pts = [[0]*num_sample]*len(Expert.training_data[0])
-        max_val = round(max(training_data[x_idx]))
-        min_val = round(min(training_data[x_idx]))
-        try:
-            pts[x_idx] = list(np.linspace(min_val, max_val, 100))
-        except ZeroDivisionError:
-            pts[x_idx] = [min_val]
+        if show_model:
+            num_sample = 100
+            pts = [[0]*num_sample]*len(Expert.training_data[0])
+            max_val = round(max(training_data[x_idx]))
+            min_val = round(min(training_data[x_idx]))
+            try:
+                pts[x_idx] = list(np.linspace(min_val, max_val, 100))
+            except ZeroDivisionError:
+                pts[x_idx] = [min_val]
 
-        #pts = list(itertools.product(*pts))
-        pts = list(zip(*pts))
+            #pts = list(itertools.product(*pts))
+            pts = list(zip(*pts))
 
-        try:
-            plot.plot(list(zip(*pts))[x_idx], list(list(zip(*Expert.predict_model.predict(pts)))[0]),'-', color='k', linewidth=1)
-        except ValueError:
-            pass
+            try:
+                plot.plot(list(zip(*pts))[x_idx], list(list(zip(*Expert.predict_model.predict(pts)))[0]),'-', color='k', linewidth=1)
+            except ValueError:
+                pass
 
     else:
-        plot_model(Expert.left, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
-        plot_model(Expert.right, region_ids, plot, x_idx, y_idx, fig_num, subplot_num)
+        plot_model(Expert.left, region_ids, plot, show_model, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
+        plot_model(Expert.right, region_ids, plot, show_model, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
 
 def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False, m_label=None, s_label=None):
 
     # plot configuration
     if ax is None:
-        fig = plt.figure(fig_num)
+        fig = plt.figure(fig_num, figsize=fig_size)
         ax = fig.add_subplot(subplot_num, projection='3d')
-        plt.ion()
+        #plt.ion()
         #plt.show()
         plt.hold(True)
         plt.title("Prediction Models")
@@ -144,7 +152,10 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
         X = training_data[x_idx[0]]
         Y = training_data[x_idx[1]]
         Z = training_label[y_idx]
-        ax.scatter(X, Y, Z, marker='o', s=2.0, color=colours[region_ids.index(Expert.expert_id)])
+        try:
+            ax.scatter(X, Y, Z, marker='o', s=2.0, color=colours[region_ids.index(Expert.expert_id)])
+        except ValueError:
+            pass
 
         if data_only:
             return
@@ -175,15 +186,15 @@ def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2,
 
 
     else:
-        plot_model_3D(Expert.left, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
-        plot_model_3D(Expert.right, region_ids, ax=ax, x_idx=x_idx, y_idx=y_idx, fig_num=fig_num, subplot_num=subplot_num, data_only=data_only)
+        plot_model_3D(Expert.left, region_ids, ax, x_idx, y_idx, fig_num, subplot_num, data_only, m_label, s_label)
+        plot_model_3D(Expert.right, region_ids, ax, x_idx, y_idx, fig_num, subplot_num, data_only, m_label, s_label)
 
 def _plot_regional_data(data, region_ids, fig_num=2, subplot_num=111, title="", y_label="", x_label="Time Step"):
 
      # plot configuration
-    fig = plt.figure(fig_num)
+    fig = plt.figure(fig_num, figsize=fig_size)
     plot = fig.add_subplot(subplot_num)
-    plt.ion()
+    #plt.ion()
     #plt.show()
     plt.hold(True)
     plt.title(title)
@@ -226,7 +237,7 @@ def plot_regional_action_rate(action_count_history, region_ids, fig_num=1, subpl
         action_rate = np.array(action_count)/total_count
         action_rate_history.append(tuple(zip(region_id, action_rate)))
 
-    _plot_regional_data(tuple(action_rate_history), region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Action Rate vs Time", y_label="Action Rate", x_label="Time Step")
+    _plot_regional_data(tuple(action_rate_history), region_ids, fig_num=fig_num, subplot_num=subplot_num, title="Action Count vs Time", y_label="Action Count", x_label="Time Step")
 
 def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, filename=None, ):
 
@@ -248,7 +259,7 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, 
 
         this_node = pydot.Node('Node %d.%d'%(level, Expert.expert_id),
                                label='Err=%.2f\nVal=%.2f\n# data=%d\n# new data=%d' %
-                                     (Expert.mean_error, Expert.rewards_history[-1], len(Expert.training_data), Expert.training_count),
+                                     (Expert.mean_error, Expert.action_value, len(Expert.training_data), Expert.training_count),
                                style="filled", fillcolor="#%x%x%x%x"%(colour[0], colour[1], colour[2], colour[3]))
 
         if is_root:
@@ -291,10 +302,19 @@ def plot_expert_tree(Expert, region_ids, graph=None, level=0, folder_name=None, 
     return this_node
 
 
-def plot_show():
-
+def plot_show(block=False):
+    pass
     plt.ioff()
-    plt.show()
+    plt.show(block=block)
+    #plt.ion()
 
+def plot_ion():
+    plt.ion()
+
+def plot_draw():
+    plt.draw()
+
+def plot_close():
+    plt.close()
 
 

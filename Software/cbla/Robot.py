@@ -4,12 +4,13 @@ from time import clock
 import re
 import queue
 import numpy as np
+import random
 
 from interactive_system.InteractiveCmd import command_object
 
 class Node():
 
-    def __init__(self, actuate_vars, report_vars, sync_barrier, name="", msg_setting=0):
+    def __init__(self, actuate_vars, report_vars, sync_barrier, name="", msg_setting=0, hidden_vars=()):
 
         self.sync_barrier = sync_barrier
         self.name = str(name)
@@ -20,6 +21,38 @@ class Node():
 
         self.report_vars = report_vars
         self.S = tuple([0]*len(report_vars))
+
+        self.hidden_vars = hidden_vars
+        self.hidden_state = tuple([0]*len(hidden_vars))
+
+        self.idled = False
+        self.idled_step = 0
+
+        self.past_reward = 0
+
+    @property
+    def activation_reward(self):
+        return 1.0
+
+    @property
+    def activation_reward_delta(self):
+        return 5.0
+
+    @property
+    def idling_reward(self):
+        return -1.0
+
+    @property
+    def idling_prob(self):
+        return 0.8
+
+    @property
+    def min_steps_before_idling(self):
+        return 200
+
+    @property
+    def idling_reward_window(self):
+        return 10
 
     def actuate(self, M):
 
@@ -35,7 +68,7 @@ class Node():
         # wait for other thread in the same sync group to finish
         self.sync_barrier.write_barrier.wait()
 
-    def report(self) -> tuple:
+    def report(self, hidden_vars_only=False) -> tuple:
 
         #wait for all thread to start at the same time
         self.sync_barrier.start_to_read_barrier.wait()
@@ -61,18 +94,29 @@ class Node():
                 if not sample_teensy[1]:
                     print(teensy_name + " has timed out")
 
+            # extract the hidden variables
+            hidden = []
+            for var in self.hidden_vars:
+                hidden.append(sample[var[0]][0][var[1]])
+            self.hidden_state = tuple(hidden)
+
+            if hidden_vars_only:
+                return self.hidden_state
+
             # construct the S vector for the node
             s = []
             for var in self.report_vars:
                 s.append(sample[var[0]][0][var[1]])
             self.S = tuple(s)
 
+
+
             sleep(max(0, self.sync_barrier.sample_period - (clock()-t_sample)))
 
             #print(self.name, 'sample period ',clock()-t_sample)
         return self.S
 
-    def get_possible_action(self, state=None, num_sample=100) -> tuple:
+    def get_possible_action(self, num_sample=100) -> tuple:
 
         x_dim = 1
 
@@ -85,12 +129,55 @@ class Node():
 
         return M_candidates
 
+    def is_idling(self, reward, step) -> bool:
+
+        if self.idled and \
+                (reward > self.activation_reward or abs(reward - self.past_reward) > self.activation_reward_delta):
+                self.idled = False
+        elif not self.idled and reward < self.idling_reward and step-self.idled_step > self.min_steps_before_idling:
+                self.idled = True
+                self.idled_step = step
+
+        if self.idled and random.random() < self.idling_prob:
+            return True
+        else:
+            return False
+
+    def get_idle_action(self) -> tuple:
+        return tuple([0] * len(self.actuate_vars))
+
+
     @staticmethod
     def _return_derive_param(counter) -> dict:
         return None
 
 
 class Protocell_Node(Node):
+
+    @Node.activation_reward.getter
+    def activation_reward(self):
+        return 20.0
+
+    @Node.activation_reward_delta.getter
+    def activation_reward_delta(self):
+        return 100.0
+
+    @Node.idling_reward.getter
+    def idling_reward(self):
+        return 2.0
+
+    @Node.min_steps_before_idling.getter
+    def min_steps_before_idling(self):
+        return 300
+
+    @Node.idling_prob.getter
+    def idling_prob(self):
+        return 0.95
+
+    @Node.idling_reward_window.getter
+    def idling_reward_window(self):
+        return 20
+
 
     def get_possible_action(self, state=None, num_sample=100) -> tuple:
         x_dim = 1
@@ -104,10 +191,40 @@ class Protocell_Node(Node):
 
         return M_candidates
 
+    def get_idle_action(self) -> tuple:
+        action = [0] * len(self.actuate_vars)
+        # for i in range(len(self.actuate_vars)):
+        #     action[i] = random.randint(0, 4)
+        return tuple(action)
+
 
 class Tentacle_Arm_Node(Node):
 
-    def get_possible_action(self, state=None, num_sample=4) -> tuple:
+    @Node.activation_reward.getter
+    def activation_reward(self):
+        return 2.0
+
+    @Node.activation_reward_delta.getter
+    def activation_reward_delta(self):
+        return 3.0
+
+    @Node.idling_reward.getter
+    def idling_reward(self):
+        return 1.0
+
+    @Node.min_steps_before_idling.getter
+    def min_steps_before_idling(self):
+        return 10
+
+    @Node.idling_prob.getter
+    def idling_prob(self):
+        return 0.95
+
+    @Node.idling_reward_window.getter
+    def idling_reward_window(self):
+        return 1
+
+    def get_possible_action(self, num_sample=4) -> tuple:
 
         # constructing a list of all possible action
         x_dim = len(self.actuate_vars)
@@ -122,8 +239,8 @@ class Tentacle_Arm_Node(Node):
         # check if tentacles are cycling
 
         for j in range(x_dim):
-            cycling_id = self.report_vars.index((self.actuate_vars[j][0], re.sub('arm_motion_on', 'cycling', self.actuate_vars[j][1])))
-            if state is not None and state[cycling_id] > 0:
+            cycling_id = self.hidden_vars.index((self.actuate_vars[j][0], re.sub('arm_motion_on', 'cycling', self.actuate_vars[j][1])))
+            if self.hidden_state is not None and self.hidden_state[cycling_id] > 0:
                 for i in range(len(X)):
                     X[i][j] = self.M0[j]
 
@@ -134,7 +251,7 @@ class Tentacle_Arm_Node(Node):
     def _return_derive_param(counter):
 
         derive_param = dict()
-        derive_param['acc_mean_window'] = int(counter/3)
+        derive_param['acc_mean_window'] = max(1, int(counter/3))
         derive_param['acc_diff_window'] = counter
         derive_param['acc_diff_gap'] = 10
 

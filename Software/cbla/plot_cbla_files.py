@@ -9,13 +9,14 @@ import numpy as np
 
 import Visualization as Viz
 from DataCollector import DataCollector
+from save_figure import save
 
 
 def main():
 
     os.chdir("pickle_jar")
 
-    EXPERT_FILE_NAME = None
+    EXPERT_FILE_NAME = 'cbla_data_15-02-21_16-09-54.pkl'
     time_range = -1
 
     try:
@@ -28,8 +29,8 @@ def main():
         raise FileNotFoundError("Cannot find any data in %s" % os.getcwd())
 
     else:
-        with open(data_file_name, 'rb') as input:
-            data_import = pickle.load(input)
+        with open(data_file_name, 'rb') as file_in:
+            data_import = pickle.load(file_in)
 
         try:
             data_collector = DataCollector(data_import)
@@ -51,8 +52,11 @@ def main():
         viz_data[robot_name]['s label'] = data_collector.data_collection.get_robot_sensor_labels(robot_name)
 
         # snapshot data
-        viz_data[robot_name]['expert snapshot'] = data_collector.get_named_var_data(robot_name, 'expert history')['val']
-        viz_data[robot_name]['region ids snapshot'] = data_collector.get_named_var_data(robot_name, 'region ids history')
+        try:
+            viz_data[robot_name]['expert snapshot'] = data_collector.get_named_var_data(robot_name, 'expert history')['val']
+            viz_data[robot_name]['region ids snapshot'] = data_collector.get_named_var_data(robot_name, 'region ids history')
+        except Exception:
+            pass
 
         # continuous recording data
         viz_data[robot_name]['action'] = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
@@ -69,11 +73,14 @@ def main():
     #visualize_CBLA(viz_data, file_name)
 
     fig_num = 1
-    fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num)
+    # Viz.plot_ion()
+    fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
+    # input("press any key to plot the next graphs")
     fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
-    Viz.plot_show()
+    Viz.plot_show(True)
 
-def visualize_CBLA_exploration(viz_data, fig_num=1):
+
+def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
 
     fig_num = fig_num
 
@@ -106,31 +113,59 @@ def visualize_CBLA_exploration(viz_data, fig_num=1):
         Viz.plot_regional_action_values(value_history, region_ids, fig_num=fig_num, subplot_num=232)
 
         # plot action count over time
-        region_ids = sorted(list(zip(*action_count_history[-1]))[0])
-        Viz.plot_regional_action_rate(action_count_history, region_ids, fig_num=fig_num, subplot_num=234)
+        if type is 'LED':
+            region_ids = sorted(list(zip(*action_count_history[-1]))[0])
+            Viz.plot_regional_action_rate(action_count_history, region_ids, fig_num=fig_num, subplot_num=234)
 
-        # plot best action over time
-        Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), marker_size=3, fig_num=fig_num, subplot_num=235)
-        Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
+
+        if type is 'LED':
+            # plot best action over time
+            Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), marker_size=3, fig_num=fig_num, subplot_num=235)
+            Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
+
+        elif type is 'SMA':
+            # plot best action over time
+            Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=235)
+            Viz.plot_evolution(action_history['val'], title='Selected Action vs Time', y_label=('Selected action',), y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=234)
+
 
         # plot the model - 2D
         if type is 'LED':
-            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0,
-                           fig_num=fig_num, subplot_num=133)
-        elif type is 'SMA':
-            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=0,
-                           fig_num=fig_num, subplot_num=333)
-            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=1,
-                           fig_num=fig_num, subplot_num=336)
-            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=2,
-                           fig_num=fig_num, subplot_num=339)
+            # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+            #                x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=133)
 
-        #plot the model - 3D
-        # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
-        #                    fig_num=fig_num, subplot_num=133)
-        fig_num +=1
+            # plot the model - 3D
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
+                              fig_num=fig_num, subplot_num=133, data_only=False)
+        elif type is 'SMA':
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                           x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=333)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                           x_idx=3, y_idx=1, x_lim=(-1, 4), fig_num=fig_num, subplot_num=336)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                           x_idx=3, y_idx=2, x_lim=(-1, 4), fig_num=fig_num, subplot_num=339)
+
+            folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+            save(os.path.join(folder, 'figure %d' % fig_num))
+            fig_num += 1
+
+            # # plot the model - 3D
+            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=0,
+            #                    fig_num=fig_num, subplot_num=131, data_only=True)
+            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=1,
+            #                   fig_num=fig_num, subplot_num=132, data_only=True)
+            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2,
+            #                   fig_num=fig_num, subplot_num=133, data_only=True)
+
+        folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+        save(os.path.join(folder, 'figure %d' % fig_num))
+        fig_num += 1
+
 
         print("Plotted %s's CBLA exploration graphs" % name)
+        Viz.plot_show()
+        #input("press any key to plot the next robot")
+
     return fig_num
 
 def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
@@ -148,51 +183,73 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
         action_label = list(zip(*viz_data[name]['m label']))[1]
         state_label = list(zip(*viz_data[name]['s label']))[1]
 
-        expert_history = viz_data[name]['expert snapshot']
-        region_ids_history = viz_data[name]['region ids snapshot']
+        try:
+            expert_history = viz_data[name]['expert snapshot']
+            region_ids_history = viz_data[name]['region ids snapshot']
+        except KeyError:
+            continue
 
         if type == 'LED':
-            for i in range(0, len(expert_history)):
+            subplot_num = 1
+            for i in range(len(expert_history)):
+            #for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 8*3)), endpoint=False):
+                i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
                 time_step = region_ids_history['step'][i]
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0,
-                               fig_num=fig_num, subplot_num=(2, 4, i % 8 + 1), title='Prediction Models (t=%d)' % time_step)
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                               x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
+                               title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
-                                     filename='%s_%d t=%d region' % (type, i, time_step))
+                                     filename='%s fig %d t=%d region' % (type, fig_num, time_step))
 
-                if (i + 1) % 8 == 0:
+                if subplot_num >= 8:
+                    folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+                    save(os.path.join(folder, 'figure %d' % fig_num))
                     fig_num += 1
+                    subplot_num = 1
+                else:
+                    subplot_num += 1
 
         elif type == 'SMA':
 
-            for i in range(0, len(expert_history)):
+            for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 4 * 3)), endpoint=False):
+                i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
                 time_step = region_ids_history['step'][i]
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
-                               y_idx=0,
-                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                               x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
                                title='Prediction Models (t=%d)' % time_step)
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
-                               y_idx=1,
-                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                               x_idx=3, y_idx=1,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
                                title='Prediction Models (t=%d)' % time_step)
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, x_idx=4,
-                               y_idx=2,
-                               fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                               x_idx=3, y_idx=2,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
                                title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
-                                     filename='%s_%d t=%d region' % (type, i, time_step))
+                                     filename='%s fig %d t=%d region' % (type, fig_num, time_step))
+
 
                 if (i + 1) % 4 == 0:
+                    folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+                    save(os.path.join(folder, 'figure %d' % fig_num))
                     fig_num += 1
+
+
+        print("Plotted %s's CBLA model and tree evolution" % name)
+        Viz.plot_show()
+        #input("press any key to plot the next robot")
+        #Viz.plot_close()
+
+        folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+        save(os.path.join(folder, 'figure %d' % fig_num))
         fig_num += 1
-        print("Plotted %s's CBLA model and tree evolution"%name)
+
 
 
 def visualize_CBLA(viz_data, file_name=''):

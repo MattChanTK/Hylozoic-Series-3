@@ -8,9 +8,11 @@ from sklearn import linear_model
 
 class Expert():
 
-    max_training_data_num = 1000
+    max_training_data_num = 3000
 
-    def __init__(self, id=0, level=0, split_thres=1000, mean_err_thres=1.0, learning_rate=0.25, kga_delta=50, kga_tau=10):
+    def __init__(self, id=0, level=0, split_thres=1000, split_thres_growth_rate=1.2,
+                 split_quality_decay=0.5,
+                 mean_err_thres=1.0, learning_rate=0.25, kga_delta=50, kga_tau=10):
 
         self.expert_id = id
         self.expert_level = level
@@ -55,7 +57,11 @@ class Expert():
 
         # the splitting thresholds
         self.split_thres = split_thres
+        self.split_thres_growth_rate = split_thres_growth_rate
+        self.split_quality_thres = -float('inf')
+        self.split_quality_decay = split_quality_decay
         self.mean_error_thres = mean_err_thres
+        self.split_lock_count = 0
 
 
     def append(self, SM, S1, S1_predicted=None):
@@ -76,7 +82,7 @@ class Expert():
             if len(self.training_data) > max(self.split_thres, Expert.max_training_data_num):
                 self.training_data.pop(0)
                 self.training_label.pop(0)
-                print("reach max Training data")
+                #print("reach max Training data")
 
             # update prediction model
             self.train()
@@ -139,6 +145,12 @@ class Expert():
         split_threshold = self.split_thres
         mean_error_threshold = self.mean_error_thres  # -float('inf')
 
+        try:
+            if self.split_lock_count > 0:
+                self.split_lock_count -= 1
+                return False
+        except AttributeError:
+            pass
         if len(self.training_data) > split_threshold and \
             (self.mean_error > mean_error_threshold):# or self.calc_expected_reward() < expected_reward_threshold):
             return True
@@ -156,10 +168,16 @@ class Expert():
 
                 # instantiate the left and right expert
                 self.right = Expert(id=(self.expert_id + (1 << self.expert_level)), level=self.expert_level+1,
-                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres,
+                                    split_thres=self.split_thres*self.split_thres_growth_rate,
+                                    split_thres_growth_rate=self.split_thres_growth_rate,
+                                    split_quality_decay=self.split_quality_decay*(2-self.split_quality_decay),
+                                    mean_err_thres=self.mean_error_thres,
                                     learning_rate=self.learning_rate, kga_tau=self.kga.tau, kga_delta=self.kga.delta)
                 self.left = Expert(id=self.expert_id,  level=self.expert_level+1,
-                                    split_thres=self.split_thres, mean_err_thres=self.mean_error_thres,
+                                    split_thres=self.split_thres*self.split_thres_growth_rate,
+                                    split_thres_growth_rate=self.split_thres_growth_rate,
+                                    split_quality_decay=self.split_quality_decay*(2-self.split_quality_decay),
+                                    mean_err_thres=self.mean_error_thres,
                                     learning_rate=self.learning_rate, kga_tau=self.kga.tau, kga_delta=self.kga.delta)
 
                 # split the data to the correct region
@@ -173,13 +191,17 @@ class Expert():
                         self.left.training_label.append(self.training_label[i])
                         #self.left.append(self.training_data[i], self.training_label[i])
 
-                # if either of them is empty
-                if len(self.left.training_data) == 0 or len(self.right.training_data) == 0:
+                # if either of them is empty  or if the split doesn't improve prediction error (low quality
+                if len(self.left.training_data) == 0 or len(self.right.training_data) == 0 \
+                        or self.region_splitter.split_quality < self.split_quality_thres:
                     # do not split
                     self.right = None
                     self.left = None
                     self.region_splitter = None
+                    print("split cancelled")
+                    self.split_lock_count = 250
                     return
+
 
                 # transferring "knowledge" to child nodes
                 self.right.train()
@@ -189,6 +211,8 @@ class Expert():
                 self.right.kga.errors = copy(self.kga.errors)
                 self.right.training_count = 0
                 self.right.action_count = self.action_count
+                self.right.split_quality_thres = self.region_splitter.split_quality * self.split_quality_decay
+
                 self.left.train()
                 self.left.mean_error = self.mean_error
                 self.left.rewards_history = copy(self.rewards_history)
@@ -196,6 +220,7 @@ class Expert():
                 self.left.kga.errors = copy(self.kga.errors)
                 self.left.training_count = 0
                 self.left.action_count = self.action_count
+                self.left.split_quality_thres = self.region_splitter.split_quality * self.split_quality_decay
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data = []
@@ -216,8 +241,28 @@ class Expert():
             self.left.split()
 
     def update_action_value(self):
-        self.action_value += self.learning_rate*(math.fsum(self.rewards_history[-self.rewards_smoothing:])/len(self.rewards_history[-self.rewards_smoothing:]))
+        #self.action_value *= 0.95
+        #self.action_value += self.learning_rate*(math.fsum(self.rewards_history[-self.rewards_smoothing:])/len(self.rewards_history[-self.rewards_smoothing:]))
+        self.action_value = math.fsum(self.rewards_history[-self.rewards_smoothing:])/len(self.rewards_history[-self.rewards_smoothing:])
         return self.action_value
+
+    def get_largest_action_value(self):
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+
+            if len(self.training_data) == 0:
+                raise (Exception, "This node has no training data!")
+
+            return self.action_value
+
+        # Cases when only one of the child is NONE
+        elif self.left is None and self.right is None:
+            raise (Exception, "Expert's Tree structure is corrupted! One child branch is missing")
+
+        else:
+            return max(self.left.get_largest_action_value(), self.right.get_largest_action_value())
+
 
     def evaluate_action(self, S1, M1):
 
@@ -299,7 +344,6 @@ class Expert():
         #M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
 
         return M1
-
 
     def print(self, level=0):
 

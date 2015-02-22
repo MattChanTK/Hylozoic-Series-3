@@ -6,6 +6,7 @@ import threading
 from time import sleep
 from time import clock
 from datetime import datetime
+import numpy as np
 
 
 from RegionsManager import Expert
@@ -16,8 +17,10 @@ class CBLA_Engine(threading.Thread):
     def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000,
                  target_loop_period: float=0.1,
                  exploring_rate: float=0.15, learning_rate=0.25,
-                 split_thres: int=1000, mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10,
-                 snapshot_period: float=2):
+                 split_thres: int=1000, split_thres_growth_rate=1.2,
+                 mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10,
+                 snapshot_period: float=2,
+                 print_to_terminal=True):
 
         # ~~ configuration ~~
         self.data_collect = data_collect
@@ -34,12 +37,17 @@ class CBLA_Engine(threading.Thread):
         # exploring rate
         self.exploring_rate = exploring_rate
 
+        self.print_to_terminal = print_to_terminal
+
         # ~~ instantiation ~~
 
         self.robot = copy(robot)
         self.engine_id = id
         self.snapshot_period = snapshot_period
         self.expert_ids = [0]
+
+        self.largest_action_values_array = np.array([])
+
 
         # instantiate an Expert
         if self.data_collect is not None and isinstance(self.data_collect, DataCollector):
@@ -49,7 +57,9 @@ class CBLA_Engine(threading.Thread):
                 self.t0 = data_collect.get_assigned_element(self.robot.name, 'expert', 'step')
 
             except KeyError:
-                self.expert = Expert(split_thres=split_thres, mean_err_thres=mean_err_thres,
+                self.expert = Expert(split_thres=split_thres,
+                                     split_thres_growth_rate=split_thres_growth_rate,
+                                     mean_err_thres=mean_err_thres,
                                      learning_rate=learning_rate,
                                      kga_delta=kga_delta, kga_tau=kga_tau)
 
@@ -79,15 +89,16 @@ class CBLA_Engine(threading.Thread):
         S = self.robot.S
         M = Mi[random.randint(0, len(Mi)) - 1]
         val_best = float("-inf")
+        idle_window_index = 0
 
 
         # t0= clock()
         is_exploring_count = 0
-
+        target_time_0 = clock()
         while t < self.sim_duration and self.killed == False:
 
-
             real_time_0 = clock()
+
             curr_datetime = datetime.now()
 
             t += 1
@@ -112,6 +123,10 @@ class CBLA_Engine(threading.Thread):
 
             # read sensor
             S1 = self.robot.report()
+
+            # wait until loop time reaches target loop period
+            sleep(max(0, self.target_loop_period - (clock() - target_time_0)))
+            target_time_0 = clock()
 
             # artificially inject noise
             # noise = 0
@@ -138,17 +153,35 @@ class CBLA_Engine(threading.Thread):
                 self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=curr_datetime, step=t)
 
             # generate a list of possible action given the state
-            M_candidates = self.robot.get_possible_action(state=S1, num_sample=255)
+            self.robot.report(hidden_vars_only=True)
+            M_candidates = self.robot.get_possible_action(num_sample=255)
             term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
 
 
             # Oudeyer's way of action selection
             M1, M_best, val_best, is_exploring = self.action_selection_oudeyer(S1, M_candidates)
 
+            # if action-value is too low, take the idle action
+
+            if len(self.largest_action_values_array) >= self.robot.idling_reward_window:
+                self.largest_action_values_array[idle_window_index] = self.expert.get_largest_action_value()
+                idle_window_index = (idle_window_index + 1) % self.robot.idling_reward_window
+            else:
+                self.largest_action_values_array = np.append(self.largest_action_values_array,
+                                                             [self.expert.get_largest_action_value()])
+
+            idled = False
+            mean_largest_action_value = np.mean(self.largest_action_values_array)
+            if self.robot.is_idling(reward=mean_largest_action_value, step=t):
+                M1 = self.robot.get_idle_action()
+                idled = True
+            term_print_str += ''.join(map(str, ("Mean Overall Highest Value: ", mean_largest_action_value, '\n')))
+
+
             self.data_collect.enqueue(self.robot.name, 'best action', M_best, time=curr_datetime, step=t)
 
-            term_print_str += ''.join(map(str, ("Best Action: ", M_best, '\n')))
-            term_print_str += ''.join(map(str, ("Highest Value: ", val_best, '\n')))
+            term_print_str += ''.join(map(str, ("Best Action given State: ", M_best, '\n')))
+            term_print_str += ''.join(map(str, ("Highest Value given State: ", val_best, '\n')))
 
             # random action or the best action
             term_print_str += ''.join(map(str, ("Expected exploring Rate: ", self.exploring_rate, '\n')))
@@ -159,6 +192,9 @@ class CBLA_Engine(threading.Thread):
                 exploring_flag = '*'
             else:
                 exploring_flag = ''
+
+            if idled:
+                exploring_flag += '#'
             term_print_str += ''.join(map(str, ("Next Action: ", M1, exploring_flag, '\n')))
 
 
@@ -194,8 +230,8 @@ class CBLA_Engine(threading.Thread):
             # store the expert
             self.data_collect.enqueue_assign(self.robot.name, 'expert', val=self.expert, time=curr_datetime, step=t)
 
-            # record expert_history periodcally
-            if real_time_0 - last_expert_save_time > self.snapshot_period:
+            # record expert_history periodically
+            if real_time_0 - last_expert_save_time > self.snapshot_period or self.killed:
                 # update expert ids
                 expert_ids = []
                 self.expert.save_expert_ids(expert_ids)
@@ -206,19 +242,18 @@ class CBLA_Engine(threading.Thread):
                 last_expert_save_time = real_time_0
 
                 # make snapshot_period slight longer over time
-                self.snapshot_period = min(900, self.snapshot_period*1.2)
+                self.snapshot_period = min(450, self.snapshot_period*1.2)
 
             # set to current state
             S = S1
             M = M1
 
-            # wait until loop time reaches target loop period
-            sleep(max(0, self.target_loop_period - (clock() - real_time_0)))
 
             real_time = clock()
             term_print_str += ("Time Step = %fs" % (real_time - real_time_0))  # output to terminal
 
-            print(term_print_str, end='\n\n')
+            if self.print_to_terminal:
+                print(term_print_str + '\n\n', end='')
 
     # ==== action section methods====
     def action_selection_oudeyer(self, S1, M_candidates):

@@ -163,9 +163,14 @@ class RegionSplitter_oudeyer():
                     self.cut_dim = i
                     self.cut_val = cut_val
 
+        self.__split_quality = dim_min
 
         # just cut in half
         #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+
+    @property
+    def split_quality(self):
+        return self.__split_quality
 
     def classify(self, data):
         if not isinstance(data, tuple):
