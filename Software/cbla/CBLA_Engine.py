@@ -117,6 +117,8 @@ class CBLA_Engine(threading.Thread):
 
             self.data_collect.enqueue(self.robot.name, 'action', M, time=curr_datetime, step=t)
             self.data_collect.enqueue(self.robot.name, 'prediction', S1_predicted, time=curr_datetime, step=t)
+            self.data_collect.enqueue(self.robot.name, 'idled', self.robot.idled, time=curr_datetime, step=t)
+
 
             # do action
             self.robot.actuate(M)
