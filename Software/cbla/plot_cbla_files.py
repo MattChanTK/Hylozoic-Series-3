@@ -16,7 +16,7 @@ def main():
 
     os.chdir("pickle_jar")
 
-    EXPERT_FILE_NAME = 'cbla_data_15-02-21_16-09-54.pkl'
+    EXPERT_FILE_NAME = None # 'cbla_data_15-02-23_13-16-29.pkl'# 'cbla_data_15-02-21_16-09-54.pkl'
     time_range = -1
 
     try:
@@ -143,31 +143,31 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
 
         # plot the model - 2D
         if type is 'LED':
-            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                           x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=133)
+            # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+            #                x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=133)
 
             # plot the model - 3D
-            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
-            #                   fig_num=fig_num, subplot_num=133, data_only=False)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(1, 2), y_idx=0,
+                              fig_num=fig_num, subplot_num=133, data_only=False)
         elif type is 'SMA':
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                           x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=333)
+                           x_idx=4, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=333)
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                           x_idx=3, y_idx=1, x_lim=(-1, 4), fig_num=fig_num, subplot_num=336)
+                           x_idx=4, y_idx=1, x_lim=(-1, 4), fig_num=fig_num, subplot_num=336)
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                           x_idx=3, y_idx=2, x_lim=(-1, 4), fig_num=fig_num, subplot_num=339)
+                           x_idx=4, y_idx=2, x_lim=(-1, 4), fig_num=fig_num, subplot_num=339)
 
             folder = os.path.join(os.getcwd(), '%s figures' % file_name)
             save(os.path.join(folder, 'figure %d' % fig_num))
             fig_num += 1
 
             # # plot the model - 3D
-            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=0,
-            #                    fig_num=fig_num, subplot_num=131, data_only=True)
-            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=1,
-            #                   fig_num=fig_num, subplot_num=132, data_only=True)
-            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2,
-            #                   fig_num=fig_num, subplot_num=133, data_only=True)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=0,
+                               fig_num=fig_num, subplot_num=131, data_only=True)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=1,
+                              fig_num=fig_num, subplot_num=132, data_only=True)
+            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2,
+                              fig_num=fig_num, subplot_num=133, data_only=True)
 
         folder = os.path.join(os.getcwd(), '%s figures' % file_name)
         save(os.path.join(folder, 'figure %d' % fig_num))
@@ -210,7 +210,7 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
                 time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                               x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
+                               x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
                                title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
@@ -232,15 +232,15 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
                 time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                               x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
+                               x_idx=4, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
                                title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                               x_idx=3, y_idx=1,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
+                               x_idx=4, y_idx=1,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
                                title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
-                               x_idx=3, y_idx=2,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
+                               x_idx=4, y_idx=2,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
                                title='Prediction Models (t=%d)' % time_step)
 
                 Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
