@@ -15,103 +15,30 @@ from sklearn import metrics
 from sklearn import linear_model
 import matplotlib.pyplot as plt
 
-
-
-
-class RegionSplitter_KMean():
+class RegionSplitter():
 
     def __init__(self, data, label):
 
-        self.cut_dim = 0
-        self.cut_val = 0
 
         data_dim_num = len(data[0])
         label_dim_num = len(label[0])
 
-        data_zipped = list(zip(*data))
+        data_label = zip(*(list(zip(*data)) + list(zip(*label))))
 
-        #set to cut dimension 1
-        # self.cut_dim = 1
-        # self.clusterer = KMeans(n_clusters=2, init='k-means++')
-        # self.clusterer.fit(list(zip(data_zipped[self.cut_dim])))
-        # return
-
-        # sort in each dimension
-        dim_min = float("inf")
-        for i in range(data_dim_num):
-
-            # TODO: need proper clustering
-            # k-mean cluster for the dimension
-            clusterer = KMeans(n_clusters=2, init='k-means++')
-
-            grouping = clusterer.fit_predict(list(zip(data_zipped[i])))
-
-            groups = [[label[j] for j in range(len(data_zipped[i])) if grouping[j] == 0],
-                      [label[j] for j in range(len(data_zipped[i])) if grouping[j] == 1]]
-
-            weighted_avg_variance = []
-            for group in groups:
-                num_sample = len(group)
-                group = zip(*group)
-
-                variance = []
-                for group_k in group:
-                    mean = math.fsum(group_k)/len(group_k)
-                    norm = math.fsum([x**2 for x in group_k])/len(group_k)
-                    variance.append(math.fsum([((x - mean)**2)/norm for x in group_k]))
-                weighted_avg_variance.append(math.fsum(variance)/len(variance)*num_sample)
-
-            in_group_variance = math.fsum(weighted_avg_variance)
-
-            if dim_min > in_group_variance:
-
-                dim_min = in_group_variance
-                self.cut_dim = i
-                self.clusterer = clusterer
-
-
-        # just cut in half
-        #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
-
-    def classify(self, data):
-        if not isinstance(data, tuple):
-            raise(TypeError, "data must be a tuple")
-
-        data = [(data[self.cut_dim],)]
-        group = self.clusterer.predict(data)
-
-        return group == 0
-        # data[self.cut_dim] > self.cut_val
-
-
-class RegionSplitter_PCA_KMean():
-    def __init__(self, data, label):
-
-        data_dim_num = len(data[0])
-        label_dim_num = len(label[0])
-
-        self.n_comp = max(1, data_dim_num)
-
-        self.pca = PCA(n_components=self.n_comp)
-
-        data = self.pca.fit_transform(data)
-        data_zipped = list(zip(*data))
-
-        # k-mean cluster for the dimension
-        self.clusterer = KMeans(n_clusters=2, init='k-means++')
-
-        self.clusterer.fit(list(zip(*data_zipped)))
+        # cluster data with labels
+        clusterer = KMeans(n_clusters=2, init='k-means++')
+        grouping = clusterer.fit_predict(list(data_label))
+        self.classifier = SVC()
+        self.classifier.fit(data, grouping)
 
 
     def classify(self, data):
         if not isinstance(data, tuple):
             raise(TypeError, "data must be a tuple")
 
-        data = tuple(self.pca.transform(data)[0])
-        group = self.clusterer.predict(data)
+        group = self.classifier.predict(data)
 
-        return group == 0
-
+        return group==0
 
 class RegionSplitter_oudeyer():
 
@@ -510,27 +437,96 @@ class RegionSplitter_PCA_oudeyer_modified():
 
         return group == 0
 
-class RegionSplitter():
+
+class RegionSplitter_KMean():
 
     def __init__(self, data, label):
 
+        self.cut_dim = 0
+        self.cut_val = 0
 
         data_dim_num = len(data[0])
         label_dim_num = len(label[0])
 
-        data_label = zip(*(list(zip(*data)) + list(zip(*label))))
+        data_zipped = list(zip(*data))
 
-        # cluster data with labels
-        clusterer = KMeans(n_clusters=2, init='k-means++')
-        grouping = clusterer.fit_predict(list(data_label))
-        self.classifier = SVC()
-        self.classifier.fit(data, grouping)
+        # set to cut dimension 1
+        # self.cut_dim = 1
+        # self.clusterer = KMeans(n_clusters=2, init='k-means++')
+        # self.clusterer.fit(list(zip(data_zipped[self.cut_dim])))
+        # return
+
+        # sort in each dimension
+        dim_min = float("inf")
+        for i in range(data_dim_num):
+
+            # TODO: need proper clustering
+            # k-mean cluster for the dimension
+            clusterer = KMeans(n_clusters=2, init='k-means++')
+
+            grouping = clusterer.fit_predict(list(zip(data_zipped[i])))
+
+            groups = [[label[j] for j in range(len(data_zipped[i])) if grouping[j] == 0],
+                      [label[j] for j in range(len(data_zipped[i])) if grouping[j] == 1]]
+
+            weighted_avg_variance = []
+            for group in groups:
+                num_sample = len(group)
+                group = zip(*group)
+
+                variance = []
+                for group_k in group:
+                    mean = math.fsum(group_k) / len(group_k)
+                    norm = math.fsum([x ** 2 for x in group_k]) / len(group_k)
+                    variance.append(math.fsum([((x - mean) ** 2) / norm for x in group_k]))
+                weighted_avg_variance.append(math.fsum(variance) / len(variance) * num_sample)
+
+            in_group_variance = math.fsum(weighted_avg_variance)
+
+            if dim_min > in_group_variance:
+                dim_min = in_group_variance
+                self.cut_dim = i
+                self.clusterer = clusterer
+
+
+                # just cut in half
+                #self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
+
+    def classify(self, data):
+        if not isinstance(data, tuple):
+            raise (TypeError, "data must be a tuple")
+
+        data = [(data[self.cut_dim],)]
+        group = self.clusterer.predict(data)
+
+        return group == 0
+        # data[self.cut_dim] > self.cut_val
+
+
+class RegionSplitter_PCA_KMean():
+    def __init__(self, data, label):
+        data_dim_num = len(data[0])
+        label_dim_num = len(label[0])
+
+        self.n_comp = max(1, data_dim_num)
+
+        self.pca = PCA(n_components=self.n_comp)
+
+        data = self.pca.fit_transform(data)
+        data_zipped = list(zip(*data))
+
+        # k-mean cluster for the dimension
+        self.clusterer = KMeans(n_clusters=2, init='k-means++')
+
+        self.clusterer.fit(list(zip(*data_zipped)))
 
 
     def classify(self, data):
         if not isinstance(data, tuple):
-            raise(TypeError, "data must be a tuple")
+            raise (TypeError, "data must be a tuple")
 
-        group = self.classifier.predict(data)
+        data = tuple(self.pca.transform(data)[0])
+        group = self.clusterer.predict(data)
 
-        return group==0
+        return group == 0
+
