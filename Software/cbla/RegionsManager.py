@@ -291,60 +291,6 @@ class Expert():
             else:
                 return self.left.evaluate_action(S1, M1)
 
-    def is_relevant(self, S1):
-        #TODO how to know if the state is associated with the region
-        # check if the S1 is within the min and max range of all existing data points
-        data_transpose = list(zip(*self.training_data))
-        for i in range(len(S1)):
-            min_S = min(data_transpose[i])
-            max_S = max(data_transpose[i])
-            if min_S > S1[i] or max_S < S1[i]:
-                return False
-        return True
-
-    def get_possible_action(self, S1):
-        # TODO need a proper way to figure out what are the possible action
-
-        # find out the indices of M data
-        M_index = (len(S1), len(self.training_data[0]))
-
-        # extract the M part of the data out
-        M = zip(*self.training_data)
-        M = tuple(M)[M_index[0]:M_index[1]]
-
-
-        # # extract the S part of the data out
-        # S = zip(*self.training_data)
-        # S = tuple(S)[0:M_index[0]]
-        #
-        # random_select = False
-        # try:
-        #     self.sm_relation.fit(list(zip(*S)), list(zip(*M)))
-        #     M1 = tuple(self.sm_relation.predict(S1))
-        # except ValueError:
-        #     random_select = True
-
-        random_select = True
-        if random_select:
-        #take random number that falls within range method
-            M1 = []
-            # for i in range(len(M)):
-            #     # find the max and min in each dimension
-            #     min_M = min(M[i])
-            #     max_M = max(M[i])
-            #     # take a random number within the range
-            #     M1.append(random.uniform(min_M, max_M))
-            #
-            # pick one of the previous action
-            M1 = random.choice(list(zip(*M)))
-
-            M1 = tuple(M1)
-
-        # take the average of the M1 in each dimension method
-        #M1 = tuple([sum(M1[i])/len(M1[i]) for i in range(len(M1))])
-
-        return M1
-
     def print(self, level=0):
 
         # this is leaf node
