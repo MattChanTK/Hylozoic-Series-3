@@ -11,7 +11,7 @@ class Expert():
     max_training_data_num = 3000
 
     def __init__(self, id=0, level=0, split_thres=1000, split_thres_growth_rate=1.2,
-                 split_quality_decay=0.5,
+                 split_quality_decay=0.5, split_lock_count_thres=250,
                  mean_err_thres=1.0, learning_rate=0.25, kga_delta=50, kga_tau=10):
 
         self.expert_id = id
@@ -62,6 +62,7 @@ class Expert():
         self.split_quality_decay = split_quality_decay
         self.mean_error_thres = mean_err_thres
         self.split_lock_count = 0
+        self.split_lock_count_thres = split_lock_count_thres
 
 
     def append(self, SM, S1, S1_predicted=None):
@@ -199,7 +200,7 @@ class Expert():
                     self.left = None
                     self.region_splitter = None
                     print("split cancelled")
-                    self.split_lock_count = 250
+                    self.split_lock_count = self.split_lock_count_thres
                     return
 
 

@@ -17,7 +17,7 @@ class CBLA_Engine(threading.Thread):
     def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000,
                  target_loop_period: float=0.1,
                  exploring_rate: float=0.15, learning_rate=0.25,
-                 split_thres: int=1000, split_thres_growth_rate=1.2,
+                 split_thres: int=1000, split_thres_growth_rate=1.2, split_lock_count_thres: int=250,
                  mean_err_thres: float=1.0, kga_delta: int=50, kga_tau:int=10,
                  snapshot_period: float=2,
                  print_to_terminal=True):
@@ -59,6 +59,7 @@ class CBLA_Engine(threading.Thread):
             except KeyError:
                 self.expert = Expert(split_thres=split_thres,
                                      split_thres_growth_rate=split_thres_growth_rate,
+                                     split_lock_count_thres=split_lock_count_thres,
                                      mean_err_thres=mean_err_thres,
                                      learning_rate=learning_rate,
                                      kga_delta=kga_delta, kga_tau=kga_tau)
@@ -166,14 +167,14 @@ class CBLA_Engine(threading.Thread):
             # if action-value is too low, take the idle action
 
             if len(self.largest_action_values_array) >= self.robot.idling_reward_window:
-                self.largest_action_values_array[idle_window_index] = self.expert.get_largest_action_value()
+                self.largest_action_values_array[idle_window_index] = val_best#self.expert.get_largest_action_value()
                 idle_window_index = (idle_window_index + 1) % self.robot.idling_reward_window
             else:
                 self.largest_action_values_array = np.append(self.largest_action_values_array,
-                                                             [self.expert.get_largest_action_value()])
+                                                             [val_best])#self.expert.get_largest_action_value()])
 
             idled = False
-            mean_largest_action_value = np.mean(self.largest_action_values_array)
+            mean_largest_action_value = val_best
             if self.robot.is_idling(reward=mean_largest_action_value, step=t):
                 M1 = self.robot.get_idle_action()
                 idled = True

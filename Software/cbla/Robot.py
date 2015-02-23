@@ -156,7 +156,7 @@ class Protocell_Node(Node):
 
     @Node.activation_reward.getter
     def activation_reward(self):
-        return 20.0
+        return 35.0
 
     @Node.activation_reward_delta.getter
     def activation_reward_delta(self):
@@ -164,7 +164,7 @@ class Protocell_Node(Node):
 
     @Node.idling_reward.getter
     def idling_reward(self):
-        return 2.0
+        return 5.0
 
     @Node.min_steps_before_idling.getter
     def min_steps_before_idling(self):
@@ -202,11 +202,11 @@ class Tentacle_Arm_Node(Node):
 
     @Node.activation_reward.getter
     def activation_reward(self):
-        return 2.0
+        return 35.0
 
     @Node.activation_reward_delta.getter
     def activation_reward_delta(self):
-        return 3.0
+        return 100.0
 
     @Node.idling_reward.getter
     def idling_reward(self):
@@ -251,9 +251,11 @@ class Tentacle_Arm_Node(Node):
     def _return_derive_param(counter):
 
         derive_param = dict()
-        derive_param['acc_mean_window'] = max(1, int(counter/3))
+        derive_param['acc_mean_window'] = max(1, int(counter))
         derive_param['acc_diff_window'] = counter
         derive_param['acc_diff_gap'] = 10
+        derive_param['ir_mean_window'] = max(1, int(counter))
+
 
         return derive_param
 

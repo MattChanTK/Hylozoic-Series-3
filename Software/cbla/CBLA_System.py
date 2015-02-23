@@ -16,8 +16,8 @@ import Robot
 
 
 # ======= CBLA Engine Settings ==========
-USING_SAVED_EXPERTS = True
-EXPERT_FILE_NAME = 'cbla_data_15-02-21_16-09-54.pkl'
+USING_SAVED_EXPERTS = False
+EXPERT_FILE_NAME = None #'cbla_data_15-02-21_16-09-54.pkl'
 #========================================
 
 class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
@@ -99,7 +99,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
             # ~~ Protocell (LED and ALS) ~~~~
             protocell_action = ((teensy_name, 'protocell_0_led_level'),)
-            protocell_sensor = ((teensy_name, 'protocell_0_als_state'),)
+            protocell_sensor = ((teensy_name, 'protocell_0_als_state'),
+                                (teensy_name, 'tentacle_0_ir_0_state'),)
             robot_led = Robot.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led,
                                              name=(teensy_name + '_LED'), msg_setting=2)
 
@@ -111,7 +112,8 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 sma_action = ((teensy_name, device_header + "arm_motion_on"),)
                 sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
                               (teensy_name, device_header + 'wave_mean_y'),
-                              (teensy_name, device_header + 'wave_mean_z'),)
+                              (teensy_name, device_header + 'wave_mean_z'),
+                              (teensy_name, 'tentacle_0_ir_0_mean'), )
                 sma_hidden = ((teensy_name, device_header + 'cycling'),)
 
                 # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
@@ -134,6 +136,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      target_loop_period=0.05,
                                                                      split_thres=300,
                                                                      split_thres_growth_rate=1.5,
+                                                                     split_lock_count_thres=250,
                                                                      mean_err_thres=20.0,
                                                                      kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
@@ -146,6 +149,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                                    target_loop_period=12.5,
                                                                                    split_thres=50,
                                                                                    split_thres_growth_rate=1.2,
+                                                                                   split_lock_count_thres=1,
                                                                                    mean_err_thres=1.8,
                                                                                    kga_delta=3, kga_tau=5,
                                                                                    learning_rate=0.7,

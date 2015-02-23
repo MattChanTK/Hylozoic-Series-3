@@ -69,3 +69,4 @@ derive_inputs                       bool        read_only               255 Fals
 acc_mean_window                     int16       read_only               255 0
 acc_diff_window                     int16       read_only               255 0
 acc_diff_gap                        int16       read_only               255 0
+ir_mean_window                      int16       read_only               255 0

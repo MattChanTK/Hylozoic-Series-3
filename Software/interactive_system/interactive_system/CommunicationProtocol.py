@@ -15,7 +15,9 @@ class CBLATestBed(SystemParameters):
         # internal variable for high-level input features
         for j in range(4):
             device_header = 'tentacle_%d_' % j
-            self.input_state[device_header + "acc_waveform"] = deque(maxlen=2000)
+            self.input_state[device_header + "acc_waveform"] = deque(maxlen=5000)
+            self.input_state[device_header + "ir_waveform"] = deque(maxlen=5000)
+
 
 
     def additional_config_routine(self):
@@ -94,6 +96,11 @@ class CBLATestBed(SystemParameters):
 
             self.input_state[device_header + "acc_waveform"].append(acc_state)
 
+            ir_state = (self.input_state[device_header + 'ir_0_state'],
+                         self.input_state[device_header + 'ir_1_state'],)
+
+            self.input_state[device_header + "ir_waveform"].append(ir_state)
+
     def __derive_input_states(self):
         # import pickle
 
@@ -110,9 +117,15 @@ class CBLATestBed(SystemParameters):
             self.input_state[device_header + "wave_diff_z"] = sum(waveform_zipped[2][-window:]) - sum(waveform_zipped[2][-(window + gap):-gap])
 
             window = self.output_param['acc_mean_window']
-            self.input_state[device_header + "wave_mean_x"] = sum(waveform_zipped[0][-window:])/window
-            self.input_state[device_header + "wave_mean_y"] = sum(waveform_zipped[1][-window:])/window
-            self.input_state[device_header + "wave_mean_z"] = sum(waveform_zipped[2][-window:])/window
+            self.input_state[device_header + "wave_mean_x"] = sum(waveform_zipped[0][-window:]) / window
+            self.input_state[device_header + "wave_mean_y"] = sum(waveform_zipped[1][-window:]) / window
+            self.input_state[device_header + "wave_mean_z"] = sum(waveform_zipped[2][-window:]) / window
+
+            waveform_zipped = list(zip(*self.input_state[device_header + "ir_waveform"]))
+
+            window = self.output_param['ir_mean_window']
+            self.input_state[device_header + "ir_0_mean"] = sum(waveform_zipped[0][-window:]) / window
+            self.input_state[device_header + "ir_1_mean"] = sum(waveform_zipped[1][-window:]) / window
 
             #print(waveform_zipped[0])
 
