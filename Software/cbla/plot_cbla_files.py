@@ -62,11 +62,12 @@ def main():
         viz_data[robot_name]['action'] = data_collector.get_named_var_data(robot_name, 'action', max_idx=time_range)
         viz_data[robot_name]['prediction'] = data_collector.get_named_var_data(robot_name, 'prediction', max_idx=time_range)
         viz_data[robot_name]['state'] = data_collector.get_named_var_data(robot_name, 'state', max_idx=time_range)
-        viz_data[robot_name]['mean error'] = data_collector.get_named_var_data(robot_name, 'mean error', max_idx=time_range)['val']
-        viz_data[robot_name]['action value'] = data_collector.get_named_var_data(robot_name, 'action value', max_idx=time_range)['val']
-        viz_data[robot_name]['action count'] = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)['val']
+        viz_data[robot_name]['mean error'] = data_collector.get_named_var_data(robot_name, 'mean error', max_idx=time_range)
+        viz_data[robot_name]['action value'] = data_collector.get_named_var_data(robot_name, 'action value', max_idx=time_range)
+        viz_data[robot_name]['action count'] = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)
         viz_data[robot_name]['reward'] = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
-        viz_data[robot_name]['best action'] = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)['val']
+        viz_data[robot_name]['best action'] = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)
+#        viz_data[robot_name]['idled'] = data_collector.get_named_var_data(robot_name, 'idled', max_idx=time_range)['val']
 
 
     file_name = re.sub('/.[pP][kK][lL]$', '', data_file_name)
@@ -105,38 +106,49 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
         best_action_history = viz_data[name]['best action']
 
         # plot prediction error
-        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=231)
+        region_ids = sorted(list(zip(*mean_error_history['val'][-1]))[0])
+        Viz.plot_regional_mean_errors(mean_error_history['val'], region_ids, mean_error_history['time'],
+                                      fig_num=fig_num, subplot_num=231)
 
         # plot action value over time
-        region_ids = sorted(list(zip(*value_history[-1]))[0])
-        Viz.plot_regional_action_values(value_history, region_ids, fig_num=fig_num, subplot_num=232)
+        region_ids = sorted(list(zip(*value_history['val'][-1]))[0])
+        Viz.plot_regional_action_values(value_history['val'], region_ids, time=value_history['time'],
+                                        fig_num=fig_num, subplot_num=232)
 
         # plot action count over time
         if type is 'LED':
-            region_ids = sorted(list(zip(*action_count_history[-1]))[0])
-            Viz.plot_regional_action_rate(action_count_history, region_ids, fig_num=fig_num, subplot_num=234)
+            region_ids = sorted(list(zip(*action_count_history['val'][-1]))[0])
+            Viz.plot_regional_action_rate(action_count_history['val'], region_ids, time=action_count_history['time'],
+                                          fig_num=fig_num, subplot_num=234)
 
 
         if type is 'LED':
             # plot best action over time
-            Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), marker_size=3, fig_num=fig_num, subplot_num=235)
-            Viz.plot_evolution(action_history['val'], title='Best Action vs Time', y_label=('Selected action',), marker_size=3, fig_num=fig_num, subplot_num=235)
+            Viz.plot_evolution(best_action_history['val'], time=best_action_history['time'],
+                               title='Best Action vs Time', y_label=('Best action',),
+                               marker_size=3, fig_num=fig_num, subplot_num=235)
+            Viz.plot_evolution(action_history['val'], time=action_history['time'],
+                               title='Best Action vs Time', y_label=('Selected action',),
+                               marker_size=3, fig_num=fig_num, subplot_num=235)
 
         elif type is 'SMA':
             # plot best action over time
-            Viz.plot_evolution(best_action_history, title='Best Action vs Time', y_label=('Best action',), y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=235)
-            Viz.plot_evolution(action_history['val'], title='Selected Action vs Time', y_label=('Selected action',), y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=234)
+            Viz.plot_evolution(best_action_history['val'], time=best_action_history['time'],
+                               title='Best Action vs Time', y_label=('Best action',),
+                               y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=235)
+            Viz.plot_evolution(action_history['val'], time=action_history['time'],
+                               title='Selected Action vs Time', y_label=('Selected action',),
+                               y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=234)
 
 
         # plot the model - 2D
         if type is 'LED':
-            # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-            #                x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=133)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                           x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=133)
 
             # plot the model - 3D
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
-                              fig_num=fig_num, subplot_num=133, data_only=False)
+            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
+            #                   fig_num=fig_num, subplot_num=133, data_only=False)
         elif type is 'SMA':
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
                            x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=333)
@@ -195,7 +207,7 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
             #for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 8*3)), endpoint=False):
                 i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
-                time_step = region_ids_history['step'][i]
+                time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
                                x_idx=1, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
@@ -217,7 +229,7 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
             for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 4 * 3)), endpoint=False):
                 i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
-                time_step = region_ids_history['step'][i]
+                time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
                 Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
                                x_idx=3, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
