@@ -6,8 +6,6 @@
 # Hardware's Ignore Files #
 #-------------------------#
 
-
-
 # Ignore list for Eagle, a PCB layout tool
 
 *.job
@@ -61,23 +59,10 @@ eagle.epf
 *.GBL
 *.GTL
 
-!Hardware/PCB\ Design/Fabrication/*/*/*
-
 #-------------------------#
 # Software's Ignore Files #
 #-------------------------#
-
-
-!Software/documentation/diagrams/*
-
 .idea/
-Bradon_IRtracking/
-serial_output*.txt
-serial_output*.csv
-CuriousSystem/outputs/*.csv
-CuriousSystem/outputs/*/*
-CuriousSystem/outputs/*.png
-CuriousSystem2/outputs/*/*.png
 *.pkl
 
 
@@ -102,7 +87,6 @@ CuriousSystem2/outputs/*/*.png
 *.rar
 *.tar
 *.zip
-!Software/archive/*.zip
 
 # Logs and databases #
 ######################
@@ -336,4 +320,4 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-InteractiveSystem_test/exportToHTML/InteractiveCmd.py.html
+
