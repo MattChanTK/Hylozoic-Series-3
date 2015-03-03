@@ -130,7 +130,7 @@ for teensy_name in teensy_names:
         # time vs cycling
         ax = fig.add_subplot(122)
         plt.title("Time vs Ambient Light Sesnor state")
-        ax.plot(time, als_state)
+        ax.plot(time, als_state, 'b.')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlabel('time(s)')
         plt.ylabel('percent max')

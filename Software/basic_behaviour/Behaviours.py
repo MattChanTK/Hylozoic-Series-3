@@ -174,6 +174,15 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     cmd_obj.add_param_change('operation_mode', 2)
                     self.enter_command(cmd_obj)
 
+                    # ------ configuration ------
+                    # set the Tentacle on/off periods
+                    cmd_obj = command_object(teensy_name, 'tentacle_high_level')
+                    for j in range(3):
+                        device_header = 'tentacle_%d_' % j
+                        cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
+                        cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
+                    self.enter_command(cmd_obj)
+
                 input_states = all_input_states[teensy_name]
                 sample = input_states[0]
                 is_new_update = input_states[1]
@@ -201,7 +210,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
 
 
                     # reflex sensor trigger LED and vibration motor
-                    if (sample[device_header + 'ir_0_state']) > 1200:
+                    if (sample[device_header + 'ir_0_state']) > 1400:
                         cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
                         cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
                     else:
