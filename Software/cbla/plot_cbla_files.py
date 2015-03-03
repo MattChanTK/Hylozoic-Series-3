@@ -67,7 +67,7 @@ def main():
         viz_data[robot_name]['action count'] = data_collector.get_named_var_data(robot_name, 'action count', max_idx=time_range)
         viz_data[robot_name]['reward'] = data_collector.get_named_var_data(robot_name, 'reward', max_idx=time_range)['val']
         viz_data[robot_name]['best action'] = data_collector.get_named_var_data(robot_name, 'best action', max_idx=time_range)
-#        viz_data[robot_name]['idled'] = data_collector.get_named_var_data(robot_name, 'idled', max_idx=time_range)['val']
+        viz_data[robot_name]['idled'] = data_collector.get_named_var_data(robot_name, 'idled', max_idx=time_range)
 
 
     file_name = re.sub('/.[pP][kK][lL]$', '', data_file_name)
@@ -75,8 +75,9 @@ def main():
 
     fig_num = 1
     # Viz.plot_ion()
+    fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
     fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
-    # input("press any key to plot the next graphs")
+    # # input("press any key to plot the next graphs")
     fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
     Viz.plot_show(True)
 
@@ -209,7 +210,8 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
                 region_ids = sorted(region_ids_history['val'][i])
                 time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label,
+                               show_model=True, model_intersect=150,
                                x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
                                title='Prediction Models (t=%d)' % time_step)
 
@@ -262,6 +264,65 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
         save(os.path.join(folder, 'figure %d' % fig_num))
         fig_num += 1
 
+def visualize_CBLA_idle_mode(viz_data, fig_num=1,file_name=''):
+
+    fig_num = fig_num
+
+    for name in viz_data.keys():
+
+        if 'SMA' in re.split('_', name):
+            type = 'SMA'
+            idle_mode_indicate = -1000
+            y_lim = (-5000, 5000)
+        elif 'LED' in re.split('_', name):
+            type = 'LED'
+            idle_mode_indicate = -400
+            y_lim = (-600, 600)
+        else:
+            type = None
+            idle_mode_indicate = -100
+            y_lim = None
+
+
+        action_history = viz_data[name]['action']
+        value_history = viz_data[name]['action value']
+        best_action_history = viz_data[name]['best action']
+        idle_state_history = viz_data[name]['idled']
+
+
+        # plot idle mode
+        idle_mode = []
+
+        for idling in idle_state_history['val']:
+
+            if idling:
+                idle_mode.append(idle_mode_indicate)
+            else:
+                idle_mode.append(None)
+
+
+        Viz.plot_evolution(list(zip(idle_mode)), time=idle_state_history['time'],
+                           title='', y_label=('Best action',), y_lim=y_lim,
+                           marker_size=3, fig_num=fig_num, subplot_num=111)
+
+
+        # plot action value over time
+        region_ids = sorted(list(zip(*value_history['val'][-1]))[0])
+        Viz.plot_regional_action_values(value_history['val'], region_ids, time=value_history['time'],
+                                        fig_num=fig_num, subplot_num=111)
+
+
+
+        folder = os.path.join(os.getcwd(), '%s figures' % file_name)
+        save(os.path.join(folder, 'figure %d' % fig_num))
+        fig_num += 1
+
+
+        print("Plotted %s's CBLA exploration graphs" % name)
+        Viz.plot_show()
+        #input("press any key to plot the next robot")
+
+    return fig_num
 
 
 def visualize_CBLA(viz_data, file_name=''):

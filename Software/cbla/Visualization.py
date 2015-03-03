@@ -48,7 +48,7 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
 
     return plot
 
-def plot_model(Expert, region_ids, plot=None, show_model=True, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None, title="Prediction Models"):
+def plot_model(Expert, region_ids, plot=None, show_model=True, model_intersect=0, x_idx=1, y_idx=0, fig_num=1, subplot_num=122, x_lim=None, y_lim=None, m_label=None, s_label=None, title="Prediction Models"):
 
     # plot configuration
     if plot is None:
@@ -90,7 +90,7 @@ def plot_model(Expert, region_ids, plot=None, show_model=True, x_idx=1, y_idx=0,
         # plot the model
         if show_model:
             num_sample = 100
-            pts = [[0]*num_sample]*len(Expert.training_data[0])
+            pts = [[model_intersect]*num_sample]*len(Expert.training_data[0])
             max_val = round(max(training_data[x_idx]))
             min_val = round(min(training_data[x_idx]))
             try:
@@ -107,8 +107,8 @@ def plot_model(Expert, region_ids, plot=None, show_model=True, x_idx=1, y_idx=0,
                 pass
 
     else:
-        plot_model(Expert.left, region_ids, plot, show_model, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
-        plot_model(Expert.right, region_ids, plot, show_model, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
+        plot_model(Expert.left, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
+        plot_model(Expert.right, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
 
 def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False, m_label=None, s_label=None):
 
