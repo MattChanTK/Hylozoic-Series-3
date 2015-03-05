@@ -5,9 +5,10 @@ import time
 import math
 import pickle
 import os
+
 import sys
 import numpy as np
-
+import random
 from interactive_system import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
 
@@ -160,7 +161,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 return
 
             #t_update = clock()
-            #self.update_input_states(teensy_names)
+            self.update_input_states(teensy_names)
             #print("t update", clock()-t_update)
 
             all_input_states = self.get_input_states(teensy_names, ('all', ), timeout=2)
@@ -182,7 +183,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                         cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
                         cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
                     self.enter_command(cmd_obj)
-
+                    self.send_commands()
                 input_states = all_input_states[teensy_name]
                 sample = input_states[0]
                 is_new_update = input_states[1]
@@ -196,6 +197,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 cmd_obj = command_object(teensy_name, msg_setting=1)
                 for j in range(3):
 
+                    break
                     t = clock()
 
                     device_header = 'tentacle_%d_' % j
@@ -203,10 +205,6 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     # cycling the tentacle
                     #if sample[device_header + 'cycling'] == :
                     cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, tentacle_action[j]%4)
-
-                    if t - tentacle_time[j] > 60:
-                        tentacle_action[j] += 1
-                        tentacle_time[j] = t
 
 
                     # reflex sensor trigger LED and vibration motor
@@ -242,28 +240,32 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                         state_history[teensy_name + '_tentacle_' + str(j)] = []
                         state_history[teensy_name + '_tentacle_' + str(j)].append(copy(state))
 
+                    if t - tentacle_time[j] > 60:
+                        tentacle_action[j] += 1
+                        tentacle_time[j] = t
+
                 self.enter_command(cmd_obj)
 
                 # ==== protocell low-level command
-                cmd_obj = command_object(teensy_name, msg_setting=0)
+                cmd_obj = command_object(teensy_name, msg_setting=1)
                 for j in range(1):
 
                     t = clock()
 
                     device_header = 'protocell_%d_' % j
                     # cycling the protocell
-                    cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 255)
+                    cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 256)
 
-                    if t - protocell_time[j] > 1 + j:
-                        protocell_brightness[j] += 1
-                        protocell_time[j] = t - j
+
 
                     print("Protocell %d" % j, end=" ---\t")
-                    #print("Brightness (%d)" % protocell_brightness[j]%255)
-                    als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
-                    print("ALS ( %.2f%% )" % als_percent)
 
-                    state = [t, protocell_brightness[j]%255 , sample[device_header + 'als_state']]
+                    print("Brightness (%d)" % (protocell_brightness[j]%256))
+                    als_state = sample[device_header + 'als_state'] #/ ADC_RES * 100
+                    print("ALS ( %d )" % als_state)
+
+
+                    state = [t, protocell_brightness[j]%256 , sample[device_header + 'als_state']]
 
                     try:
                         state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
@@ -271,8 +273,15 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                         state_history[teensy_name + '_protocell_' + str(j)] = []
                         state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
 
+                    if t - protocell_time[j] > 1.0 + j:
+                        protocell_brightness[j] = random.randint(0, 255)
+                        #protocell_brightness[j] += 1
+                        protocell_time[j] = t - j
+
                 self.enter_command(cmd_obj)
                 print('')
+
+
 
             #t_cmd = clock()
             self.send_commands()
@@ -290,6 +299,10 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     os.chdir(curr_dir)
 
             t0 = clock()
+           # sleep(0.01)
+            # TODO change the execution order of system identification
+
+
 
 
 class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
