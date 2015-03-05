@@ -111,32 +111,46 @@ for teensy_name in teensy_names:
         state = list(zip(*state))
         time = state[0]
         action = state[1]
-        als_state = np.array(state[2])/ADC_RES*100
-
+        #als_state = np.array(state[2])/ADC_RES*100
+        als_state = np.array(state[2])
 
         fig = plt.figure(figure_num)
         fig.suptitle(filename)
 
-        # time vs action
-        ax = fig.add_subplot(121)
-        plt.title("Time vs Action")
-        ax.plot(time, action)
+        # # time vs action
+        # ax = fig.add_subplot(121)
+        # plt.title("LED Output vs. Time")
+        # ax.plot(time, action)
+        # ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # plt.xlabel('time(s)')
+        # plt.ylabel('LED Output Level [0...255]')
+        # plt.ylim((-1, max(action)+1))
+        #
+        #
+        # # time vs reading
+        # ax = fig.add_subplot(122)
+        # plt.title("Ambient Light Sensor Reading vs. Time")
+        # ax.plot(time, als_state, 'b.')
+        # ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        # plt.xlabel('time(s)')
+        # plt.ylabel('Ambient Light Sensor Reading')
+        # plt.ylim(0, max(max(als_state)+200, 100))
+
+
+        figure_num += 1
+
+        # action vs reading
+        als_state = list(als_state)
+        als_state.pop(0)
+        action = list(action)
+        action.pop()
+        ax = fig.add_subplot(111)
+        plt.title("Ambient Light Sensor Reading vs. LED Output")
+        ax.plot(action, als_state, 'b.')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        plt.xlabel('time(s)')
-        plt.ylabel('action [0...255]')
-        plt.ylim((-1, max(action)+1))
-
-
-        # time vs cycling
-        ax = fig.add_subplot(122)
-        plt.title("Time vs Ambient Light Sesnor state")
-        ax.plot(time, als_state, 'b.')
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        plt.xlabel('time(s)')
-        plt.ylabel('percent max')
-        plt.ylim(0, max(max(als_state), 100))
-
-
+        plt.xlabel('LED Output Level [0...255]')
+        plt.ylabel('Ambient Light Sensor Reading')
+        plt.ylim(0, max(max(als_state) + 200, 100))
         figure_num += 1
 
 plt.show()
