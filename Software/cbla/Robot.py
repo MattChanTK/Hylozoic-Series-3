@@ -79,7 +79,7 @@ class Node():
 
             # wait for other thread in the same sync group to finish
             self.sync_barrier.read_barrier.wait()
-
+            #sleep(0.1)
             # collect sample
             sample = self.sync_barrier.sample
 
@@ -160,7 +160,7 @@ class Protocell_Node(Node):
 
     @Node.activation_reward_delta.getter
     def activation_reward_delta(self):
-        return 100.0
+        return 60.0
 
     @Node.idling_reward.getter
     def idling_reward(self):
@@ -168,7 +168,7 @@ class Protocell_Node(Node):
 
     @Node.min_steps_before_idling.getter
     def min_steps_before_idling(self):
-        return 300
+        return 200
 
     @Node.idling_prob.getter
     def idling_prob(self):
@@ -185,7 +185,7 @@ class Protocell_Node(Node):
         X = np.zeros((num_sample, x_dim))
 
         for i in range(num_sample):
-            X[i, x_dim - 1] = max(min(self.M0[x_dim - 1] - int(num_sample / 2) + i, 100), 0)
+            X[i, x_dim - 1] = max(min(self.M0[x_dim - 1] - int(num_sample / 2) + i, 255), 0)
 
         M_candidates = tuple(set((map(tuple, X))))
 
