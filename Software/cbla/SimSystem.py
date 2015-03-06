@@ -216,7 +216,7 @@ if __name__ == '__main__':
     data, label = (generate_data(func, num_sample=10000, randomize=True))
 
     with open('SimpleData.pkl', 'wb') as data_pickle:
-        pickle.dump(data, data_pickle, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(label, data_pickle, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, data_pickle, protocol=3)
+        pickle.dump(label, data_pickle, protocol=3)
 
     test = SimpleDataSource('SimpleData.pkl')

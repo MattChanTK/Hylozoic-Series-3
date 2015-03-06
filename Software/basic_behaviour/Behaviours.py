@@ -295,7 +295,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     curr_dir = os.getcwd()
                     os.chdir(os.path.join(curr_dir, 'pickle_jar'))
                     with open(str(device) + '_state_history.pkl', 'wb') as output:
-                        pickle.dump(states, output, pickle.HIGHEST_PROTOCOL)
+                        pickle.dump(states, output, protocol=3)
                     os.chdir(curr_dir)
 
             t0 = clock()
