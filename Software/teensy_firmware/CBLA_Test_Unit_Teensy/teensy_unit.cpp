@@ -14,8 +14,8 @@ TeensyUnit::TeensyUnit(): Wire(0),
 	tentacle_2(*this, 3),
 	tentacle_3(*this, 2),
 	tentacle{tentacle_0, tentacle_1, tentacle_2, tentacle_3},
-	protocell_0(*this, 5),
-	protocell_1(*this, 4),
+	protocell_0(*this, 4),
+	protocell_1(*this, 5),
 	protocell{protocell_0, protocell_1}
 {
 
