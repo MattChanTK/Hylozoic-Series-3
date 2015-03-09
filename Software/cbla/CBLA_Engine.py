@@ -68,8 +68,8 @@ class CBLA_Engine(threading.Thread):
         else:
             self.data_collect = DataCollector()
 
-        self.data_collect.data_collection.set_robot_actuator_labels(self.robot.name, self.robot.actuate_vars)
-        self.data_collect.data_collection.set_robot_sensor_labels(self.robot.name, self.robot.report_vars)
+        self.data_collect.set_robot_actuator_labels(self.robot.name, self.robot.actuate_vars)
+        self.data_collect.set_robot_sensor_labels(self.robot.name, self.robot.report_vars)
 
         # ~~ initiating threads ~~
         self.killed = False
@@ -240,8 +240,11 @@ class CBLA_Engine(threading.Thread):
                 self.expert.save_expert_ids(expert_ids)
                 self.data_collect.enqueue(self.robot.name, 'region ids history', val=expert_ids, time=curr_datetime, step=t)
 
-                # deepcoying experts
-                self.data_collect.enqueue(self.robot.name, 'expert history', val=deepcopy(self.expert), time=curr_datetime, step=t)
+                # saving the exemplars
+                exemplars_data = dict()
+                self.expert.save_exemplars(exemplars_data)
+                print(exemplars_data)
+                self.data_collect.enqueue(self.robot.name, 'exemplars history', val=exemplars_data, time=curr_datetime, step=t)
                 last_expert_save_time = real_time_0
 
                 # make snapshot_period slight longer over time
@@ -299,6 +302,7 @@ class CBLA_Engine(threading.Thread):
         M1 = M_candidates[M_idx]
 
         return M1, M_best, L_best
+
 
 def weighted_choice_sub(weights, min_percent=0.05):
     min_weight = min(weights)
