@@ -67,7 +67,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchronization barrier for all LEDs
         self.sync_barrier_led = Robot.Sync_Barrier(self, len(teensy_names) * 1,
                                                    node_type=Robot.Protocell_Node,
-                                                   sample_interval=0.04, sample_period=0.04)
+                                                   sample_interval=0.00, sample_period=0.00)
         # synchronization barrier for all SMAs
         self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
                                                    node_type=Robot.Tentacle_Arm_Node,
@@ -133,7 +133,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
                                                                      id=1,
                                                                      sim_duration=float('inf'),
-                                                                     target_loop_period=0.05,
+                                                                     target_loop_period=0.03,
                                                                      split_thres=400,
                                                                      split_thres_growth_rate=1.5,
                                                                      split_lock_count_thres=250,
@@ -141,7 +141,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
                                                                      snapshot_period=10,
-                                                                     print_to_terminal=False)
+                                                                     print_to_terminal=True)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
