@@ -256,8 +256,6 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     # cycling the protocell
                     cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 256)
 
-
-
                     print("Protocell %d" % j, end=" ---\t")
 
                     print("Brightness (%d)" % (protocell_brightness[j]%256))
@@ -273,10 +271,10 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                         state_history[teensy_name + '_protocell_' + str(j)] = []
                         state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
 
-                    if t - protocell_time[j] > 1.0 + j:
+                    if t - protocell_time[j] > 1.0:
                         protocell_brightness[j] = random.randint(0, 255)
                         #protocell_brightness[j] += 1
-                        protocell_time[j] = t - j
+                        protocell_time[j] = t
 
                 self.enter_command(cmd_obj)
                 print('')
@@ -299,10 +297,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     os.chdir(curr_dir)
 
             t0 = clock()
-           # sleep(0.01)
-            # TODO change the execution order of system identification
-
-
+            sleep(0.5)
 
 
 class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
