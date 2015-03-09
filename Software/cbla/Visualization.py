@@ -82,7 +82,7 @@ def plot_model(Expert, region_ids, plot=None, show_model=True, model_intersect=0
             training_label = list(zip(*exemplars[1]))
             X = training_data[x_idx]
             Y = training_label[y_idx]
-            plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[exemp_region_ids])
+            plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[exemp_region_ids-1])
 
     else:
         # this is leaf node
