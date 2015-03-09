@@ -62,6 +62,7 @@ void Behaviours::parse_msg(){
 			}
 			break;
 		}
+		
 		//Tentacles high level requests
 		case 2: {
 		
@@ -185,6 +186,42 @@ void Behaviours::parse_msg(){
 		
 		}
 		
+		// Type 1 composite request protocol
+		case 5: {
+			
+			// (1 bytes each)
+			// >>>>> byte 2: TENTACLE 0
+			// >>>>> byte 3: TENTACLE 1
+			// >>>>> byte 4: TENTACLE 2	
+			// >>>>> byte 5: TENTACLE 3			
+			for (uint8_t j = 0; j < 4; j++){
+						
+				const uint8_t byte_offset = (j) + 2;
+					
+				//--- actuator output variables---
+				
+				// byte x10 --- tentacle motion activation 
+				tentacle_var[j].tentacle_motion_on = recv_data_buff[byte_offset];
+
+			}
+			
+			// (1 bytes each)
+			// >>>>> byte 6: PROTOCELL 0
+			// >>>>> byte 7: PROTOCELL 1
+			for (uint8_t j = 0; j < 2; j++){
+						
+				const uint8_t byte_offset = (j) + 6;
+								
+				//--- actuator output variables---
+				// byte x4 --- high-power LED level 
+				protocell_var[j].protocell_led_level = recv_data_buff[byte_offset];
+			
+			}
+			break;
+			
+			
+		}
+		
 		// wave forms
 		case 10: {
 		
@@ -303,8 +340,8 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature, byte m
 				send_data_buff[i] = recv_data_buff[i];
 			}
 			break;
+
 		}
-		
 		default: {
 			break;
 		}

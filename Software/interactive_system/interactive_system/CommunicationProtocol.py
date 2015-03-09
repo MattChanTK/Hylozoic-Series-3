@@ -228,6 +228,23 @@ class CBLATestBed(SystemParameters):
         elif self.request_type == 'prgm':
             content[0] = self.output_param['program_teensy']
 
+        elif self.request_type == 'composite_1':
+
+            for j in range(4):
+                device_header = 'tentacle_%d_' % j
+                byte_offset = j
+
+                # byte x0 --- tentacle motion activation
+                content[byte_offset] = self.output_param[device_header + 'arm_motion_on']
+
+            for j in range(2):
+                device_header = 'protocell_%d_' % j
+                byte_offset = j + 4
+
+                # byte x0 + 4 --- high-power LED level
+                content[byte_offset] = self.output_param[device_header + 'led_level']
+
+
         elif self.request_type == 'wave_change':
             # byte 2: wave type
             content[0] = self.output_param['wave_type']
