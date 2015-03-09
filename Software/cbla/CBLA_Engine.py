@@ -243,7 +243,6 @@ class CBLA_Engine(threading.Thread):
                 # saving the exemplars
                 exemplars_data = dict()
                 self.expert.save_exemplars(exemplars_data)
-                print(exemplars_data)
                 self.data_collect.enqueue(self.robot.name, 'exemplars history', val=exemplars_data, time=curr_datetime, step=t)
                 last_expert_save_time = real_time_0
 
