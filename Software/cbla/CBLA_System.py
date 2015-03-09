@@ -67,7 +67,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchronization barrier for all LEDs
         self.sync_barrier_led = Robot.Sync_Barrier(self, len(teensy_names) * 1,
                                                    node_type=Robot.Protocell_Node,
-                                                   sample_interval=0, sample_period=0.0)
+                                                   sample_interval=0.04, sample_period=0.04)
         # synchronization barrier for all SMAs
         self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
                                                    node_type=Robot.Tentacle_Arm_Node,
@@ -134,7 +134,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      id=1,
                                                                      sim_duration=float('inf'),
                                                                      target_loop_period=0.05,
-                                                                     split_thres=300,
+                                                                     split_thres=400,
                                                                      split_thres_growth_rate=1.5,
                                                                      split_lock_count_thres=250,
                                                                      mean_err_thres=20.0,
@@ -147,7 +147,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                                    id=2 + j,
                                                                                    sim_duration=float('inf'),
                                                                                    target_loop_period=12.5,
-                                                                                   split_thres=50,
+                                                                                   split_thres=25,
                                                                                    split_thres_growth_rate=1.2,
                                                                                    split_lock_count_thres=1,
                                                                                    mean_err_thres=1.8,

@@ -41,7 +41,7 @@ def plot_evolution(action_history, time=None, title='Action vs Time', y_label='M
     #plt.show()
     plt.title(title)
     plt.ylabel('M(t)')
-    plt.legend(loc=2, prop={'size':12})
+ #   plt.legend(loc=2, prop={'size':12})
     if y_lim is not None and isinstance(y_lim, tuple):
         plt.ylim(y_lim)
 
@@ -72,43 +72,56 @@ def plot_model(Expert, region_ids, plot=None, show_model=True, model_intersect=0
         if x_lim is not None:
             plt.xlim(x_lim)
 
-    # this is leaf node
-    if Expert.left is None and Expert.right is None:
+    if isinstance(Expert, dict):
+        colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(Expert)))
 
-        colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
+        for exemp_region_ids, exemplars in Expert.items():
 
-        # plot the exemplars in the training set
-        training_data = list(zip(*Expert.training_data))
-        training_label = list(zip(*Expert.training_label))
-        X = training_data[x_idx]
-        Y = training_label[y_idx]
-        try:
-            plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
-        except ValueError:
-            pass
+            # plot the exemplars in the training set
+            training_data = list(zip(*exemplars[0]))
+            training_label = list(zip(*exemplars[1]))
+            X = training_data[x_idx]
+            Y = training_label[y_idx]
+            plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[exemp_region_ids])
 
-        # plot the model
-        if show_model:
-            num_sample = 100
-            pts = [[model_intersect]*num_sample]*len(Expert.training_data[0])
-            max_val = round(max(training_data[x_idx]))
-            min_val = round(min(training_data[x_idx]))
+    else:
+        # this is leaf node
+        if Expert.left is None and Expert.right is None:
+
+            colours = plt.get_cmap('gist_rainbow')(np.linspace(0, 1.0, len(region_ids)))
+
+            # plot the exemplars in the training set
+            training_data = list(zip(*Expert.training_data))
+            training_label = list(zip(*Expert.training_label))
+            X = training_data[x_idx]
+            Y = training_label[y_idx]
             try:
-                pts[x_idx] = list(np.linspace(min_val, max_val, 100))
-            except ZeroDivisionError:
-                pts[x_idx] = [min_val]
-
-            #pts = list(itertools.product(*pts))
-            pts = list(zip(*pts))
-
-            try:
-                plot.plot(list(zip(*pts))[x_idx], list(list(zip(*Expert.predict_model.predict(pts)))[0]),'-', color='k', linewidth=1)
+                plot.plot(X, Y, marker='o', ms=3, mew=0.01, lw=0, color=colours[region_ids.index(Expert.expert_id)])
             except ValueError:
                 pass
 
-    else:
-        plot_model(Expert.left, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
-        plot_model(Expert.right, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
+            # plot the model
+            if show_model:
+                num_sample = 100
+                pts = [[model_intersect]*num_sample]*len(Expert.training_data[0])
+                max_val = round(max(training_data[x_idx]))
+                min_val = round(min(training_data[x_idx]))
+                try:
+                    pts[x_idx] = list(np.linspace(min_val, max_val, 100))
+                except ZeroDivisionError:
+                    pts[x_idx] = [min_val]
+
+                #pts = list(itertools.product(*pts))
+                pts = list(zip(*pts))
+
+                try:
+                    plot.plot(list(zip(*pts))[x_idx], list(list(zip(*Expert.predict_model.predict(pts)))[0]),'-', color='k', linewidth=1)
+                except ValueError:
+                    pass
+
+        else:
+            plot_model(Expert.left, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
+            plot_model(Expert.right, region_ids, plot, show_model, model_intersect, x_idx, y_idx, fig_num, subplot_num, x_lim, y_lim, m_label, s_label, title)
 
 def plot_model_3D(Expert, region_ids, ax=None, x_idx=(0, 1), y_idx=0, fig_num=2, subplot_num=111, data_only=False, m_label=None, s_label=None):
 

@@ -343,6 +343,14 @@ class Expert():
             self.left.save_action_count(action_count)
             self.right.save_action_count(action_count)
 
+    def save_exemplars(self, exemplars_data):
+
+        # this is leaf node
+        if self.left is None and self.right is None:
+            exemplars_data[self.expert_id] = [copy(self.training_data), copy(self.training_label)]
+        else:
+            self.left.save_exemplars(exemplars_data)
+            self.right.save_exemplars(exemplars_data)
 
 class KGA():
 

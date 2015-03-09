@@ -16,7 +16,7 @@ def main():
 
     os.chdir("pickle_jar")
 
-    EXPERT_FILE_NAME = None # 'cbla_data_15-02-23_13-16-29.pkl'# 'cbla_data_15-02-21_16-09-54.pkl'
+    EXPERT_FILE_NAME = None #'cbla_data_15-03-02_22-16-41.pkl'
     time_range = -1
 
     try:
@@ -48,12 +48,12 @@ def main():
 
         # assigned data
         viz_data[robot_name]['expert'] = data_collector.get_assigned_element(robot_name, 'expert', 'val')
-        viz_data[robot_name]['m label'] = data_collector.data_collection.get_robot_actuator_labels(robot_name)
-        viz_data[robot_name]['s label'] = data_collector.data_collection.get_robot_sensor_labels(robot_name)
+        viz_data[robot_name]['m label'] = data_collector.get_robot_actuator_labels(robot_name)
+        viz_data[robot_name]['s label'] = data_collector.get_robot_sensor_labels(robot_name)
 
         # snapshot data
         try:
-            viz_data[robot_name]['expert snapshot'] = data_collector.get_named_var_data(robot_name, 'expert history')['val']
+            viz_data[robot_name]['exemplars snapshot'] = data_collector.get_named_var_data(robot_name, 'exemplars history')['val']
             viz_data[robot_name]['region ids snapshot'] = data_collector.get_named_var_data(robot_name, 'region ids history')
         except Exception:
             pass
@@ -75,9 +75,9 @@ def main():
 
     fig_num = 1
     # Viz.plot_ion()
-    fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
-    fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
-    # # input("press any key to plot the next graphs")
+   # fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
+   # fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
+    # # # input("press any key to plot the next graphs")
     fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
     Viz.plot_show(True)
 
@@ -144,12 +144,12 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
 
         # plot the model - 2D
         if type is 'LED':
-            # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
-            #                x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=133)
+            Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=True,
+                           x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=133)
 
             # plot the model - 3D
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(1, 2), y_idx=0,
-                              fig_num=fig_num, subplot_num=133, data_only=False)
+            # Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(1, 2), y_idx=0,
+            #                   fig_num=fig_num, subplot_num=133, data_only=False)
         elif type is 'SMA':
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=False,
                            x_idx=4, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=333)
@@ -197,26 +197,24 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
         state_label = list(zip(*viz_data[name]['s label']))[1]
 
         try:
-            expert_history = viz_data[name]['expert snapshot']
+            exemplars_history = viz_data[name]['exemplars snapshot']
             region_ids_history = viz_data[name]['region ids snapshot']
         except KeyError:
             continue
 
         if type == 'LED':
             subplot_num = 1
-            for i in range(len(expert_history)):
+            for i in range(len(exemplars_history)):
             #for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 8*3)), endpoint=False):
                 i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
                 time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label,
+                Viz.plot_model(exemplars_history[i], region_ids, s_label=state_label, m_label=action_label,
                                show_model=True, model_intersect=150,
                                x_idx=2, y_idx=0, fig_num=fig_num, subplot_num=(2, 4, subplot_num),
                                title='Prediction Models (t=%d)' % time_step)
 
-                Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
-                                     filename='%s fig %d t=%d region' % (type, fig_num, time_step))
 
                 if subplot_num >= 8:
                     folder = os.path.join(os.getcwd(), '%s figures' % file_name)
@@ -227,27 +225,23 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
                     subplot_num += 1
 
         elif type == 'SMA':
-
-            for i in np.linspace(0, len(expert_history), int(min(len(expert_history), 4 * 3)), endpoint=False):
+            for i in range(len(exemplars_history)):
+            #for i in np.linspace(0, len(exemplars_history), int(min(len(exemplars_history), 4 * 3)), endpoint=False):
                 i = int(i)
                 region_ids = sorted(region_ids_history['val'][i])
                 time_step = (region_ids_history['time'][i] - region_ids_history['time'][0]).total_seconds()
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                Viz.plot_model(exemplars_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
                                x_idx=4, y_idx=0, x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 1),
                                title='Prediction Models (t=%d)' % time_step)
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                Viz.plot_model(exemplars_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
                                x_idx=4, y_idx=1,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 5),
                                title='Prediction Models (t=%d)' % time_step)
 
-                Viz.plot_model(expert_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
+                Viz.plot_model(exemplars_history[i], region_ids, s_label=state_label, m_label=action_label, show_model=False,
                                x_idx=4, y_idx=2,  x_lim=(-1, 4), fig_num=fig_num, subplot_num=(3, 4, i % 4 + 9),
                                title='Prediction Models (t=%d)' % time_step)
-
-                Viz.plot_expert_tree(expert_history[i], region_ids, folder_name=file_name,
-                                     filename='%s fig %d t=%d region' % (type, fig_num, time_step))
-
 
                 if (i + 1) % 4 == 0:
                     folder = os.path.join(os.getcwd(), '%s figures' % file_name)
@@ -302,7 +296,7 @@ def visualize_CBLA_idle_mode(viz_data, fig_num=1,file_name=''):
 
 
         Viz.plot_evolution(list(zip(idle_mode)), time=idle_state_history['time'],
-                           title='', y_label=('Best action',), y_lim=y_lim,
+                           title='', y_label=('',), y_lim=y_lim,
                            marker_size=3, fig_num=fig_num, subplot_num=111)
 
 
@@ -318,138 +312,12 @@ def visualize_CBLA_idle_mode(viz_data, fig_num=1,file_name=''):
         fig_num += 1
 
 
-        print("Plotted %s's CBLA exploration graphs" % name)
+        print("Plotted %s's CBLA idle graphs" % name)
         Viz.plot_show()
         #input("press any key to plot the next robot")
 
     return fig_num
 
-
-def visualize_CBLA(viz_data, file_name=''):
-
-    fig_num = 1
-    # ------ plot the led/ambient light sensor data -------
-
-    fig_num = _visualize_led_als(viz_data, fig_num, file_name)
-
-    # ------- plot the tentacle/accelerometer data --------
-
-    fig_num = _visualize_sma_acc(viz_data, fig_num, file_name)
-
-    Viz.plot_show()
-
-def _visualize_led_als(viz_data, fig_num=1, file_name=''):
-    # ------ plot the led/ambient light sensor data -------
-    fig_num = fig_num
-    name_list = []
-    for name in viz_data.keys():
-        type = re.split('_', name)[-1]
-
-        if type == 'LED':
-            name_list.append(copy(name))
-
-    for name in name_list:
-
-        expert = viz_data[name][0]
-        action_history = viz_data[name][1]
-        state_history = viz_data[name][2]
-        mean_error_history = viz_data[name][3]
-        action_label = list(zip(*viz_data[name][4]))[1]
-        state_label = list(zip(*viz_data[name][5]))[1]
-        reward_history = viz_data[name][6]
-
-        expert.print()
-
-        # find out what are the ids that existed
-        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
-
-        Viz.plot_expert_tree(expert, region_ids, filename=(file_name + '_fig_' + str(fig_num)))
-        Viz.plot_evolution(state_history['val'], time=None, title='State vs Time', y_label=state_label, fig_num=fig_num,
-                           subplot_num=261)
-        Viz.plot_evolution(action_history['val'], time=None, title='Action vs Time', marker_size=3,
-                           y_label=action_label,
-                           fig_num=fig_num, subplot_num=262)
-        Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=1, y_idx=0, fig_num=fig_num,
-                       subplot_num=263)
-        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=0, y_idx=0, fig_num=fig_num, subplot_num=269)
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=245)
-        Viz.plot_evolution(zip(*[reward_history]), time=None, title='Reward vs Time', linestyle='-', y_label=['reward'],
-                           fig_num=fig_num, subplot_num=246)
-
-        try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(0, 1), y_idx=0,
-                              fig_num=fig_num, subplot_num=122)
-        except Exception as e:
-            print(e)
-
-        fig_num += 1
-
-    return fig_num
-
-def _visualize_sma_acc(viz_data, fig_num=1, file_name=''):
-    # ------- plot the tentacle/accelerometer data --------
-
-    # find the names associated with the tentacle
-    name_list = []
-    for name in viz_data.keys():
-        if 'SMA' in re.split('_', name):
-            name_list.append(copy(name))
-
-    for name in name_list:
-
-        expert = viz_data[name][0]
-        action_history = viz_data[name][1]
-        state_history = viz_data[name][2]
-        mean_error_history = viz_data[name][3]
-        action_label = list(zip(*viz_data[name][4]))[1]
-        state_label = list(zip(*viz_data[name][5]))[1]
-        reward_history = viz_data[name][6]
-
-        expert.print()
-
-        # find out what are the ids that existed
-        region_ids = sorted(list(zip(*mean_error_history[-1]))[0])
-
-        Viz.plot_expert_tree(expert, region_ids, filename=(file_name + '_fig_' + str(fig_num)))
-        Viz.plot_evolution(state_history['val'], time=None, title='State vs Time', y_label=state_label, fig_num=fig_num,
-                           subplot_num=221)
-        Viz.plot_evolution(action_history['val'], time=None, title='Action vs Time', marker_size=3,
-                           y_label=action_label,
-                           fig_num=fig_num, subplot_num=222)
-        # Viz.plot_model(expert, region_ids, x_idx=6, y_idx=0, fig_num=fig_num, subplot_num=253)
-        # Viz.plot_model(expert, region_ids, x_idx=7, y_idx=1, fig_num=fig_num, subplot_num=254)
-        # Viz.plot_model(expert, region_ids, x_idx=8, y_idx=2, fig_num=fig_num, subplot_num=255)
-
-
-        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=0, fig_num=fig_num, subplot_num=253, x_lim=(-1,4))
-        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=1, fig_num=fig_num, subplot_num=254, x_lim=(-1,4))
-        # Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=4, y_idx=2, fig_num=fig_num, subplot_num=255, x_lim=(-1,4))
-
-        Viz.plot_regional_mean_errors(mean_error_history, region_ids, fig_num=fig_num, subplot_num=223)
-        Viz.plot_evolution(zip(*[reward_history]), time=None, title='Reward vs Time', linestyle='-', y_label='reward',
-                           fig_num=fig_num, subplot_num=224)
-
-        fig_num += 1
-
-        try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=0,
-                              fig_num=fig_num, subplot_num=131)
-        except Exception as e:
-            print(e)
-
-        try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=1,
-                              fig_num=fig_num, subplot_num=132)
-        except Exception as e:
-            print(e)
-        try:
-            Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2,
-                              fig_num=fig_num, subplot_num=133)
-        except Exception as e:
-            print(e)
-
-        fig_num += 1
-    return fig_num
 
 if __name__ == "__main__":
     main()

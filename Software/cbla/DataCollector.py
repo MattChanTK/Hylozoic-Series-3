@@ -28,7 +28,44 @@ class DataCollection(object):
     def creation_date(self):
         return self.__creation_date
 
-    def append_data(self, robot_name: str, var_name: str, val, time=None, step=-1):
+
+class DataCollector(object):
+
+    def __init__(self, data: DataCollection=None):
+
+        self.data_q = queue.Queue()
+        self.data_q_assign = queue.Queue()
+        self.lock = threading.Lock()
+
+        if data is None:
+            data = DataCollection()
+        if not isinstance(data, DataCollection):
+            raise TypeError("Data must be in DataCollection class")
+        self.data_collection = data
+
+    @property
+    def data(self) -> dict:
+        return self.data_collection.data
+
+    @property
+    def creation_date(self) -> datetime:
+        return self.data_collection.creation_date
+
+    @property
+    def type_index(self) -> dict:
+        return self.data_collection.type_index
+
+    @property
+    def robot_names(self):
+        return list(self.data_collection.data.keys())
+
+    def enqueue(self, robot_name: str, var_name: str, val, time=None, step=-1):
+        self.data_q.put_nowait((copy(robot_name), copy(var_name), copy(val), copy(time), copy(step)))
+
+    def enqueue_assign(self, robot_name: str, var_name: str, val, time=None, step=-1):
+        self.data_q_assign.put_nowait((copy(robot_name), copy(var_name), copy(val), copy(time), copy(step)))
+
+    def __append_data(self, robot_name: str, var_name: str, val, time=None, step=-1):
 
         if not isinstance(robot_name, str):
             raise TypeError("Robot name must be a String")
@@ -37,7 +74,6 @@ class DataCollection(object):
 
         if robot_name not in self.data:
             self.data[robot_name] = dict()
-
 
         if not isinstance(time, datetime):
             time = datetime.now()
@@ -48,7 +84,7 @@ class DataCollection(object):
         else:
             self.data[robot_name][var_name].append([copy(val), copy(time), copy(step)])
 
-    def assign_data(self, robot_name: str, var_name: str, val, time=None, step=-1):
+    def __assign_data(self, robot_name: str, var_name: str, val, time=None, step=-1):
 
         if not isinstance(robot_name, str):
             raise TypeError("Robot name must be a String")
@@ -65,33 +101,36 @@ class DataCollection(object):
         self.data[robot_name][var_name] = [copy(val), copy(time), copy(step)]
 
 
-    def set_robot_actuator_labels(self, robot_name, actuator_labels):
-        if isinstance(actuator_labels, tuple):
-            self.assign_data(robot_name, 'actuator_labels', actuator_labels)
-        else:
-            raise TypeError("Labels have to be in a tuple!")
+    def append(self, max_save=float('inf')):
 
-    def set_robot_sensor_labels(self, robot_name, sensor_labels):
-        if isinstance(sensor_labels, tuple):
-            self.assign_data(robot_name, 'sensor_labels', sensor_labels)
-        else:
-            raise TypeError("Labels have to be in a tuple!")
+        with self.lock:
 
+            count = 0
+            while not self.data_q.empty() and count < max_save:
 
-    def get_robot_actuator_labels(self, robot_name):
-        try:
-            return self.data[robot_name]['actuator_labels'][self.type_index['val']]
-        except KeyError:
-            return None
+                data_package = self.data_q.get()
+                robot_name = data_package[0]
+                var_name = data_package[1]
+                val = data_package[2]
+                time = data_package[3]
+                step = data_package[4]
 
-    def get_robot_sensor_labels(self, robot_name):
-        try:
-            return self.data[robot_name]['sensor_labels'][self.type_index['val']]
-        except KeyError:
-            return None
+                self.__append_data(robot_name, var_name, val, time, step)
+                count += 1
 
-    def get_data_element(self, robot_name: str, var_name: str, index='all', return_type='val'):
+            count = 0
+            while not self.data_q_assign.empty() and count < max_save:
+                data_package = self.data_q_assign.get()
+                robot_name = data_package[0]
+                var_name = data_package[1]
+                val = data_package[2]
+                time = data_package[3]
+                step = data_package[4]
 
+                self.__assign_data(robot_name, var_name, val, time, step)
+                count += 1
+
+    def __get_element(self, robot_name: str, var_name: str, index='all', return_type='val'):
         # error checking
         if not isinstance(robot_name, str):
             raise TypeError("Robot name must be a String")
@@ -130,74 +169,8 @@ class DataCollection(object):
 
         return None
 
-
-class DataCollector(object):
-
-    def __init__(self, data: DataCollection=None):
-
-        self.data_q = queue.Queue()
-        self.data_q_assign = queue.Queue()
-        self.lock = threading.Lock()
-
-        if data is None:
-            data = DataCollection()
-        if not isinstance(data, DataCollection):
-            raise TypeError("Data must be in DataCollection class")
-        self.data_collection = data
-
-    @property
-    def data(self) -> dict:
-        return self.data_collection.data
-
-    @property
-    def creation_date(self) -> datetime:
-        return self.data_collection.creation_date
-
-    @property
-    def type_index(self) -> dict:
-        return self.data_collection.type_index
-
-    def enqueue(self, robot_name: str, var_name: str, val, time=None, step=-1):
-        self.data_q.put_nowait((copy(robot_name), copy(var_name), copy(val), copy(time), copy(step)))
-
-    def enqueue_assign(self, robot_name: str, var_name: str, val, time=None, step=-1):
-        self.data_q_assign.put_nowait((copy(robot_name), copy(var_name), copy(val), copy(time), copy(step)))
-
-    def append(self, max_save=float('inf')):
-
-        with self.lock:
-
-            count = 0
-            while not self.data_q.empty() and count < max_save:
-
-                data_package = self.data_q.get()
-                robot_name = data_package[0]
-                var_name = data_package[1]
-                val = data_package[2]
-                time = data_package[3]
-                step = data_package[4]
-
-                self.data_collection.append_data(robot_name, var_name, val, time, step)
-                count += 1
-
-            count = 0
-            while not self.data_q_assign.empty() and count < max_save:
-                data_package = self.data_q_assign.get()
-                robot_name = data_package[0]
-                var_name = data_package[1]
-                val = data_package[2]
-                time = data_package[3]
-                step = data_package[4]
-
-                self.data_collection.assign_data(robot_name, var_name, val, time, step)
-                count += 1
-
-    def __get_element(self, robot_name: str, var_name: str, index='all', return_type='val'):
-
-        return self.data_collection.get_data_element(robot_name, var_name, index, return_type)
-
     def get_element_val(self, robot_name: str, var_name: str, index=-1):
-        return self.__get_element(robot_name, var_name, index, return_type='val')
+        return self.__get_element(robot_name, var_name, index=index, return_type='val')
 
     def get_element_time(self, robot_name: str, var_name: str, index=-1):
         return self.__get_element(robot_name, var_name, index, return_type='time')
@@ -223,7 +196,27 @@ class DataCollector(object):
 
         return named_var_data
 
+    def set_robot_actuator_labels(self, robot_name, actuator_labels):
+        if isinstance(actuator_labels, tuple):
+            self.__assign_data(robot_name, 'actuator_labels', actuator_labels)
+        else:
+            raise TypeError("Labels have to be in a tuple!")
 
-    @property
-    def robot_names(self):
-        return list(self.data_collection.data.keys())
+    def set_robot_sensor_labels(self, robot_name, sensor_labels):
+        if isinstance(sensor_labels, tuple):
+            self.__assign_data(robot_name, 'sensor_labels', sensor_labels)
+        else:
+            raise TypeError("Labels have to be in a tuple!")
+
+    def get_robot_actuator_labels(self, robot_name):
+        try:
+            return self.data[robot_name]['actuator_labels'][self.type_index['val']]
+        except KeyError:
+            return None
+
+    def get_robot_sensor_labels(self, robot_name):
+        try:
+            return self.data[robot_name]['sensor_labels'][self.type_index['val']]
+        except KeyError:
+            return None
+
