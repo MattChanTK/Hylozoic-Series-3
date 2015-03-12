@@ -185,7 +185,7 @@ class Protocell_Node(Node):
         X = np.zeros((num_sample, x_dim))
 
         for i in range(num_sample):
-            X[i, x_dim - 1] = max(min(self.M0[x_dim - 1] - int(num_sample / 2) + i, 255), 0)
+            X[i, x_dim - 1] = max(min(self.M0[x_dim - 1] - int(num_sample / 2) + i, 100), 0)
 
         M_candidates = tuple(set((map(tuple, X))))
 
