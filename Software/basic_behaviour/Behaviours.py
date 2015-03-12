@@ -197,8 +197,8 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                 cmd_obj = command_object(teensy_name, msg_setting=1)
                 for j in range(3):
 
-                    break
                     t = clock()
+
 
                     device_header = 'tentacle_%d_' % j
 
@@ -271,7 +271,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                         state_history[teensy_name + '_protocell_' + str(j)] = []
                         state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
 
-                    if t - protocell_time[j] > 1.0:
+                    if True:#t - protocell_time[j] > 1.0:
                         protocell_brightness[j] = random.randint(0, 255)
                         #protocell_brightness[j] += 1
                         protocell_time[j] = t
@@ -297,7 +297,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
                     os.chdir(curr_dir)
 
             t0 = clock()
-            sleep(0.5)
+            #sleep(0.5)
 
 
 class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
