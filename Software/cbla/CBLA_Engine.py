@@ -87,7 +87,7 @@ class CBLA_Engine(threading.Thread):
         self.time_step = t
 
         last_expert_save_time = 0
-        S = self.robot.S
+        S = self.robot.report()
         M = Mi[random.randint(0, len(Mi)) - 1]
         val_best = float("-inf")
         idle_window_index = 0
@@ -120,12 +120,12 @@ class CBLA_Engine(threading.Thread):
             self.data_collect.enqueue(self.robot.name, 'prediction', S1_predicted, time=curr_datetime, step=t)
             self.data_collect.enqueue(self.robot.name, 'idled', self.robot.idled, time=curr_datetime, step=t)
 
-
             # do action
             self.robot.actuate(M)
 
             # read sensor
             S1 = self.robot.report()
+
 
             # wait until loop time reaches target loop period
             sleep(max(0, self.target_loop_period - (clock() - target_time_0)))
@@ -156,7 +156,7 @@ class CBLA_Engine(threading.Thread):
                 self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=curr_datetime, step=t)
 
             # generate a list of possible action given the state
-            self.robot.report(hidden_vars_only=True)
+            #self.robot.report(hidden_vars_only=True)
             M_candidates = self.robot.get_possible_action(num_sample=255)
             term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
 

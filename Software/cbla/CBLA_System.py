@@ -67,7 +67,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         # synchronization barrier for all LEDs
         self.sync_barrier_led = Robot.Sync_Barrier(self, len(teensy_names) * 1,
                                                    node_type=Robot.Protocell_Node,
-                                                   sample_interval=0.00, sample_period=0.00)
+                                                   sample_interval=0.01, sample_period=0.02)
         # synchronization barrier for all SMAs
         self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
                                                    node_type=Robot.Tentacle_Arm_Node,
@@ -98,9 +98,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             # ------ instantiate robots -------
 
             # ~~ Protocell (LED and ALS) ~~~~
-            protocell_action = ((teensy_name, 'protocell_0_led_level'),)
-            protocell_sensor = ((teensy_name, 'protocell_0_als_state'),
-                                (teensy_name, 'tentacle_0_ir_0_state'),)
+            protocell_action = ((teensy_name, 'protocell_0_led_level', ),)
+            protocell_sensor = ((teensy_name, 'protocell_0_als_state', 0, 4095),
+                                (teensy_name, 'tentacle_0_ir_0_state', 0, 4095),)
             robot_led = Robot.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led,
                                              name=(teensy_name + '_LED'), msg_setting=2)
 
@@ -110,10 +110,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 device_header = 'tentacle_%d_' % j
 
                 sma_action = ((teensy_name, device_header + "arm_motion_on"),)
-                sma_sensor = ((teensy_name, device_header + 'wave_mean_x'),
-                              (teensy_name, device_header + 'wave_mean_y'),
-                              (teensy_name, device_header + 'wave_mean_z'),
-                              (teensy_name, 'tentacle_0_ir_0_mean'), )
+                sma_sensor = ((teensy_name, device_header + 'wave_mean_x', -256, 256),
+                              (teensy_name, device_header + 'wave_mean_y', -256, 256),
+                              (teensy_name, device_header + 'wave_mean_z', -256, 256),
+                              (teensy_name, 'tentacle_0_ir_0_mean', 0, 4095), )
                 sma_hidden = ((teensy_name, device_header + 'cycling'),)
 
                 # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
@@ -133,7 +133,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
                                                                      id=1,
                                                                      sim_duration=float('inf'),
-                                                                     target_loop_period=0.03,
+                                                                     target_loop_period=0.05,
                                                                      split_thres=400,
                                                                      split_thres_growth_rate=1.5,
                                                                      split_lock_count_thres=250,

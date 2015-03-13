@@ -79,6 +79,7 @@ class Node():
 
             # wait for other thread in the same sync group to finish
             self.sync_barrier.read_barrier.wait()
+
             #sleep(0.1)
             # collect sample
             sample = self.sync_barrier.sample
@@ -106,14 +107,13 @@ class Node():
             # construct the S vector for the node
             s = []
             for var in self.report_vars:
-                s.append(sample[var[0]][0][var[1]])
+                value = self._normalize(sample[var[0]][0][var[1]], var[2], var[3])
+                s.append(value)
             self.S = tuple(s)
-
-
 
             sleep(max(0, self.sync_barrier.sample_period - (clock()-t_sample)))
 
-            #print(self.name, 'sample period ',clock()-t_sample)
+           # print(self.name, 'sample period ',clock()-t_sample)
         return self.S
 
     def get_possible_action(self, num_sample=100) -> tuple:
@@ -150,6 +150,14 @@ class Node():
     @staticmethod
     def _return_derive_param(counter) -> dict:
         return None
+
+    @staticmethod
+    def _normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
+
+        if low_bound >= hi_bound:
+            raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
+
+        return (orig_val - low_bound)/(hi_bound - low_bound)
 
 
 class Protocell_Node(Node):
@@ -292,6 +300,9 @@ class Sync_Barrier():
 
     def read_barrier_action(self):
 
+        t0 = clock()
+
+
         self.sample_counter += 1
 
           # when sampling interval is reached
@@ -311,11 +322,10 @@ class Sync_Barrier():
             self.cmd.update_input_states(self.cmd.teensy_manager.get_teensy_name_list(), derive_param=derive_param)
             #print("read barrier 1 time: ", clock() - t0)
 
-            #t0= clock()
+            #t0 = clock()
             self.sample = self.cmd.get_input_states(self.cmd.teensy_manager.get_teensy_name_list(), ('all',),
                                                         timeout=max(0.1, self.sample_interval))
             #print("read barrier 2 time: ", clock() - t0)
-
 
     def write_barrier_action(self):
 

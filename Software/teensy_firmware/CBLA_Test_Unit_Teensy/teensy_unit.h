@@ -160,7 +160,7 @@ class TeensyUnit{
 				const uint8_t  ACC_INRPPT_DISABLE = 0x00;  //disable interupt
 
 				const uint8_t  ACC_DATAFORMAT_ADDR = 0x31; //ACC data format byte
-				const uint8_t  ACC_DATAFORMAT_VALUE = 0x09;  //Set the range to +/- 4 Full Resolution and make the value right justified with sign extention
+				const uint8_t  ACC_DATAFORMAT_VALUE = 0x08;  //Set the range to +/- 2g Full Resolution and make the value right justified with sign extension
 
 				const uint8_t  ACC_FIFO_ADDR = 0x38; //ACC FIFO byte
 				const uint8_t  ACC_FIFO_VALUE = 0x00;  // Bypass FIFO
