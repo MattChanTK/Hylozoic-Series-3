@@ -4,6 +4,7 @@ import struct
 import sys
 import re
 from time import clock
+from time import sleep
 
 import usb.core
 import usb.util
@@ -274,9 +275,8 @@ class TeensyInterface(threading.Thread):
                             # check if reply matches sent message
                             if data[0] == front_id and data[-1] == back_id:
                                 received_reply = True
-
-
                                 self.param.parse_message_content(data)
+
                                 self.inputs_sampled_event.set()
 
                                 self.print_to_term("Teensy thread: input sampled")

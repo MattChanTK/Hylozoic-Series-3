@@ -150,7 +150,6 @@ class InteractiveCmd(threading.Thread):
                 else:
                     self.apply_change_request(cmd_obj)
 
-
     def apply_change_request(self, cmd_obj):
 
         #print("applying change request")
