@@ -120,6 +120,7 @@ class InteractiveCmd(threading.Thread):
 
             cmds_by_type = dict()
 
+            # reconstruct cmd_obj based on request type
             if cmd_obj.change_request_type is None:
                 for var, value in cmd_obj.change_request.items():
                     request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)

@@ -8,6 +8,7 @@ import copy
 
 from interactive_system import InteractiveCmd
 from interactive_system.InteractiveCmd import command_object
+from interactive_system.Messenger import Messenger
 from CBLA_Engine import CBLA_Engine
 from DataCollector import DataCollector
 
@@ -155,9 +156,14 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                                    learning_rate=0.7,
                                                                                    snapshot_period=30)
 
+        # ~~~~ start the Messenger ~~~~
+        messenger = Messenger(self, 0.05)
+        messenger.start()
+
         # ~~~~ starting the CBLA engines ~~~~~
         for cbla_thread in self.cbla_engine.values():
             cbla_thread.start()
+
 
         # create new file if we didn't import data
         if filename is None:
@@ -200,7 +206,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         for temp_file in temp_files:
             os.remove(temp_file)
         print("CBLA Behaviours Finished")
-
 
 
 def input_thread(L):
