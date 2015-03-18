@@ -12,6 +12,9 @@ class InteractiveCmd(threading.Thread):
         self.cmd_q = queue.Queue()
         self.teensy_manager = Teensy_manager
 
+        # semaphore for restricting only one thread to access this thread at any given time
+        self.lock = threading.Lock()
+
         # start thread
         threading.Thread.__init__(self)
         self.daemon = False

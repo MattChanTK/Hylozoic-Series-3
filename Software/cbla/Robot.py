@@ -10,11 +10,13 @@ from interactive_system.InteractiveCmd import command_object
 
 class Node():
 
-    def __init__(self, actuate_vars, report_vars, sync_barrier, name="", msg_setting=0, hidden_vars=()):
+    def __init__(self, actuate_vars, report_vars, messenger,
+                 sample_period, sample_interval,
+                 name="", hidden_vars=()):
 
-        self.sync_barrier = sync_barrier
         self.name = str(name)
-        self.msg_setting = msg_setting
+
+        self.messenger = messenger
 
         self.actuate_vars = actuate_vars
         self.M0 = tuple([0] * len(actuate_vars))
@@ -29,6 +31,14 @@ class Node():
         self.idled_step = 0
 
         self.past_reward = 0
+
+        # sampling related variables
+        self.sample_counter = 0
+        self.sample = None
+        self.sample_period = sample_period
+        self.sample_interval = sample_interval
+        self.t0 = clock()
+        self.sample_interval_finished = False
 
     @property
     def activation_reward(self):
@@ -61,28 +71,41 @@ class Node():
         if len(M) != len(self.actuate_vars):
             raise (ValueError, "M must have " + str(len(self.actuate_vars)) + " elements!")
 
-        for i in range(len(self.actuate_vars)):
-            self.sync_barrier.action_q.put((self.actuate_vars[i][0], (self.actuate_vars[i][1], M[i])))
-
         self.M0 = M
-        # wait for other thread in the same sync group to finish
-        self.sync_barrier.write_barrier.wait()
+
+        # categorize action in action_q based on teensy_name
+        change_requests = dict()
+        for i in range(len(self.actuate_vars)):
+            action = (self.actuate_vars[i][0], (self.actuate_vars[i][1], M[i]))
+            try:
+                change_requests[action[0]].append(action[1])
+            except KeyError:
+                change_requests[action[0]] = [action[1]]
+
+        for teensy_name, output_params in change_requests.items():
+
+            cmd_obj = command_object(teensy_name, msg_setting=1)
+            for param in output_params:
+                cmd_obj.add_param_change(param[0], param[1])
+
+            self.messenger.load_message(cmd_obj)
 
     def report(self, hidden_vars_only=False) -> tuple:
 
-        #wait for all thread to start at the same time
-        self.sync_barrier.start_to_read_barrier.wait()
-
-        while not self.sync_barrier.sample_interval_finished:
+        while not self.sample_interval_finished:
 
             t_sample = clock()
 
-            # wait for other thread in the same sync group to finish
-            self.sync_barrier.read_barrier.wait()
+            self.sample_counter += 1
+            # when sampling interval is reached
+            if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished \
+                    or self.sample_interval <= self.sample_period:
 
-            #sleep(0.1)
+                self.sample_interval_finished = True
+                self.t0 = clock()
+
             # collect sample
-            sample = self.sync_barrier.sample
+            sample = self.messenger.sample
 
             # if the first sample read was unsuccessful, just return the default value
             if sample is None:
@@ -111,9 +134,10 @@ class Node():
                 s.append(value)
             self.S = tuple(s)
 
-            sleep(max(0, self.sync_barrier.sample_period - (clock()-t_sample)))
+            sleep(max(0, self.sample_period - (clock()-t_sample)))
 
            # print(self.name, 'sample period ',clock()-t_sample)
+        self.sample_interval_finished = False
         return self.S
 
     def get_possible_action(self, num_sample=100) -> tuple:
@@ -145,7 +169,6 @@ class Node():
 
     def get_idle_action(self) -> tuple:
         return tuple([0] * len(self.actuate_vars))
-
 
     @staticmethod
     def _return_derive_param(counter) -> dict:
@@ -266,92 +289,6 @@ class Tentacle_Arm_Node(Node):
 
 
         return derive_param
-
-
-class Sync_Barrier():
-
-    def __init__(self, behaviour_cmd, num_threads, node_type, sample_period=0.1, sample_interval=0.4):
-
-        self.cmd = behaviour_cmd
-        self.node_type = node_type
-
-        # barrier which ensure all threads read and write at the same time
-        self.write_barrier = threading.Barrier(num_threads, action=self.write_barrier_action)
-        self.read_barrier = threading.Barrier(num_threads, action=self.read_barrier_action)
-        self.start_to_read_barrier = threading.Barrier(num_threads, action=self.start_to_read_barrier_action)
-
-        # queue that store action pending from all threads
-        self.action_q = queue.Queue()
-
-        self.sample_counter = 0
-
-        self.sample = None
-        self.sample_period = sample_period
-        self.sample_interval = sample_interval
-        self.t0 = clock()
-        self.sample_interval_finished = False
-
-    def start_to_read_barrier_action(self):
-
-        self.t0 = clock()
-        self.sample_interval_finished = False
-        self.sample_counter = 0
-
-
-    def read_barrier_action(self):
-
-        t0 = clock()
-
-
-        self.sample_counter += 1
-
-          # when sampling interval is reached
-        if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished  \
-           or self.sample_interval <= self.sample_period:
-
-            derive_param = self.node_type._return_derive_param(self.sample_counter)
-            self.sample_interval_finished = True
-            #print(self.sample_counter)
-        else:
-            derive_param = None
-
-        # during the sampling interval
-        with self.cmd.lock:
-
-            #t0 = clock()
-            self.cmd.update_input_states(self.cmd.teensy_manager.get_teensy_name_list(), derive_param=derive_param)
-            #print("read barrier 1 time: ", clock() - t0)
-
-            #t0 = clock()
-            self.sample = self.cmd.get_input_states(self.cmd.teensy_manager.get_teensy_name_list(), ('all',),
-                                                        timeout=max(0.1, self.sample_interval))
-            #print("read barrier 2 time: ", clock() - t0)
-
-    def write_barrier_action(self):
-
-        # categorize action in action_q based on teensy_name
-        change_requests = dict()
-        while not self.action_q.empty():
-            action = self.action_q.get()
-            try:
-                change_requests[action[0]].append(action[1])
-            except KeyError:
-                change_requests[action[0]] = [action[1]]
-
-
-        for teensy_name, output_params in change_requests.items():
-
-            cmd_obj = command_object(teensy_name, msg_setting=1)
-            for param in output_params:
-                cmd_obj.add_param_change(param[0], param[1])
-
-            with self.cmd.lock:
-                self.cmd.enter_command(cmd_obj)
-
-        with self.cmd.lock:
-            self.cmd.send_commands()
-
-
 
 def toDigits(n, b):
     """Convert a positive number n to its digit representation in base b."""

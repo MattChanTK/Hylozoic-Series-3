@@ -59,23 +59,13 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
 
-        # === setting up Sync Barriers ====
+        # === setting up messenger ====
+        messenger = Messenger(self, 0.04)
+
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
         # initially update the Teensys with all the output parameters here
         self.update_output_params(teensy_names)
-
-        # synchronization barrier for all LEDs
-        self.sync_barrier_led = Robot.Sync_Barrier(self, len(teensy_names) * 1,
-                                                   node_type=Robot.Protocell_Node,
-                                                   sample_interval=0.01, sample_period=0.02)
-        # synchronization barrier for all SMAs
-        self.sync_barrier_sma = Robot.Sync_Barrier(self, len(teensy_names) * 3,
-                                                   node_type=Robot.Tentacle_Arm_Node,
-                                                   sample_interval=12.0, sample_period=0.33)
-
-        # semaphore for restricting only one thread to access this thread at any given time
-        self.lock = threading.Lock()
 
         # ===== setting up robots and CBLA Engines ======
         # storage for the list of CBLA Engine thread
@@ -102,8 +92,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             protocell_action = ((teensy_name, 'protocell_0_led_level', ),)
             protocell_sensor = ((teensy_name, 'protocell_0_als_state', 0, 4095),
                                 (teensy_name, 'tentacle_0_ir_0_state', 0, 4095),)
-            robot_led = Robot.Protocell_Node(protocell_action, protocell_sensor, self.sync_barrier_led,
-                                             name=(teensy_name + '_LED'), msg_setting=2)
+            robot_led = Robot.Protocell_Node(protocell_action, protocell_sensor, messenger,
+                                             sample_period=0.045, sample_interval=0.045,
+                                             name=(teensy_name + '_LED'))
 
             # --- one tentacle arm; derived acc features ---
             robot_sma = []
@@ -123,8 +114,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #               (teensy_name, device_header + 'wave_diff_z'),
                 #               (teensy_name, device_header + 'cycling'))
 
-                robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, self.sync_barrier_sma,
-                                                         name=(teensy_name + '_SMA_%d' % j), msg_setting=1,
+                robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, messenger,
+                                                         sample_period=0.33, sample_interval=12.0,
+                                                         name=(teensy_name + '_SMA_%d' % j),
                                                          hidden_vars=sma_hidden))
 
             # -------- instantiate CBLA Engines ----------------
@@ -142,7 +134,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
                                                                      snapshot_period=10,
-                                                                     print_to_terminal=True)
+                                                                     print_to_terminal=False)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
@@ -157,7 +149,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                                    snapshot_period=30)
 
         # ~~~~ start the Messenger ~~~~
-        messenger = Messenger(self, 0.05)
         messenger.start()
 
         # ~~~~ starting the CBLA engines ~~~~~
