@@ -5,7 +5,6 @@ import re
 import queue
 import numpy as np
 import random
-from collections import deque
 from collections import defaultdict
 
 from interactive_system.InteractiveCmd import command_object
