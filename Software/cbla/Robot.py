@@ -5,6 +5,8 @@ import re
 import queue
 import numpy as np
 import random
+from collections import deque
+from collections import defaultdict
 
 from interactive_system.InteractiveCmd import command_object
 
@@ -12,7 +14,7 @@ class Node():
 
     def __init__(self, actuate_vars, report_vars, messenger,
                  sample_period, sample_interval,
-                 name="", hidden_vars=()):
+                 name="", derived_vars=(), hidden_vars=()):
 
         self.name = str(name)
 
@@ -22,7 +24,25 @@ class Node():
         self.M0 = tuple([0] * len(actuate_vars))
 
         self.report_vars = report_vars
-        self.S = tuple([0]*len(report_vars))
+
+        # list of derived vars to be included as sensor input
+        self.report_vars_derived = derived_vars
+
+        if len(self.report_vars_derived) > 0:
+            # check if the derived vars are supported for this node
+            __report_vars = tuple(zip(*self.report_vars_derived))[1]
+            if not set(__report_vars).issubset(set(self.get_supported_derived_param())):
+                raise ValueError('Derived report variables are not supported in this Node Type')
+
+        # dictionary for storing data needed for calculating the derived vars
+        self.data_storage = None
+
+        # find the relevant devices for this node
+        self.relevant_teensy = set()
+        for var in self.report_vars_derived:
+            self.relevant_teensy.add(var[0])
+
+        self.S = tuple([0]*(len(report_vars) + len(derived_vars)))
 
         self.hidden_vars = hidden_vars
         self.hidden_state = tuple([0]*len(hidden_vars))
@@ -33,12 +53,15 @@ class Node():
         self.past_reward = 0
 
         # sampling related variables
-        self.sample_counter = 0
         self.sample = None
         self.sample_period = sample_period
         self.sample_interval = sample_interval
         self.t0 = clock()
-        self.sample_interval_finished = False
+
+        self._additional_init_routine()
+
+    def _additional_init_routine(self):
+        pass
 
     @property
     def activation_reward(self):
@@ -92,17 +115,14 @@ class Node():
 
     def report(self, hidden_vars_only=False) -> tuple:
 
-        while not self.sample_interval_finished:
+        self.t0 = clock()
+        while True:
 
             t_sample = clock()
 
-            self.sample_counter += 1
-            # when sampling interval is reached
-            if clock() - self.t0 >= self.sample_interval and not self.sample_interval_finished \
-                    or self.sample_interval <= self.sample_period:
-
-                self.sample_interval_finished = True
-                self.t0 = clock()
+            # if wants hidden variables only but there isn't any hidden variable
+            if hidden_vars_only and len(self.hidden_vars) == 0:
+                return None
 
             # collect sample
             sample = self.messenger.sample
@@ -127,17 +147,31 @@ class Node():
             if hidden_vars_only:
                 return self.hidden_state
 
-            # construct the S vector for the node
-            s = []
-            for var in self.report_vars:
-                value = self._normalize(sample[var[0]][0][var[1]], var[2], var[3])
-                s.append(value)
-            self.S = tuple(s)
+            # store data for deriving the the derived parameters
+            self.store_data_for_derived_param(sample)
 
-            sleep(max(0, self.sample_period - (clock()-t_sample)))
+            # when sampling interval is reached
+            if (clock() - self.t0) >= self.sample_interval or \
+               self.sample_interval <= self.sample_period:
 
-           # print(self.name, 'sample period ',clock()-t_sample)
-        self.sample_interval_finished = False
+                # construct the S vector for the node
+                s = []
+                for var in self.report_vars:
+                    value = self._normalize(sample[var[0]][0][var[1]], var[2], var[3])
+                    s.append(value)
+
+                # compute derived variables
+                derived_sample = self.compute_derived_param()
+                if derived_sample is not None:
+                    for var in self.report_vars_derived:
+                        value = self._normalize(derived_sample[(var[0], var[1])], var[2], var[3])
+                        s.append(value)
+
+                self.S = tuple(s)
+                break
+
+            sleep(max(0, self.sample_period - (clock() - t_sample)))
+
         return self.S
 
     def get_possible_action(self, num_sample=100) -> tuple:
@@ -170,9 +204,16 @@ class Node():
     def get_idle_action(self) -> tuple:
         return tuple([0] * len(self.actuate_vars))
 
-    @staticmethod
-    def _return_derive_param(counter) -> dict:
-        return None
+    def get_supported_derived_param(self) -> tuple:
+        return ()
+
+    def store_data_for_derived_param(self, sample):
+        if len(self.report_vars_derived) > 0:
+            raise SystemError('Storage method for derived parameters is not defined!')
+
+    def compute_derived_param(self):
+        if len(self.report_vars_derived) > 0:
+            raise SystemError('Derivation method for derived parameters is not defined!')
 
     @staticmethod
     def _normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
@@ -208,7 +249,6 @@ class Protocell_Node(Node):
     @Node.idling_reward_window.getter
     def idling_reward_window(self):
         return 20
-
 
     def get_possible_action(self, state=None, num_sample=100) -> tuple:
         x_dim = 1
@@ -255,6 +295,10 @@ class Tentacle_Arm_Node(Node):
     def idling_reward_window(self):
         return 1
 
+    def _additional_init_routine(self):
+
+        self.data_storage = defaultdict(list)
+
     def get_possible_action(self, num_sample=4) -> tuple:
 
         # constructing a list of all possible action
@@ -277,6 +321,75 @@ class Tentacle_Arm_Node(Node):
 
         M_candidates = tuple(set(map(tuple, X)))
         return M_candidates
+
+    def get_supported_derived_param(self) -> tuple:
+
+        try:
+            return self.supported
+
+        except AttributeError:
+
+            supported = []
+            for j in range(4):
+                device_header = 'tentacle_%d_' % j
+                supported.append(device_header + 'acc_mean_x')
+                supported.append(device_header + 'acc_mean_y')
+                supported.append(device_header + 'acc_mean_z')
+                supported.append(device_header + 'ir_0_mean')
+
+                self.supported = tuple(supported)
+
+            return self.supported
+
+    def store_data_for_derived_param(self, sample):
+
+        for var in self.report_vars_derived:
+
+            teensy = var[0]
+            var_name = var[1]
+
+            if 'acc_mean_x' in var_name:
+                device = var_name.replace('acc_mean_x', '')
+                self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'acc_x_state'])
+
+            elif 'acc_mean_y' in var_name:
+                device = var_name.replace('acc_mean_y', '')
+                self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'acc_y_state'])
+
+            elif 'acc_mean_z' in var_name:
+                device = var_name.replace('acc_mean_z', '')
+                self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'acc_z_state'])
+
+            elif 'ir_0_mean' in var_name:
+                device = var_name.replace('ir_0_mean', '')
+                self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'ir_0_state'])
+
+            elif 'ir_1_mean' in var_name:
+                device = var_name.replace('ir_1_mean', '')
+                self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'ir_1_state'])
+
+
+
+    def compute_derived_param(self):
+
+        derived_sample = dict()
+        for var in self.report_vars_derived:
+
+            teensy = var[0]
+            var_name = var[1]
+            data = self.data_storage[(teensy, var_name)]
+
+            if 'acc_mean_x' in var_name or \
+               'acc_mean_y' in var_name or \
+               'acc_mean_z' in var_name or \
+               'ir_0_mean' in var_name or \
+               'ir_1_mean' in var_name:
+
+                derived_sample[(teensy, var_name)] = sum(data) / len(data)
+                self.data_storage[(teensy, var_name)] = []
+
+        return derived_sample
+
 
     @staticmethod
     def _return_derive_param(counter):
