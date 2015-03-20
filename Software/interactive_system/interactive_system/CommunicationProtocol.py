@@ -36,6 +36,7 @@ class CBLATestBed(SystemParameters):
 
         # byte 1: reply type
         self.reply_type = msg[1]
+        self.reply_type = msg[1]
 
         #=== Default reply type =====
         if self.reply_type == 0:
@@ -78,58 +79,6 @@ class CBLATestBed(SystemParameters):
                 byte_offset = j + 50
 
                 self.input_state[device_header + 'cycling'] = msg[byte_offset]
-
-
-            self.__store_input_states()
-
-            if self.output_param['derive_inputs'] == True:
-                self.output_param['derive_inputs'] = False
-                self.__derive_input_states()
-
-    def __store_input_states(self):
-
-        for j in range(4):
-            device_header = 'tentacle_%d_' % j
-            acc_state = (self.input_state[device_header + 'acc_x_state'],
-                         self.input_state[device_header + 'acc_y_state'],
-                         self.input_state[device_header + 'acc_z_state'])
-
-            self.input_state[device_header + "acc_waveform"].append(acc_state)
-
-            ir_state = (self.input_state[device_header + 'ir_0_state'],
-                         self.input_state[device_header + 'ir_1_state'],)
-
-            self.input_state[device_header + "ir_waveform"].append(ir_state)
-
-    def __derive_input_states(self):
-        # import pickle
-
-        # internal variable for high-level input features
-        for j in range(4):
-            device_header = 'tentacle_%d_' % j
-
-            waveform_zipped = list(zip(*self.input_state[device_header + "acc_waveform"]))
-
-            window = self.output_param['acc_diff_window']
-            gap = self.output_param['acc_diff_gap']
-            self.input_state[device_header + "wave_diff_x"] = sum(waveform_zipped[0][-window:]) - sum(waveform_zipped[0][-(window + gap):-gap])
-            self.input_state[device_header + "wave_diff_y"] = sum(waveform_zipped[1][-window:]) - sum(waveform_zipped[1][-(window + gap):-gap])
-            self.input_state[device_header + "wave_diff_z"] = sum(waveform_zipped[2][-window:]) - sum(waveform_zipped[2][-(window + gap):-gap])
-
-            window = self.output_param['acc_mean_window']
-            self.input_state[device_header + "wave_mean_x"] = sum(waveform_zipped[0][-window:]) / window
-            self.input_state[device_header + "wave_mean_y"] = sum(waveform_zipped[1][-window:]) / window
-            self.input_state[device_header + "wave_mean_z"] = sum(waveform_zipped[2][-window:]) / window
-
-            waveform_zipped = list(zip(*self.input_state[device_header + "ir_waveform"]))
-
-            window = self.output_param['ir_mean_window']
-            self.input_state[device_header + "ir_0_mean"] = sum(waveform_zipped[0][-window:]) / window
-            self.input_state[device_header + "ir_1_mean"] = sum(waveform_zipped[1][-window:]) / window
-
-            #print(waveform_zipped[0])
-
-
 
 
     def _compose_outgoing_msg(self, content):
