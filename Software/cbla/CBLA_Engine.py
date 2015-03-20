@@ -93,7 +93,7 @@ class CBLA_Engine(threading.Thread):
         idle_window_index = 0
 
 
-        # t0= clock()
+        # t0 = clock()
         is_exploring_count = 0
         target_time_0 = clock()
         while t < self.sim_duration and self.killed == False:
@@ -156,7 +156,7 @@ class CBLA_Engine(threading.Thread):
                 self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=curr_datetime, step=t)
 
             # generate a list of possible action given the state
-            #self.robot.report(hidden_vars_only=True)
+            self.robot.report(hidden_vars_only=True)
             M_candidates = self.robot.get_possible_action(num_sample=255)
             term_print_str += ''.join(map(str, ("Possible M's: ", M_candidates, '\n')))
 

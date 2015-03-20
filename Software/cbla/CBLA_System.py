@@ -102,10 +102,11 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 device_header = 'tentacle_%d_' % j
 
                 sma_action = ((teensy_name, device_header + "arm_motion_on"),)
-                sma_sensor = ((teensy_name, device_header + 'wave_mean_x', -256, 256),
-                              (teensy_name, device_header + 'wave_mean_y', -256, 256),
-                              (teensy_name, device_header + 'wave_mean_z', -256, 256),
-                              (teensy_name, 'tentacle_0_ir_0_mean', 0, 4095), )
+                sma_sensor = ()
+                sma_sensor_derived = ((teensy_name, device_header + 'acc_mean_x', -256, 256),
+                                      (teensy_name, device_header + 'acc_mean_y', -256, 256),
+                                      (teensy_name, device_header + 'acc_mean_z', -256, 256),
+                                      (teensy_name, 'tentacle_0_ir_0_mean', 0, 4095), )
                 sma_hidden = ((teensy_name, device_header + 'cycling'),)
 
                 # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
@@ -115,9 +116,9 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 #               (teensy_name, device_header + 'cycling'))
 
                 robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, messenger,
-                                                         sample_period=0.33, sample_interval=12.0,
+                                                         sample_period=0.3, sample_interval=12.0,
                                                          name=(teensy_name + '_SMA_%d' % j),
-                                                         hidden_vars=sma_hidden))
+                                                         derived_vars=sma_sensor_derived, hidden_vars=sma_hidden))
 
             # -------- instantiate CBLA Engines ----------------
             with self.lock:
@@ -196,7 +197,10 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
         temp_files = glob.glob("*.tmp")
         for temp_file in temp_files:
             os.remove(temp_file)
-        print("CBLA Behaviours Finished")
+        print("CBLA Behaviours Finished\n\n")
+
+        for teensy_name in tuple(teensy_names):
+            self.teensy_manager.kill_teensy_thread(teensy_name)
 
 
 def input_thread(L):
