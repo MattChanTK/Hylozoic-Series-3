@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='interactive_system',
-      version='0.5',
+      version='1.0',
       description='Interface with Teensy control that control the interactive art sculpture at PBAI',
       url='https://github.com/tuzzer/CBLA-Test-Bed/tree/master/Software/InteractiveSystem',
       author='Matthew T.K. Chan',
