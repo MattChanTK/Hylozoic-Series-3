@@ -60,7 +60,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
 
 
         # === setting up messenger ====
-        messenger = Messenger(self, 0.04)
+        messenger = Messenger(self, 0.00)
 
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
@@ -93,7 +93,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             protocell_sensor = ((teensy_name, 'protocell_0_als_state', 0, 4095),
                                 (teensy_name, 'tentacle_0_ir_0_state', 0, 4095),)
             robot_led = Robot.Protocell_Node(protocell_action, protocell_sensor, messenger,
-                                             sample_period=0.045, sample_interval=0.045,
+                                             sample_period=0.09, sample_interval=0.045,
                                              name=(teensy_name + '_LED'))
 
             # --- one tentacle arm; derived acc features ---
@@ -109,12 +109,6 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                       (teensy_name, 'tentacle_0_ir_0_mean', 0, 4095), )
                 sma_hidden = ((teensy_name, device_header + 'cycling'),)
 
-                # sma_action = ((teensy_name, device_header + "arm_motion_on"),)
-                # sma_sensor = ((teensy_name, device_header + 'wave_diff_x'),
-                #               (teensy_name, device_header + 'wave_diff_y'),
-                #               (teensy_name, device_header + 'wave_diff_z'),
-                #               (teensy_name, device_header + 'cycling'))
-
                 robot_sma.append(Robot.Tentacle_Arm_Node(sma_action, sma_sensor, messenger,
                                                          sample_period=0.3, sample_interval=12.0,
                                                          name=(teensy_name + '_SMA_%d' % j),
@@ -127,7 +121,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                 self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
                                                                      id=1,
                                                                      sim_duration=float('inf'),
-                                                                     target_loop_period=0.05,
+                                                                     target_loop_period=0.050,
                                                                      split_thres=400,
                                                                      split_thres_growth_rate=1.5,
                                                                      split_lock_count_thres=250,
@@ -135,12 +129,12 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
                                                                      snapshot_period=10,
-                                                                     print_to_terminal=False)
+                                                                     print_to_terminal=True)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
                                                                                    sim_duration=float('inf'),
-                                                                                   target_loop_period=12.5,
+                                                                                   target_loop_period=0.0,
                                                                                    split_thres=25,
                                                                                    split_thres_growth_rate=1.2,
                                                                                    split_lock_count_thres=1,
