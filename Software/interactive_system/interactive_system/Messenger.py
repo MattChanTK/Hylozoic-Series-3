@@ -15,6 +15,7 @@ class Messenger(threading.Thread):
         self.msg_period = msg_period
         self.cmd = interactive_cmd
         self.cmd_q = queue.Queue()
+        self.__estimated_msg_period = msg_period
 
         self.__sample = None
         self.sample_inputs(msg_period)
@@ -25,10 +26,14 @@ class Messenger(threading.Thread):
     def sample(self):
         return self.__sample
 
+    @property
+    def estimated_msg_period(self):
+        return self.__estimated_msg_period
+
     def run(self):
 
-        self.t0 = clock()
         while True:
+            self.t0 = clock()
 
             while not self.cmd_q.empty():
                 msg = self.cmd_q.get_nowait()
@@ -41,9 +46,9 @@ class Messenger(threading.Thread):
             self.sample_inputs(self.msg_period)
 
             sleep(max(0, self.msg_period - (clock() - self.t0)))
+            self.__estimated_msg_period = (self.__estimated_msg_period + clock() - self.t0)/2
 
             #print('Update time = %f' % (clock() - self.t0))
-            self.t0 = clock()
 
     def load_message(self, msg: InteractiveCmd.command_object):
 
@@ -56,4 +61,3 @@ class Messenger(threading.Thread):
 
             self.__sample = self.cmd.get_input_states(self.cmd.teensy_manager.get_teensy_name_list(), ('all',),
                                                       timeout=max(0.1, timeout_max))
-            # print(self.__sample['test_teensy_3'][0]['protocell_0_als_state'])

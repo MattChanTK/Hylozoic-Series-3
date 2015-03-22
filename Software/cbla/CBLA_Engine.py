@@ -7,7 +7,7 @@ from time import sleep
 from time import clock
 from datetime import datetime
 import numpy as np
-
+import warnings
 
 from RegionsManager import Expert
 from DataCollector import DataCollector
@@ -93,9 +93,7 @@ class CBLA_Engine(threading.Thread):
         idle_window_index = 0
 
 
-        # t0 = clock()
         is_exploring_count = 0
-        target_time_0 = clock()
         while t < self.sim_duration and self.killed == False:
 
             real_time_0 = clock()
@@ -127,14 +125,10 @@ class CBLA_Engine(threading.Thread):
             S1 = self.robot.report()
 
 
-            # wait until loop time reaches target loop period
-            sleep(max(0, self.target_loop_period - (clock() - target_time_0)))
-            target_time_0 = clock()
-
             # artificially inject noise
             # noise = 0
             # if M[0] < 50:
-            #     noise = 1000
+            # noise = 1000
             # elif M[0] < 100:
             #     noise = 500
             # S1 = list(S1)
@@ -151,7 +145,8 @@ class CBLA_Engine(threading.Thread):
             self.data_collect.enqueue(self.robot.name, 'selected expert', selected_expert, time=curr_datetime, step=t)
 
             try:
-                self.data_collect.enqueue(self.robot.name, 'reward', self.expert.rewards_history[-1], time=curr_datetime, step=t)
+                self.data_collect.enqueue(self.robot.name, 'reward', self.expert.rewards_history[-1],
+                                          time=curr_datetime, step=t)
             except TypeError:
                 self.data_collect.enqueue(self.robot.name, 'reward', -float('inf'), time=curr_datetime, step=t)
 
@@ -167,11 +162,11 @@ class CBLA_Engine(threading.Thread):
             # if action-value is too low, take the idle action
 
             if len(self.largest_action_values_array) >= self.robot.idling_reward_window:
-                self.largest_action_values_array[idle_window_index] = val_best#self.expert.get_largest_action_value()
+                self.largest_action_values_array[idle_window_index] = val_best  #self.expert.get_largest_action_value()
                 idle_window_index = (idle_window_index + 1) % self.robot.idling_reward_window
             else:
                 self.largest_action_values_array = np.append(self.largest_action_values_array,
-                                                             [val_best])#self.expert.get_largest_action_value()])
+                                                             [val_best])  #self.expert.get_largest_action_value()])
 
             idled = False
             mean_largest_action_value = val_best
@@ -179,7 +174,6 @@ class CBLA_Engine(threading.Thread):
                 M1 = self.robot.get_idle_action()
                 idled = True
             term_print_str += ''.join(map(str, ("Mean Overall Highest Value: ", mean_largest_action_value, '\n')))
-
 
             self.data_collect.enqueue(self.robot.name, 'best action', M_best, time=curr_datetime, step=t)
 
@@ -238,24 +232,36 @@ class CBLA_Engine(threading.Thread):
                 # update expert ids
                 expert_ids = []
                 self.expert.save_expert_ids(expert_ids)
-                self.data_collect.enqueue(self.robot.name, 'region ids history', val=expert_ids, time=curr_datetime, step=t)
+                self.data_collect.enqueue(self.robot.name, 'region ids history', val=expert_ids, time=curr_datetime,
+                                          step=t)
 
                 # saving the exemplars
                 exemplars_data = dict()
                 self.expert.save_exemplars(exemplars_data)
-                self.data_collect.enqueue(self.robot.name, 'exemplars history', val=exemplars_data, time=curr_datetime, step=t)
+                self.data_collect.enqueue(self.robot.name, 'exemplars history', val=exemplars_data, time=curr_datetime,
+                                          step=t)
                 last_expert_save_time = real_time_0
 
                 # make snapshot_period slight longer over time
-                self.snapshot_period = min(450, self.snapshot_period*1.2)
+                self.snapshot_period = min(450, self.snapshot_period * 1.2)
 
             # set to current state
             S = S1
             M = M1
 
+            # wait until loop time reaches target loop period
+            sleep_time = self.target_loop_period - (clock() - real_time_0)
+            sleep(max(0, sleep_time))
+            print(sleep_time)
 
             real_time = clock()
             term_print_str += ("Time Step = %fs" % (real_time - real_time_0))  # output to terminal
+
+            if self.robot.messenger.estimated_msg_period > real_time - real_time_0:
+                warning_text = '%s is sampling faster than the messenger! [messenger speed %fs]' \
+                               % (self.name, self.robot.messenger.estimated_msg_period)
+                warnings.warn(warning_text, RuntimeWarning)
+
 
             if self.print_to_terminal:
                 print(term_print_str + '\n\n', end='')
@@ -296,7 +302,6 @@ class CBLA_Engine(threading.Thread):
         M_best = M_candidates[L_list.index(L_best)]
 
         M_idx = weighted_choice_sub(L_list, min_percent=self.exploring_rate)
-
 
         M1 = M_candidates[M_idx]
 

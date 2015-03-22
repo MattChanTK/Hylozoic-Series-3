@@ -53,14 +53,33 @@ class Node():
 
         # sampling related variables
         self.sample = None
-        self.sample_period = sample_period
+        self.__sample_period = 0
+        self.__sample_interval = 0
         self.sample_interval = sample_interval
+        self.sample_period = sample_period
         self.t0 = clock()
+        self.estimated_sampling_time = 0.03
 
         self._additional_init_routine()
 
     def _additional_init_routine(self):
         pass
+
+    @property
+    def sample_period(self) -> float:
+        return self.__sample_period
+
+    @sample_period.setter
+    def sample_period(self, period: float):
+        self.__sample_period = max(0.0, min(self.sample_interval, period))
+
+    @property
+    def sample_interval(self) -> float:
+        return self.__sample_interval
+
+    @sample_interval.setter
+    def sample_interval(self, period: float):
+        self.__sample_interval = max(0.0, period)
 
     @property
     def activation_reward(self):
@@ -115,6 +134,7 @@ class Node():
     def report(self, hidden_vars_only=False) -> tuple:
 
         self.t0 = clock()
+
         while True:
 
             t_sample = clock()
@@ -149,9 +169,13 @@ class Node():
             # store data for deriving the the derived parameters
             self.store_data_for_derived_param(sample)
 
+            self.estimated_sampling_time = (self.estimated_sampling_time + (clock() - t_sample))/2
+
+
             # when sampling interval is reached
-            if (clock() - self.t0) >= self.sample_interval or \
-               self.sample_interval <= self.sample_period:
+            remaining_interval_time = self.sample_interval - self.estimated_sampling_time - (clock() - self.t0)
+            if remaining_interval_time < self.sample_period or (clock() - self.t0) >= self.sample_interval:
+                sleep(max(0, remaining_interval_time))
 
                 # construct the S vector for the node
                 s = []
@@ -168,8 +192,11 @@ class Node():
 
                 self.S = tuple(s)
                 break
+            sleep_time = self.sample_period - self.estimated_sampling_time - (clock() - t_sample)
 
-            sleep(max(0, self.sample_period - (clock() - t_sample)))
+            sleep(max(0.0, sleep_time))
+
+
 
         return self.S
 
@@ -335,6 +362,9 @@ class Tentacle_Arm_Node(Node):
                 supported.append(device_header + 'acc_mean_y')
                 supported.append(device_header + 'acc_mean_z')
                 supported.append(device_header + 'ir_0_mean')
+                supported.append(device_header + 'acc_diff_x')
+                supported.append(device_header + 'acc_diff_y')
+                supported.append(device_header + 'acc_diff_z')
 
                 self.supported = tuple(supported)
 
@@ -366,8 +396,6 @@ class Tentacle_Arm_Node(Node):
             elif 'ir_1_mean' in var_name:
                 device = var_name.replace('ir_1_mean', '')
                 self.data_storage[(teensy, var_name)].append(sample[teensy][0][device + 'ir_1_state'])
-
-
 
     def compute_derived_param(self):
 
