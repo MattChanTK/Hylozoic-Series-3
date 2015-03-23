@@ -184,7 +184,6 @@ class IR_Proximity_Sensor(Node):
             sleep(self.messenger.estimated_msg_period)
 
 
+class Tentacle_Frond(Node):
 
-
-
-
+    pass

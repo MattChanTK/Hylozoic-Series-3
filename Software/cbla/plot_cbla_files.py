@@ -75,10 +75,10 @@ def main():
 
     fig_num = 1
     # Viz.plot_ion()
-   # fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
-   # fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
+    #fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
+    fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
     # # # input("press any key to plot the next graphs")
-    fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
+    # fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
     Viz.plot_show(True)
 
 
