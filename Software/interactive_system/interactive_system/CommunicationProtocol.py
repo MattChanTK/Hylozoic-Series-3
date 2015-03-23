@@ -185,12 +185,16 @@ class CBLATestBed(SystemParameters):
 
                 # byte x0 --- tentacle motion activation
                 content[byte_offset] = self.output_param[device_header + 'arm_motion_on']
+                # byte x1 --- reflex actuation level
+                content[byte_offset+1] = self.output_param[device_header+'reflex_0_level']
+                # byte x2 --- reflex actuation level
+                content[byte_offset+2] = self.output_param[device_header+'reflex_1_level']
 
             for j in range(2):
                 device_header = 'protocell_%d_' % j
-                byte_offset = j + 4
+                byte_offset = j + 12
 
-                # byte x0 + 4 --- high-power LED level
+                # byte x0 --- high-power LED level
                 content[byte_offset] = self.output_param[device_header + 'led_level']
 
 
