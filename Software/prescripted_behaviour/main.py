@@ -3,7 +3,6 @@
 # import cProfile
 
 from interactive_system import TeensyManager
-from interactive_system import Messenger
 from prescripted_behaviour import Prescripted_Behaviour as cmd
 
 # None means all Teensy's connected will be active; otherwise should be a tuple of names
