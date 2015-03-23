@@ -39,7 +39,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
         teensy_3 = 'HK_teensy_3'
 
 
-        teensy_in_use = (teensy_0, )
+        teensy_in_use = (teensy_2, )
 
         cluster = defaultdict(lambda: Cluster_Components())
 
@@ -55,17 +55,26 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 # 1 frond each
                 frond = Output_Node(messenger, teensy, output='tentacle_%d_arm_motion_on' % j)
 
+                # 2 reflex each
+                reflex_0 = Output_Node(messenger, teensy, output='tentacle_%d_reflex_0_level' % j)
+                reflex_1 = Output_Node(messenger, teensy, output='tentacle_%d_reflex_1_level' % j)
+
+
                 # copy to Tentacle component set
-                tentacle_internals = Tentacle_Internal_Components(ir_sensor_0, ir_sensor_1, frond)
+                tentacle_internals = Tentacle_Internal_Components(ir_sensor_0, ir_sensor_1, frond, reflex_0, reflex_1)
+
+                cluster[teensy].append_components(tentacle_internals=tentacle_internals)
 
                 # create the Tentacle Node object
                 tentacle = Tentacle(messenger, teensy_name=teensy,
-                                    ir_0=tentacle_internals.ir_0.out_var['input'],
-                                    ir_1=tentacle_internals.ir_1.out_var['input'],
-                                    frond=tentacle_internals.frond.in_var['output'])
+                                    ir_0=cluster[teensy].tentacle_internals[j].ir_0.out_var['input'],
+                                    ir_1=cluster[teensy].tentacle_internals[j].ir_0.out_var['input'],
+                                    frond=cluster[teensy].tentacle_internals[j].frond.in_var['output'],
+                                    reflex_0=cluster[teensy].tentacle_internals[j].reflex_0.in_var['output'],
+                                    reflex_1=cluster[teensy].tentacle_internals[j].reflex_1.in_var['output'])
 
                 # copy to cluster set
-                cluster[teensy].append(tentacle_node=tentacle, tentacle_internals=tentacle_internals)
+                cluster[teensy].append_node(tentacle_node=tentacle)
 
                 # de-ref temp threads
                 ir_sensor_0 = None
@@ -82,18 +91,23 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
 class Tentacle_Internal_Components(object):
 
-    def __init__(self, ir_sensor_0: Input_Node, ir_sensor_1: Input_Node, frond: Output_Node):
+    def __init__(self, ir_sensor_0: Input_Node, ir_sensor_1: Input_Node,
+                 frond: Output_Node, reflex_0: Output_Node, reflex_1: Output_Node):
 
         self.ir_0 = copy(ir_sensor_0)
         self.ir_1 = copy(ir_sensor_1)
 
         self.frond = copy(frond)
+        self.reflex_0 = copy(reflex_0)
+        self.reflex_1 = copy(reflex_1)
 
     def start_all(self):
 
         self.ir_0.start()
         self.ir_1.start()
         self.frond.start()
+        self.reflex_0.start()
+        self.reflex_1.start()
 
         print('components started')
 
@@ -104,8 +118,10 @@ class Cluster_Components(object):
         self.tentacle_internals = []
         self.tentacle_node = []
 
-    def append(self, tentacle_node: Tentacle, tentacle_internals: Tentacle_Internal_Components):
+    def append_node(self, tentacle_node: Tentacle):
         self.tentacle_node.append(copy(tentacle_node))
+
+    def append_components(self, tentacle_internals: Tentacle_Internal_Components):
         self.tentacle_internals.append(copy(tentacle_internals))
 
     def start(self):

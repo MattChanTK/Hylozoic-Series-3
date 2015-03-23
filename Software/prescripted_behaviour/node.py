@@ -113,7 +113,7 @@ class Input_Node(Node):
             self.out_var[name] = Var(0)
             self.in_dev[name] = input_dev
 
-        self.print_to_term = False
+        self.print_to_term = True
 
 
     def run(self):
