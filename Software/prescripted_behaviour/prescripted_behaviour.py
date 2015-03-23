@@ -6,6 +6,23 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
     # ========= the Run function for the prescripted behaviour system =====
     def run(self):
 
+        for teensy_name in self.teensy_manager.get_teensy_name_list():
+            # ------ set mode ------
+            cmd_obj = InteractiveCmd.command_object(teensy_name, 'basic')
+            cmd_obj.add_param_change('operation_mode', 3)
+            self.enter_command(cmd_obj)
+
+            # ------ configuration ------
+            # set the Tentacle on/off periods
+            cmd_obj = InteractiveCmd.command_object(teensy_name, 'tentacle_high_level')
+            for j in range(3):
+                device_header = 'tentacle_%d_' % j
+                cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
+                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
+            self.enter_command(cmd_obj)
+
+
+
         messenger = Messenger.Messenger(self, 0.03)
         messenger.start()
 
