@@ -206,7 +206,7 @@ def save_to_file(filename, data):
     # create a temp file
     temp_filename = "__%s.tmp" % filename
     with open(temp_filename, 'wb') as output:
-        pickle.dump(data, output, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(data, output, protocol=3)
 
         output.flush()
         os.fsync(output.fileno())

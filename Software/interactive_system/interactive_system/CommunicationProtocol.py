@@ -236,7 +236,7 @@ class CBLATestBed_FAST(CBLATestBed):
         self.var_encode_func["int8s"] = self._set_int8_array
 
         # import parameters from files
-        self.output_param_config_filename = 'CBLATestBed_fast_output_config'
-        self.input_param_config_filename = 'CBLATestBed_fast_input_config'
+        self.output_param_config_filename = 'CBLATestBed_FAST_output_config'
+        self.input_param_config_filename = 'CBLATestBed_FAST_input_config'
 
         self._import_param_from_file()
