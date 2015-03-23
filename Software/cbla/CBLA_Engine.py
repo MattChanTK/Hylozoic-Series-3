@@ -11,10 +11,11 @@ import warnings
 
 from RegionsManager import Expert
 from DataCollector import DataCollector
+from Robot import Node
 
 
 class CBLA_Engine(threading.Thread):
-    def __init__(self, robot, data_collect: DataCollector=None, id: int=0, sim_duration=2000,
+    def __init__(self, robot: Node, data_collect: DataCollector=None, id: int=0, sim_duration=2000,
                  target_loop_period: float=0.1,
                  exploring_rate: float=0.15, learning_rate=0.25,
                  split_thres: int=1000, split_thres_growth_rate=1.2, split_lock_count_thres: int=250,
@@ -120,6 +121,8 @@ class CBLA_Engine(threading.Thread):
 
             # do action
             self.robot.actuate(M)
+            # adjust sample period based on action choice
+            self.robot.adjust_sample_period()
 
             # read sensor
             S1 = self.robot.report()
@@ -252,14 +255,13 @@ class CBLA_Engine(threading.Thread):
             # wait until loop time reaches target loop period
             sleep_time = self.target_loop_period - (clock() - real_time_0)
             sleep(max(0, sleep_time))
-            print(sleep_time)
 
             real_time = clock()
             term_print_str += ("Time Step = %fs" % (real_time - real_time_0))  # output to terminal
 
             if self.robot.messenger.estimated_msg_period > real_time - real_time_0:
                 warning_text = '%s is sampling faster than the messenger! [messenger speed %fs]' \
-                               % (self.name, self.robot.messenger.estimated_msg_period)
+                               % (self.robot.name, self.robot.messenger.estimated_msg_period)
                 warnings.warn(warning_text, RuntimeWarning)
 
 
