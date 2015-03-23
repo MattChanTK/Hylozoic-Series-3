@@ -22,7 +22,7 @@ class CBLATestBed(SystemParameters):
 
     def additional_config_routine(self):
 
-        self.var_encode_func["int8s"] = self.__set_int8_array
+        self.var_encode_func["int8s"] = self._set_int8_array
 
         # import parameters from files
         self.output_param_config_filename = 'CBLATestBed_output_config'
@@ -203,7 +203,7 @@ class CBLATestBed(SystemParameters):
         elif self.request_type == 'read_only':
             pass
 
-    def __set_int8_array(self, input_type, raw_input):
+    def _set_int8_array(self, input_type, raw_input):
 
         if raw_input is None:
             raise TypeError("The array must not be empty.")
@@ -226,3 +226,13 @@ class CBLATestBed(SystemParameters):
                 else:
                     raise TypeError("Elements of " + input_type + " must be positive and less than 255")
 
+class CBLATestBed_FAST(CBLATestBed):
+
+    def additional_config_routine(self):
+        self.var_encode_func["int8s"] = self._set_int8_array
+
+        # import parameters from files
+        self.output_param_config_filename = 'CBLATestBed_fast_output_config'
+        self.input_param_config_filename = 'CBLATestBed_fast_input_config'
+
+        self._import_param_from_file()
