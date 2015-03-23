@@ -129,7 +129,7 @@ class Tentacle(Node):
 
         while True:
             output_changed = False
-            if self.in_var['ir_sensor_1'].val > 1000 and self.out_var['tentacle_out'].val ==0:
+            if self.in_var['ir_sensor_1'].val > 1400 and self.out_var['tentacle_out'].val ==0:
                 self.out_var['tentacle_out'].val = 3
                 self.out_var['reflex_out_0'].val = 100
                 self.out_var['reflex_out_1'].val = 100
@@ -154,7 +154,7 @@ class Tentacle(Node):
                                   self.out_var['reflex_out_1'].val))
 
 
-            sleep(1)
+            sleep(self.messenger.estimated_msg_period*2)
 
 class IR_Proximity_Sensor(Node):
 
