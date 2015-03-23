@@ -46,13 +46,14 @@ class Messenger(threading.Thread):
             self.sample_inputs(self.msg_period)
 
             sleep(max(0, self.msg_period - (clock() - self.t0)))
-            self.__estimated_msg_period = (self.__estimated_msg_period + clock() - self.t0)/2
+            self.__estimated_msg_period = (9*self.__estimated_msg_period + clock() - self.t0)/10
 
             #print('Update time = %f' % (clock() - self.t0))
 
     def load_message(self, msg: InteractiveCmd.command_object):
 
         self.cmd_q.put_nowait(msg)
+        #print(self.cmd_q.qsize())
 
     def sample_inputs(self, timeout_max=0.0):
 
