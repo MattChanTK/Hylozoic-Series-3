@@ -6,6 +6,7 @@ import queue
 import numpy as np
 import random
 from collections import defaultdict
+from copy import copy
 
 from interactive_system.InteractiveCmd import command_object
 
@@ -55,8 +56,12 @@ class Node():
         self.sample = None
         self.__sample_period = 0
         self.__sample_interval = 0
+
         self.sample_interval = sample_interval
         self.sample_period = sample_period
+        self.sample_interval_0 = self.sample_interval
+        self.sample_period_0 = self.sample_period
+
         self.t0 = clock()
         self.estimated_sampling_time = 0.03
 
@@ -241,6 +246,10 @@ class Node():
         if len(self.report_vars_derived) > 0:
             raise SystemError('Derivation method for derived parameters is not defined!')
 
+    def adjust_sample_period(self):
+        pass
+
+
     @staticmethod
     def _normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
 
@@ -417,6 +426,14 @@ class Tentacle_Arm_Node(Node):
 
         return derived_sample
 
+    def adjust_sample_period(self):
+
+        if self.M0 == self.get_idle_action():
+            self.sample_interval = 0.1
+            self.sample_period = 0.05
+        else:
+            self.sample_interval = self.sample_interval_0
+            self.sample_period = self.sample_period_0
 
     @staticmethod
     def _return_derive_param(counter):
