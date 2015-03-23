@@ -21,6 +21,8 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
             self.enter_command(cmd_obj)
 
+        # initially update the Teensys with all the output parameters here
+        self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
 
         messenger = Messenger.Messenger(self, 0.03)
