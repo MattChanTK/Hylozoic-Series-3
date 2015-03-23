@@ -12,14 +12,6 @@ class CBLATestBed(SystemParameters):
     def __init__(self):
         super(CBLATestBed, self).__init__()
 
-        # internal variable for high-level input features
-        for j in range(4):
-            device_header = 'tentacle_%d_' % j
-            self.input_state[device_header + "acc_waveform"] = deque(maxlen=5000)
-            self.input_state[device_header + "ir_waveform"] = deque(maxlen=5000)
-
-
-
     def additional_config_routine(self):
 
         self.var_encode_func["int8s"] = self._set_int8_array

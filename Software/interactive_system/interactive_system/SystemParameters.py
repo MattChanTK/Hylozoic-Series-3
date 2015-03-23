@@ -194,8 +194,6 @@ class SystemParameters():
         if input > 2**num_bit - 1 or input < 0:
             raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + ".")
         self.output_param[input_type] = input
-        print('set_int ', input_type, ' ', input)
-
 
     def _set_int8_var(self, input_type, input):
         self._set_int_var(input_type, input, 8)
