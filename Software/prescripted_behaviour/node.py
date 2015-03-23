@@ -48,7 +48,7 @@ class Node(threading.Thread):
 
         return sample
 
-    def send_output_cmd(self, teensy, *output):
+    def send_output_cmd(self, teensy, output):
 
         if output:
             if not isinstance(teensy, str):
@@ -58,12 +58,14 @@ class Node(threading.Thread):
         else:
             return
 
+
         for output_name, value in output:
             if isinstance(value, Var):
                 value = value.val
             cmd_obj.add_param_change(output_name, value)
 
         self.messenger.load_message(cmd_obj)
+
 
 
 class Var(object):
@@ -95,95 +97,68 @@ class Test_Node(Node):
             sleep(0.5)
 
 
-class Tentacle(Node):
+class Input_Node(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, tentacle_num: int, ir_0: Var, ir_1: Var):
+    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='input_node', **input_name):
+        super(Input_Node, self).__init__(messenger, node_name='%s @ %s' % (node_name, teensy_name))
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
 
+
         self.teensy_name = teensy_name
+        self.in_dev = dict()
 
-        if not isinstance(tentacle_num, int):
-            raise TypeError('Tentacle number must an integer!')
+        for name, input_dev in input_name.items():
+            self.out_var[name] = Var(0)
+            self.in_dev[name] = input_dev
 
-
-        super(Tentacle, self).__init__(messenger, node_name='Tentacle %d' % tentacle_num)
-
-        # defining the input variables
-        self.in_var['ir_sensor_0'] = ir_0
-        self.in_var['ir_sensor_1'] = ir_1
-
-        # defining the output variables
-        self.out_var['tentacle_out'] = Var(0)
-        self.tentacle_sma_name = 'tentacle_%d_arm_motion_on' % tentacle_num
-        self.out_var['reflex_out_0'] = Var(0)
-        self.tentacle_reflex_0_name = 'tentacle_%d_reflex_0_level' % tentacle_num
-        self.out_var['reflex_out_1'] = Var(0)
-        self.tentacle_reflex_1_name = 'tentacle_%d_reflex_1_level' % tentacle_num
-
-
+        self.print_to_term = False
 
 
     def run(self):
 
         while True:
-            output_changed = False
-            if self.in_var['ir_sensor_1'].val > 1400 and self.out_var['tentacle_out'].val ==0:
-                self.out_var['tentacle_out'].val = 3
-                self.out_var['reflex_out_0'].val = 100
-                self.out_var['reflex_out_1'].val = 100
-                output_changed = True
 
-            elif self.in_var['ir_sensor_1'].val <= 1000 and self.out_var['tentacle_out'].val > 0:
+            out_var_list = []
+            for name in self.out_var.keys():
+                out_var_list.append((self.in_dev[name], self.out_var[name]))
 
-                self.out_var['tentacle_out'].val = 0
-                self.out_var['reflex_out_0'].val = 0
-                self.out_var['reflex_out_1'].val = 0
-                output_changed = True
+                sample = self.read_sample()
+                self.out_var[name].val = sample[self.teensy_name][0][self.in_dev[name]]
 
-            if output_changed:
-
-                self.send_output_cmd(self.teensy_name,
-                                     (self.tentacle_sma_name, self.out_var['tentacle_out']),
-                                     (self.tentacle_reflex_0_name, self.out_var['reflex_out_0']),
-                                     (self.tentacle_reflex_1_name, self.out_var['reflex_out_1']))
-
-            print('%d, %d, %d' % (self.out_var['tentacle_out'].val,
-                                  self.out_var['reflex_out_0'].val,
-                                  self.out_var['reflex_out_1'].val))
+                if self.print_to_term:
+                    print('[%s] %s: %f' % (self.in_dev[name], 'sensor_out', self.out_var[name].val))
+                sleep(self.messenger.estimated_msg_period)
 
 
-            sleep(self.messenger.estimated_msg_period*2)
+class Output_Node(Node):
 
-class IR_Proximity_Sensor(Node):
+    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='output_node', **output_name):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, sensor_name: str):
-        super(IR_Proximity_Sensor, self).__init__(messenger, node_name='ir sensor')
+        super(Output_Node, self).__init__(messenger, node_name='%s @ %s' % (node_name, teensy_name))
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
 
-        if not isinstance(sensor_name, str):
-            raise TypeError('sensor_name must be a string!')
-
         self.teensy_name = teensy_name
-        self.sensor_name = sensor_name
+        self.out_dev = dict()
 
-        # define output variables
-        self.out_var['sensor_raw'] = Var(0)
+        for name, output_dev in output_name.items():
+            self.in_var[name] = Var(0)
+            self.out_dev[name] = output_dev
 
+        self.print_to_term = True
 
     def run(self):
 
         while True:
-            sample = self.read_sample()
-            self.out_var['sensor_raw'].val = sample[self.teensy_name][0][self.sensor_name]
 
-            #print('[%s] %s: %f' % (self.node_name, 'sensor_out', self.out_var['sensor_raw'].val))
-            sleep(self.messenger.estimated_msg_period)
+            in_var_list = []
+            for name in self.in_var.keys():
+                in_var_list.append((self.out_dev[name], self.in_var[name]))
 
-
-class Tentacle_Frond(Node):
-
-    pass
+            self.send_output_cmd(self.teensy_name, tuple(in_var_list))
+            if self.print_to_term:
+                print('[%s] %s: %f' % (self.out_dev[name], 'action_out', self.in_var[name].val))
+            sleep(self.messenger.estimated_msg_period * 2)
