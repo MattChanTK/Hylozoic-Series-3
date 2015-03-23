@@ -39,7 +39,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
         teensy_3 = 'HK_teensy_3'
 
 
-        teensy_in_use = (teensy_1, )
+        teensy_in_use = (teensy_0, )
 
         cluster = defaultdict(lambda: Cluster_Components())
 
@@ -58,7 +58,6 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 # copy to Tentacle component set
                 tentacle_internals = Tentacle_Internal_Components(ir_sensor_0, ir_sensor_1, frond)
 
-
                 # create the Tentacle Node object
                 tentacle = Tentacle(messenger, teensy_name=teensy,
                                     ir_0=tentacle_internals.ir_0.out_var['input'],
@@ -67,6 +66,13 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
                 # copy to cluster set
                 cluster[teensy].append(tentacle_node=tentacle, tentacle_internals=tentacle_internals)
+
+                # de-ref temp threads
+                ir_sensor_0 = None
+                ir_sensor_1 = None
+                frond = None
+                tentacle_internals = None
+                tentacle = None
 
         for teensy in teensy_in_use:
             cluster[teensy].start()

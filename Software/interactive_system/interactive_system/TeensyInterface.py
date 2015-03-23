@@ -230,6 +230,7 @@ class TeensyInterface(threading.Thread):
         # start thread
         threading.Thread.__init__(self)
         self.daemon = True
+        self.name = 'Teensy_Interface for %s' % serial_num
         self.start()
 
         # print to terminal or not

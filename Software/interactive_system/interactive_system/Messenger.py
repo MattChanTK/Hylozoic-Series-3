@@ -20,7 +20,7 @@ class Messenger(threading.Thread):
         self.__sample = None
         self.sample_inputs(msg_period)
 
-        super(Messenger, self).__init__(daemon=True)
+        super(Messenger, self).__init__(daemon=True, name='Messenger')
 
     @property
     def sample(self):

@@ -12,7 +12,7 @@ class Tentacle(Node):
         self.teensy_name = teensy_name
 
 
-        super(Tentacle, self).__init__(messenger)
+        super(Tentacle, self).__init__(messenger, node_name='%s @ %s' % ('tentacle', teensy_name))
 
         # defining the input variables
         self.in_var['ir_sensor_0'] = ir_0

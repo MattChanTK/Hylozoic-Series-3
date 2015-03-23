@@ -7,7 +7,7 @@ class Node(threading.Thread):
 
     def __init__(self, messenger: Messenger.Messenger, node_name=None):
 
-        super(Node, self).__init__(daemon=True)
+        super(Node, self).__init__(name=node_name, daemon=True)
 
         self.node_name = 'generic'
         self.messenger = messenger
