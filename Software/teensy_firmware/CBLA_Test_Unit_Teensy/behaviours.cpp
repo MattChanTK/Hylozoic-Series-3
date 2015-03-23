@@ -190,30 +190,34 @@ void Behaviours::parse_msg(){
 		case 5: {
 			
 			// (1 bytes each)
-			// >>>>> byte 2: TENTACLE 0
-			// >>>>> byte 3: TENTACLE 1
-			// >>>>> byte 4: TENTACLE 2	
-			// >>>>> byte 5: TENTACLE 3			
+			// >>>>> byte 2 to byte 4 : TENTACLE 0
+			// >>>>> byte 5 to byte 7 : TENTACLE 1
+			// >>>>> byte 8 to byte 10: TENTACLE 2	
+			// >>>>> byte 11 to byte 13: TENTACLE 3			
 			for (uint8_t j = 0; j < 4; j++){
 						
-				const uint8_t byte_offset = (j) + 2;
+				const uint8_t byte_offset = 3*(j) + 2;
 					
 				//--- actuator output variables---
 				
-				// byte x10 --- tentacle motion activation 
+				// byte x1 --- tentacle motion activation 
 				tentacle_var[j].tentacle_motion_on = recv_data_buff[byte_offset];
+				// byte x2 --- reflex actuation level
+				tentacle_var[j].tentacle_reflex_level[0] = recv_data_buff[byte_offset+1];
+				// byte x3 --- reflex actuation level
+				tentacle_var[j].tentacle_reflex_level[1] = recv_data_buff[byte_offset+2];
 
 			}
 			
 			// (1 bytes each)
-			// >>>>> byte 6: PROTOCELL 0
-			// >>>>> byte 7: PROTOCELL 1
+			// >>>>> byte 14: PROTOCELL 0
+			// >>>>> byte 15: PROTOCELL 1
 			for (uint8_t j = 0; j < 2; j++){
 						
-				const uint8_t byte_offset = (j) + 6;
+				const uint8_t byte_offset = (j) + 14 ;
 								
 				//--- actuator output variables---
-				// byte x4 --- high-power LED level 
+				// byte x1 --- high-power LED level 
 				protocell_var[j].protocell_led_level = recv_data_buff[byte_offset];
 			
 			}
