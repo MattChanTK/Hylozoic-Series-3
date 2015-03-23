@@ -26,18 +26,23 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
         messenger = Messenger.Messenger(self, 0.03)
         messenger.start()
 
+        #teensy_1 = 'test_teensy_3'
+        teensy_1 = 'HK_teensy_1'
+        teensy_2 = 'HK_teensy_2'
+        teensy_3 = 'HK_teensy_3'
 
-        ir_sensor_0 = node.IR_Proximity_Sensor(messenger, 'test_teensy_3', 'tentacle_0_ir_0_state')
+
+        ir_sensor_0 = node.IR_Proximity_Sensor(messenger, teensy_1, 'tentacle_0_ir_0_state')
         ir_sensor_0.start()
 
-        ir_sensor_1 = node.IR_Proximity_Sensor(messenger, 'test_teensy_3', 'tentacle_0_ir_1_state')
+        ir_sensor_1 = node.IR_Proximity_Sensor(messenger, teensy_1, 'tentacle_0_ir_1_state')
         ir_sensor_1.start()
 
 
         # test_node = node.Test_Node(messenger, ir_sensor_0.out_var['sensor_raw'])
         # test_node.start()
 
-        tentacle_0 = node.Tentacle(messenger, teensy_name='test_teensy_3', tentacle_num=0,
+        tentacle_0 = node.Tentacle(messenger, teensy_name=teensy_1, tentacle_num=0,
                                    ir_0=ir_sensor_0.out_var['sensor_raw'], ir_1=ir_sensor_0.out_var['sensor_raw'])
         tentacle_0.start()
         print('System Initialized')
