@@ -107,7 +107,6 @@ class Tentacle(Node):
         if not isinstance(tentacle_num, int):
             raise TypeError('Tentacle number must an integer!')
 
-        self.tentacle_name = 'tentacle_%d_arm_motion_on' % tentacle_num
 
         super(Tentacle, self).__init__(messenger, node_name='Tentacle %d' % tentacle_num)
 
@@ -117,8 +116,13 @@ class Tentacle(Node):
 
         # defining the output variables
         self.out_var['tentacle_out'] = Var(0)
+        self.tentacle_sma_name = 'tentacle_%d_arm_motion_on' % tentacle_num
         self.out_var['reflex_out_0'] = Var(0)
+        self.tentacle_reflex_0_name = 'tentacle_%d_reflex_0_level' % tentacle_num
         self.out_var['reflex_out_1'] = Var(0)
+        self.tentacle_reflex_1_name = 'tentacle_%d_reflex_1_level' % tentacle_num
+
+
 
 
     def run(self):
@@ -141,9 +145,9 @@ class Tentacle(Node):
             if output_changed:
 
                 self.send_output_cmd(self.teensy_name,
-                                     (self.tentacle_name, self.out_var['tentacle_out']),
-                                     (self.tentacle_name, self.out_var['reflex_out_0']),
-                                     (self.tentacle_name, self.out_var['reflex_out_1']))
+                                     (self.tentacle_sma_name, self.out_var['tentacle_out']),
+                                     (self.tentacle_reflex_0_name, self.out_var['reflex_out_0']),
+                                     (self.tentacle_reflex_1_name, self.out_var['reflex_out_1']))
 
             print('%d, %d, %d' % (self.out_var['tentacle_out'].val,
                                   self.out_var['reflex_out_0'].val,
