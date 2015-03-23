@@ -129,7 +129,7 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
                                                                      kga_delta=10, kga_tau=30,
                                                                      learning_rate=0.25,
                                                                      snapshot_period=10,
-                                                                     print_to_terminal=False)
+                                                                     print_to_terminal=True)
                 for j in range(len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,

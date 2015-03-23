@@ -27,9 +27,9 @@ class SystemParameters():
 
         #~~~ function to encode variable type ~~~~
         self.var_encode_func = dict()
-        self.var_encode_func["bool"] = self.__set_bool_var
-        self.var_encode_func["int8"] = self.__set_int8_var
-        self.var_encode_func["int16"] = self.__set_int_var
+        self.var_encode_func["bool"] = self._set_bool_var
+        self.var_encode_func["int8"] = self._set_int8_var
+        self.var_encode_func["int16"] = self._set_int_var
 
         #==== inputs ====
         self.input_state = dict()
@@ -183,7 +183,7 @@ class SystemParameters():
         return 0
 
 
-    def __set_int_var(self, input_type, input, num_bit=16):
+    def _set_int_var(self, input_type, input, num_bit=16):
 
         if not isinstance(input, int):
             try:
@@ -194,12 +194,13 @@ class SystemParameters():
         if input > 2**num_bit - 1 or input < 0:
             raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + ".")
         self.output_param[input_type] = input
+        print('set_int ', input_type, ' ', input)
 
 
-    def __set_int8_var(self, input_type, input):
-        self.__set_int_var(input_type, input, 8)
+    def _set_int8_var(self, input_type, input):
+        self._set_int_var(input_type, input, 8)
 
-    def __set_bool_var(self, input_type, input):
+    def _set_bool_var(self, input_type, input):
 
         if isinstance(input, bool):
             self.output_param[input_type] = input
