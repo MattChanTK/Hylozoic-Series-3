@@ -81,26 +81,10 @@ class Var(object):
     def val(self, new_val):
         self.__val = new_val
 
-
-class Test_Node(Node):
-
-    def __init__(self, messenger: Messenger.Messenger, input_addr):
-
-        super(Test_Node, self).__init__(messenger)
-
-        self.in_var['ir_sensor_1'] = input_addr
-
-    def run(self):
-
-        while True:
-            print('[%s] %s: %f' % (self.node_name, 'sensor_out', self.in_var['ir_sensor_1'].val))
-            sleep(0.5)
-
-
 class Input_Node(Node):
 
     def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='input_node', **input_name):
-        super(Input_Node, self).__init__(messenger, node_name='%s @ %s' % (node_name, teensy_name))
+        super(Input_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name, ))
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
@@ -113,7 +97,7 @@ class Input_Node(Node):
             self.out_var[name] = Var(0)
             self.in_dev[name] = input_dev
 
-        self.print_to_term = True
+        self.print_to_term = False
 
 
     def run(self):
@@ -136,7 +120,7 @@ class Output_Node(Node):
 
     def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='output_node', **output_name):
 
-        super(Output_Node, self).__init__(messenger, node_name='%s @ %s' % (node_name, teensy_name))
+        super(Output_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
@@ -148,7 +132,7 @@ class Output_Node(Node):
             self.in_var[name] = Var(0)
             self.out_dev[name] = output_dev
 
-        self.print_to_term = True
+        self.print_to_term = False
 
     def run(self):
 
