@@ -172,7 +172,7 @@ class CBLATestBed(SystemParameters):
         elif self.request_type == 'composite_1':
             for j in range(4):
                 device_header = 'tentacle_%d_' % j
-                byte_offset = 4*j
+                byte_offset = 3*j
 
                 # byte x0 --- tentacle motion activation
                 content[byte_offset] = self.output_param[device_header + 'arm_motion_on']
