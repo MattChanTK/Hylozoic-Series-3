@@ -1,7 +1,7 @@
 from interactive_system import InteractiveCmd
 from interactive_system import Messenger
 from node import *
-from tentacle_node import *
+from complex_node import *
 import gui
 from collections import OrderedDict
 
@@ -97,6 +97,19 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
                 node_list[tentacle.node_name] = tentacle
 
+
+                # creating Protocell Node
+
+                # 1 LED per protocell
+                led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
+                                  output='protocell_0_led_level')
+                protocell = Protocell(messenger, teensy_name=teensy, node_name='protocell',
+                                      led=led.in_var['output'],
+                                      cluster_activity=cluster_activity)
+                node_list[led.node_name] = led
+                node_list[protocell.node_name] = protocell
+
+
             tentacle_list = []
             for tentacle in node_list.values():
                 if isinstance(tentacle, Tentacle):
@@ -104,9 +117,6 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
             for id in range(len(tentacle_list)):
                 tentacle_list[id].in_var['left_ir'] = tentacle_list[id].in_var['ir_sensor_0']
                 tentacle_list[id].in_var['right_ir'] = tentacle_list[(id-1) % len(tentacle_list)].in_var['ir_sensor_0']
-
-
-
 
         for name, node in node_list.items():
             node.start()

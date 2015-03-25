@@ -80,3 +80,47 @@ class Tentacle(Node):
                 self.out_var['reflex_out_1'].val = 0
 
             sleep(self.messenger.estimated_msg_period*2)
+
+
+class Protocell(Node):
+
+    def __init__(self, messenger: Messenger.Messenger, teensy_name: str,
+                 als: Var=Var(0), cluster_activity: Var=Var(0),
+                 led: Var=Var(0), node_name='protocell'):
+
+
+        if not isinstance(teensy_name, str):
+            raise TypeError('teensy_name must be a string!')
+
+        self.teensy_name = teensy_name
+
+        super(Protocell, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+
+        # defining the input variables
+        self.in_var['als'] = als
+        self.in_var['cluster_activity'] = cluster_activity
+
+        # defining the output variables
+        self.out_var['led'] = led
+        self.out_var['cluster_activity'] = cluster_activity
+
+
+    def run(self):
+        while True:
+
+            # cluster activity
+            if self.in_var['cluster_activity'].val > 15:
+
+                for i in range(10):
+                    self.out_var['led'].val = 0
+                    while self.out_var['led'].val < 100:
+                        self.out_var['led'].val += 1
+                        sleep(0.01)
+                    while self.out_var['led'].val > 0:
+                        self.out_var['led'].val -= 1
+                        sleep(0.01)
+
+            self.out_var['led'].val = 0
+
+            sleep(self.messenger.estimated_msg_period * 2)
+
