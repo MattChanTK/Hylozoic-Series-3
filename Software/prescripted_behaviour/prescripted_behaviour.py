@@ -3,6 +3,7 @@ from interactive_system import Messenger
 from node import *
 from tentacle_node import *
 import gui
+from collections import OrderedDict
 
 from copy import copy
 from collections import defaultdict
@@ -24,26 +25,28 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
             for j in range(3):
                 device_header = 'tentacle_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
-                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
+                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)
             self.enter_command(cmd_obj)
+        self.send_commands()
 
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
 
-        messenger = Messenger.Messenger(self, 0.03)
+        messenger = Messenger.Messenger(self, 0.001)
         messenger.start()
 
-        teensy_0 = 'test_teensy_3'
-        teensy_1 = 'HK_teensy_1'
-        teensy_2 = 'HK_teensy_2'
-        teensy_3 = 'HK_teensy_3'
+        teensy_0 = 'test_teensy_1'
+        teensy_1 = 'test_teensy_3'
+        teensy_2 = 'HK_teensy_1'
+        teensy_3 = 'HK_teensy_2'
+        teensy_4 = 'HK_teensy_3'
 
+        teensy_in_use = (teensy_0, teensy_1,)
 
-        teensy_in_use = (teensy_0, )
+        node_list = OrderedDict()
 
-        node_list = dict()
-
+        # instantiate all the basic components
         for teensy in teensy_in_use:
 
             # check if the teensy exists
@@ -52,11 +55,19 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 continue
 
             # 3 tentacles
+            cluster_activity = Var(0)
             for j in range(3):
 
                 # 2 ir sensors each
                 ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
                 ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
+
+
+                # 1 3-axis acceleromter each
+                acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
+                                         x='tentacle_%d_acc_x_state' % j,
+                                         y='tentacle_%d_acc_x_state' % j,
+                                         z='tentacle_%d_acc_x_state' % j)
 
                 # 1 frond each
                 frond = Output_Node(messenger, teensy, node_name='tentacle_%d.frond' % j, output='tentacle_%d_arm_motion_on' % j)
@@ -65,21 +76,35 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
                 reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
 
-                # create the Tentacle Node object
+                node_list[ir_sensor_0.node_name] = ir_sensor_0
+                node_list[ir_sensor_1.node_name] = ir_sensor_1
+                node_list[acc.node_name] = acc
+                node_list[frond.node_name] = frond
+                node_list[reflex_0.node_name] = reflex_0
+                node_list[reflex_1.node_name] = reflex_1
+
+
+                # instantiate the Tentacle Node
                 tentacle = Tentacle(messenger, teensy_name=teensy,
                                     node_name='tentacle_%d' % j,
                                     ir_0=ir_sensor_0.out_var['input'],
                                     ir_1=ir_sensor_1.out_var['input'],
+                                    acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
+                                    cluster_activity=cluster_activity,
                                     frond=frond.in_var['output'],
                                     reflex_0=reflex_0.in_var['output'],
                                     reflex_1=reflex_1.in_var['output'])
 
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
-                node_list[frond.node_name] = frond
-                node_list[reflex_0.node_name] = reflex_0
-                node_list[reflex_1.node_name] = reflex_1
                 node_list[tentacle.node_name] = tentacle
+
+            tentacle_list = []
+            for tentacle in node_list.values():
+                if isinstance(tentacle, Tentacle):
+                    tentacle_list.append(tentacle)
+            for id in range(len(tentacle_list)):
+                tentacle_list[id].in_var['left_ir'] = tentacle_list[id].in_var['ir_sensor_0']
+                tentacle_list[id].in_var['right_ir'] = tentacle_list[(id-1) % len(tentacle_list)].in_var['ir_sensor_0']
+
 
 
 

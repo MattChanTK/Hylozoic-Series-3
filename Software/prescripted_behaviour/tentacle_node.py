@@ -1,11 +1,14 @@
 from node import *
 
 from time import sleep
+import random
 
 class Tentacle(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, ir_0: Var, ir_1: Var,
-                 frond: Var, reflex_0: Var, reflex_1: Var, node_name='tentacle'):
+    def __init__(self, messenger: Messenger.Messenger, teensy_name: str,
+                 ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0), cluster_activity: Var=Var(0),
+                 left_ir: Var=Var(0), right_ir: Var=Var(0),
+                 frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='tentacle'):
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
@@ -18,26 +21,61 @@ class Tentacle(Node):
         # defining the input variables
         self.in_var['ir_sensor_0'] = ir_0
         self.in_var['ir_sensor_1'] = ir_1
+        self.in_var['acc'] = acc
+        self.in_var['left_ir'] = left_ir
+        self.in_var['right_ir'] = right_ir
+        self.in_var['cluster_activity'] = cluster_activity
 
         # defining the output variables
         self.out_var['tentacle_out'] = frond
         self.out_var['reflex_out_0'] = reflex_0
         self.out_var['reflex_out_1'] = reflex_1
+        self.out_var['cluster_activity'] = cluster_activity
 
-
+        # parameters
+        self.ir_on_thres = 1400
+        self.ir_off_thres = 1000
 
     def run(self):
 
         while True:
-            if self.in_var['ir_sensor_0'].val > 1400 and self.out_var['tentacle_out'].val == 0:
-                self.out_var['tentacle_out'].val = 3
+
+            # frond's sensor
+            if self.in_var['ir_sensor_1'].val > self.ir_on_thres and self.out_var['tentacle_out'].val == 0:
+
+                motion_type = 3
+                if self.in_var['left_ir'].val > self.ir_on_thres and self.in_var['right_ir'].val > self.ir_on_thres:
+                    motion_type = random.choice((1, 2))
+                elif self.in_var['left_ir'].val > self.ir_on_thres:
+                    motion_type = 1
+                elif self.in_var['right_ir'].val > self.ir_on_thres:
+                    motion_type = 2
+
+                self.out_var['tentacle_out'].val = motion_type
+                self.out_var['cluster_activity'].val += 1
+
+            elif self.in_var['ir_sensor_1'].val <= self.ir_off_thres and self.out_var['tentacle_out'].val > 0:
+                self.out_var['tentacle_out'].val = 0
+
+            # scout's sensor
+            if self.in_var['ir_sensor_0'].val > self.ir_on_thres and \
+                    (self.out_var['reflex_out_0'].val == 0 or self.out_var['reflex_out_1'].val == 0):
                 self.out_var['reflex_out_0'].val = 100
                 self.out_var['reflex_out_1'].val = 100
+                self.out_var['cluster_activity'].val += 1
 
+            elif self.in_var['ir_sensor_0'].val <= self.ir_off_thres and \
+                    (self.out_var['reflex_out_0'].val > 0 or self.out_var['reflex_out_1'].val > 0):
 
-            elif self.in_var['ir_sensor_0'].val <= 1000 and self.out_var['tentacle_out'].val > 0:
+                self.out_var['reflex_out_0'].val = 0
+                self.out_var['reflex_out_1'].val = 0
 
-                self.out_var['tentacle_out'].val = 0
+            # cluster activity
+            if self.in_var['cluster_activity'].val > 15:
+                self.out_var['reflex_out_0'].val = 200
+                self.out_var['reflex_out_1'].val = 200
+                sleep(3)
+                self.in_var['cluster_activity'].val = 0
                 self.out_var['reflex_out_0'].val = 0
                 self.out_var['reflex_out_1'].val = 0
 

@@ -26,7 +26,7 @@ class Node(threading.Thread):
         return tuple(self.in_var.keys())
 
     @property
-    def get_out_var_list(self) -> tuple:
+    def out_var_list(self) -> tuple:
         return tuple(self.out_var.keys())
 
     def run(self):
