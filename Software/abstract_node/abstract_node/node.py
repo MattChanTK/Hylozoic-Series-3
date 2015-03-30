@@ -2,6 +2,7 @@ import threading
 from interactive_system import Messenger
 from interactive_system.InteractiveCmd import command_object
 from time import sleep
+from collections import OrderedDict
 
 class Node(threading.Thread):
 
@@ -13,10 +14,10 @@ class Node(threading.Thread):
         self.messenger = messenger
 
         # constructing the list of input variables
-        self.in_var = dict()
+        self.in_var = OrderedDict()
 
         # constructing the list of output variables
-        self.out_var = dict()
+        self.out_var = OrderedDict()
 
         if isinstance(node_name, str):
             self.node_name = node_name
@@ -146,3 +147,17 @@ class Output_Node(Node):
             if self.print_to_term:
                 print('[%s] %s: %f' % (self.out_dev[name], 'action_out', self.in_var[name].val))
             sleep(self.messenger.estimated_msg_period * 2)
+
+
+class Simple_Node(Node):
+
+    def __init__(self, messenger: Messenger.Messenger, node_name='simple_node', output: Var=Var(0), **input_name):
+
+        super(Simple_Node, self).__init__(messenger, node_name='%s' % node_name)
+
+        self.out_var['output'] = output
+
+        for name, input_var in input_name.items():
+            self.in_var[name] = input_var
+
+        self.print_to_term = False

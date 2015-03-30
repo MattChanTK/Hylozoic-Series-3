@@ -1,12 +1,10 @@
-from interactive_system import InteractiveCmd
-from interactive_system import Messenger
-from node import *
-from complex_node import *
-import gui
 from collections import OrderedDict
 
-from copy import copy
-from collections import defaultdict
+from interactive_system import InteractiveCmd
+
+from complex_node import *
+from abstract_node import gui
+
 
 class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
@@ -31,7 +29,6 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
-
 
         messenger = Messenger.Messenger(self, 0.001)
         messenger.start()

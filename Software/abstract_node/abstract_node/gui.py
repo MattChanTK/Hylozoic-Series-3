@@ -1,7 +1,9 @@
 __author__ = 'Matthew'
 import tkinter as tk
-from node import *
 from collections import OrderedDict
+
+from abstract_node.node import *
+
 
 class GUI(object):
     def __init__(self, node_list: dict):

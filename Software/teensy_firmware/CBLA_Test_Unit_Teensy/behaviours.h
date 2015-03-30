@@ -120,7 +120,6 @@ class Behaviours : public TeensyUnit{
 		//--- Input functions----
 		void sample_inputs();
 		void sample_inputs(const uint8_t setting);
-		void sample_tentacle_sensor_waveform(const uint32_t &curr_time);
 		
 		//===============================================
 		//==== BEHAVIOUR functions =====
@@ -146,6 +145,9 @@ class Behaviours : public TeensyUnit{
 		//---- high-level direct control ---
 		void high_level_direct_control_tentacle_arm_behaviour(const uint32_t &curr_time);
 		void high_level_direct_control_tentacle_arm_behaviour_continuous(const uint32_t &curr_time);
+		
+		//---- SMA control ----
+		void sma_control(const uint32_t &curr_time);
 
 
 		

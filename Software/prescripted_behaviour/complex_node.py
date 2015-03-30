@@ -1,7 +1,7 @@
-from node import *
-
 from time import sleep
 import random
+
+from abstract_node.node import *
 
 class Tentacle(Node):
 
@@ -111,14 +111,14 @@ class Protocell(Node):
             # cluster activity
             if self.in_var['cluster_activity'].val > 15:
 
-                for i in range(10):
+                for i in range(5):
                     self.out_var['led'].val = 0
                     while self.out_var['led'].val < 100:
                         self.out_var['led'].val += 1
-                        sleep(0.01)
+                        sleep(self.messenger.estimated_msg_period)
                     while self.out_var['led'].val > 0:
                         self.out_var['led'].val -= 1
-                        sleep(0.01)
+                        sleep(self.messenger.estimated_msg_period)
 
             self.out_var['led'].val = 0
 

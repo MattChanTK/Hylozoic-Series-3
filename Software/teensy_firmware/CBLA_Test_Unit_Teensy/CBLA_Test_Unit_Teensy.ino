@@ -98,6 +98,7 @@ void self_running_test(){
 	teensy_unit.tentacle_arm_test_behaviour(curr_time);
 	teensy_unit.reflex_test_behaviour();
 	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.sma_control(curr_time);
 }
 
 void quality_assurance(){
@@ -160,6 +161,7 @@ void loop() {
 			break;
 	
 	}
+	
 
 
 }
