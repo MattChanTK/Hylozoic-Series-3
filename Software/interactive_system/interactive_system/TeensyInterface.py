@@ -192,7 +192,11 @@ class TeensyInterface(threading.Thread):
         # release device
         #usb.util.release_interface(dev, self.intf)
         # claiming device
-        usb.util.claim_interface(dev, self.intf)
+
+        try:
+            usb.util.claim_interface(dev, self.intf)
+        except usb.core.USBError:
+            raise usb.core.USBError("Error: Teensy device (%s) is in use." % self.serial_number)
 
         # get OUT endpoint
         self.ep_out = usb.util.find_descriptor(
