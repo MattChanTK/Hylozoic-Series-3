@@ -70,7 +70,7 @@ class CBLA_Engine(threading.Thread):
             self.data_collect = DataCollector()
 
         self.data_collect.set_robot_actuator_labels(self.robot.name, self.robot.actuate_vars)
-        self.data_collect.set_robot_sensor_labels(self.robot.name, self.robot.report_vars)
+        self.data_collect.set_robot_sensor_labels(self.robot.name, self.robot.report_vars + self.robot.report_vars_derived)
 
         # ~~ initiating threads ~~
         self.killed = False

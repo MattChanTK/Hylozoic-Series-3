@@ -118,27 +118,27 @@ class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
             with self.lock:
 
                 # ~~~~ creating CBLA Engines ~~~~
-                self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
-                                                                     id=1,
-                                                                     sim_duration=float('inf'),
-                                                                     target_loop_period=0.050,
-                                                                     split_thres=400,
-                                                                     split_thres_growth_rate=1.5,
-                                                                     split_lock_count_thres=250,
-                                                                     mean_err_thres=20.0,
-                                                                     kga_delta=10, kga_tau=30,
-                                                                     learning_rate=0.25,
-                                                                     snapshot_period=10,
-                                                                     print_to_terminal=True)
-                for j in range(len(robot_sma)):
+                # self.cbla_engine[teensy_name + '_LED'] = CBLA_Engine(robot_led, data_collect=data_collector,
+                #                                                      id=1,
+                #                                                      sim_duration=float('inf'),
+                #                                                      target_loop_period=0.050,
+                #                                                      split_thres=100,
+                #                                                      split_thres_growth_rate=1.5,
+                #                                                      split_lock_count_thres=250,
+                #                                                      mean_err_thres=0.0025,
+                #                                                      kga_delta=10, kga_tau=30,
+                #                                                      learning_rate=0.25,
+                #                                                      snapshot_period=10,
+                #                                                      print_to_terminal=False)
+                for j in range(1):#len(robot_sma)):
                     self.cbla_engine['%s_SMA_%d' % (teensy_name, j)] = CBLA_Engine(robot_sma[j], data_collect=data_collector,
                                                                                    id=2 + j,
                                                                                    sim_duration=float('inf'),
-                                                                                   target_loop_period=0.0,
+                                                                                   target_loop_period=15,
                                                                                    split_thres=25,
                                                                                    split_thres_growth_rate=1.2,
                                                                                    split_lock_count_thres=1,
-                                                                                   mean_err_thres=1.8,
+                                                                                   mean_err_thres=0.0025,
                                                                                    kga_delta=3, kga_tau=5,
                                                                                    learning_rate=0.7,
                                                                                    snapshot_period=30)

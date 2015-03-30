@@ -247,7 +247,7 @@ class Node():
             raise SystemError('Derivation method for derived parameters is not defined!')
 
     def adjust_sample_period(self):
-        pass
+        return self.sample_interval
 
 
     @staticmethod
@@ -263,15 +263,15 @@ class Protocell_Node(Node):
 
     @Node.activation_reward.getter
     def activation_reward(self):
-        return 35.0
+        return 0.05
 
     @Node.activation_reward_delta.getter
     def activation_reward_delta(self):
-        return 60.0
+        return 0.5
 
     @Node.idling_reward.getter
     def idling_reward(self):
-        return 5.0
+        return 0.01
 
     @Node.min_steps_before_idling.getter
     def min_steps_before_idling(self):
@@ -279,7 +279,7 @@ class Protocell_Node(Node):
 
     @Node.idling_prob.getter
     def idling_prob(self):
-        return 0.95
+        return 0.98
 
     @Node.idling_reward_window.getter
     def idling_reward_window(self):
@@ -308,15 +308,15 @@ class Tentacle_Arm_Node(Node):
 
     @Node.activation_reward.getter
     def activation_reward(self):
-        return 35.0
+        return 0.05
 
     @Node.activation_reward_delta.getter
     def activation_reward_delta(self):
-        return 100.0
+        return 0.5
 
     @Node.idling_reward.getter
     def idling_reward(self):
-        return 1.0
+        return 0.01
 
     @Node.min_steps_before_idling.getter
     def min_steps_before_idling(self):
@@ -324,7 +324,7 @@ class Tentacle_Arm_Node(Node):
 
     @Node.idling_prob.getter
     def idling_prob(self):
-        return 0.95
+        return 1.0
 
     @Node.idling_reward_window.getter
     def idling_reward_window(self):
@@ -434,6 +434,8 @@ class Tentacle_Arm_Node(Node):
         else:
             self.sample_interval = self.sample_interval_0
             self.sample_period = self.sample_period_0
+
+        return self.sample_interval
 
     @staticmethod
     def _return_derive_param(counter):

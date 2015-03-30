@@ -78,7 +78,7 @@ def main():
     #fig_num = visualize_CBLA_idle_mode(viz_data, fig_num, file_name)
     fig_num = visualize_CBLA_exploration(viz_data, fig_num=fig_num, file_name=file_name)
     # # # input("press any key to plot the next graphs")
-    # fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
+    #fig_num = visualize_CBLA_model(viz_data, fig_num=fig_num, file_name=file_name)
     Viz.plot_show(True)
 
 
@@ -100,7 +100,10 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
         state_history = viz_data[name]['state']
         mean_error_history = viz_data[name]['mean error']
         action_label = list(zip(*viz_data[name]['m label']))[1]
-        state_label = list(zip(*viz_data[name]['s label']))[1]
+        try:
+            state_label = list(zip(*viz_data[name]['s label']))[1]
+        except IndexError:
+            state_label = None
         reward_history = viz_data[name]['reward']
         value_history = viz_data[name]['action value']
         action_count_history = viz_data[name]['action count']
@@ -140,8 +143,6 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
             Viz.plot_evolution(action_history['val'], time=action_history['time'],
                                title='Selected Action vs Time', y_label=('Selected action',),
                                y_lim=(-1, 4), marker_size=6, fig_num=fig_num, subplot_num=234)
-
-
         # plot the model - 2D
         if type is 'LED':
             Viz.plot_model(expert, region_ids, s_label=state_label, m_label=action_label, show_model=True,
@@ -170,6 +171,15 @@ def visualize_CBLA_exploration(viz_data, fig_num=1,file_name=''):
             Viz.plot_model_3D(expert, region_ids, s_label=state_label, m_label=action_label, x_idx=(3, 4), y_idx=2,
                               fig_num=fig_num, subplot_num=133, data_only=True)
 
+        if type is 'SMA':
+            fig_num += 1
+            Viz.plot_evolution(state_history['val'], time=state_history['time'],
+                               title='state vs Time', y_label=('x', 'y', 'z', 'ir'),
+                               marker_size=6, fig_num=fig_num, subplot_num=111)
+
+        Viz.plot_expert_tree(expert, region_ids, folder_name=file_name,
+                             filename='%s fig %d region' % (type, fig_num))
+
         folder = os.path.join(os.getcwd(), '%s figures' % file_name)
         save(os.path.join(folder, 'figure %d' % fig_num))
         fig_num += 1
@@ -194,7 +204,10 @@ def visualize_CBLA_model(viz_data, fig_num=1, file_name=''):
             type = None
 
         action_label = list(zip(*viz_data[name]['m label']))[1]
-        state_label = list(zip(*viz_data[name]['s label']))[1]
+        try:
+            state_label = list(zip(*viz_data[name]['s label']))[1]
+        except IndexError:
+            state_label = None
 
         try:
             exemplars_history = viz_data[name]['exemplars snapshot']
