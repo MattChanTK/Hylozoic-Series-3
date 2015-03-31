@@ -4,6 +4,7 @@ from copy import copy
 from time import clock
 import inspect
 
+
 class InteractiveCmd(threading.Thread):
 
     def __init__(self, Teensy_manager):
@@ -117,31 +118,32 @@ class InteractiveCmd(threading.Thread):
 
         # split them based on their type
         cmd_obj_qs = dict()
+        cmds_by_type = dict()
 
         while not self.cmd_q.empty():
             cmd_obj = self.cmd_q.get()
-
-            cmds_by_type = dict()
 
             # reconstruct cmd_obj based on request type
             if cmd_obj.change_request_type is None:
                 for var, value in cmd_obj.change_request.items():
                     request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)
-                    try:
+
+                    if request_type in cmds_by_type:
                         cmds_by_type[request_type].add_param_change(var, value)
-                    except KeyError:
+                    else:
                         cmds_by_type[request_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.msg_setting)
                         cmds_by_type[request_type].add_param_change(var, value)
+
             else:
                 cmds_by_type[cmd_obj.change_request_type] = copy(cmd_obj)
 
-            # split cmd_obj based on their destination
-            for cmd_by_type in cmds_by_type.values():
-                try:
-                    cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
-                except KeyError:
-                    cmd_obj_qs[cmd_by_type.teensy_name] = queue.Queue()
-                    cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
+        # split cmd_obj based on their destination
+        for cmd_by_type in cmds_by_type.values():
+            try:
+                cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
+            except KeyError:
+                cmd_obj_qs[cmd_by_type.teensy_name] = queue.Queue()
+                cmd_obj_qs[cmd_by_type.teensy_name].put_nowait(copy(cmd_by_type))
 
         # send them out one Teensy by one Teensy
         while len(cmd_obj_qs) > 0:
