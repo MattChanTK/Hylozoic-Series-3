@@ -21,7 +21,7 @@ class GUI(object):
                                                                   text="%s = %d" % (name, node.out_var[var_name].val),
                                                                   fg='blue')
 
-            if isinstance(node, Output_Node):
+            elif isinstance(node, Output_Node):
                 for var_name in node.in_var_list:
                     self.action_text[(name, var_name)] = tk.Label(self.root,
                                                                   text="%s = %d" % (name, node.in_var[var_name].val),
