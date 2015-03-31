@@ -1,4 +1,5 @@
 import threading
+
 from interactive_system import Messenger
 from interactive_system.InteractiveCmd import command_object
 from time import sleep
@@ -22,6 +23,8 @@ class Node(threading.Thread):
         if isinstance(node_name, str):
             self.node_name = node_name
 
+        self.update_freq = 2
+
     @property
     def in_var_list(self) -> tuple:
         return tuple(self.in_var.keys())
@@ -36,7 +39,6 @@ class Node(threading.Thread):
     def read_sample(self, print_warning=False):
 
         sample = self.messenger.sample
-
         if print_warning:
             # if the first sample read was unsuccessful, just return the default value
             if sample is None:
@@ -99,6 +101,7 @@ class Input_Node(Node):
             self.in_dev[name] = input_dev
 
         self.print_to_term = False
+        self.update_freq = 1.5
 
 
     def run(self):
@@ -106,15 +109,16 @@ class Input_Node(Node):
         while True:
 
             out_var_list = []
+            sample = self.read_sample()
+
             for name in self.out_var.keys():
                 out_var_list.append((self.in_dev[name], self.out_var[name]))
 
-                sample = self.read_sample()
                 self.out_var[name].val = sample[self.teensy_name][0][self.in_dev[name]]
 
                 if self.print_to_term:
                     print('[%s] %s: %f' % (self.in_dev[name], 'sensor_out', self.out_var[name].val))
-                sleep(self.messenger.estimated_msg_period)
+            sleep(self.messenger.estimated_msg_period * self.update_freq)
 
 
 class Output_Node(Node):
@@ -134,6 +138,7 @@ class Output_Node(Node):
             self.out_dev[name] = output_dev
 
         self.print_to_term = False
+        self.update_freq = 2
 
     def run(self):
 
@@ -144,9 +149,10 @@ class Output_Node(Node):
                 in_var_list.append((self.out_dev[name], self.in_var[name]))
 
             self.send_output_cmd(self.teensy_name, tuple(in_var_list))
-            if self.print_to_term:
-                print('[%s] %s: %f' % (self.out_dev[name], 'action_out', self.in_var[name].val))
-            sleep(self.messenger.estimated_msg_period * 2)
+            for name in self.in_var.keys():
+                if self.print_to_term:
+                    print('[%s] %s: %f' % (self.out_dev[name], 'action_out', self.in_var[name].val))
+            sleep(self.messenger.estimated_msg_period * self.update_freq)
 
 
 class Simple_Node(Node):
