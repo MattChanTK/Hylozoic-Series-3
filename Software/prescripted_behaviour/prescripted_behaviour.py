@@ -2,7 +2,9 @@ from collections import OrderedDict
 from time import clock
 
 from interactive_system import InteractiveCmd
+from interactive_system import CommunicationProtocol as CP
 
+from abstract_node.low_level_node import *
 from complex_node import *
 from abstract_node import gui
 
@@ -15,7 +17,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = InteractiveCmd.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', 3)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
             self.enter_command(cmd_obj)
 
             # ------ configuration ------
@@ -60,24 +62,36 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
                 ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
 
+                node_list[ir_sensor_0.node_name] = ir_sensor_0
+                node_list[ir_sensor_1.node_name] = ir_sensor_1
 
                 # 1 3-axis acceleromter each
                 acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
                                          x='tentacle_%d_acc_x_state' % j,
                                          y='tentacle_%d_acc_x_state' % j,
                                          z='tentacle_%d_acc_x_state' % j)
+                node_list[acc.node_name] = acc
 
-                # 1 frond each
-                frond = Output_Node(messenger, teensy, node_name='tentacle_%d.frond' % j, output='tentacle_%d_arm_motion_on' % j)
+                # 2 SMA wires each
+                sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
+                sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
+
+                node_list[sma_0.node_name] = sma_0
+                node_list[sma_1.node_name] = sma_1
+
+                # 1 frond
+                motion_type = Var(0)
+                frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
+                              right_sma=sma_1.in_var['output'],
+                              motion_type=motion_type)
+                node_list[frond.node_name] = frond
+
 
                 # 2 reflex each
                 reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
                 reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
 
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
-                node_list[acc.node_name] = acc
-                node_list[frond.node_name] = frond
+
                 node_list[reflex_0.node_name] = reflex_0
                 node_list[reflex_1.node_name] = reflex_1
 
@@ -89,7 +103,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                                     ir_1=ir_sensor_1.out_var['input'],
                                     acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
                                     cluster_activity=cluster_activity,
-                                    frond=frond.in_var['output'],
+                                    frond=frond.in_var['motion_type'],
                                     reflex_0=reflex_0.in_var['output'],
                                     reflex_1=reflex_1.in_var['output'])
 
@@ -120,11 +134,29 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
             node.start()
             print('%s initialized' % name)
 
+
+
+        # initialize the gui
+        main_gui = gui.Main_GUI(messenger)
+
+        # adding the data display frame
+        if len(node_list) > 0:
+            display_gui = gui.Display_Frame(main_gui.root, node_list)
+
+        # # adding the control frame
+        # entries = dict()
+        # for name, node in node_list.items():
+        #
+        #     if isinstance(node, Frond):
+        #         entries[name] = node.in_var['motion_type']
+        # control_gui = gui.Control_Frame(main_gui.root, **entries)
+        #
+        # main_gui.add_frame(control_gui)
+        main_gui.add_frame(display_gui)
+
+        main_gui.start()
+
         print('System Initialized with %d nodes' % len(node_list))
-
-        app = gui.GUI(node_list)
-
-        app.run()
 
 
 

@@ -1,11 +1,7 @@
-from collections import OrderedDict
-
 from interactive_system import CommunicationProtocol as CP
 from interactive_system import InteractiveCmd
-from interactive_system import Messenger
-from abstract_node.node import *
 
-from low_level_node import *
+from abstract_node.low_level_node import *
 import gui
 
 
@@ -68,7 +64,7 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
                 # 2 SMA wires each
                 sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
                 sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
-                #
+
                 # 2 reflex each
                 reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
                 reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
@@ -95,22 +91,37 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
 
             node_list[led.node_name] = led
 
-
-
+        # initialize each node
         for name, node in node_list.items():
             node.start()
             print('%s initialized' % name)
 
-        print('System Initialized with %d nodes' % len(node_list))
 
+        # initialize the gui
+        main_gui = gui.Main_GUI(messenger)
+
+        # adding the data display frame
         if len(node_list) > 0:
-            app = gui.GUI(node_list)
+            display_gui = gui.Display_Frame(main_gui.root, node_list)
 
-            app.start()
 
-            while True:
-                print(messenger.estimated_msg_period)
-                sleep(1)
+        # adding the control frame
+        entries = dict()
+        for name, node in node_list.items():
+
+            if isinstance(node, Frond):
+                entries[name] = node.in_var['motion_type']
+        control_gui = gui.Control_Frame(main_gui.root, **entries)
+
+        main_gui.add_frame(control_gui)
+        main_gui.add_frame(display_gui)
+
+        main_gui.start()
+
+        print('System Initialized with %d nodes' % len(node_list))
+            # while True:
+            #     print(messenger.estimated_msg_period)
+            #     sleep(1)
 
 
 if __name__ == "__main__":

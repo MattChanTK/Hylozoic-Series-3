@@ -1,37 +1,60 @@
 __author__ = 'Matthew'
-import threading
 import tkinter as tk
-from collections import OrderedDict
 
-from abstract_node.node import *
-from low_level_node import *
+from abstract_node.low_level_node import *
 
+class Main_GUI(Node):
 
-class GUI(threading.Thread):
-    def __init__(self, node_list: dict):
+    def __init__(self, messenger):
 
-        super(GUI, self).__init__(name='gui', daemon=True)
+        super(Main_GUI, self).__init__(messenger, node_name='main_gui')
 
         self.root = tk.Tk()
-        self.root.resizable(True, True)
+        self.frame_list = []
+
+    def add_frame(self, *child_frame):
+
+        self.frame_list += child_frame
+
+
+    def run(self):
+        self.pack_frames()
+        for frame in self.frame_list:
+            frame.run()
+            frame.updateFrame()
+        self.root.mainloop()
+
+    def pack_frames(self):
+        for frame in self.frame_list:
+            frame.pack()
+
+
+class Display_Frame(tk.Frame):
+
+    def __init__(self, tk_master, node_list: dict):
+
+        super(Display_Frame, self).__init__(tk_master)
+        #self.grid(columnspan=2, rowspan=1)
 
         self.node_list = node_list
-
         self.status_text = OrderedDict()
         self.action_text = OrderedDict()
 
         for name, node in node_list.items():
             if isinstance(node, Input_Node):
                 for var_name in node.out_var_list:
-                    self.status_text[(name, var_name)] = tk.Label(self.root,
+                    self.status_text[(name, var_name)] = tk.Label(self,
                                                                   text="%s = %d" % (name, node.out_var[var_name].val),
                                                                   fg='blue')
+                    self.status_text[(name, var_name)].grid(column=0, row=0)
 
             elif isinstance(node, Output_Node) or isinstance(node, Frond):
                 for var_name in node.in_var_list:
-                    self.action_text[(name, var_name)] = tk.Label(self.root,
+                    self.action_text[(name, var_name)] = tk.Label(self,
                                                                   text="%s = %d" % (name, node.in_var[var_name].val),
                                                                   fg='red')
+                    self.action_text[(name, var_name)].grid(column=1, row=0)
+
 
 
     def run(self):
@@ -40,12 +63,8 @@ class GUI(threading.Thread):
             label.pack(fill=tk.X, padx=10)
         for label in self.action_text.values():
             label.pack(fill=tk.X, padx=10)
-        self.root.after(500, self.updateGUI)
-        self.root.mainloop()
 
-        self.updateGUI()
-
-    def updateGUI(self):
+    def updateFrame(self):
         for name, label in self.status_text.items():
             msg = "%s.%s:\t\t%d" % (name[0], name[1], self.node_list[name[0]].out_var[name[1]].val)
             label["text"] = msg
@@ -54,9 +73,44 @@ class GUI(threading.Thread):
             msg = "%s.%s:\t%d" % (name[0], name[1], self.node_list[name[0]].in_var[name[1]].val)
             label["text"] = msg
 
-        self.root.after(500, self.updateGUI)
-        self.root.update()
+        self.after(500, self.updateFrame)
+        self.update()
 
+
+class Control_Frame(tk.Frame):
+
+    def __init__(self, tk_master, **control_var):
+
+        super(Control_Frame, self).__init__(tk_master)
+
+        self.label_list = OrderedDict()
+        self.entry_list = OrderedDict()
+        self.control_var = OrderedDict()
+
+        for name, var in control_var.items():
+            self.label_list[name] = tk.Label(self, text=name)
+            self.entry_list[name] = tk.Entry(self)
+            self.control_var[name] = var
+
+    def run(self):
+
+        for name, entry in self.entry_list.items():
+            self.label_list[name].pack()
+            entry.insert(0, '0')
+            entry.pack()
+
+    def updateFrame(self):
+
+        for name, entry in self.entry_list.items():
+            try:
+                self.control_var[name].val = int(entry.get())
+            except ValueError:
+                self.label_list[name].config(fg='red')
+            else:
+                self.label_list[name].config(fg='black')
+
+        self.after(100, self.updateFrame)
+        self.update()
 
 
 if __name__ == '__main__':

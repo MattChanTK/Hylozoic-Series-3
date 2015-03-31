@@ -5,6 +5,7 @@ from interactive_system.InteractiveCmd import command_object
 from time import sleep
 from collections import OrderedDict
 
+
 class Node(threading.Thread):
 
     def __init__(self, messenger: Messenger.Messenger, node_name=None):

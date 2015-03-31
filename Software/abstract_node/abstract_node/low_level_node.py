@@ -62,28 +62,25 @@ class Frond(Node):
 
         def __init__(self, output: Var):
 
-            self.KP = 1.0
-            self.KI = 0.3
-            self.K_SMA = 1.0
-            self.K_dissipate = 0.25
+            self.KP = 15.0
+            self.KI = 0.0005
+            self.K_heating = 1.0
+            self.K_dissipate = 0.1*self.K_heating
 
             self.output = output
             self.T_model = 0
             self.T_err_sum = 0
+            self.t0 = clock()
 
         def update(self, T_ref):
 
-            if T_ref <= 0:
-                self.output.val = 0
+            self.T_model += (self.K_heating * self.output.val - self.K_dissipate * self.T_model) * (clock() - self.t0)
 
-            else:
+            T_err = (T_ref - self.T_model)
+            output_p = self.KP * T_err
+            self.T_err_sum += T_err
+            output_i = self.KI*self.T_err_sum
+            self.output.val = min(max(0, output_p + output_i), 255)
 
-                self.T_model = self.T_model + self.K_SMA*self.output.val - self.K_dissipate*self.T_model
-
-                T_err = (T_ref - self.T_model)
-                output_p = self.KP * T_err
-                self.T_err_sum += T_err
-                output_i = self.KI*self.T_err_sum
-                self.output.val = min(max(0, output_p + output_i), 255)
-
+            self.t0=clock()
             return self.output.val
