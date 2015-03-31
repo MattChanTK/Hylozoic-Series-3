@@ -91,6 +91,17 @@ void cbla(){
 
 }
 
+void cbla2(){
+	uint32_t curr_time = get_time();
+	//teensy_unit.sample_inputs();
+	
+	teensy_unit.low_level_control_tentacle_behaviour();
+	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
+	teensy_unit.low_level_control_protocell_behaviour();
+
+}
+
+
 void self_running_test(){
 	uint32_t curr_time = get_time();
 	teensy_unit.sample_inputs();
@@ -111,7 +122,7 @@ void quality_assurance(){
 }	
 
 void preprogrammed_behaviour(){
-
+	cbla();
 }
 
 void inactive_mode(){
@@ -155,6 +166,9 @@ void loop() {
 			break;
 		case 6:
 			quality_assurance();
+			break;
+		case 7:
+			cbla2();
 			break;
 		default:
 			inactive_mode();

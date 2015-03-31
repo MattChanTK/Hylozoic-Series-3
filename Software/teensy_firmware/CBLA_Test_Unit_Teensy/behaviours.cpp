@@ -190,34 +190,40 @@ void Behaviours::parse_msg(){
 		case 5: {
 			
 			// (1 bytes each)
-			// >>>>> byte 2 to byte 4 : TENTACLE 0
-			// >>>>> byte 5 to byte 7 : TENTACLE 1
-			// >>>>> byte 8 to byte 10: TENTACLE 2	
-			// >>>>> byte 11 to byte 13: TENTACLE 3			
+			// >>>>> byte 2 to byte 9 : TENTACLE 0
+			// >>>>> byte 10 to byte 17 : TENTACLE 1
+			// >>>>> byte 18 to byte 25: TENTACLE 2	
+			// >>>>> byte 26 to byte 33: TENTACLE 3			
 			for (uint8_t j = 0; j < 4; j++){
 						
-				const uint8_t byte_offset = 3*(j) + 2;
+				const uint8_t byte_offset = 8*(j) + 2;
 					
 				//--- actuator output variables---
 				
-				// byte x1 --- tentacle motion activation 
+				// byte x0 --- tentacle motion activation 
 				tentacle_var[j].tentacle_motion_on = recv_data_buff[byte_offset];
-				// byte x2 --- reflex actuation level
+				// byte x1 --- reflex actuation level
 				tentacle_var[j].tentacle_reflex_level[0] = recv_data_buff[byte_offset+1];
-				// byte x3 --- reflex actuation level
+				// byte x2 --- reflex actuation level
 				tentacle_var[j].tentacle_reflex_level[1] = recv_data_buff[byte_offset+2];
+		
+				// byte x3 --- tentacle SMA wire 0
+				tentacle_var[j].tentacle_sma_level[0] = recv_data_buff[byte_offset+3];
+				// byte x4 --- tentacle SMA wire 1
+				tentacle_var[j].tentacle_sma_level[1] = recv_data_buff[byte_offset+4];
+				
 
 			}
 			
 			// (1 bytes each)
-			// >>>>> byte 14: PROTOCELL 0
-			// >>>>> byte 15: PROTOCELL 1
+			// >>>>> byte 34 to byte 37: PROTOCELL 0
+			// >>>>> byte 38 to byte 41: PROTOCELL 1
 			for (uint8_t j = 0; j < 2; j++){
 						
-				const uint8_t byte_offset = (j) + 14 ;
+				const uint8_t byte_offset = 4*(j) + 34 ;
 								
 				//--- actuator output variables---
-				// byte x1 --- high-power LED level 
+				// byte x0 --- high-power LED level 
 				protocell_var[j].protocell_led_level = recv_data_buff[byte_offset];
 			
 			}
@@ -368,25 +374,20 @@ void Behaviours::sample_inputs(){
 
 void Behaviours::sample_inputs(const uint8_t setting){
 
-	const uint8_t read_buff_num = 1;
 	
 	//>>>Tentacle<<<
 			
-	for (uint8_t j=0; j<4; j++){
+	for (uint8_t j=0; j<3; j++){
 	
 		//~~IR sensors state~~
 		for (uint8_t i=0; i<2; i++){
 		
-			uint32_t read_buff = 0;
-			for (uint8_t k=0; k<read_buff_num; k++){
-				read_buff += tentacle[j].read_analog_state(i);
-			}
-			noInterrupts()
-			tentacle_var[j].tentacle_ir_state[i] = (uint16_t) (read_buff/read_buff_num);
-			interrupts()
+			noInterrupts();
+			tentacle_var[j].tentacle_ir_state[i] = tentacle[j].read_analog_state(i);
+			interrupts();
+			
 		}
-	
-		
+		;
 		//~~Accelerometer~~		
 		noInterrupts();
 		tentacle[j].read_acc_state(tentacle_var[j].tentacle_acc_state[0], 
@@ -398,10 +399,10 @@ void Behaviours::sample_inputs(const uint8_t setting){
 		
 	}
 	
-	if (Wire.frozen){
-		//digitalWrite(PGM_DO_pin, 1);
-		digitalWrite(13, 1);
-	}
+	// if (Wire.frozen){
+		// //digitalWrite(PGM_DO_pin, 1);
+		// digitalWrite(13, 1);
+	// }
 		
 	
 	
@@ -410,12 +411,8 @@ void Behaviours::sample_inputs(const uint8_t setting){
 	for (uint8_t j = 0; j<2; j++){
 	
 		//~~Ambient Light Sensor~~
-		uint32_t read_buff = 0;
-		for (uint8_t k=0; k<read_buff_num; k++){
-			read_buff += protocell[j].read_analog_state();
-		}
 		noInterrupts();
-		protocell_var[j].protocell_als_state = (uint16_t) (read_buff/read_buff_num);
+		protocell_var[j].protocell_als_state = protocell[j].read_analog_state();;
 		interrupts();
 	}
 

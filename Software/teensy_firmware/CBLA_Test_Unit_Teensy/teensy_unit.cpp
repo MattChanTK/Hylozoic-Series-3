@@ -256,7 +256,7 @@ bool TeensyUnit::TentaclePort::read_acc_state(int16_t &accel_x, int16_t &accel_y
 	uint8_t i = 0;
 	byte buffer[6] = {0};
 	
-	delay(5);
+	//delay(5);
 
 	while(teensy_unit.Wire.available() && i<6)
 	{

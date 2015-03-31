@@ -48,7 +48,7 @@ class Messenger(threading.Thread):
             sleep(max(0, self.msg_period - (clock() - self.t0)))
             self.__estimated_msg_period = (9*self.__estimated_msg_period + clock() - self.t0)/10
 
-            #print('Update time = %f' % (clock() - self.t0))
+            # print('Update time = %f' % (clock() - self.t0))
 
     def load_message(self, msg: InteractiveCmd.command_object):
 

@@ -8,7 +8,7 @@
 #include "Arduino.h"
 
 #define packet_size 64
-#define i2c_timeout 1000 //microsecond
+#define i2c_timeout 100 //microsecond
 
 class TeensyUnit{
 	

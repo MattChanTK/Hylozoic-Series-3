@@ -98,7 +98,6 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
 
 
         for name, node in node_list.items():
-            node.update_freq = 2.0
             node.start()
             print('%s initialized' % name)
 
