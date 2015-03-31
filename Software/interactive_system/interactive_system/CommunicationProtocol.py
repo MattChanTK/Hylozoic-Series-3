@@ -9,6 +9,17 @@ from . import SystemParameters
 
 
 class CBLATestBed(SystemParameters):
+
+    MODE_SELF_RUNNING_TEST = 0
+    MODE_MANUAL_CONTROL = 1
+    MODE_SYSTEM_IDENTIFICATION = 2
+    MODE_CBLA = 3
+    MODE_INTERNODE_TEST = 4
+    MODE_PREPROGRAMMED_BEHAVIOUR = 5
+    MODE_QUALITY_ASSURANCE = 6
+    MODE_CBLA2 = 7
+    MODE_INACTIVE = 255
+
     def __init__(self):
         super(CBLATestBed, self).__init__()
 
@@ -172,7 +183,7 @@ class CBLATestBed(SystemParameters):
         elif self.request_type == 'composite_1':
             for j in range(4):
                 device_header = 'tentacle_%d_' % j
-                byte_offset = 3*j
+                byte_offset = 8*j
 
                 # byte x0 --- tentacle motion activation
                 content[byte_offset] = self.output_param[device_header + 'arm_motion_on']
@@ -180,10 +191,14 @@ class CBLATestBed(SystemParameters):
                 content[byte_offset+1] = self.output_param[device_header+'reflex_0_level']
                 # byte x2 --- reflex actuation level
                 content[byte_offset+2] = self.output_param[device_header+'reflex_1_level']
+                # byte x3 --- tentacle SMA wire 0
+                content[byte_offset+3] = self.output_param[device_header+'sma_0_level']
+                # byte x4 --- tentacle SMA wire 1
+                content[byte_offset+4] = self.output_param[device_header+'sma_1_level']
 
             for j in range(2):
                 device_header = 'protocell_%d_' % j
-                byte_offset = 2*j + 12
+                byte_offset = 4*j + 32
 
                 # byte x0 --- high-power LED level
                 content[byte_offset] = self.output_param[device_header + 'led_level']
