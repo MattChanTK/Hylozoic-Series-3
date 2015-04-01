@@ -39,17 +39,22 @@ class Display_Frame(tk.Frame):
         self.node_list = node_list
         self.status_text = OrderedDict()
         self.action_text = OrderedDict()
+        self.status_frame = tk.Frame()
+        self.action_frame = tk.Frame()
+
+        self.status_frame.pack(side=tk.LEFT)
+        self.action_frame.pack(side=tk.LEFT)
 
         for name, node in node_list.items():
             if isinstance(node, Input_Node):
                 for var_name in node.out_var_list:
-                    self.status_text[(name, var_name)] = tk.Label(self,
+                    self.status_text[(name, var_name)] = tk.Label(self.status_frame,
                                                                   text="%s = %d" % (name, node.out_var[var_name].val),
                                                                   fg='blue')
 
             elif isinstance(node, Output_Node) or isinstance(node, Frond):
                 for var_name in node.in_var_list:
-                    self.action_text[(name, var_name)] = tk.Label(self,
+                    self.action_text[(name, var_name)] = tk.Label(self.action_frame,
                                                                   text="%s = %d" % (name, node.in_var[var_name].val),
                                                                   fg='red')
 
