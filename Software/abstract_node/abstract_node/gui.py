@@ -1,5 +1,6 @@
 __author__ = 'Matthew'
 import tkinter as tk
+from collections import OrderedDict
 
 from abstract_node.low_level_node import *
 
@@ -31,10 +32,9 @@ class Main_GUI(Node):
 
 class Display_Frame(tk.Frame):
 
-    def __init__(self, tk_master, node_list: dict):
+    def __init__(self, tk_master, node_list: OrderedDict):
 
         super(Display_Frame, self).__init__(tk_master)
-        #self.grid(columnspan=2, rowspan=1)
 
         self.node_list = node_list
         self.status_text = OrderedDict()
@@ -46,14 +46,12 @@ class Display_Frame(tk.Frame):
                     self.status_text[(name, var_name)] = tk.Label(self,
                                                                   text="%s = %d" % (name, node.out_var[var_name].val),
                                                                   fg='blue')
-                    self.status_text[(name, var_name)].grid(column=0, row=0)
 
             elif isinstance(node, Output_Node) or isinstance(node, Frond):
                 for var_name in node.in_var_list:
                     self.action_text[(name, var_name)] = tk.Label(self,
                                                                   text="%s = %d" % (name, node.in_var[var_name].val),
                                                                   fg='red')
-                    self.action_text[(name, var_name)].grid(column=1, row=0)
 
 
 
@@ -79,7 +77,7 @@ class Display_Frame(tk.Frame):
 
 class Control_Frame(tk.Frame):
 
-    def __init__(self, tk_master, **control_var):
+    def __init__(self, tk_master, control_var: OrderedDict):
 
         super(Control_Frame, self).__init__(tk_master)
 
@@ -103,7 +101,13 @@ class Control_Frame(tk.Frame):
 
         for name, entry in self.entry_list.items():
             try:
-                self.control_var[name].val = int(entry.get())
+                curr_val = int(entry.get())
+                if curr_val > 255 or curr_val < 0:
+                    raise ValueError
+
+                if curr_val != self.control_var[name].val:
+                    self.control_var[name].val = curr_val
+
             except ValueError:
                 self.label_list[name].config(fg='red')
             else:
