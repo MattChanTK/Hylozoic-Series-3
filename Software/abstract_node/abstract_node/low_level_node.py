@@ -64,8 +64,8 @@ class Frond(Node):
 
             self.KP = 15.0
             self.KI = 0.0005
-            self.K_heating = 1.0
-            self.K_dissipate = 0.1*self.K_heating
+            self.K_heating = 0.8
+            self.K_dissipate = 0.1
 
             self.output = output
             self.T_model = 0
