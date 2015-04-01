@@ -41,7 +41,10 @@ class Tentacle(Node):
         while True:
 
             # frond's sensor
-            if self.in_var['ir_sensor_1'].val > self.ir_on_thres and self.out_var['tentacle_out'].val == 0:
+            if self.in_var['ir_sensor_1'].val > self.ir_on_thres:
+
+                if self.out_var['tentacle_out'].val == 0:
+                    self.out_var['cluster_activity'].val += 1
 
                 motion_type = 3
                 if self.in_var['left_ir'].val > self.ir_on_thres and self.in_var['right_ir'].val > self.ir_on_thres:
@@ -52,7 +55,7 @@ class Tentacle(Node):
                     motion_type = 2
 
                 self.out_var['tentacle_out'].val = motion_type
-                self.out_var['cluster_activity'].val += 1
+
 
             elif self.in_var['ir_sensor_1'].val <= self.ir_off_thres and self.out_var['tentacle_out'].val > 0:
                 self.out_var['tentacle_out'].val = 0
@@ -71,13 +74,13 @@ class Tentacle(Node):
                 self.out_var['reflex_out_1'].val = 0
 
             # cluster activity
-            if self.in_var['cluster_activity'].val > 15:
-                self.out_var['reflex_out_0'].val = 200
-                self.out_var['reflex_out_1'].val = 200
-                sleep(3)
-                self.in_var['cluster_activity'].val = 0
-                self.out_var['reflex_out_0'].val = 0
-                self.out_var['reflex_out_1'].val = 0
+            # if self.in_var['cluster_activity'].val > 15:
+            #     self.out_var['reflex_out_0'].val = 200
+            #     self.out_var['reflex_out_1'].val = 200
+            #     sleep(3)
+            #     self.in_var['cluster_activity'].val = 0
+            #     self.out_var['reflex_out_0'].val = 0
+            #     self.out_var['reflex_out_1'].val = 0
 
             sleep(self.messenger.estimated_msg_period*2)
 
@@ -109,16 +112,17 @@ class Protocell(Node):
         while True:
 
             # cluster activity
-            if self.in_var['cluster_activity'].val > 15:
+            if self.in_var['cluster_activity'].val > 10:
 
                 for i in range(5):
                     self.out_var['led'].val = 0
                     while self.out_var['led'].val < 100:
-                        self.out_var['led'].val += 1
-                        sleep(self.messenger.estimated_msg_period)
+                        self.out_var['led'].val += max(1, int(self.out_var['led'].val*0.1))
+                        sleep(0.025)
                     while self.out_var['led'].val > 0:
-                        self.out_var['led'].val -= 1
-                        sleep(self.messenger.estimated_msg_period)
+                        self.out_var['led'].val -= max(1, int(self.out_var['led'].val*0.1))
+                        sleep(0.025)
+                    self.in_var['cluster_activity'].val = 0
 
             self.out_var['led'].val = 0
 
