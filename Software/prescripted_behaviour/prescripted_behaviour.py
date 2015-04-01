@@ -68,8 +68,8 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 # 1 3-axis acceleromter each
                 acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
                                          x='tentacle_%d_acc_x_state' % j,
-                                         y='tentacle_%d_acc_x_state' % j,
-                                         z='tentacle_%d_acc_x_state' % j)
+                                         y='tentacle_%d_acc_y_state' % j,
+                                         z='tentacle_%d_acc_z_state' % j)
                 node_list[acc.node_name] = acc
 
                 # 2 SMA wires each
@@ -110,16 +110,16 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
                 node_list[tentacle.node_name] = tentacle
 
 
-                # creating Protocell Node
+            # creating Protocell Node
 
-                # 1 LED per protocell
-                led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
-                                  output='protocell_0_led_level')
-                protocell = Protocell(messenger, teensy_name=teensy, node_name='protocell',
-                                      led=led.in_var['output'],
-                                      cluster_activity=cluster_activity)
-                node_list[led.node_name] = led
-                node_list[protocell.node_name] = protocell
+            # 1 LED per protocell
+            led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
+                              output='protocell_0_led_level')
+            protocell = Protocell(messenger, teensy_name=teensy, node_name='protocell',
+                                  led=led.in_var['output'],
+                                  cluster_activity=cluster_activity)
+            node_list[led.node_name] = led
+            node_list[protocell.node_name] = protocell
 
 
             tentacle_list = []
@@ -135,26 +135,16 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
             print('%s initialized' % name)
 
 
-
-        # initialize the gui
-        main_gui = gui.Main_GUI(messenger)
-
-        # adding the data display frame
         if len(node_list) > 0:
+
+            # initialize the gui
+            main_gui = gui.Main_GUI(messenger)
+            # adding the data display frame
             display_gui = gui.Display_Frame(main_gui.root, node_list)
 
-        # # adding the control frame
-        # entries = dict()
-        # for name, node in node_list.items():
-        #
-        #     if isinstance(node, Frond):
-        #         entries[name] = node.in_var['motion_type']
-        # control_gui = gui.Control_Frame(main_gui.root, **entries)
-        #
-        # main_gui.add_frame(control_gui)
-        main_gui.add_frame(display_gui)
+            main_gui.add_frame(display_gui)
 
-        main_gui.start()
+            main_gui.start()
 
         print('System Initialized with %d nodes' % len(node_list))
 
@@ -164,7 +154,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 if __name__ == "__main__":
 
     from interactive_system import TeensyManager
-    from prescripted_behaviour import Prescripted_Behaviour as cmd
+    cmd = Prescripted_Behaviour
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = None  # ('test_teensy_88',)
