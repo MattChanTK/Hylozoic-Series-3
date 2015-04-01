@@ -4,7 +4,6 @@ from interactive_system import InteractiveCmd
 from abstract_node.low_level_node import *
 import gui
 
-
 class CBLA2(InteractiveCmd.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
@@ -58,8 +57,8 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
 
                 # 1 3-axis acceleromter each
                 acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j, x='tentacle_%d_acc_x_state' % j,
-                                                                                     y='tentacle_%d_acc_x_state' % j,
-                                                                                     z='tentacle_%d_acc_x_state' % j)
+                                                                                     y='tentacle_%d_acc_y_state' % j,
+                                                                                     z='tentacle_%d_acc_z_state' % j)
 
                 # 2 SMA wires each
                 sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
@@ -97,26 +96,28 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
             print('%s initialized' % name)
 
 
-        # initialize the gui
-        main_gui = gui.Main_GUI(messenger)
 
-        # adding the data display frame
+
         if len(node_list) > 0:
+            # initialize the gui
+            main_gui = gui.CBLA2_Main_GUI(messenger)
+
+            # adding the data display frame
             display_gui = gui.Display_Frame(main_gui.root, node_list)
 
 
-        # adding the control frame
-        entries = dict()
-        for name, node in node_list.items():
+            # adding the control frame
+            entries = OrderedDict()
+            for name, node in node_list.items():
 
-            if isinstance(node, Frond):
-                entries[name] = node.in_var['motion_type']
-        control_gui = gui.Control_Frame(main_gui.root, **entries)
+                if isinstance(node, Frond):
+                    entries[name] = node.in_var['motion_type']
+            control_gui = gui.Control_Frame(main_gui.root, entries)
 
-        main_gui.add_frame(control_gui)
-        main_gui.add_frame(display_gui)
+            main_gui.add_frame(control_gui)
+            main_gui.add_frame(display_gui)
 
-        main_gui.start()
+            main_gui.start()
 
         print('System Initialized with %d nodes' % len(node_list))
             # while True:
