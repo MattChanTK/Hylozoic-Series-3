@@ -128,14 +128,15 @@ class InteractiveCmd(threading.Thread):
                 for var, value in cmd_obj.change_request.items():
                     request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)
 
-                    if request_type in cmds_by_type:
-                        cmds_by_type[request_type].add_param_change(var, value)
+                    key_type = (cmd_obj.teensy_name, request_type)
+                    if key_type in cmds_by_type:
+                        cmds_by_type[key_type].add_param_change(var, value)
                     else:
-                        cmds_by_type[request_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.msg_setting)
-                        cmds_by_type[request_type].add_param_change(var, value)
+                        cmds_by_type[key_type] = command_object(cmd_obj.teensy_name, request_type, cmd_obj.msg_setting)
+                        cmds_by_type[key_type].add_param_change(var, value)
 
             else:
-                cmds_by_type[cmd_obj.change_request_type] = copy(cmd_obj)
+                cmds_by_type[(cmd_obj.teensy_name, cmd_obj.change_request_type)] = copy(cmd_obj)
 
         # split cmd_obj based on their destination
         for cmd_by_type in cmds_by_type.values():
