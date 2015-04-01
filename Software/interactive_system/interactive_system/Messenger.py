@@ -20,6 +20,8 @@ class Messenger(threading.Thread):
         self.__sample = None
         self.sample_inputs(msg_period)
 
+        self.active_teensy_list = self.cmd.teensy_manager.get_teensy_name_list()
+
         super(Messenger, self).__init__(daemon=True, name='Messenger')
 
     @property
@@ -34,6 +36,9 @@ class Messenger(threading.Thread):
 
         while True:
             self.t0 = clock()
+
+            # update active teensy list
+            self.active_teensy_list = self.cmd.teensy_manager.get_teensy_name_list()
 
             while not self.cmd_q.empty():
                 msg = self.cmd_q.get_nowait()

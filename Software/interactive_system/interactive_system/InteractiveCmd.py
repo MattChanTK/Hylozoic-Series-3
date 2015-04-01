@@ -126,7 +126,12 @@ class InteractiveCmd(threading.Thread):
             # reconstruct cmd_obj based on request type
             if cmd_obj.change_request_type is None:
                 for var, value in cmd_obj.change_request.items():
-                    request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)
+
+                    try:
+                        request_type = self.__get_type(var, cmd_obj.teensy_name, param_type=0)
+                    except ValueError:
+                        print('%s does not exist for %s' % (var, cmd_obj.teensy_name))
+                        continue
 
                     key_type = (cmd_obj.teensy_name, request_type)
                     if key_type in cmds_by_type:

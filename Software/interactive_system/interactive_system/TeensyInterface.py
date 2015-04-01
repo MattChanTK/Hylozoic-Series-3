@@ -108,10 +108,14 @@ class TeensyManager():
         return self.teensy_thread_table.keys()
 
     def get_param_type(self, teensy_name, var, param_type=0)->dict:
-        if param_type == 1:
-            return self.get_teensy_thread(teensy_name).param.get_reply_type(var)
-        else:
-            return self.get_teensy_thread(teensy_name).param.get_request_type(var)
+
+        teensy_thread = self.get_teensy_thread(teensy_name)
+        if isinstance(teensy_thread, TeensyInterface):
+            if param_type == 1:
+                return teensy_thread.param.get_reply_type(var)
+            else:
+                return teensy_thread.param.get_request_type(var)
+        raise ValueError('Teensy Thread %s does not exist' % teensy_name)
 
     def remove_teensy_thread(self, teensy_name):
         try:

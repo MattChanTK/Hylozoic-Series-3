@@ -109,6 +109,10 @@ class Input_Node(Node):
 
         while True:
 
+            if self.teensy_name not in self.messenger.active_teensy_list:
+                print('%s is no longer functional. Terminated.' % self.node_name)
+                return
+
             out_var_list = []
             sample = self.read_sample()
 
@@ -144,6 +148,10 @@ class Output_Node(Node):
     def run(self):
 
         while True:
+
+            if self.teensy_name not in self.messenger.active_teensy_list:
+                print('%s is no longer functional. Terminated.' % self.node_name)
+                return
 
             in_var_list = []
             for name in self.in_var.keys():
