@@ -14,7 +14,7 @@ class Frond(Node):
 
     T_ON_REF = 300
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name, node_name='frond', left_sma: Var=Var(0), right_sma: Var=Var(0), motion_type: Var=Var(0)):
+    def __init__(self, messenger: Messenger, teensy_name, node_name='frond', left_sma: Var=Var(0), right_sma: Var=Var(0), motion_type: Var=Var(0)):
 
         super(Frond, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 

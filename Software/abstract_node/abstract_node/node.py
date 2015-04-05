@@ -1,14 +1,14 @@
 import threading
 
 from interactive_system import Messenger
-from interactive_system.InteractiveCmd import command_object
+from interactive_system import command_object
 from time import sleep
 from collections import OrderedDict
 
 
 class Node(threading.Thread):
 
-    def __init__(self, messenger: Messenger.Messenger, node_name=None):
+    def __init__(self, messenger: Messenger, node_name=None):
 
         super(Node, self).__init__(name=node_name, daemon=True)
 
@@ -87,7 +87,7 @@ class Var(object):
 
 class Input_Node(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='input_node', **input_name):
+    def __init__(self, messenger: Messenger, teensy_name: str, node_name='input_node', **input_name):
         super(Input_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name, ))
 
         if not isinstance(teensy_name, str):
@@ -128,7 +128,7 @@ class Input_Node(Node):
 
 class Output_Node(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str, node_name='output_node', **output_name):
+    def __init__(self, messenger: Messenger, teensy_name: str, node_name='output_node', **output_name):
 
         super(Output_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
@@ -166,7 +166,7 @@ class Output_Node(Node):
 
 class Simple_Node(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, node_name='simple_node', output: Var=Var(0), **input_name):
+    def __init__(self, messenger: Messenger, node_name='simple_node', output: Var=Var(0), **input_name):
 
         super(Simple_Node, self).__init__(messenger, node_name='%s' % node_name)
 

@@ -2,7 +2,8 @@ __author__ = 'Matthew'
 import tkinter as tk
 from collections import OrderedDict
 
-from abstract_node.low_level_node import *
+from .node import *
+from .low_level_node import *
 
 class Main_GUI(Node):
 
