@@ -3,12 +3,12 @@ import queue
 from time import clock
 from time import sleep
 
-from . import InteractiveCmd
+from .InteractiveCmd import *
 
 
 class Messenger(threading.Thread):
 
-    def __init__(self, interactive_cmd: InteractiveCmd.InteractiveCmd,
+    def __init__(self, interactive_cmd: InteractiveCmd,
                  msg_period: float):
 
         self.t0 = 0.0
@@ -55,7 +55,7 @@ class Messenger(threading.Thread):
 
             # print('Update time = %f' % (clock() - self.t0))
 
-    def load_message(self, msg: InteractiveCmd.command_object):
+    def load_message(self, msg: command_object):
 
         self.cmd_q.put_nowait(msg)
         #print(self.cmd_q.qsize())
