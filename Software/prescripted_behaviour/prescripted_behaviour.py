@@ -1,28 +1,28 @@
 from collections import OrderedDict
 from time import clock
 
-from interactive_system import InteractiveCmd
+import interactive_system
 from interactive_system import CommunicationProtocol as CP
 
-from abstract_node.low_level_node import *
+from abstract_node import *
 from complex_node import *
-from abstract_node import gui
 
 
-class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
+
+class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the prescripted behaviour system =====
     def run(self):
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
-            cmd_obj = InteractiveCmd.command_object(teensy_name, 'basic')
+            cmd_obj = interactive_system.command_object(teensy_name, 'basic')
             cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
             self.enter_command(cmd_obj)
 
             # ------ configuration ------
             # set the Tentacle on/off periods
-            cmd_obj = InteractiveCmd.command_object(teensy_name, 'tentacle_high_level')
+            cmd_obj = interactive_system.command_object(teensy_name, 'tentacle_high_level')
             for j in range(3):
                 device_header = 'tentacle_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
@@ -33,7 +33,7 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = Messenger.Messenger(self, 0.001)
+        messenger = interactive_system.Messenger(self, 0.001)
         messenger.start()
 
         teensy_0 = 'test_teensy_1'
@@ -148,12 +148,14 @@ class Prescripted_Behaviour(InteractiveCmd.InteractiveCmd):
 
         print('System Initialized with %d nodes' % len(node_list))
 
+        # while True:
+        #     print(messenger.estimated_msg_period)
+        #     sleep(1)
 
 
 
 if __name__ == "__main__":
 
-    from interactive_system import TeensyManager
     cmd = Prescripted_Behaviour
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
@@ -163,7 +165,7 @@ if __name__ == "__main__":
     def main():
 
         # instantiate Teensy Monitor
-        teensy_manager = TeensyManager(import_config=True)
+        teensy_manager = interactive_system.TeensyManager(import_config=True)
 
         # find all the Teensy
         print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))

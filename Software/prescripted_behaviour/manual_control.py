@@ -1,22 +1,22 @@
 from collections import OrderedDict
 from time import clock
 
-from interactive_system import InteractiveCmd
-from interactive_system import CommunicationProtocol as CP
+import interactive_system
+import interactive_system.CommunicationProtocol as CP
 
-from abstract_node.low_level_node import *
+from abstract_node import *
 from complex_node import *
 import gui
 
 
-class Manual_Control(InteractiveCmd.InteractiveCmd):
+class Manual_Control(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the manual control =====
     def run(self):
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
-            cmd_obj = InteractiveCmd.command_object(teensy_name, 'basic')
+            cmd_obj = interactive_system.command_object(teensy_name, 'basic')
             cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
             self.enter_command(cmd_obj)
 
@@ -25,7 +25,7 @@ class Manual_Control(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = Messenger.Messenger(self, 0.000)
+        messenger = Messenger(self, 0.000)
         messenger.start()
 
         teensy_0 = 'test_teensy_1'
@@ -95,7 +95,6 @@ class Manual_Control(InteractiveCmd.InteractiveCmd):
             node.start()
             print('%s initialized' % name)
 
-
         if len(node_list) > 0:
 
             # initialize the gui
@@ -127,7 +126,6 @@ class Manual_Control(InteractiveCmd.InteractiveCmd):
 
 if __name__ == "__main__":
 
-    from interactive_system import TeensyManager
     cmd = Manual_Control
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
@@ -137,7 +135,7 @@ if __name__ == "__main__":
     def main():
 
         # instantiate Teensy Monitor
-        teensy_manager = TeensyManager(import_config=True)
+        teensy_manager = interactive_system.TeensyManager(import_config=True)
 
         # find all the Teensy
         print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))

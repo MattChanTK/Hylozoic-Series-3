@@ -1,11 +1,11 @@
 from time import sleep
 import random
 
-from abstract_node.node import *
+from abstract_node import *
 
 class Tentacle(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str,
+    def __init__(self, messenger: Messenger, teensy_name: str,
                  ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0), cluster_activity: Var=Var(0),
                  left_ir: Var=Var(0), right_ir: Var=Var(0),
                  frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='tentacle'):
@@ -87,7 +87,7 @@ class Tentacle(Node):
 
 class Protocell(Node):
 
-    def __init__(self, messenger: Messenger.Messenger, teensy_name: str,
+    def __init__(self, messenger: Messenger, teensy_name: str,
                  als: Var=Var(0), cluster_activity: Var=Var(0),
                  led: Var=Var(0), node_name='protocell'):
 
