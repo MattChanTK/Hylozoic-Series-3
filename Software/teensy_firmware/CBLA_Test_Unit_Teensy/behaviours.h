@@ -146,10 +146,6 @@ class Behaviours : public TeensyUnit{
 		void high_level_direct_control_tentacle_arm_behaviour(const uint32_t &curr_time);
 		void high_level_direct_control_tentacle_arm_behaviour_continuous(const uint32_t &curr_time);
 		
-		//---- SMA control ----
-		void sma_control(const uint32_t &curr_time);
-
-
 		
 		//===============================================
 		//==== BEHAVIOUR variables =====
