@@ -1,23 +1,24 @@
 from interactive_system import CommunicationProtocol as CP
-from interactive_system import InteractiveCmd
+import interactive_system
 
-from abstract_node.low_level_node import *
+from abstract_node import *
 import gui
+import cbla_node
 
-class CBLA2(InteractiveCmd.InteractiveCmd):
+class CBLA2(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
-            cmd_obj = InteractiveCmd.command_object(teensy_name, 'basic')
+            cmd_obj = interactive_system.command_object(teensy_name, 'basic')
             cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
             self.enter_command(cmd_obj)
 
             # ------ configuration ------
             # set the Tentacle on/off periods
-            cmd_obj = InteractiveCmd.command_object(teensy_name, 'tentacle_high_level')
+            cmd_obj = interactive_system.command_object(teensy_name, 'tentacle_high_level')
             for j in range(3):
                 device_header = 'tentacle_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
@@ -28,7 +29,7 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = Messenger.Messenger(self, 0.000)
+        messenger = interactive_system.Messenger(self, 0.000)
         messenger.start()
 
         teensy_0 = 'test_teensy_1'
@@ -82,6 +83,19 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
                                                                                       motion_type=motion_type)
                 node_list[frond.node_name] = frond
 
+                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy,
+                                                        node_name='cbla_tentacle_%d' % j,
+                                                        ir_0=ir_sensor_0.out_var['input'],
+                                                        ir_1=ir_sensor_1.out_var['input'],
+                                                        acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
+                                                        frond=frond.in_var['motion_type'],
+                                                        reflex_0=reflex_0.in_var['output'],
+                                                        reflex_1=reflex_1.in_var['output'])
+                node_list[cbla_tentacle.node_name] = cbla_tentacle
+
+
+
+
             # creating components for Protocell Node
 
             # 1 LED per protocell
@@ -120,14 +134,13 @@ class CBLA2(InteractiveCmd.InteractiveCmd):
             main_gui.start()
 
         print('System Initialized with %d nodes' % len(node_list))
-            # while True:
-            #     print(messenger.estimated_msg_period)
-            #     sleep(1)
+        # while True:
+        #     print(messenger.estimated_msg_period)
+        #     sleep(1)
 
 
 if __name__ == "__main__":
 
-    from interactive_system import TeensyManager
     cmd = CBLA2
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
@@ -137,7 +150,7 @@ if __name__ == "__main__":
     def main():
 
         # instantiate Teensy Monitor
-        teensy_manager = TeensyManager(import_config=True)
+        teensy_manager = interactive_system.TeensyManager(import_config=True)
 
         # find all the Teensy
         print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))
