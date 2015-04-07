@@ -80,7 +80,7 @@ class Frond(Node):
             output_p = self.KP * T_err
             self.T_err_sum += T_err
             output_i = self.KI*self.T_err_sum
-            self.output.val = min(max(0, output_p + output_i), 255)
+            self.output.val = int(min(max(0, output_p + output_i), 255))
 
-            self.t0=clock()
+            self.t0 = clock()
             return self.output.val
