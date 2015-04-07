@@ -152,7 +152,7 @@ class Control_Frame(tk.Frame):
             else:
                 self.label_list[name].config(fg='black')
 
-        self.after(100, self.updateFrame)
+        self.after(500, self.updateFrame)
         self.update()
 
 class Messenger_Frame(tk.Frame):
@@ -173,7 +173,7 @@ class Messenger_Frame(tk.Frame):
     def updateFrame(self):
 
         self.messenger_time_label["text"] = "Messenger Update Period: %.4fs" % self.messenger.estimated_msg_period
-        self.after(100, self.updateFrame)
+        self.after(250, self.updateFrame)
         self.update()
 
 
