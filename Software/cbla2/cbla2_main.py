@@ -104,7 +104,22 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             node_list[led.node_name] = led
 
-        # initialize each node
+            # 1 ambient light sensor per protocell
+            als = Input_Node(messenger, teensy, node_name='protocell.als',
+                                     input='protocell_0_als_state')
+
+            node_list[als.node_name] = als
+
+            # constructing the Protocell
+            cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy,
+                                                      node_name='cbla_protocell',
+                                                      als=als.out_var['input'],
+                                                      led=led.in_var['output'])
+            node_list[cbla_protocell.node_name] = cbla_protocell
+
+
+
+            # initialize each node
         for name, node in node_list.items():
             node.start()
             print('%s initialized' % name)

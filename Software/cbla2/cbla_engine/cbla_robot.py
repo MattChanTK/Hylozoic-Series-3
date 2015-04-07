@@ -77,8 +77,14 @@ class Robot(object):
     def read(self) -> tuple:
         # compute the sensor variables
         S = []
-        for var in self.in_vars:
-            S.append(var.val)
+        for i in range(len(self.in_vars)):
+            s = self.in_vars[i].val
+            # normalize if the range is specified
+            if 'in_vars_range' in self.config:
+                val_range = self.config['in_vars_range'][i]
+                if isinstance(val_range, tuple) and len(val_range) == 2:
+                    s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
+            S.append(s)
         self.S0 = tuple(S)
         return tuple(S)
 
@@ -149,7 +155,6 @@ class Robot_Frond(Robot):
         self.config['sample_window'] = 30
         self.config['sample_period'] = max(0.01, self.config['wait_time'])
 
-
     def read(self) -> tuple:
 
         # making sure sample_period does not exceed the messenger reading speed
@@ -159,8 +164,15 @@ class Robot_Frond(Robot):
         for i in range(self.config['sample_window']):
             t0 = clock()
             S = []
-            for var in self.in_vars:
-                S.append(var.val)
+            for i in range(len(self.in_vars)):
+                s = self.in_vars[i].val
+
+                # normalize if the range is specified
+                if 'in_vars_range' in self.config:
+                    val_range = self.config['in_vars_range'][i]
+                    if isinstance(val_range, tuple) and len(val_range) == 2:
+                        s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
+                S.append(s)
 
             # store into memory
             self.S_memory.append(tuple(S))
@@ -208,3 +220,11 @@ def toDigits(n, b):
         n = n // b
 
     return digits
+
+
+def normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
+
+    if low_bound >= hi_bound:
+        raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
+
+    return (orig_val - low_bound)/(hi_bound - low_bound)

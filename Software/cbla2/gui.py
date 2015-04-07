@@ -27,14 +27,14 @@ class CBLA2_Learner_Frame(Display_Frame):
 
         # contents
         for name, node in self.node_list.items():
-            if isinstance(node, cbla_node.CBLA_Tentacle):
+            if isinstance(node, (cbla_node.CBLA_Tentacle, cbla_node.CBLA_Protocell)):
                 for var_name in node.out_var_list:
-
-                    self.status_text[(name, var_name)] = [tk.Label(self.status_frame, text="%s.%s" % (name, var_name),
-                                                                   fg='black'),
-                                                          tk.Label(self.status_frame,
-                                                                   text="###",
-                                                                   fg='black', width='20', anchor=tk.E, justify=tk.RIGHT)]
+                    if var_name == 'S' or var_name == 'M':
+                        self.status_text[(name, var_name)] = [tk.Label(self.status_frame, text="%s.%s" % (name, var_name),
+                                                                       fg='black'),
+                                                              tk.Label(self.status_frame,
+                                                                       text="###",
+                                                                       fg='black', width='20', anchor=tk.E, justify=tk.RIGHT)]
 
     def run(self):
 
@@ -43,7 +43,6 @@ class CBLA2_Learner_Frame(Display_Frame):
             label[0].grid(column=0, row=row_id, ipadx=10, sticky=tk.W)
             label[1].grid(column=1, row=row_id, ipadx=20, sticky=tk.E)
             row_id += 1
-
 
     def updateFrame(self):
 
@@ -55,7 +54,12 @@ class CBLA2_Learner_Frame(Display_Frame):
 
                 val_text = "("
                 for element in val:
-                    val_text += '%0.2f, ' % element
+                    if isinstance(element, float):
+                        val_text += '%0.2f, ' % element
+                    elif isinstance(element, int):
+                        val_text += '%d, ' % element
+                    else:
+                        val_text += '%s, ' % str(element)
                 val_text += ")"
 
             else:
