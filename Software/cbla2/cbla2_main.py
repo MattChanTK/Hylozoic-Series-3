@@ -77,12 +77,12 @@ class CBLA2(interactive_system.InteractiveCmd):
                 node_list[reflex_0.node_name] = reflex_0
                 node_list[reflex_1.node_name] = reflex_1
 
-                motion_type = Var(0)
+                # 1 frond each
                 frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                                                                                      right_sma=sma_1.in_var['output'],
-                                                                                      motion_type=motion_type)
+                                                                                    right_sma=sma_1.in_var['output'])
                 node_list[frond.node_name] = frond
 
+                # construct tentacle
                 cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy,
                                                         node_name='cbla_tentacle_%d' % j,
                                                         ir_0=ir_sensor_0.out_var['input'],
@@ -118,18 +118,11 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             # adding the data display frame
             display_gui = gui.Display_Frame(main_gui.root, node_list)
+            # adding the data display frame for CBLA related stats
+            cbla_learner_gui = gui.CBLA2_Learner_Frame(main_gui.root, node_list)
 
-
-            # adding the control frame
-            entries = OrderedDict()
-            for name, node in node_list.items():
-
-                if isinstance(node, Frond):
-                    entries[name] = node.in_var['motion_type']
-            control_gui = gui.Control_Frame(main_gui.root, entries)
-
-            main_gui.add_frame(control_gui)
             main_gui.add_frame(display_gui)
+            main_gui.add_frame(cbla_learner_gui)
 
             main_gui.start()
 
