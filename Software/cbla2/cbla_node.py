@@ -39,7 +39,7 @@ class CBLA_Tentacle(Node):
         out_vars = [self.out_var['tentacle_out']]
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot(in_vars, out_vars)
+        self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars)
 
         # create learner
         M0 = self.cbla_robot.compute_initial_motor()
