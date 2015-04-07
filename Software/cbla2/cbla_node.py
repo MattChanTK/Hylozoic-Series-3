@@ -35,11 +35,13 @@ class CBLA_Tentacle(Node):
         self.out_var['reflex_out_1'] = reflex_1
         self.out_var['cluster_activity'] = cluster_activity
 
+
         in_vars = [self.in_var['acc_x'], self.in_var['acc_y'], self.in_var['acc_z'], self.in_var['ir_0']]
         out_vars = [self.out_var['tentacle_out']]
 
         # create robot
         self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars)
+
 
         # create learner
         M0 = self.cbla_robot.compute_initial_motor()
@@ -49,11 +51,23 @@ class CBLA_Tentacle(Node):
         # create CBLA engine
         self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
 
+        # internal output variables
+        self.out_var['S'] = Var(self.cbla_robot.S0)
+        self.out_var['M'] = Var(self.cbla_robot.M0)
 
     def run(self):
 
         while True:
-            self.cbla_engine.update(robot_wait=self.messenger.estimated_msg_period*2)
+            # adjust the robot's wait time between act() and read()
+            self.cbla_robot.config['wait_time'] = self.messenger.estimated_msg_period*2
+
+            # update CBLA Engine
+            self.cbla_engine.update()
+
+            # update the node's internal variables
+            self.out_var['S'].val = self.cbla_robot.S0
+            self.out_var['M'].val = self.cbla_robot.M0
+
 
 
 

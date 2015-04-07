@@ -32,13 +32,13 @@ class CBLA_Engine(object):
         # initialization
         self.M = self.learner.select_action(self.robot)
 
-    def update(self, robot_wait=0.03):
+    def update(self):
 
         # act
         self.robot.act(self.M)
 
         # wait
-        self.robot.wait(robot_wait)
+        self.robot.wait()
 
         # read
         S2 = self.robot.read()
@@ -48,6 +48,7 @@ class CBLA_Engine(object):
 
         # select action
         self.M = self.learner.select_action(self.robot)
+        #print(self.M)
 
         # predict
         self.learner.predict()

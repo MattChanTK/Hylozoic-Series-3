@@ -41,6 +41,7 @@ class Robot(object):
         self.S0 = None
 
     def _set_default_config(self):
+        self.config['wait_time'] = 0.03
         self.config['activation_reward_delta'] = 0.01
         self.config['activation_reward'] = 0.1
         self.config['idling_reward'] = 0.1
@@ -69,9 +70,9 @@ class Robot(object):
 
         return self.out_vars
 
-    def wait(self, wait_time_s=0.03):
+    def wait(self):
 
-        sleep(wait_time_s)
+        sleep(self.config['wait_time'])
 
     def read(self) -> tuple:
         # compute the sensor variables
@@ -137,22 +138,24 @@ class Robot_Frond(Robot):
 
 
     def _set_default_config(self):
+        super(Robot_Frond, self)._set_default_config()
+
         self.config['activation_reward_delta'] = 0.01
         self.config['activation_reward'] = 0.1
         self.config['idling_reward'] = 0.1
         self.config['min_step_before_idling'] = 0.1
         self.config['idling_prob'] = 0.98
 
-        self.config['sample_window'] = 100
-        self.config['sample_period'] = 0.01
+        self.config['sample_window'] = 30
+        self.config['sample_period'] = max(0.01, self.config['wait_time'])
 
-    def act(self, M: tuple):
-
-        pass
 
     def read(self) -> tuple:
-        # compute the sensor variables
 
+        # making sure sample_period does not exceed the messenger reading speed
+        self.config['sample_period'] = max(0.01, self.config['wait_time'])
+
+        # compute the sensor variables
         for i in range(self.config['sample_window']):
             t0 = clock()
             S = []
@@ -161,9 +164,8 @@ class Robot_Frond(Robot):
 
             # store into memory
             self.S_memory.append(tuple(S))
-
             # wait for next period
-            sleep(self.config['sample_period'] - (clock() - t0))
+            sleep(max(0, self.config['sample_period'] - (clock() - t0)))
 
         # compute average
         S_mean = []
