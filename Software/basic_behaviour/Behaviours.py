@@ -15,7 +15,7 @@ from interactive_system.InteractiveCmd import command_object
 ACC_MG_PER_LSB = 3.9
 ADC_RES = 2**12
 
-class Test_Behaviours(InteractiveCmd.InteractiveCmd):
+class Test_Behaviours(InteractiveCmd):
 
     def run(self):
 
@@ -134,7 +134,7 @@ class Test_Behaviours(InteractiveCmd.InteractiveCmd):
             sleep(0.1)
 
 
-class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
+class System_Identification_Behaviour(InteractiveCmd):
 
     def run(self):
 
@@ -300,7 +300,7 @@ class System_Identification_Behaviour(InteractiveCmd.InteractiveCmd):
             #sleep(0.5)
 
 
-class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
+class Internode_Test_Behaviour(InteractiveCmd):
 
     def run(self):
         teensy_names = self.teensy_manager.get_teensy_name_list()
@@ -362,7 +362,7 @@ class Internode_Test_Behaviour(InteractiveCmd.InteractiveCmd):
             self.send_commands()
 
 
-class Default_Behaviour(InteractiveCmd.InteractiveCmd):
+class Default_Behaviour(InteractiveCmd):
 
     def run(self):
         teensy_names = self.teensy_manager.get_teensy_name_list()
@@ -419,7 +419,7 @@ class Default_Behaviour(InteractiveCmd.InteractiveCmd):
             sleep(0.1)
 
 
-class ProgrammUpload(InteractiveCmd.InteractiveCmd):
+class ProgrammUpload(InteractiveCmd):
 
     def run(self):
         teensy_names = self.teensy_manager.get_teensy_name_list()

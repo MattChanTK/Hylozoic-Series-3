@@ -21,7 +21,7 @@ USING_SAVED_EXPERTS = False
 EXPERT_FILE_NAME = None #'cbla_data_15-02-21_16-09-54.pkl'
 #========================================
 
-class CBLA_Behaviours(InteractiveCmd.InteractiveCmd):
+class CBLA_Behaviours(InteractiveCmd):
 
     # ========= the Run function for the entire CBLA behaviour =====
     def run(self):
