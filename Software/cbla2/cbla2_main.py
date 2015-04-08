@@ -78,8 +78,10 @@ class CBLA2(interactive_system.InteractiveCmd):
                 node_list[reflex_1.node_name] = reflex_1
 
                 # 1 frond each
+                motion_type = Var(0)
                 frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                                                                                    right_sma=sma_1.in_var['output'])
+                                                                                    right_sma=sma_1.in_var['output'],
+                                                                                    motion_type=motion_type)
                 node_list[frond.node_name] = frond
 
                 # construct tentacle

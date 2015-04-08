@@ -37,15 +37,15 @@ class Robot(object):
         self.step_in_active_mode = 0
 
         # compute initial action
-        self.M0 = self.compute_initial_motor()
-        self.S0 = None
+        self.M0 = Var(self.compute_initial_motor())
+        self.S0 = Var(None)
 
     def _set_default_config(self):
         self.config['wait_time'] = 0.03
-        self.config['activation_reward_delta'] = 0.01
-        self.config['activation_reward'] = 0.1
-        self.config['idling_reward'] = 0.1
-        self.config['min_step_before_idling'] = 0.1
+        self.config['activation_reward_delta'] = 0.5
+        self.config['activation_reward'] = 0.05
+        self.config['idling_reward'] = -0.01
+        self.config['min_step_before_idling'] = 200
         self.config['idling_prob'] = 0.98
 
     def compute_initial_motor(self) -> tuple:
@@ -66,7 +66,7 @@ class Robot(object):
         for i in range(len(self.out_vars)):
             self.out_vars[i].val = M[i]
 
-        self.M0 = tuple(M)
+        self.M0.val = tuple(M)
 
         return self.out_vars
 
@@ -85,12 +85,12 @@ class Robot(object):
                 if isinstance(val_range, tuple) and len(val_range) == 2:
                     s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
             S.append(s)
-        self.S0 = tuple(S)
+        self.S0.val = tuple(S)
         return tuple(S)
 
     def get_possible_action(self, num_sample=100) -> tuple:
 
-        num_dim = len(self.M0)
+        num_dim = len(self.M0.val)
 
         X = np.zeros((num_sample, num_dim))
 
@@ -131,7 +131,7 @@ class Robot(object):
         return self.in_idle_mode
 
     def get_idle_action(self) -> tuple:
-        return tuple([0] * len(self.M0))
+        return tuple([0] * len(self.M0.val))
 
 
 class Robot_Frond(Robot):
@@ -146,19 +146,19 @@ class Robot_Frond(Robot):
     def _set_default_config(self):
         super(Robot_Frond, self)._set_default_config()
 
-        self.config['activation_reward_delta'] = 0.01
-        self.config['activation_reward'] = 0.1
-        self.config['idling_reward'] = 0.1
-        self.config['min_step_before_idling'] = 0.1
+        self.config['activation_reward_delta'] = 1.0
+        self.config['activation_reward'] = 0.8
+        self.config['idling_reward'] = -0.01
+        self.config['min_step_before_idling'] = 15
         self.config['idling_prob'] = 0.98
 
-        self.config['sample_window'] = 30
-        self.config['sample_period'] = max(0.01, self.config['wait_time'])
+        self.config['sample_window'] = 20
+        self.config['sample_period'] = 0.05
 
     def read(self) -> tuple:
 
         # making sure sample_period does not exceed the messenger reading speed
-        self.config['sample_period'] = max(0.01, self.config['wait_time'])
+        sample_period = max(self.config['sample_period'], self.config['wait_time'])
 
         # compute the sensor variables
         for i in range(self.config['sample_window']):
@@ -176,8 +176,14 @@ class Robot_Frond(Robot):
 
             # store into memory
             self.S_memory.append(tuple(S))
+
+            # if first run
+            if self.S0.val is None:
+                break
+
             # wait for next period
-            sleep(max(0, self.config['sample_period'] - (clock() - t0)))
+            if i < self.config['sample_window'] - 1:
+                sleep(max(0, sample_period - (clock() - t0)))
 
         # compute average
         S_mean = []
@@ -185,13 +191,13 @@ class Robot_Frond(Robot):
         for s in s_zipped:
             S_mean.append(np.average(s))
 
-        self.S0 = tuple(S_mean)
+        self.S0.val = tuple(S_mean)
         return tuple(S_mean)
 
     def get_possible_action(self, num_sample=10):
 
         # constructing a list of all possible action
-        x_dim = len(self.M0)
+        x_dim = len(self.M0.val)
         X = list(range(0, 4 ** x_dim))
         for i in range(len(X)):
             X[i] = toDigits(X[i], 4)
@@ -209,8 +215,29 @@ class Robot_Frond(Robot):
 
 
 class Robot_Protocell(Robot):
-     pass
 
+    def _set_default_config(self):
+        super(Robot_Protocell, self)._set_default_config()
+
+        self.config['activation_reward_delta'] = 0.5
+        self.config['activation_reward'] = 0.05
+        self.config['idling_reward'] = -0.01
+        self.config['min_step_before_idling'] = 200
+        self.config['idling_prob'] = 0.98
+
+    def get_possible_action(self, num_sample=5) -> tuple:
+
+        num_dim = len(self.M0.val)
+
+        X = np.zeros((num_sample, num_dim))
+
+        for i in range(num_sample):
+            for x_dim in range(num_dim):
+                X[i, x_dim - 1] = random.randint(0, 100)
+
+        M_candidates = tuple(set((map(tuple, X))))
+
+        return M_candidates
 
 def toDigits(n, b):
     """Convert a positive number n to its digit representation in base b."""

@@ -29,7 +29,8 @@ class CBLA2_Learner_Frame(Display_Frame):
         for name, node in self.node_list.items():
             if isinstance(node, (cbla_node.CBLA_Tentacle, cbla_node.CBLA_Protocell)):
                 for var_name in node.out_var_list:
-                    if var_name == 'S' or var_name == 'M':
+                    if var_name == 'S' or var_name == 'M' or \
+                       var_name == 'loop_time' or var_name == 'idle_mode':
                         self.status_text[(name, var_name)] = [tk.Label(self.status_frame, text="%s.%s" % (name, var_name),
                                                                        fg='black'),
                                                               tk.Label(self.status_frame,

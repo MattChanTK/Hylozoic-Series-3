@@ -56,22 +56,26 @@ class CBLA_Tentacle(Node):
         self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
 
         # internal output variables
-        self.out_var['S'] = Var(self.cbla_robot.S0)
-        self.out_var['M'] = Var(self.cbla_robot.M0)
+        self.out_var['S'] = self.cbla_robot.S0
+        self.out_var['M'] = self.cbla_robot.M0
+
+        # output variables
+        self.out_var['loop_time'] = Var(0)
+        self.out_var['idle_mode'] = Var(False)
 
     def run(self):
 
         while True:
+            t0 = clock()
+
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.config['wait_time'] = self.messenger.estimated_msg_period*2
+            self.cbla_robot.config['wait_time'] = max(0.01, self.messenger.estimated_msg_period*2)
 
             # update CBLA Engine
             self.cbla_engine.update()
 
-            # update the node's internal variables
-            self.out_var['S'].val = self.cbla_robot.S0
-            self.out_var['M'].val = self.cbla_robot.M0
-
+            self.out_var['idle_mode'].val = self.cbla_robot.is_in_idle_mode()
+            self.out_var['loop_time'].val = clock() - t0
 
 
 
@@ -116,18 +120,21 @@ class CBLA_Protocell(Node):
         self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
 
         # internal output variables
-        self.out_var['S'] = Var(self.cbla_robot.S0)
-        self.out_var['M'] = Var(self.cbla_robot.M0)
+        self.out_var['S'] = self.cbla_robot.S0
+        self.out_var['M'] = self.cbla_robot.M0
+        self.out_var['loop_time'] = Var(0)
+        self.out_var['idle_mode'] = Var(False)
 
     def run(self):
 
         while True:
+            t0 = clock()
+
             # adjust the robot's wait time between act() and read()
             self.cbla_robot.config['wait_time'] = self.messenger.estimated_msg_period * 2
 
             # update CBLA Engine
             self.cbla_engine.update()
 
-            # update the node's internal variables
-            self.out_var['S'].val = self.cbla_robot.S0
-            self.out_var['M'].val = self.cbla_robot.M0
+            self.out_var['idle_mode'].val = self.cbla_robot.is_in_idle_mode()
+            self.out_var['loop_time'].val = clock() - t0
