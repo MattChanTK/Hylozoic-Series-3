@@ -67,12 +67,11 @@ class Robot(object):
             self.out_vars[i].val = M[i]
 
         self.M0.val = tuple(M)
-
         return self.out_vars
 
     def wait(self):
 
-        sleep(self.config['wait_time'])
+        sleep(max(0, self.config['wait_time'] ))
 
     def read(self) -> tuple:
         # compute the sensor variables

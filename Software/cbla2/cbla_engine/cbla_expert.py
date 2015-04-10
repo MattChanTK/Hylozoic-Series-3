@@ -312,51 +312,26 @@ class Expert():
             print((" ")*len(" L ** ")*level, "R ** ", end="")
             self.right.print(level+1)
 
-    def save_expert_ids(self, expert_ids):
+    def save_expert_info(self, info):
 
         # this is leaf node
         if self.left is None and self.right is None:
-            expert_ids.append(self.expert_id)
+
+            try:
+                info['expert_ids'].append(self.expert_id)
+            except AttributeError:
+                info['expert_ids'] = [self.expert_id]
+
+            info['mean_errors'][self.expert_id] = self.mean_error
+            info['action_values'][self.expert_id] = self.action_value
+            info['action_counts'][self.expert_id] = self.action_count
+            info['exemplars'][self.expert_id] = [copy(self.training_data), copy(self.training_label)]
+            info['latest_rewards'][self.expert_id] = self.rewards_history[-1]
+
         else:
-            self.left.save_expert_ids(expert_ids)
-            self.right.save_expert_ids(expert_ids)
+            self.left.save_expert_info(info)
+            self.right.save_expert_info(info)
 
-    def save_mean_errors(self, mean_errors):
-
-        # this is leaf node
-        if self.left is None and self.right is None:
-            mean_errors.append((self.expert_id, self.mean_error))
-        else:
-
-            self.left.save_mean_errors(mean_errors)
-            self.right.save_mean_errors(mean_errors)
-
-    def save_action_values(self, values):
-
-        # this is leaf node
-        if self.left is None and self.right is None:
-            values.append((self.expert_id, self.action_value))
-        else:
-            self.left.save_action_values(values)
-            self.right.save_action_values(values)
-
-    def save_action_count(self, action_count):
-
-        # this is leaf node
-        if self.left is None and self.right is None:
-            action_count.append((self.expert_id, self.action_count))
-        else:
-            self.left.save_action_count(action_count)
-            self.right.save_action_count(action_count)
-
-    def save_exemplars(self, exemplars_data):
-
-        # this is leaf node
-        if self.left is None and self.right is None:
-            exemplars_data[self.expert_id] = [copy(self.training_data), copy(self.training_label)]
-        else:
-            self.left.save_exemplars(exemplars_data)
-            self.right.save_exemplars(exemplars_data)
 
 class KGA():
 

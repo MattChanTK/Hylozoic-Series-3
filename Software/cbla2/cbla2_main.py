@@ -4,11 +4,14 @@ import interactive_system
 from abstract_node import *
 import gui
 import cbla_node
+from cbla_engine import cbla_data_collect
 
 class CBLA2(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
+
+        data_collector = cbla_data_collect.retrieve_data()
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
@@ -29,6 +32,7 @@ class CBLA2(interactive_system.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
+        # start the messenger
         messenger = interactive_system.Messenger(self, 0.000)
         messenger.start()
 
@@ -38,7 +42,7 @@ class CBLA2(interactive_system.InteractiveCmd):
         teensy_3 = 'HK_teensy_2'
         teensy_4 = 'HK_teensy_3'
 
-        teensy_in_use = (teensy_0, teensy_1,)
+        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
 
         node_list = OrderedDict()
         # instantiate all the basic components
@@ -85,7 +89,7 @@ class CBLA2(interactive_system.InteractiveCmd):
                 node_list[frond.node_name] = frond
 
                 # construct tentacle
-                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy,
+                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy, data_collector,
                                                         node_name='cbla_tentacle_%d' % j,
                                                         ir_0=ir_sensor_0.out_var['input'],
                                                         ir_1=ir_sensor_1.out_var['input'],
@@ -113,7 +117,7 @@ class CBLA2(interactive_system.InteractiveCmd):
             node_list[als.node_name] = als
 
             # constructing the Protocell
-            cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy,
+            cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy, data_collector,
                                                       node_name='cbla_protocell',
                                                       als=als.out_var['input'],
                                                       led=led.in_var['output'])
@@ -126,9 +130,12 @@ class CBLA2(interactive_system.InteractiveCmd):
             node.start()
             print('%s initialized' % name)
 
-
-
-
+        print('System Initialized with %d nodes' % len(node_list))
+        
+        # start the Data Collector
+        data_collector.start()
+        
+        # start the GUI
         if len(node_list) > 0:
             # initialize the gui
             main_gui = gui.CBLA2_Main_GUI(messenger)
@@ -143,10 +150,7 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             main_gui.start()
 
-        print('System Initialized with %d nodes' % len(node_list))
-        # while True:
-        #     print(messenger.estimated_msg_period)
-        #     sleep(1)
+
 
 
 if __name__ == "__main__":

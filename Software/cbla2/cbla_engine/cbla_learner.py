@@ -5,6 +5,8 @@ from .cbla_robot import Robot
 import random
 import numpy as np
 import warnings
+from collections import defaultdict
+from collections import OrderedDict
 
 class Learner(object):
 
@@ -18,15 +20,16 @@ class Learner(object):
         for param, value in config_kwargs.items():
             self.config[param] = value
 
-
         # sensorimotor variables
         self.S = S0
         self.M = M0
         self.S_predicted = self.S
 
-
         # expert
         self.expert = self.expert = Expert(**self.config)
+
+        # learner information
+        self.info = dict()
 
         # misc. variables
         self.exploring_rate = self.config['exploring_rate']
@@ -55,19 +58,25 @@ class Learner(object):
 
         # from a set of possible action, select one
         M_candidates = robot.get_possible_action(num_sample=100)
-        M1, M_best, val_best, is_exploring = self.action_selection_oudeyer(self.S, M_candidates)
+        M1, M_best, val_best, is_exploring = self.action_selection(self.S, M_candidates)
 
         # if action-value is too low, enter idle mode
+        is_doing_idle_action = False
         if robot.enter_idle_mode(reward=val_best):
             if robot.is_doing_idle_action():
                 M1 = robot.get_idle_action()
+                is_doing_idle_action = True
 
         self.M = M1
+
+        # save to info
+        self.info['best_action'] = (M_best, val_best)
+        self.info['is_exploring'] = is_exploring
+        self.info['is_doing_idle_action'] = is_doing_idle_action
 
         self.adapt_exploring_rate(action_value=val_best)
 
         return self.M
-
 
     def predict(self):
 
@@ -75,7 +84,7 @@ class Learner(object):
 
         return self.S_predicted
 
-    def action_selection_oudeyer(self, S1, M_candidates):
+    def action_selection(self, S1, M_candidates, method='oudeyer'):
 
         # compute the M with the highest learning rate
         M_best = [0]
@@ -100,21 +109,6 @@ class Learner(object):
 
         return M1, M_best, val_best, is_exploring
 
-    def action_selection_probabilistic(self, S1, M_candidates):
-
-        L_list = []
-        for M_candidate in M_candidates:
-            L_list.append(self.expert.evaluate_action(S1, M_candidate))
-
-        L_best = max(L_list)
-        M_best = M_candidates[L_list.index(L_best)]
-
-        M_idx = weighted_choice_sub(L_list, min_percent=self.exploring_rate)
-
-        M1 = M_candidates[M_idx]
-
-        return M1, M_best, L_best
-
     def adapt_exploring_rate(self, action_value):
 
         # update learning rate based on reward
@@ -131,6 +125,14 @@ class Learner(object):
                 self.exploring_rate = m * action_value + b
 
         return self.exploring_rate
+
+    def get_expert_info(self) -> defaultdict:
+
+        info = defaultdict(dict)
+
+        self.expert.save_expert_info(info)
+
+        return info
 
 
 def weighted_choice_sub(weights, min_percent=0.05):

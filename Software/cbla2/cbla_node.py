@@ -5,20 +5,76 @@ from abstract_node.node import *
 from interactive_system import Messenger
 import cbla_engine
 
+class CBLA_Node(Node):
 
-class CBLA_Tentacle(Node):
+    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+                 node_name='cbla_node'):
 
-    def __init__(self, messenger: Messenger, teensy_name: str,
-                 ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0), cluster_activity: Var=Var(0),
-                 left_ir: Var=Var(0), right_ir: Var=Var(0),
-                 frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
 
         if not isinstance(teensy_name, str):
             raise TypeError('teensy_name must be a string!')
 
         self.teensy_name = teensy_name
 
-        super(CBLA_Tentacle, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+        # reference to the data collector
+        self.data_collector = data_collector
+
+        super(CBLA_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+
+        self.cbla_robot = None
+        self.cbla_learner = None
+
+
+    def instantiate(self):
+
+        if self.cbla_robot is None:
+            raise AttributeError("CBLA_Robot must be implemented in the child class")
+
+        # create learner
+        M0 = self.cbla_robot.compute_initial_motor()
+        S0 = self.cbla_robot.read()
+        self.cbla_learner = cbla_engine.Learner(S0, M0)
+
+        # create CBLA engine
+        self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
+
+        # internal output variables
+        self.out_var['S'] = self.cbla_robot.S0
+        self.out_var['M'] = self.cbla_robot.M0
+
+        # output variables
+        self.out_var['loop_time'] = Var(0)
+        self.out_var['idle_mode'] = Var(False)
+
+
+    def run(self):
+
+        while True:
+            # adjust the robot's wait time between act() and read()
+            self.cbla_robot.config['wait_time'] = max(0.01, self.messenger.estimated_msg_period * 2)
+
+            # update CBLA Engine
+            self.cbla_engine.update()
+
+            # save the data
+            self.data_collector.append_data_packet(self.node_name, self.cbla_engine.data_packet)
+            # self.cbla_engine.print_data_packet(header=self.node_name)
+
+            self.out_var['loop_time'].val = self.cbla_engine.data_packet['loop_period']
+            self.out_var['idle_mode'].val = self.cbla_engine.data_packet['in_idle_mode']
+
+
+class CBLA_Tentacle(CBLA_Node):
+
+    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+                 ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0), cluster_activity: Var=Var(0),
+                 left_ir: Var=Var(0), right_ir: Var=Var(0),
+                 frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
+
+
+        super(CBLA_Tentacle, self).__init__(messenger=messenger, teensy_name=teensy_name,
+                                            data_collector=data_collector, node_name=node_name)
+
 
         # defining the input variables
         self.in_var['ir_0'] = ir_0
@@ -46,53 +102,19 @@ class CBLA_Tentacle(Node):
         # create robot
         self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range)
 
-
-        # create learner
-        M0 = self.cbla_robot.compute_initial_motor()
-        S0 = self.cbla_robot.read()
-        self.cbla_learner = cbla_engine.Learner(S0, M0)
-
-        # create CBLA engine
-        self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
-
-        # internal output variables
-        self.out_var['S'] = self.cbla_robot.S0
-        self.out_var['M'] = self.cbla_robot.M0
-
-        # output variables
-        self.out_var['loop_time'] = Var(0)
-        self.out_var['idle_mode'] = Var(False)
-
-    def run(self):
-
-        while True:
-            t0 = clock()
-
-            # adjust the robot's wait time between act() and read()
-            self.cbla_robot.config['wait_time'] = max(0.01, self.messenger.estimated_msg_period*2)
-
-            # update CBLA Engine
-            self.cbla_engine.update()
-
-            self.out_var['idle_mode'].val = self.cbla_robot.is_in_idle_mode()
-            self.out_var['loop_time'].val = clock() - t0
+        # instantiate
+        self.instantiate()
 
 
 
+class CBLA_Protocell(CBLA_Node):
 
-class CBLA_Protocell(Node):
-
-    def __init__(self, messenger: Messenger, teensy_name: str,
+    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
                  als: Var=Var(0), cluster_activity: Var=Var(0),
                  led: Var=Var(0), node_name='cbla_protocell'):
 
-
-        if not isinstance(teensy_name, str):
-            raise TypeError('teensy_name must be a string!')
-
-        self.teensy_name = teensy_name
-
-        super(CBLA_Protocell, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+        super(CBLA_Protocell, self).__init__(messenger=messenger, teensy_name=teensy_name,
+                                            data_collector=data_collector, node_name=node_name)
 
         # defining the input variables
         self.in_var['als'] = als
@@ -111,30 +133,4 @@ class CBLA_Protocell(Node):
         # create robot
         self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range)
 
-        # create learner
-        M0 = self.cbla_robot.compute_initial_motor()
-        S0 = self.cbla_robot.read()
-        self.cbla_learner = cbla_engine.Learner(S0, M0)
-
-        # create CBLA engine
-        self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
-
-        # internal output variables
-        self.out_var['S'] = self.cbla_robot.S0
-        self.out_var['M'] = self.cbla_robot.M0
-        self.out_var['loop_time'] = Var(0)
-        self.out_var['idle_mode'] = Var(False)
-
-    def run(self):
-
-        while True:
-            t0 = clock()
-
-            # adjust the robot's wait time between act() and read()
-            self.cbla_robot.config['wait_time'] = self.messenger.estimated_msg_period * 2
-
-            # update CBLA Engine
-            self.cbla_engine.update()
-
-            self.out_var['idle_mode'].val = self.cbla_robot.is_in_idle_mode()
-            self.out_var['loop_time'].val = clock() - t0
+        self.instantiate()
