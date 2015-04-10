@@ -7,7 +7,7 @@ import inspect
 
 class InteractiveCmd(threading.Thread):
 
-    def __init__(self, Teensy_manager):
+    def __init__(self, Teensy_manager, auto_start=True):
 
         # command queue
         self.cmd_q = queue.Queue()
@@ -19,8 +19,8 @@ class InteractiveCmd(threading.Thread):
         # start thread
         threading.Thread.__init__(self)
         self.daemon = False
-        self.start()
-
+        if auto_start:
+            self.start()
 
     def update_output_params(self, teensy_names):
 
