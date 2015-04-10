@@ -34,7 +34,7 @@ class Manual_Control(interactive_system.InteractiveCmd):
         teensy_3 = 'HK_teensy_2'
         teensy_4 = 'HK_teensy_3'
 
-        teensy_in_use = (teensy_0, teensy_1,)
+        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
 
         node_list = OrderedDict()
 
@@ -91,36 +91,45 @@ class Manual_Control(interactive_system.InteractiveCmd):
                               output='protocell_0_led_level')
             node_list[led.node_name] = led
 
-        for name, node in node_list.items():
-            node.start()
-            print('%s initialized' % name)
+        self.node_list = node_list
+        self.messenger = messenger
 
-        if len(node_list) > 0:
+        self.start_nodes()
+        self.create_gui().run()
+
+    def create_gui(self,):
+
+        self.main_gui = gui.Main_GUI(self.messenger)
+
+        if len(self.node_list) > 0:
 
             # initialize the gui
-            main_gui = gui.Main_GUI(messenger)
-            main_gui.root.title = 'Manual Control'
+            self.main_gui.root.title = 'Manual Control'
             # adding the data display frame
-            display_gui = gui.Display_Frame(main_gui.root, node_list)
+            display_gui = gui.Display_Frame(self.main_gui.root, self.node_list)
 
             # adding the control frame
             entries = OrderedDict()
-            for name, node in node_list.items():
+            for name, node in self.node_list.items():
 
                 if isinstance(node, Frond):
                     entries[name] = node.in_var['motion_type']
                 elif isinstance(node, Output_Node) and 'sma' not in name:
                     entries[name] = node.in_var['output']
 
-            control_gui = gui.Manual_Control_GUI(main_gui.root, entries)
+            control_gui = gui.Manual_Control_GUI(self.main_gui.root, entries)
 
-            main_gui.add_frame(control_gui)
-            main_gui.add_frame(display_gui)
+            self.main_gui.add_frame(control_gui)
+            self.main_gui.add_frame(display_gui)
 
-            main_gui.start()
+        return self.main_gui
 
-        print('System Initialized with %d nodes' % len(node_list))
+    def start_nodes(self):
 
+        for name, node in self.node_list.items():
+            node.start()
+            print('%s initialized' % name)
+        print('System Initialized with %d nodes' % len(self.node_list))
 
 
 
@@ -161,6 +170,7 @@ if __name__ == "__main__":
         # interactive code
         behaviours = cmd(teensy_manager)
 
+        print('done')
         for teensy_thread in teensy_manager._get_teensy_thread_list():
             teensy_thread.join()
 

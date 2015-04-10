@@ -42,7 +42,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         teensy_3 = 'HK_teensy_2'
         teensy_4 = 'HK_teensy_3'
 
-        teensy_in_use = (teensy_0, teensy_1,)
+        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
 
         node_list = OrderedDict()
 
@@ -134,6 +134,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             node.start()
             print('%s initialized' % name)
 
+        print('System Initialized with %d nodes' % len(node_list))
 
         if len(node_list) > 0:
 
@@ -145,12 +146,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             main_gui.add_frame(display_gui)
 
             main_gui.start()
-
-        print('System Initialized with %d nodes' % len(node_list))
-
-        # while True:
-        #     print(messenger.estimated_msg_period)
-        #     sleep(1)
 
 
 

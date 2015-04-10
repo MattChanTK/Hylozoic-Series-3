@@ -2,14 +2,19 @@ __author__ = 'Matthew'
 import tkinter as tk
 from collections import OrderedDict
 
-from .node import *
 from .low_level_node import *
 
-class Main_GUI(Node):
+class Main_GUI(object):
 
     def __init__(self, messenger):
 
-        super(Main_GUI, self).__init__(messenger, node_name='main_gui')
+        self.messenger = messenger
+
+        # constructing the list of input variables
+        self.in_var = OrderedDict()
+
+        # constructing the list of output variables
+        self.out_var = OrderedDict()
 
         self.root = tk.Tk()
         self.frame_list = []
@@ -26,6 +31,9 @@ class Main_GUI(Node):
         # add the messenger frame automatically
         self.messenger_frame = Messenger_Frame(self.root, messenger)
         self.frame_list.append(self.messenger_frame)
+
+    def start(self):
+        self.run()
 
     def run(self):
         self.pack_frames()
