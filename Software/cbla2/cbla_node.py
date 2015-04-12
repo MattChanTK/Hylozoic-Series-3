@@ -27,9 +27,6 @@ class CBLA_Node(Node):
         self.cbla_robot = None
         self.cbla_learner = None
 
-        self.instantiate()
-
-
     def instantiate(self):
 
         if self.cbla_robot is None:
