@@ -24,13 +24,12 @@ class CBLA2_Learner_Frame(Display_Frame):
         self.status_frame_label = tk.Label(self.status_frame, text="CBLA Status", font=("Helvetica", 14))
         self.status_frame_label.grid(row=0, columnspan=2)
 
-
         # contents
         for name, node in self.node_list.items():
             if isinstance(node, (cbla_node.CBLA_Tentacle, cbla_node.CBLA_Protocell)):
                 for var_name in node.out_var_list:
                     if var_name == 'S' or var_name == 'M' or \
-                       var_name == 'loop_time' or var_name == 'idle_mode':
+                       var_name == 'loop_time' or var_name == 'idle_mode' or var_name == 'node_step':
                         self.status_text[(name, var_name)] = [tk.Label(self.status_frame, text="%s.%s" % (name, var_name),
                                                                        fg='black'),
                                                               tk.Label(self.status_frame,

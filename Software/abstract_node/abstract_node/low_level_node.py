@@ -33,7 +33,7 @@ class Frond(Node):
 
     def run(self):
 
-        while True:
+        while self.alive:
 
             if self.in_var['motion_type'].val == Frond.ON_LEFT:
 

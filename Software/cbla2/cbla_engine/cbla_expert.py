@@ -312,7 +312,7 @@ class Expert():
             print((" ")*len(" L ** ")*level, "R ** ", end="")
             self.right.print(level+1)
 
-    def save_expert_info(self, info):
+    def save_expert_info(self, info, include_exemplars=False):
 
         # this is leaf node
         if self.left is None and self.right is None:

@@ -1,5 +1,6 @@
 from copy import copy
 from collections import OrderedDict
+from datetime import datetime
 
 
 from .cbla_robot import *
@@ -13,6 +14,8 @@ class CBLA_Engine(object):
         self.config = dict()
         # default configurations
         self.config['print_to_term'] = False
+        self.config['update_count_start'] = 0
+        self.config['exemplars_save_interval'] = 200
 
         # custom configurations
         for param, value in config_kwargs.items():
@@ -27,7 +30,10 @@ class CBLA_Engine(object):
 
         # initialization
         self.M = self.learner.select_action(self.robot)
-        self.update_count = 0
+
+        # start from previous if necessary
+        self.update_count = self.config['update_count_start']
+
 
     def update(self):
 
@@ -53,15 +59,22 @@ class CBLA_Engine(object):
         S_predicted = self.learner.predict()
 
         # save to data packet
-        self.data_packet['time'] = clock()
+        self.data_packet['time'] = datetime.now()
         self.data_packet['step'] = self.update_count
-        self.data_packet['loop_period'] = self.data_packet['time'] - t0
+        self.data_packet['loop_period'] = clock() - t0
         self.data_packet['S'] = S2
         self.data_packet['M'] = self.M
         self.data_packet['S1_predicted'] = S_predicted
         self.data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
         self.data_packet.update(self.learner.info)
-        self.data_packet.update(self.learner.get_expert_info())
+
+
+        expert_info = self.learner.get_expert_info()
+        if self.update_count % self.config['exemplars_save_interval']:
+            # remove exemplars from expert info every certain number of times
+            del expert_info['exemplars']
+
+        self.data_packet.update(expert_info)
 
 
     def print_data_packet(self, header=""):

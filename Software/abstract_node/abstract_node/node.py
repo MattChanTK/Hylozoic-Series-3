@@ -25,6 +25,7 @@ class Node(threading.Thread):
             self.node_name = node_name
 
         self.update_freq = 2
+        self.alive = True
 
     @property
     def in_var_list(self) -> tuple:
@@ -104,12 +105,12 @@ class Input_Node(Node):
         self.print_to_term = False
         self.update_freq = 1.5
 
-
     def run(self):
 
-        while True:
+        while self.alive:
 
             if self.teensy_name not in self.messenger.active_teensy_list:
+                self.alive = False
                 print('%s is no longer functional. Terminated.' % self.node_name)
                 return
 
@@ -147,9 +148,10 @@ class Output_Node(Node):
 
     def run(self):
 
-        while True:
+        while self.alive:
 
             if self.teensy_name not in self.messenger.active_teensy_list:
+                self.alive = False
                 print('%s is no longer functional. Terminated.' % self.node_name)
                 return
 

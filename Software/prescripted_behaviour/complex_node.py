@@ -38,7 +38,7 @@ class Tentacle(Node):
 
     def run(self):
 
-        while True:
+        while self.alive:
 
             # frond's sensor
             if self.in_var['ir_sensor_1'].val > self.ir_on_thres:

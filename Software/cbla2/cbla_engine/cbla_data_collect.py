@@ -2,6 +2,7 @@ from threading import Thread
 from queue import Queue
 from collections import defaultdict
 from copy import copy
+from copy import deepcopy
 import pickle
 import os
 import shutil
@@ -11,31 +12,31 @@ import glob
 
 class DataCollector(Thread):
 
-    def __init__(self, data_file=None, file_save_freq=10):
+    def __init__(self, data_file=None, file_save_freq=50):
 
         super(DataCollector, self).__init__(name='DataCollect', daemon=False)
 
         self.packet_queue = Queue()
+        self.states_update_queue = Queue()
 
         # if using saved data
         if isinstance(data_file, (dict, defaultdict)):
             self.data_file = data_file
-            self.filename = data_file['file_name']
-            self.filenum = data_file['file_num'] + 1
+            self.data_file['file_num'] += 1
 
         # if having no data
         else:
-            self.data_file = defaultdict(list)
+            self.data_file = dict()
+            self.data_file['data'] = defaultdict(list)
+            self.data_file['state'] = defaultdict(dict)
+
             now = time.strftime("%y-%m-%d_%H-%M-%S", time.localtime())
-            self.filename = 'cbla_data_%s' % now
-            self.filenum = 1
+            self.data_file['file_name'] = 'cbla_data_%s' % now
+            self.data_file['file_num'] = 1
 
         self.filetype = ".pkl"
 
-        self.data_file['file_name'] = self.filename
-        self.data_file['file_num'] = self.filenum
-
-        save_to_file('%s (%d)%s' % (self.filename, self.filenum, self.filetype), self.data_file)
+        self.save_to_file()
 
         self.program_terminating = False
 
@@ -44,20 +45,30 @@ class DataCollector(Thread):
     def run(self):
 
         packet_count = 0
-        while not self.program_terminating or self.packet_queue.not_empty():
+        while not self.program_terminating or not self.packet_queue.empty() or not self.states_update_queue.empty():
 
+            # saving run-time data to memory
             if not self.packet_queue.empty():
 
-                packet_name, packet_data = self.packet_queue.get_nowait()
-                self.data_file[packet_name].append(packet_data)
+                node_name, packet_data = self.packet_queue.get_nowait()
+                self.data_file['data'][node_name].append(packet_data)
                 packet_count += 1
 
-            if packet_count >= self.file_save_freq:
-                save_to_file('%s (%d)%s' % (self.filename, self.filenum, self.filetype), self.data_file)
+            # saving state data to memory
+            if not self.states_update_queue.empty():
 
-        save_to_file('%s (%d)%s' % (self.filename, self.filenum, self.filetype), self.data_file)
+                node_name, states_val = self.states_update_queue.get_nowait()
+                self.data_file['state'][node_name] = states_val
+
+            # saving to file
+            if packet_count >= self.file_save_freq and not self.program_terminating:
+                self.save_to_file()
+
+        self.save_to_file()
 
         # remove tmp files
+        curr_dir = os.getcwd()
+        os.chdir(os.path.join(curr_dir, "cbla_data"))
         temp_files = glob.glob("*.tmp")
         for temp_file in temp_files:
             os.remove(temp_file)
@@ -66,15 +77,24 @@ class DataCollector(Thread):
 
         self.packet_queue.put((node_name, copy(data_packet)))
 
+    def update_state(self, node_name, states_update):
+
+        self.states_update_queue.put((node_name, deepcopy(states_update)))
+
     def end_data_collection(self):
 
         self.program_terminating = True
+
+    def save_to_file(self):
+
+        save_to_file('%s (%d)%s' % (self.data_file['file_name'], self.data_file['file_num'], self.filetype),
+                     self.data_file)
 
 
 def retrieve_data(file_name=None):
 
     # ====== retrieving data ======
-    # change folder to "pickle_jar". This is where al the data will be stored
+    # change folder to "cbla_data". This is where al the data will be stored
     curr_dir = os.getcwd()
     os.chdir(os.path.join(curr_dir, "cbla_data"))
 
@@ -95,12 +115,18 @@ def retrieve_data(file_name=None):
         except EOFError:
             print("File Error!")
 
+    os.chdir(curr_dir)
+
     data_collector = DataCollector(data_import)
 
     return data_collector
 
 
 def save_to_file(filename, data):
+
+    # change folder to "cbla_data". This is where al the data will be stored
+    curr_dir = os.getcwd()
+    os.chdir(os.path.join(curr_dir, "cbla_data"))
 
     # create a temp file
     temp_filename = "__%s.tmp" % filename
@@ -112,3 +138,6 @@ def save_to_file(filename, data):
 
     # move original file
     shutil.copy(temp_filename, filename)
+    os.chdir(curr_dir)
+
+

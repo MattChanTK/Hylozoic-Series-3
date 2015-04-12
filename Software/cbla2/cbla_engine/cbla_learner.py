@@ -10,7 +10,7 @@ from collections import OrderedDict
 
 class Learner(object):
 
-    def __init__(self, S0, M0, **config_kwargs):
+    def __init__(self, S0, M0, past_state=None, **config_kwargs):
 
         # default configurations
         self.config = dict()
@@ -26,7 +26,10 @@ class Learner(object):
         self.S_predicted = self.S
 
         # expert
-        self.expert = self.expert = Expert(**self.config)
+        if isinstance(past_state, dict) and 'learner_expert' in past_state:
+            self.expert = past_state['learner_expert']
+        else:
+            self.expert = Expert(**self.config)
 
         # learner information
         self.info = dict()

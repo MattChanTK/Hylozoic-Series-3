@@ -323,8 +323,6 @@ class TeensyInterface(threading.Thread):
 
                     #print(self.serial_number, " - Echo time: ", clock() - start_time)
 
-        print('finished')
-
 
     def compose_msg(self, rand_signature=True):
 

@@ -5,6 +5,7 @@ from abstract_node.node import *
 from interactive_system import Messenger
 import cbla_engine
 
+
 class CBLA_Node(Node):
 
     def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
@@ -21,8 +22,12 @@ class CBLA_Node(Node):
 
         super(CBLA_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
+        self.state_save_freq = 1000
+
         self.cbla_robot = None
         self.cbla_learner = None
+
+        self.instantiate()
 
 
     def instantiate(self):
@@ -33,10 +38,23 @@ class CBLA_Node(Node):
         # create learner
         M0 = self.cbla_robot.compute_initial_motor()
         S0 = self.cbla_robot.read()
-        self.cbla_learner = cbla_engine.Learner(S0, M0)
+
+        # load previous learner expert
+        try:
+            past_state = self.data_collector.data_file['state'][self.node_name]
+        except KeyError:
+            past_state = None
+        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state)
+
+        # load previous learner steps
+        config = dict()
+        try:
+            config['update_count_start'] = past_state['learner_step']
+        except KeyError:
+            pass
 
         # create CBLA engine
-        self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner)
+        self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner, **config)
 
         # internal output variables
         self.out_var['S'] = self.cbla_robot.S0
@@ -45,11 +63,13 @@ class CBLA_Node(Node):
         # output variables
         self.out_var['loop_time'] = Var(0)
         self.out_var['idle_mode'] = Var(False)
+        self.out_var['node_step'] = Var(0)
 
+        self.cbla_states = dict()
 
     def run(self):
 
-        while True:
+        while self.alive:
             # adjust the robot's wait time between act() and read()
             self.cbla_robot.config['wait_time'] = max(0.01, self.messenger.estimated_msg_period * 2)
 
@@ -62,7 +82,15 @@ class CBLA_Node(Node):
 
             self.out_var['loop_time'].val = self.cbla_engine.data_packet['loop_period']
             self.out_var['idle_mode'].val = self.cbla_engine.data_packet['in_idle_mode']
+            self.out_var['node_step'].val = self.cbla_engine.data_packet['step']
 
+        self.save_states()
+
+    def save_states(self):
+        # save state when terminated
+        self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
+        self.cbla_states['learner_step'] = self.cbla_engine.data_packet['step']
+        self.data_collector.update_state(self.node_name, self.cbla_states)
 
 class CBLA_Tentacle(CBLA_Node):
 

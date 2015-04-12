@@ -6,12 +6,17 @@ import gui
 import cbla_node
 from cbla_engine import cbla_data_collect
 
+USE_SAVED_DATA = True
+
 class CBLA2(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
 
-        data_collector = cbla_data_collect.retrieve_data()
+        if USE_SAVED_DATA:
+            data_collector = cbla_data_collect.retrieve_data()
+        else:
+            data_collector = cbla_data_collect.DataCollector()
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
@@ -130,15 +135,24 @@ class CBLA2(interactive_system.InteractiveCmd):
             node.start()
             print('%s initialized' % name)
 
-        print('System Initialized with %d nodes' % len(node_list))
-        
+        print('System initialized with %d nodes.' % len(node_list))
+
+        # initialize the gui
+        main_gui = gui.CBLA2_Main_GUI(messenger)
+        print('GUI initialized.')
+
         # start the Data Collector
         data_collector.start()
-        
+        print('Data Collector initialized.')
+
+        # start thread that kill program with any input
+        threading.Thread(target=self.termination_input_thread,
+                         args=(node_list, data_collector, main_gui.root),
+                         daemon=True, name='termination_input').start()
+
+
         # start the GUI
         if len(node_list) > 0:
-            # initialize the gui
-            main_gui = gui.CBLA2_Main_GUI(messenger)
 
             # adding the data display frame
             display_gui = gui.Display_Frame(main_gui.root, node_list)
@@ -149,6 +163,43 @@ class CBLA2(interactive_system.InteractiveCmd):
             main_gui.add_frame(cbla_learner_gui)
 
             main_gui.start()
+
+    def termination_input_thread(self, node_list, data_collector, gui_root):
+
+        input_str = ''
+        while not input_str == 'exit':
+            input_str = input("\nEnter 'exit' to terminate program: \t")
+
+            if input_str == 'save_states':
+                CBLA2.save_cbla_node_states(node_list)
+
+        # terminate the gui
+        gui_root.quit()
+        print('GUI is terminated.')
+
+        # killing each of the Node
+        for node in node_list.values():
+            node.alive = False
+        for node in node_list.values():
+            node.join()
+            print('%s is terminated.' % node.node_name)
+
+        # terminating the data_collection thread
+        data_collector.end_data_collection()
+        data_collector.join()
+        print("Data Collector is terminated.")
+
+        # killing each of the Teensy threads
+        for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
+            self.teensy_manager.kill_teensy_thread(teensy_name)
+
+    @staticmethod
+    def save_cbla_node_states(node_list):
+
+        for node in node_list.values():
+            if isinstance(node, cbla_node.CBLA_Node):
+                node.save_states()
+
 
 
 
@@ -196,3 +247,5 @@ if __name__ == "__main__":
         print("All Teensy threads terminated")
 
     main()
+
+    print("\n===== Program Terminated =====")
