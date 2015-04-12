@@ -1,7 +1,7 @@
 from copy import copy
 from collections import OrderedDict
 from datetime import datetime
-
+import threading
 
 from .cbla_robot import *
 from .cbla_learner import *
@@ -34,6 +34,8 @@ class CBLA_Engine(object):
         # start from previous if necessary
         self.update_count = self.config['update_count_start']
 
+        self.learner_lock = threading.Lock()
+
 
     def update(self):
 
@@ -50,7 +52,8 @@ class CBLA_Engine(object):
         S2 = self.robot.read()
 
         # learn
-        self.learner.learn(S2, self.M)
+        with self.learner_lock:
+            self.learner.learn(S2, self.M)
 
         # select action
         self.M = self.learner.select_action(self.robot)
@@ -66,14 +69,15 @@ class CBLA_Engine(object):
         self.data_packet['M'] = self.M
         self.data_packet['S1_predicted'] = S_predicted
         self.data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
+
+        # save learner info to data_packet
         self.data_packet.update(self.learner.info)
 
-
+        # save expert info to data_packet
         expert_info = self.learner.get_expert_info()
         if self.update_count % self.config['exemplars_save_interval']:
             # remove exemplars from expert info every certain number of times
             del expert_info['exemplars']
-
         self.data_packet.update(expert_info)
 
 

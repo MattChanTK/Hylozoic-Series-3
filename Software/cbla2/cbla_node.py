@@ -84,10 +84,12 @@ class CBLA_Node(Node):
         self.save_states()
 
     def save_states(self):
-        # save state when terminated
-        self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
-        self.cbla_states['learner_step'] = self.cbla_engine.data_packet['step']
-        self.data_collector.update_state(self.node_name, self.cbla_states)
+
+        with self.cbla_engine.learner_lock:
+            # save state when terminated
+            self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
+            self.cbla_states['learner_step'] = self.cbla_engine.data_packet['step']
+            self.data_collector.update_state(self.node_name, self.cbla_states)
 
 class CBLA_Tentacle(CBLA_Node):
 
