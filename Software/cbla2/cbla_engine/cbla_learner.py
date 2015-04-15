@@ -73,7 +73,8 @@ class Learner(object):
         self.M = M1
 
         # save to info
-        self.info['best_action'] = (M_best, val_best)
+        self.info['best_action'] = M_best
+        self.info['best_action_value'] = val_best
         self.info['is_exploring'] = is_exploring
         self.info['is_doing_idle_action'] = is_doing_idle_action
 
@@ -129,11 +130,11 @@ class Learner(object):
 
         return self.exploring_rate
 
-    def get_expert_info(self) -> defaultdict:
+    def get_expert_info(self, snap_shot=False) -> defaultdict:
 
         info = defaultdict(dict)
 
-        self.expert.save_expert_info(info)
+        self.expert.save_expert_info(info, include_exemplars=snap_shot)
 
         return info
 

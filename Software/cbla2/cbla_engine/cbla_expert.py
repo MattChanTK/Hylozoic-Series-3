@@ -5,13 +5,14 @@ import math
 import random
 from copy import copy
 from sklearn import linear_model
+from collections import defaultdict
 
 class Expert():
 
     def __init__(self, id=0, level=0, **config_kwargs):
 
         # default expert configuration
-        self.config = dict()
+        self.config = defaultdict(int)
         self.config['split_thres'] = 100
         self.config['split_thres_growth_rate'] = 1.5
         self.config['split_lock_count_thres'] = 250
@@ -42,6 +43,7 @@ class Expert():
         self.region_splitter = None
 
         # memory
+        # TODO: Training data should be SET
         self.training_data = []
         self.training_label = []
 
@@ -325,12 +327,14 @@ class Expert():
             info['mean_errors'][self.expert_id] = self.mean_error
             info['action_values'][self.expert_id] = self.action_value
             info['action_counts'][self.expert_id] = self.action_count
-            info['exemplars'][self.expert_id] = [copy(self.training_data), copy(self.training_label)]
             info['latest_rewards'][self.expert_id] = self.rewards_history[-1]
 
+            if include_exemplars:
+                info['exemplars'][self.expert_id] = [copy(self.training_data), copy(self.training_label)]
+
         else:
-            self.left.save_expert_info(info)
-            self.right.save_expert_info(info)
+            self.left.save_expert_info(info, include_exemplars=include_exemplars)
+            self.right.save_expert_info(info, include_exemplars=include_exemplars)
 
 
 class KGA():

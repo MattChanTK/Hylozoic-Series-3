@@ -1,4 +1,4 @@
-from threading import Thread
+import threading
 from queue import Queue
 from collections import defaultdict
 from copy import copy
@@ -8,9 +8,9 @@ import os
 import shutil
 import time
 import glob
+from time import clock
 
-
-class DataCollector(Thread):
+class DataCollector(threading.Thread):
 
     def __init__(self, data_file=None, file_save_freq=50):
 
@@ -36,35 +36,39 @@ class DataCollector(Thread):
 
         self.filetype = ".pkl"
 
-        self.save_to_file()
+        self.__save_to_file()
 
         self.program_terminating = False
 
         self.file_save_freq = file_save_freq
+
+        self.data_file_lock = threading.Lock()
 
     def run(self):
 
         packet_count = 0
         while not self.program_terminating or not self.packet_queue.empty() or not self.states_update_queue.empty():
 
-            # saving run-time data to memory
-            if not self.packet_queue.empty():
+            with self.data_file_lock:
+                # saving run-time data to memory
+                if not self.packet_queue.empty():
 
-                node_name, packet_data = self.packet_queue.get_nowait()
-                self.data_file['data'][node_name].append(packet_data)
-                packet_count += 1
+                    node_name, packet_data = self.packet_queue.get_nowait()
+                    self.data_file['data'][node_name].append(packet_data)
+                    packet_count += 1
 
-            # saving state data to memory
-            if not self.states_update_queue.empty():
+                # saving state data to memory
+                if not self.states_update_queue.empty():
 
-                node_name, states_val = self.states_update_queue.get_nowait()
-                self.data_file['state'][node_name] = states_val
+                    node_name, states_val = self.states_update_queue.get_nowait()
+                    self.data_file['state'][node_name] = states_val
 
-            # saving to file
-            if packet_count >= self.file_save_freq and not self.program_terminating:
-                self.save_to_file()
+                # saving to file
+                if packet_count >= self.file_save_freq and not self.program_terminating:
+                    self.__save_to_file()
 
-        self.save_to_file()
+        self.__save_to_file()
+        print("Data Collector saved all data to disk.")
 
         # remove tmp files
         curr_dir = os.getcwd()
@@ -85,10 +89,14 @@ class DataCollector(Thread):
 
         self.program_terminating = True
 
-    def save_to_file(self):
+    def __save_to_file(self):
 
         save_to_file('%s (%d)%s' % (self.data_file['file_name'], self.data_file['file_num'], self.filetype),
                      self.data_file)
+
+    def deepcopy_data_file(self):
+        with self.data_file_lock:
+            return deepcopy(self.data_file)
 
 
 def retrieve_data(file_name=None):
@@ -98,28 +106,26 @@ def retrieve_data(file_name=None):
     curr_dir = os.getcwd()
     os.chdir(os.path.join(curr_dir, "cbla_data"))
 
-    data_import = None
+    data_file = None
     try:
         if file_name is None:
-            data_file = max(glob.iglob('cbla_data*.[Pp][Kk][Ll]'), key=os.path.getctime)
+            disk_file = max(glob.iglob('cbla_data*.[Pp][Kk][Ll]'), key=os.path.getctime)
         else:
-            data_file = file_name
+            disk_file = file_name
 
     except Exception:
         print("Cannot use saved data")
 
     else:
         try:
-            with open(data_file, 'rb') as input:
-                data_import = pickle.load(input)
+            with open(disk_file, 'rb') as input:
+                data_file = pickle.load(input)
         except EOFError:
             print("File Error!")
 
     os.chdir(curr_dir)
 
-    data_collector = DataCollector(data_import)
-
-    return data_collector
+    return data_file
 
 
 def save_to_file(filename, data):

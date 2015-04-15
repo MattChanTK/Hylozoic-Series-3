@@ -21,64 +21,75 @@ class CBLA_Engine(object):
         for param, value in config_kwargs.items():
             self.config[param] = value
 
+        self.learner_lock = threading.Lock()
+        self.robot_lock = threading.Lock()
+        self.data_packet_lock = threading.Lock()
+
         # instantiate the robot
-        self.robot = robot
-        self.learner = learner
+        with self.robot_lock:
+            self.robot = robot
+
+        # instantiate the learner
+        with self.learner_lock:
+            self.learner = learner
 
         # instantiate the data collector
-        self.data_packet = OrderedDict()
+        with self.data_packet_lock:
+            self.data_packet = OrderedDict()
 
         # initialization
-        self.M = self.learner.select_action(self.robot)
+        with self.robot_lock, self.learner_lock:
+            self.M = self.learner.select_action(self.robot)
 
         # start from previous if necessary
         self.update_count = self.config['update_count_start']
-
-        self.learner_lock = threading.Lock()
-
 
     def update(self):
 
         t0 = clock()
         self.update_count += 1
 
-        # act
-        self.robot.act(self.M)
+        with self.robot_lock:
+            # act
+            self.robot.act(self.M)
 
-        # wait
-        self.robot.wait()
+            # wait
+            self.robot.wait()
 
-        # read
-        S2 = self.robot.read()
+            # read
+            S2 = self.robot.read()
 
         # learn
         with self.learner_lock:
+            # learn
             self.learner.learn(S2, self.M)
 
-        # select action
-        self.M = self.learner.select_action(self.robot)
+            # select action
+            with self.robot_lock:
+                self.M = self.learner.select_action(self.robot)
 
-        # predict
-        S_predicted = self.learner.predict()
+            # predict
+            S_predicted = self.learner.predict()
 
         # save to data packet
-        self.data_packet['time'] = datetime.now()
-        self.data_packet['step'] = self.update_count
-        self.data_packet['loop_period'] = clock() - t0
-        self.data_packet['S'] = S2
-        self.data_packet['M'] = self.M
-        self.data_packet['S1_predicted'] = S_predicted
-        self.data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
+        with self.data_packet_lock:
+            self.data_packet['time'] = datetime.now()
+            self.data_packet['step'] = self.update_count
+            self.data_packet['loop_period'] = clock() - t0
+            self.data_packet['S'] = S2
+            self.data_packet['M'] = self.M
+            self.data_packet['S1_predicted'] = S_predicted
+            self.data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
 
-        # save learner info to data_packet
-        self.data_packet.update(self.learner.info)
+            # save learner info to data_packet
+            self.data_packet.update(self.learner.info)
 
-        # save expert info to data_packet
-        expert_info = self.learner.get_expert_info()
-        if self.update_count % self.config['exemplars_save_interval']:
-            # remove exemplars from expert info every certain number of times
-            del expert_info['exemplars']
-        self.data_packet.update(expert_info)
+            snapshot = False
+            if self.update_count % self.config['exemplars_save_interval'] == 0:
+                snapshot = True
+            # save expert info to data_packet
+            expert_info = self.learner.get_expert_info(snap_shot=snapshot)
+            self.data_packet.update(expert_info)
 
 
     def print_data_packet(self, header=""):

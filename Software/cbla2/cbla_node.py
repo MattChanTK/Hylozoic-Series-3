@@ -74,12 +74,14 @@ class CBLA_Node(Node):
             self.cbla_engine.update()
 
             # save the data
-            self.data_collector.append_data_packet(self.node_name, self.cbla_engine.data_packet)
-            # self.cbla_engine.print_data_packet(header=self.node_name)
+            with self.cbla_engine.data_packet_lock:
+                self.data_collector.append_data_packet(self.node_name, self.cbla_engine.data_packet)
 
-            self.out_var['loop_time'].val = self.cbla_engine.data_packet['loop_period']
-            self.out_var['idle_mode'].val = self.cbla_engine.data_packet['in_idle_mode']
-            self.out_var['node_step'].val = self.cbla_engine.data_packet['step']
+                self.out_var['loop_time'].val = self.cbla_engine.data_packet['loop_period']
+                self.out_var['idle_mode'].val = self.cbla_engine.data_packet['in_idle_mode']
+                self.out_var['node_step'].val = self.cbla_engine.data_packet['step']
+
+            # self.cbla_engine.print_data_packet(header=self.node_name)
 
         self.save_states()
 
@@ -88,8 +90,10 @@ class CBLA_Node(Node):
         with self.cbla_engine.learner_lock:
             # save state when terminated
             self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
-            self.cbla_states['learner_step'] = self.cbla_engine.data_packet['step']
-            self.data_collector.update_state(self.node_name, self.cbla_states)
+            self.cbla_states['learner_step'] = self.cbla_engine.update_count
+
+        self.data_collector.update_state(self.node_name, self.cbla_states)
+
 
 class CBLA_Tentacle(CBLA_Node):
 

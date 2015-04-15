@@ -13,10 +13,11 @@ class CBLA2(interactive_system.InteractiveCmd):
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
 
+        data_file = None
         if USE_SAVED_DATA:
-            data_collector = cbla_data_collect.retrieve_data()
-        else:
-            data_collector = cbla_data_collect.DataCollector()
+            data_file= cbla_data_collect.retrieve_data()
+
+        data_collector = cbla_data_collect.DataCollector(data_file=data_file)
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
@@ -103,8 +104,6 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                         reflex_0=reflex_0.in_var['output'],
                                                         reflex_1=reflex_1.in_var['output'])
                 node_list[cbla_tentacle.node_name] = cbla_tentacle
-
-
 
 
             # creating components for Protocell Node
