@@ -125,10 +125,15 @@ void preprogrammed_behaviour(){
 }
 
 void inactive_mode(){
+	
+	teensy_unit.inactive_behaviour();
 
 }
 
 //===== MAIN LOOP =====
+
+uint16_t loop_since_last_msg = 0;
+const uint16_t keep_alive_thres = 200;
 
 void loop() {
 
@@ -137,8 +142,13 @@ void loop() {
 			
 		// parse the message and save to parameters
 		teensy_unit.parse_msg();
+		
+		loop_since_last_msg = 0;
 
 	}
+	
+	loop_since_last_msg++;
+
 	
 	//teensy_unit.sample_inputs();
 	
@@ -152,22 +162,34 @@ void loop() {
 			manual_control();
 			break;
 		case 2:
-			system_identification();
+			if (loop_since_last_msg < keep_alive_thres)
+				system_identification();
+			else
+				inactive_mode();
 			break;
 		case 3:
-			cbla();
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla();
+			else
+				inactive_mode();
 			break;
 		case 4:
 			internode_test();
 			break;
 		case 5:
-			preprogrammed_behaviour();
+			if (loop_since_last_msg < keep_alive_thres)
+				preprogrammed_behaviour();
+			else
+				inactive_mode();
 			break;
 		case 6:
 			quality_assurance();
 			break;
 		case 7:
-			cbla2();
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla2();
+			else
+				inactive_mode();			
 			break;
 		default:
 			inactive_mode();

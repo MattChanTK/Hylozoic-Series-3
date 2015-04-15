@@ -125,6 +125,9 @@ class Behaviours : public TeensyUnit{
 		//==== BEHAVIOUR functions =====
 		//===============================================
 		
+		//---- inactive behaviour ----
+		void inactive_behaviour();
+		
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
 		void reflex_test_behaviour();

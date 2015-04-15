@@ -425,6 +425,29 @@ void Behaviours::sample_inputs(const uint8_t setting){
 //============ BEHAVIOUR CODES =========
 //===========================================================================
 
+//---- inactive behaviour ----
+void Behaviours::inactive_behaviour() {
+	
+	//=== Tentacle ===
+	for (uint8_t i=0; i<4; i++){
+
+		tentacle[i].set_led_level(0, 0);
+		tentacle[i].set_led_level(1, 0);
+		
+		tentacle[i].set_sma_level(0, 0);
+		tentacle[i].set_sma_level(1, 0);
+		
+	}		
+	
+	
+	//=== testing Protocell
+	for (uint8_t i=0; i<2; i++){
+
+		protocell[i].set_led_level(0);
+		
+	}
+	
+}
 
 //---- test behaviour ----
 void Behaviours::test_behaviour(const uint32_t &curr_time) {
