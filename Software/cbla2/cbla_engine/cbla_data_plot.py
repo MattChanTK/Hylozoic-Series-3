@@ -223,6 +223,7 @@ def plot_regional_evolution(ax: axes.Axes, y, x=None, **plot_config):
 
 
 def plot_exemplars(ax: axes.Axes, y, x=None, **plot_config):
+
     # default config
     config = defaultdict(lambda: None)
     config['xlabel'] = 'time'
