@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='abstract_node',
-      version='0.1',
+      version='0.3',
       description='An abstraction of a node with a set of inputs and output variables',
       url='https://github.com/tuzzer/CBLA-Test-Bed/',
       author='Matthew T.K. Chan',
