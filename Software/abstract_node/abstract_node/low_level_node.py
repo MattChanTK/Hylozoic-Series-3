@@ -31,8 +31,8 @@ class Frond(Node):
             left_config = dict()
         if right_config is None:
             right_config = dict()
-        self.ctrl_left = Frond.Controller(self.out_var['left_sma'], **left_config)
-        self.ctrl_right = Frond.Controller(self.out_var['right_sma'], **right_config)
+        self.ctrl_left = SMA_Controller(self.out_var['left_sma'], **left_config)
+        self.ctrl_right = SMA_Controller(self.out_var['right_sma'], **right_config)
 
         self.print_to_term = False
 
@@ -49,7 +49,7 @@ class Frond(Node):
                 T_left_ref = 0
                 T_right_ref = Frond.T_ON_REF
 
-            elif self.in_var['motion_type'].val  == Frond.ON_CENTRE:
+            elif self.in_var['motion_type'].val == Frond.ON_CENTRE:
                 T_left_ref = Frond.T_ON_REF
                 T_right_ref = Frond.T_ON_REF
 
@@ -62,39 +62,59 @@ class Frond(Node):
 
             sleep(self.messenger.estimated_msg_period*2)
 
-    class Controller:
 
-        def __init__(self, output: Var, **kwargs):
+class SMA_Controller(object):
 
-            self.config = dict()
-            self.config['KP'] = 15
-            self.config['KI'] = 0.0005
-            self.config['K_heating'] = 0.002
-            self.config['K_dissipate'] = 0.01
+    def __init__(self, output: Var, **kwargs):
 
-            if kwargs is not None:
-                for name, arg in kwargs.items():
-                    self.config[name] = arg
+        self.config = dict()
+        self.config['KP'] = 12
+        self.config['KI'] = 0.005
+        self.config['K_heating'] = 1.0
+        self.config['K_dissipate'] = 0.22
 
-            self.KP = self.config['KP']
-            self.KI = self.config['KI']
-            self.K_heating = self.config['K_heating']
-            self.K_dissipate = self.config['K_dissipate']
+        if kwargs is not None:
+            for name, arg in kwargs.items():
+                self.config[name] = arg
 
-            self.output = output
-            self.T_model = 0
-            self.T_err_sum = 0
-            self.t0 = clock()
+        self.KP = self.config['KP']
+        self.KI = self.config['KI']
+        self.K_heating = self.config['K_heating']
+        self.K_dissipate = self.config['K_dissipate']
 
-        def update(self, T_ref):
+        self.output = output
+        self.T_model = 0
+        self.T_err_sum = 0
+        self.t0 = clock()
 
-            self.T_model += (self.K_heating * self.output.val**2 - self.K_dissipate * self.T_model) * (clock() - self.t0)
+    def update(self, T_ref):
 
-            T_err = (T_ref - self.T_model)
-            output_p = self.KP * T_err
-            self.T_err_sum += T_err
-            output_i = self.KI*self.T_err_sum
-            self.output.val = int(min(max(0, output_p + output_i), 255))
+        self.T_model += (self.K_heating * self.output.val - self.K_dissipate * self.T_model) * (clock() - self.t0)
 
-            self.t0 = clock()
-            return self.output.val
+        T_err = (T_ref - self.T_model)
+        output_p = self.KP * T_err
+        self.T_err_sum += T_err
+        output_i = self.KI*self.T_err_sum
+        self.output.val = int(min(max(0, output_p + output_i), 255))
+        self.t0 = clock()
+        return self.output.val
+
+
+class Frond_SMA(Simple_Node):
+
+    def __init__(self, messenger: Messenger, node_name='frond_sma', sma: Var=Var(0), temp_ref: Var=Var(0), **config):
+
+        super(Frond_SMA, self).__init__(messenger, node_name='%s' % node_name, output=sma, temp_ref=temp_ref)
+
+        # controller
+        self.controller = SMA_Controller(self.out_var['output'], **config)
+
+    def run(self):
+
+        while self.alive:
+
+            self.controller.update(self.in_var['temp_ref'])
+            sleep(self.messenger.estimated_msg_period*2)
+
+
+

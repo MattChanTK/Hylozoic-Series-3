@@ -168,13 +168,13 @@ class Output_Node(Node):
 
 class Simple_Node(Node):
 
-    def __init__(self, messenger: Messenger, node_name='simple_node', output: Var=Var(0), **input_name):
+    def __init__(self, messenger: Messenger, node_name='simple_node', output: Var=Var(0), **input_var):
 
         super(Simple_Node, self).__init__(messenger, node_name='%s' % node_name)
 
         self.out_var['output'] = output
 
-        for name, input_var in input_name.items():
+        for name, input_var in input_var.items():
             self.in_var[name] = input_var
 
         self.print_to_term = False

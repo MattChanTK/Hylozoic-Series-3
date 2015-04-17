@@ -4,9 +4,8 @@ from time import clock
 import interactive_system
 from interactive_system import CommunicationProtocol as CP
 
-from abstract_node import *
 from complex_node import *
-
+from abstract_node import *
 
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
@@ -54,7 +53,11 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
+            local_action_prob = Var(0)
+
             # 3 tentacles
+            half_frond_list = []
+            reflex_actuator_list = []
             cluster_activity = Var(0)
             for j in range(3):
 
@@ -79,56 +82,74 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 node_list[sma_0.node_name] = sma_0
                 node_list[sma_1.node_name] = sma_1
 
-                # 1 frond
-                motion_type = Var(0)
-                frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                              right_sma=sma_1.in_var['output'],
-                              motion_type=motion_type)
-                node_list[frond.node_name] = frond
-
 
                 # 2 reflex each
                 reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
                 reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
 
-
                 node_list[reflex_0.node_name] = reflex_0
                 node_list[reflex_1.node_name] = reflex_1
 
+                # 1 reflex actuator node
+                scout_reflex_0 = Reflex_Actuator(messenger, node_name='%s.tentacle_%d.scout_reflex_0' % (teensy, j),
+                                                 output=reflex_0.in_var['output'], ir_sensor=ir_sensor_0.out_var['input'])
+                node_list[scout_reflex_0.node_name] = scout_reflex_0
+                reflex_actuator_list.append(scout_reflex_0)
 
-                # instantiate the Tentacle Node
-                tentacle = Tentacle(messenger, teensy_name=teensy,
-                                    node_name='tentacle_%d' % j,
-                                    ir_0=ir_sensor_0.out_var['input'],
-                                    ir_1=ir_sensor_1.out_var['input'],
-                                    acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
-                                    cluster_activity=cluster_activity,
-                                    frond=frond.in_var['motion_type'],
-                                    reflex_0=reflex_0.in_var['output'],
-                                    reflex_1=reflex_1.in_var['output'])
+                # two half-fronds
+                half_frond_left = Half_Frond(messenger, node_name='%s.tentacle_%d.half_frond_left' % (teensy, j),
+                                             output=sma_0.in_var['output'], frond_ir=ir_sensor_1.out_var['input'],
+                                             scout_ir=ir_sensor_0.out_var['input'], local_action_prob=local_action_prob)
 
-                node_list[tentacle.node_name] = tentacle
+                half_frond_right = Half_Frond(messenger, node_name='%s.tentacle_%d.half_frond_right' % (teensy, j),
+                                              output=sma_1.in_var['output'], frond_ir=ir_sensor_1.out_var['input'],
+                                              side_ir=ir_sensor_0.out_var['input'], local_action_prob=local_action_prob)
 
+                node_list[half_frond_left.node_name] = half_frond_left
+                node_list[half_frond_right.node_name] = half_frond_right
+                half_frond_list.append(half_frond_left)
+                half_frond_list.append(half_frond_right)
 
             # creating Protocell Node
 
             # 1 LED per protocell
             led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
                               output='protocell_0_led_level')
-            protocell = Protocell(messenger, teensy_name=teensy, node_name='protocell',
-                                  led=led.in_var['output'],
-                                  cluster_activity=cluster_activity)
+            protocell = Protocell2(messenger, node_name='%s.protocell' % teensy,
+                                   led=led.in_var['output'],
+                                   local_action_prob=local_action_prob)
             node_list[led.node_name] = led
             node_list[protocell.node_name] = protocell
 
+            # == establishing relationship among devices ===
 
-            tentacle_list = []
-            for tentacle in node_list.values():
-                if isinstance(tentacle, Tentacle):
-                    tentacle_list.append(tentacle)
-            for id in range(len(tentacle_list)):
-                tentacle_list[id].in_var['left_ir'] = tentacle_list[id].in_var['ir_sensor_0']
-                tentacle_list[id].in_var['right_ir'] = tentacle_list[(id-1) % len(tentacle_list)].in_var['ir_sensor_0']
+            # setting their side_ir to the neighbouring tentacle one
+            half_frond_right_list = []
+            half_frond_left_list = []
+            for half_frond in half_frond_list:
+                if isinstance(half_frond, Half_Frond):
+                    if 'right' in half_frond.node_name:
+                        half_frond_right_list.append(half_frond)
+                    elif 'left' in half_frond.node_name:
+                        half_frond_left_list.append(half_frond)
+
+            for j in range(len(half_frond_right_list)):
+                right_id = (j - 1) % len(half_frond_right_list)
+                half_frond_right_list[j].in_var['scout_ir'] = half_frond_right_list[right_id].in_var['side_ir']
+            for j in range(len(half_frond_left_list)):
+                right_id = (j - 1) % len(half_frond_left_list)
+                half_frond_left_list[j].in_var['side_ir'] = half_frond_left_list[right_id].in_var['scout_ir']
+
+            # setting up local activity node
+            local_cluster_input = []
+            for device in half_frond_list + reflex_actuator_list:
+                local_cluster_input.append(device.out_var['output'])
+
+            local_cluster = Cluster_Activity(messenger, node_name='%s.local_cluster' % teensy,
+                                             output=local_action_prob, inputs=tuple(local_cluster_input))
+
+
+            node_list[local_cluster.node_name] = local_cluster
 
         for name, node in node_list.items():
             node.start()

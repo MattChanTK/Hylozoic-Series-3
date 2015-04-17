@@ -72,10 +72,10 @@ class Manual_Control(interactive_system.InteractiveCmd):
 
                 # 1 frond
                 motion_type = Var(0)
-                sma_param = {'KP': 15, 'K_heating': 0.002, 'K_dissipate': 0.015}
+                #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
                 frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                              right_sma=sma_1.in_var['output'], motion_type=motion_type,
-                              left_config=sma_param, right_config=sma_param)
+                              right_sma=sma_1.in_var['output'], motion_type=motion_type,)
+                              #left_config=sma_param, right_config=sma_param)
                 node_list[frond.node_name] = frond
 
 
