@@ -15,7 +15,7 @@ class CBLA_Engine(object):
         # default configurations
         self.config['print_to_term'] = False
         self.config['update_count_start'] = 0
-        self.config['exemplars_save_interval'] = 200
+        self.config['snapshot_interval'] = 60
 
         # custom configurations
         for param, value in config_kwargs.items():
@@ -44,10 +44,20 @@ class CBLA_Engine(object):
         # start from previous if necessary
         self.update_count = self.config['update_count_start']
 
+        # snapshot parameters and variables
+        self.snapshot_interval = self.config['snapshot_interval']
+        self.last_snapshot_t = clock()
+
     def update(self):
 
         t0 = clock()
         self.update_count += 1
+
+        # save snapshot or not
+        snapshot = False
+        if t0 - self.last_snapshot_t > self.snapshot_interval:
+            snapshot = True
+            self.last_snapshot_t = t0
 
         with self.robot_lock:
             # act
@@ -84,9 +94,6 @@ class CBLA_Engine(object):
             # save learner info to data_packet
             self.data_packet.update(self.learner.info)
 
-            snapshot = False
-            if self.update_count % self.config['exemplars_save_interval'] == 0:
-                snapshot = True
             # save expert info to data_packet
             expert_info = self.learner.get_expert_info(snap_shot=snapshot)
             self.data_packet.update(expert_info)

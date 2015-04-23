@@ -61,7 +61,7 @@ class DataCollector(threading.Thread):
                 if not self.states_update_queue.empty():
 
                     node_name, states_val = self.states_update_queue.get_nowait()
-                    self.data_file['state'][node_name] = states_val
+                    self.data_file['state'][node_name].update(states_val)
 
                 # saving to file
                 if packet_count >= self.file_save_freq and not self.program_terminating:
@@ -125,7 +125,7 @@ def retrieve_data(file_name=None):
 
     os.chdir(curr_dir)
 
-    return data_file
+    return data_file, disk_file
 
 
 def save_to_file(filename, data):

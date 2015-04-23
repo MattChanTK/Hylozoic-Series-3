@@ -41,6 +41,7 @@ class CBLA_Node(Node):
             past_state = self.data_collector.data_file['state'][self.node_name]
         except KeyError:
             past_state = None
+
         self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state)
 
         # load previous learner steps
@@ -65,6 +66,16 @@ class CBLA_Node(Node):
         self.cbla_states = dict()
 
     def run(self):
+
+        # add information about the robot's label to data_collector
+        label_info = dict()
+        if 'in_vars_name' in self.cbla_robot.config:
+            label_info['input_label_name'] = self.cbla_robot.config['in_vars_name']
+        if 'out_vars_name' in self.cbla_robot.config:
+            label_info['output_label_name'] = self.cbla_robot.config['out_vars_name']
+
+        if label_info:
+            self.data_collector.update_state(node_name=self.node_name, states_update=label_info)
 
         while self.alive:
             # adjust the robot's wait time between act() and read()
@@ -126,12 +137,15 @@ class CBLA_Tentacle(CBLA_Node):
         # defining the input variables
         in_vars = [self.in_var['acc_x'], self.in_var['acc_y'], self.in_var['acc_z'], self.in_var['ir_0']]
         in_vars_range = [(-512, 512), (-512, 512), (-512, 512), (0, 4095)]
+        in_vars_name = ['acc x-axis', 'acc y-axis', 'acc z-axis', 'scout ir']
 
         # defining the output variables
         out_vars = [self.out_var['tentacle_out']]
+        out_vars_name = ['motion type']
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range)
+        self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range,
+                                                  in_vars_name=in_vars_name, out_vars_name=out_vars_name)
 
         # instantiate
         self.instantiate()
@@ -158,10 +172,14 @@ class CBLA_Protocell(CBLA_Node):
 
         in_vars = [self.in_var['als']]
         in_vars_range = [(0, 4096)]
+        in_vars_name = ['ambient light sensor']
+
 
         out_vars = [self.out_var['protocell_out']]
+        out_vars_name = ['LED brightness']
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range)
+        self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
+                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name)
 
         self.instantiate()

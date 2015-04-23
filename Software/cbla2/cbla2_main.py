@@ -6,7 +6,13 @@ import gui
 import cbla_node
 from cbla_engine import cbla_data_collect
 
-USE_SAVED_DATA = True
+import sys
+
+USE_SAVED_DATA = False
+
+if len(sys.argv) > 1:
+    USE_SAVED_DATA = bool(sys.argv[1])
+
 
 class CBLA2(interactive_system.InteractiveCmd):
 
