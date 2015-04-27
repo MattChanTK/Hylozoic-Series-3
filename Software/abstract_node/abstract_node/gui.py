@@ -4,23 +4,17 @@ from collections import OrderedDict
 
 from .low_level_node import *
 
+
 class Main_GUI(object):
 
     def __init__(self, messenger):
 
         self.messenger = messenger
 
-        # constructing the list of input variables
-        self.in_var = OrderedDict()
-
-        # constructing the list of output variables
-        self.out_var = OrderedDict()
-
         self.root = tk.Tk()
         self.frame_list = []
 
         self._add_messenger_frame(messenger)
-
 
     def add_frame(self, *child_frame):
 
@@ -51,6 +45,58 @@ class Main_GUI(object):
             else:
                 frame.pack(side=tk.LEFT)
 
+
+class Main_GUI2(object):
+
+    def __init__(self, start_page='home'):
+
+        self.root = tk.Tk()
+
+        # messenger status panel
+        self.messenger_panel = None
+        # navigation panel
+        self.nav_panel = None
+        # content panel
+        self.content_panel = None
+
+        # the contents are stored in the page_dict
+        self.page_dict = OrderedDict()
+        self.start_page = start_page
+
+    def add_page(self, **child_pages):
+        for page_name, page_frame in child_pages.items():
+            self.page_dict[page_name] = page_frame
+
+    def start(self, messenger):
+
+        self.set_messenger_panel(messenger)
+        self.set_navigation_panel()
+
+    def run(self):
+        self.pack_frames()
+        for frame in self.frame_list:
+            frame.run()
+            frame.updateFrame()
+
+        self.root.mainloop()
+
+    def set_messenger_panel(self, messenger):
+
+        # add the messenger frame automatically
+        self.messenger_panel = Messenger_Frame(self.root, messenger)
+
+    def set_navigation_panel(self, ):
+        self.nav_panel = Navigation_Panel()
+
+
+
+    def pack_frames(self):
+
+        for frame in self.frame_list:
+            if isinstance(frame, Messenger_Frame):
+                frame.pack(side=tk.BOTTOM)
+            else:
+                frame.pack(side=tk.LEFT)
 
 
 class Display_Frame(tk.Frame):
@@ -163,6 +209,7 @@ class Control_Frame(tk.Frame):
         self.after(500, self.updateFrame)
         self.update()
 
+
 class Messenger_Frame(tk.Frame):
 
     def __init__(self, tk_master, messenger):
@@ -185,6 +232,38 @@ class Messenger_Frame(tk.Frame):
         self.update()
 
 
+class Navigation_Panel(tk.Frame):
+
+    def __init__(self, tk_master, content_frame, page_dict: dict):
+
+        super(Navigation_Panel, self).__init__(tk_master)
+
+        self.content_frame = content_frame
+
+        if not isinstance(page_dict, (dict, OrderedDict)):
+            raise TypeError("page_dict must be a dictionary!")
+
+        self.page_dict = page_dict
+        self.button_list = []
+
+    def _build_nav_buttons(self):
+
+        for page_name, page_frame in self.page_dict.items():
+            page_button = tk.Button(self, text=page_name,
+                                    command=lambda: self.show_page(page_frame))
+            self.button_list.append(page_button)
+
+        for button in self.button_list:
+            button.pack(side=tk.TOP)
+
+    def run(self):
+        self._build_nav_buttons()
+
+    def show_page(self, frame: tk.Frame):
+        frame.tkraise()
+
+    def updateFrame(self):
+        pass
 
 if __name__ == '__main__':
     pass
