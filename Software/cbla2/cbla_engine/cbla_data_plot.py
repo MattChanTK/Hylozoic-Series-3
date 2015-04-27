@@ -31,14 +31,14 @@ class Plotter(object):
     def __construct_plot_objects(self):
 
         for node_name in self.data.keys():
-            #self.plot_objects[(node_name, 'history')] = PlotObject(fig_title='History Plot - %s' % node_name)
-            #self.plot_objects[(node_name, 'regions_snapshot')] = PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+            self.plot_objects[(node_name, 'history')] = PlotObject(fig_title='History Plot - %s' % node_name)
+            self.plot_objects[(node_name, 'regions_snapshot')] = PlotObject(fig_title='Regions Snapshots - %s' % node_name)
             self.plot_objects[(node_name, 'model')] = PlotObject(fig_title='Final Expert Model - %s' % node_name)
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(tentacle_plot_dim=(4, 1), protocell_plot_dim=(1, 0))
-        self.plot_models()
+        self.plot_regions(tentacle_plot_dim=(4, 1), protocell_plot_dim=(2, 0))
+        self.plot_models(tentacle_plot_dim=(4, 1), protocell_plot_dim=(2, 0))
 
     def plot_histories(self):
 
@@ -110,12 +110,10 @@ class Plotter(object):
         snapshot_num = max(2, snapshot_num)  # making sure that it's over 2
 
         exemplars_plot_dim = defaultdict(lambda: (0, 0))
-        exemplars_plot_dim['tentacle'] = (4, 1)
-        exemplars_plot_dim['protocell'] = (1, 0)
 
         for config_key, config_val in config.items():
-            if 'plot_dim' in config_key and isinstance(config_val, tuple) and isinstance(config_val[1], tuple):
-                exemplars_plot_dim[config_val[0].replace('plot_dim', '')] = config_val[1]
+            if 'plot_dim' in config_key and isinstance(config_val, tuple):
+                exemplars_plot_dim[config_key.replace('_plot_dim', '')] = config_val
 
         for node_name, node_data in self.data.items():
 
@@ -200,12 +198,10 @@ class Plotter(object):
 
         grid_dim = (1, 1)
         exemplars_plot_dim = defaultdict(lambda: (0, 0))
-        exemplars_plot_dim['tentacle'] = (4, 1)
-        exemplars_plot_dim['protocell'] = (1, 0)
 
         for config_key, config_val in config.items():
-            if 'plot_dim' in config_key and isinstance(config_val, tuple) and isinstance(config_val[1], tuple):
-                exemplars_plot_dim[config_val[0].replace('plot_dim', '')] = config_val[1]
+            if '_plot_dim' in config_key and isinstance(config_val, tuple):
+                exemplars_plot_dim[config_key.replace('_plot_dim', '')] = config_val
 
         for node_name, node_states in self.state_info.items():
 
