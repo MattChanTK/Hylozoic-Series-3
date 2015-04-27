@@ -9,6 +9,7 @@ import os
 
 import cbla_data_collect as cbla_data
 from cbla_engine.save_figure import save
+import cbla_engine.cbla_expert as cbla_expert
 
 
 class Plotter(object):
@@ -198,6 +199,13 @@ class Plotter(object):
     def plot_models(self, **config):
 
         grid_dim = (1, 1)
+        exemplars_plot_dim = defaultdict(lambda: (0, 0))
+        exemplars_plot_dim['tentacle'] = (4, 1)
+        exemplars_plot_dim['protocell'] = (1, 0)
+
+        for config_key, config_val in config.items():
+            if 'plot_dim' in config_key and isinstance(config_val, tuple) and isinstance(config_val[1], tuple):
+                exemplars_plot_dim[config_val[0].replace('plot_dim', '')] = config_val[1]
 
         for node_name, node_states in self.state_info.items():
 
@@ -208,11 +216,63 @@ class Plotter(object):
                 continue
 
             expert = node_states['learner_expert']
-            print(expert)
 
+            # add axis to the plot object
+            ax_name = 'Expert Model for %s' % node_name
+            ax_num = 1
+            self.plot_objects[(node_name, 'model')].add_ax(ax_name=ax_name,
+                                                           location=(grid_dim[0], grid_dim[1], ax_num))
 
+            # extract the exemplars
+            info = defaultdict(dict)
+            expert.save_expert_info(info, include_exemplars=True)
+            exemplars_data = info['exemplars']
+            prediction_model = info['prediction_model']
 
+            # specify the dimensions to plot
+            plot_dims = exemplars_plot_dim['default']
+            for node_type in exemplars_plot_dim.keys():
+                if node_type in node_name:
+                    plot_dims = exemplars_plot_dim[node_type]
 
+            # construct the data set for scatter plotting
+            scatter_plot_data = dict()
+            model_func = dict()
+            for region_id, region_exemplars in exemplars_data.items():
+                try:
+                    SM_data = tuple(list(zip(*region_exemplars[0]))[plot_dims[0]])
+                except IndexError:
+                    print('SM(t) does not have dimension %d' % plot_dims[0])
+                    break
+                try:
+                    S1_data = tuple(list(zip(*region_exemplars[1]))[plot_dims[1]])
+                except IndexError:
+                    print('S(t+1) does not have dimension %d' % plot_dims[1])
+                    break
+                scatter_plot_data[region_id] = (SM_data, S1_data)
+
+                model_func[region_id] = prediction_model[region_id].predict
+
+            # configure the plot
+            plot_config = dict()
+            if 'input_label_name' in self.state_info[node_name]:
+                labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name][
+                    'output_label_name']
+                plot_config['xlabel'] = labels[plot_dims[0]]
+            else:
+                plot_config['xlabel'] = 'SM(t) [%d]' % plot_dims[0]
+            if 'output_label_name' in self.state_info[node_name]:
+                plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[1]]
+            else:
+                plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[1]
+
+            plot_config['int_xaxis'] = True
+            plot_config['linestyle'] = ''
+            plot_config['marker'] = 'o'
+
+            # plot the exemplars
+            plot_expert_model(self.plot_objects[(node_name, 'model')].ax[ax_name],
+                              region_data=scatter_plot_data, region_model_func=model_func, **plot_config)
 
 
     def show_plots(self, plot_names=None, plot_stay=True):
@@ -378,8 +438,8 @@ def plot_regions_tree():
     pass
 
 
-def plot_model(ax: axes.Axes, Region_Model_Func, region_data, **plot_config):
-
+def plot_expert_model(ax: axes.Axes, region_data, region_model_func=None, **plot_config):
+    # TODO still needs to actually plot the model
     plot_regional_points(ax, region_data, **plot_config)
 
 
