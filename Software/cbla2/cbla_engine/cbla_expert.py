@@ -43,7 +43,6 @@ class Expert():
         self.region_splitter = None
 
         # memory
-        # TODO: Training data should be SET
         self.training_data = []
         self.training_label = []
 
@@ -331,10 +330,10 @@ class Expert():
             if include_exemplars:
                 info['exemplars'][self.expert_id] = [copy(self.training_data), copy(self.training_label)]
 
+            info['prediction_model'][self.expert_id] = self.predict_model
         else:
             self.left.save_expert_info(info, include_exemplars=include_exemplars)
             self.right.save_expert_info(info, include_exemplars=include_exemplars)
-
 
 class KGA():
 

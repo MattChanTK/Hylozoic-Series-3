@@ -460,7 +460,6 @@ class RegionSplitter_KMean():
         dim_min = float("inf")
         for i in range(data_dim_num):
 
-            # TODO: need proper clustering
             # k-mean cluster for the dimension
             clusterer = KMeans(n_clusters=2, init='k-means++')
 
