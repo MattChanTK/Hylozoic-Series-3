@@ -216,7 +216,7 @@ class Half_Frond(Simple_Node):
         self.config['ir_on_thres'] = 1600
         self.config['ir_off_thres'] = 1100
         self.config['T_on'] = 300
-        self.config['T_off'] = 0
+        self.config['T_off'] = 5
         # custom parameters
         if isinstance(config, dict):
             for name, arg in config.items():
@@ -254,6 +254,8 @@ class Half_Frond(Simple_Node):
                     t_cluster = clock()
 
             self.controller.update(T_set)
+            if 'tentacle_1' in self.node_name:
+                print('T = %f;   out = %f ' % (self.controller.T_model, self.controller.output.val ))
 
             sleep(self.messenger.estimated_msg_period * 2)
 
@@ -289,7 +291,7 @@ class Cluster_Activity(Simple_Node):
             # determine level of activity
             activity = 0
             for var in self.in_var.values():
-                activity += (var.val > 0)
+                activity += (var.val > 20)
             activity = activity**self.config['activity_expon']
             activity = max(0, min(self.config['activity_denom']**self.config['activity_expon'], activity))
 

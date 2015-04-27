@@ -69,7 +69,7 @@ class SMA_Controller(object):
 
         self.config = dict()
         self.config['KP'] = 12
-        self.config['KI'] = 0.005
+        self.config['KI'] = 0.0001
         self.config['K_heating'] = 1.0
         self.config['K_dissipate'] = 0.22
 
@@ -90,7 +90,6 @@ class SMA_Controller(object):
     def update(self, T_ref):
 
         self.T_model += (self.K_heating * self.output.val - self.K_dissipate * self.T_model) * (clock() - self.t0)
-
         T_err = (T_ref - self.T_model)
         output_p = self.KP * T_err
         self.T_err_sum += T_err
