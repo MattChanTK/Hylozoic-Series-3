@@ -10,6 +10,7 @@ import time
 import glob
 from datetime import datetime
 from time import clock
+from time import sleep
 
 
 class DataCollector(threading.Thread):
@@ -53,6 +54,7 @@ class DataCollector(threading.Thread):
     def run(self):
 
         packet_count = 0
+        sleep_time = 0.001
         while not self.program_terminating or not self.packet_queue.empty() or not self.states_update_queue.empty():
 
             with self.data_file_lock:
@@ -73,6 +75,12 @@ class DataCollector(threading.Thread):
                 if packet_count >= self.file_save_freq and not self.program_terminating:
                     self.__save_to_file()
                     packet_count = 0
+
+                # don't sleep if program is terminating
+                if self.program_terminating:
+                    sleep_time = 0
+
+            sleep(sleep_time)
 
         self.__save_to_file()
         print("Data Collector saved all data to disk.")

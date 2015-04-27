@@ -81,8 +81,8 @@ class CBLA_Node(Node):
         last_save_states_time = clock()
         while self.alive:
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.config['wait_time'] = max(self.cbla_robot.curr_wait_time,
-                                                      self.messenger.estimated_msg_period * 2)
+            self.cbla_robot.curr_wait_time = max(self.cbla_robot.curr_wait_time,
+                                                 self.messenger.estimated_msg_period * 4)
 
             # update CBLA Engine
             data_packet = self.cbla_engine.update()
@@ -186,7 +186,6 @@ class CBLA_Protocell(CBLA_Node):
 
         # create robot
         self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
-                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name,
-                                                      wait_time=0.1)
+                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name)
 
         self.instantiate()

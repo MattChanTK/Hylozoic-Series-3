@@ -254,8 +254,8 @@ class Half_Frond(Simple_Node):
                     t_cluster = clock()
 
             self.controller.update(T_set)
-            if 'tentacle_1' in self.node_name:
-                print('T = %f;   out = %f ' % (self.controller.T_model, self.controller.output.val ))
+            # if 'tentacle_1' in self.node_name:
+            #     print('T = %f;   out = %f ' % (self.controller.T_model, self.controller.output.val ))
 
             sleep(self.messenger.estimated_msg_period * 2)
 

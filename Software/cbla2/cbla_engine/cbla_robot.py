@@ -45,7 +45,7 @@ class Robot(object):
         self.S0 = Var(None)
 
     def _set_default_config(self):
-        self.config['wait_time'] = 0.05
+        self.config['wait_time'] = 0.02
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
         self.config['idling_reward'] = -0.01
@@ -150,7 +150,7 @@ class Robot_Frond(Robot):
 
         self.config['activation_reward_delta'] = 1.0
         self.config['activation_reward'] = 0.8
-        self.config['idling_reward'] = -0.01
+        self.config['idling_reward'] = 0.00
         self.config['min_step_before_idling'] = 15
         self.config['idling_prob'] = 0.98
 
@@ -226,7 +226,6 @@ class Robot_Protocell(Robot):
         self.config['idling_reward'] = -0.01
         self.config['min_step_before_idling'] = 500
         self.config['idling_prob'] = 0.98
-        self.config['wait_time'] = 1.0
 
     def get_possible_action(self, num_sample=5) -> tuple:
 
