@@ -22,7 +22,7 @@ class CBLA_Node(Node):
 
         super(CBLA_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
-        self.state_save_freq = 1000
+        self.state_save_period = 200  # seconds
 
         self.cbla_robot = None
         self.cbla_learner = None
@@ -62,6 +62,7 @@ class CBLA_Node(Node):
         self.out_var['loop_time'] = Var(0)
         self.out_var['idle_mode'] = Var(False)
         self.out_var['node_step'] = Var(0)
+        self.out_var['best_val'] = Var(0)
 
         self.cbla_states = dict()
 
@@ -77,22 +78,30 @@ class CBLA_Node(Node):
         if label_info:
             self.data_collector.update_state(node_name=self.node_name, states_update=label_info)
 
+        last_save_states_time = clock()
         while self.alive:
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.config['wait_time'] = max(0.01, self.messenger.estimated_msg_period * 2)
+            self.cbla_robot.config['wait_time'] = max(self.cbla_robot.curr_wait_time,
+                                                      self.messenger.estimated_msg_period * 2)
 
             # update CBLA Engine
-            self.cbla_engine.update()
+            data_packet = self.cbla_engine.update()
 
             # save the data
-            with self.cbla_engine.data_packet_lock:
-                self.data_collector.append_data_packet(self.node_name, self.cbla_engine.data_packet)
+            self.data_collector.append_data_packet(self.node_name, data_packet)
 
-                self.out_var['loop_time'].val = self.cbla_engine.data_packet['loop_period']
-                self.out_var['idle_mode'].val = self.cbla_engine.data_packet['in_idle_mode']
-                self.out_var['node_step'].val = self.cbla_engine.data_packet['step']
+            self.out_var['loop_time'].val = data_packet['loop_period']
+            self.out_var['idle_mode'].val = data_packet['in_idle_mode']
+            self.out_var['node_step'].val = data_packet['step']
+            self.out_var['best_val'].val = data_packet['best_action_value']
 
-            # self.cbla_engine.print_data_packet(header=self.node_name)
+            # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
+
+            # save state periodically
+            curr_time = clock()
+            if curr_time - last_save_states_time > self.state_save_period:
+                self.save_states()
+                last_save_states_time = curr_time
 
         self.save_states()
 
@@ -109,8 +118,8 @@ class CBLA_Node(Node):
 class CBLA_Tentacle(CBLA_Node):
 
     def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
-                 ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0), cluster_activity: Var=Var(0),
-                 left_ir: Var=Var(0), right_ir: Var=Var(0),
+                 ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0),
+                 left_ir: Var=Var(0), right_ir: Var=Var(0), shared_ir_0: Var=Var(0),
                  frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
 
 
@@ -126,18 +135,17 @@ class CBLA_Tentacle(CBLA_Node):
         self.in_var['acc_z'] = acc.val[2]
         self.in_var['left_ir'] = left_ir
         self.in_var['right_ir'] = right_ir
-        self.in_var['cluster_activity'] = cluster_activity
+        self.in_var['shared_ir_0'] = shared_ir_0
 
         # defining the output variables
         self.out_var['tentacle_out'] = frond
         self.out_var['reflex_out_0'] = reflex_0
         self.out_var['reflex_out_1'] = reflex_1
-        self.out_var['cluster_activity'] = cluster_activity
 
         # defining the input variables
-        in_vars = [self.in_var['acc_x'], self.in_var['acc_y'], self.in_var['acc_z'], self.in_var['ir_0']]
+        in_vars = [self.in_var['acc_x'], self.in_var['acc_y'], self.in_var['acc_z'], self.in_var['shared_ir_0']]
         in_vars_range = [(-512, 512), (-512, 512), (-512, 512), (0, 4095)]
-        in_vars_name = ['acc x-axis', 'acc y-axis', 'acc z-axis', 'scout ir']
+        in_vars_name = ['Accelerometer (x-axis)', 'Accelerometer (y-axis)', 'Accelerometer (z-axis)', 'Shared IR Sensor']
 
         # defining the output variables
         out_vars = [self.out_var['tentacle_out']]
@@ -151,11 +159,10 @@ class CBLA_Tentacle(CBLA_Node):
         self.instantiate()
 
 
-
 class CBLA_Protocell(CBLA_Node):
 
     def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
-                 als: Var=Var(0), cluster_activity: Var=Var(0),
+                 als: Var=Var(0), shared_ir_0: Var=Var(0),
                  led: Var=Var(0), node_name='cbla_protocell'):
 
         super(CBLA_Protocell, self).__init__(messenger=messenger, teensy_name=teensy_name,
@@ -163,16 +170,15 @@ class CBLA_Protocell(CBLA_Node):
 
         # defining the input variables
         self.in_var['als'] = als
-        self.in_var['cluster_activity'] = cluster_activity
+        self.in_var['shared_ir_0'] = shared_ir_0
 
         # defining the output variables
         self.out_var['protocell_out'] = led
-        self.out_var['cluster_activity'] = cluster_activity
 
 
-        in_vars = [self.in_var['als']]
-        in_vars_range = [(0, 4096)]
-        in_vars_name = ['ambient light sensor']
+        in_vars = [self.in_var['als'], self.in_var['shared_ir_0']]
+        in_vars_range = [(0, 4096), (0, 4096)]
+        in_vars_name = ['ambient light sensor', 'Shared IR Sensor']
 
 
         out_vars = [self.out_var['protocell_out']]
@@ -180,6 +186,7 @@ class CBLA_Protocell(CBLA_Node):
 
         # create robot
         self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
-                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name)
+                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name,
+                                                      wait_time=0.1)
 
         self.instantiate()

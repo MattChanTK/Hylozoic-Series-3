@@ -6,6 +6,7 @@ import threading
 from .cbla_robot import *
 from .cbla_learner import *
 
+
 class CBLA_Engine(object):
 
     def __init__(self, robot: Robot, learner: Learner, **config_kwargs):
@@ -23,19 +24,15 @@ class CBLA_Engine(object):
 
         self.learner_lock = threading.Lock()
         self.robot_lock = threading.Lock()
-        self.data_packet_lock = threading.Lock()
 
         # instantiate the robot
         with self.robot_lock:
             self.robot = robot
 
+
         # instantiate the learner
         with self.learner_lock:
             self.learner = learner
-
-        # instantiate the data collector
-        with self.data_packet_lock:
-            self.data_packet = OrderedDict()
 
         # initialization
         with self.robot_lock, self.learner_lock:
@@ -82,27 +79,30 @@ class CBLA_Engine(object):
             S_predicted = self.learner.predict()
 
         # save to data packet
-        with self.data_packet_lock:
-            self.data_packet['time'] = datetime.now()
-            self.data_packet['step'] = self.update_count
-            self.data_packet['loop_period'] = clock() - t0
-            self.data_packet['S'] = S2
-            self.data_packet['M'] = self.M
-            self.data_packet['S1_predicted'] = S_predicted
-            self.data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
 
-            # save learner info to data_packet
-            self.data_packet.update(self.learner.info)
+        data_packet = dict()
+        data_packet['time'] = datetime.now()
+        data_packet['step'] = self.update_count
+        data_packet['loop_period'] = clock() - t0
+        data_packet['S'] = S2
+        data_packet['M'] = self.M
+        data_packet['S1_predicted'] = S_predicted
+        data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
 
-            # save expert info to data_packet
-            expert_info = self.learner.get_expert_info(snap_shot=snapshot)
-            self.data_packet.update(expert_info)
+        # save learner info to data_packet
+        data_packet.update(self.learner.info)
 
+        # save expert info to data_packet
+        expert_info = self.learner.get_expert_info(snap_shot=snapshot)
+        data_packet.update(expert_info)
 
-    def print_data_packet(self, header=""):
+        return data_packet
+
+    @staticmethod
+    def print_data_packet(data_packet: dict, header=""):
 
         print_str = header + '\n'
-        for name, packet in self.data_packet.items():
+        for name, packet in data_packet.items():
             print_str += ("%s: %s\n" % (name, str(packet)))
 
         print(print_str + '\n')

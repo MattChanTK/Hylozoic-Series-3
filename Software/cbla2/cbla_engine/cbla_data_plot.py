@@ -31,11 +31,13 @@ class Plotter(object):
 
         for node_name in self.data.keys():
             #self.plot_objects[(node_name, 'history')] = PlotObject(fig_title='History Plot - %s' % node_name)
-            self.plot_objects[(node_name, 'regions_snapshot')] = PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+            #self.plot_objects[(node_name, 'regions_snapshot')] = PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+            self.plot_objects[(node_name, 'model')] = PlotObject(fig_title='Final Expert Model - %s' % node_name)
 
     def plot(self):
         self.plot_histories()
         self.plot_regions(tentacle_plot_dim=(4, 1), protocell_plot_dim=(1, 0))
+        self.plot_models()
 
     def plot_histories(self):
 
@@ -68,7 +70,7 @@ class Plotter(object):
                     if data_type in ('in_idle_mode', 'is_exploring'):
                         plot_config['int_yaxis'] = True
                         plot_config['ylim'] = (-0.5, 1.5)
-                    elif data_type == 'M':
+                    elif data_type == 'M' and 'tentacle' in node_name:
                         plot_config['int_yaxis'] = True
                         plot_config['ylim'] = (-0.5, 3.5)
                         plot_config['linestyle'] = ' '
@@ -193,6 +195,26 @@ class Plotter(object):
 
                 ax_num += 1
 
+    def plot_models(self, **config):
+
+        grid_dim = (1, 1)
+
+        for node_name, node_states in self.state_info.items():
+
+            if (node_name, 'model') not in self.plot_objects:
+                continue
+
+            if 'learner_expert' not in node_states.keys():
+                continue
+
+            expert = node_states['learner_expert']
+            print(expert)
+
+
+
+
+
+
     def show_plots(self, plot_names=None, plot_stay=True):
 
         if plot_names is None:
@@ -200,7 +222,6 @@ class Plotter(object):
         else:
             for plot_name in plot_names:
                 self.plot_objects[plot_name].fig.show()
-
 
     def update_plot(self, data_file):
 
@@ -213,12 +234,12 @@ class Plotter(object):
             for packet in raw_data:
                 for data_type, data_val in packet.items():
                     self.data[node_name][data_type]['y'].append(data_val)
-                    #self.data[node_name][data_type]['x'].append(packet['step'])
+                    # self.data[node_name][data_type]['x'].append(packet['step'])
                     self.data[node_name][data_type]['x'].append(to_time_value(packet['time'] - t0, 'minute'))
 
             for data_type, data_element in self.data[node_name].items():
                 print('Extracted %s --- %s' % (node_name, data_type))
-                #print(self.data[node_name][data_type]['y'][100])
+                # print(self.data[node_name][data_type]['y'][100])
 
         for node_name, raw_state in data_file['state'].items():
             self.state_info[node_name].update(raw_state)
@@ -353,8 +374,14 @@ def plot_regional_points(ax: axes.Axes, region_data, **plot_config):
     apply_plot_config(ax, config)
 
 
-def plot_model():
+def plot_regions_tree():
     pass
+
+
+def plot_model(ax: axes.Axes, Region_Model_Func, region_data, **plot_config):
+
+    plot_regional_points(ax, region_data, **plot_config)
+
 
 def apply_plot_config(ax: axes.Axes, config):
 

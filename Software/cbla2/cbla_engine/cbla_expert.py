@@ -276,7 +276,6 @@ class Expert():
         else:
             return max(self.left.get_largest_action_value(), self.right.get_largest_action_value())
 
-
     def evaluate_action(self, S1, M1):
 
         if not isinstance(S1, tuple):

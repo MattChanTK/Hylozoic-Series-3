@@ -8,6 +8,7 @@ import random
 from collections import deque
 from time import clock
 
+
 class Robot(object):
 
     def __init__(self, in_vars: list, out_vars: list, **config_kwargs):
@@ -32,6 +33,9 @@ class Robot(object):
                 raise TypeError('CBLA Engine only accepts Var type as motor variable')
             self.out_vars.append(var)
 
+        # the current wait_time
+        self.curr_wait_time = self.config['wait_time']
+
         # idle mode related variables
         self.in_idle_mode = False
         self.step_in_active_mode = 0
@@ -41,7 +45,7 @@ class Robot(object):
         self.S0 = Var(None)
 
     def _set_default_config(self):
-        self.config['wait_time'] = 0.03
+        self.config['wait_time'] = 0.05
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
         self.config['idling_reward'] = -0.01
@@ -56,6 +60,7 @@ class Robot(object):
         return tuple(M0)
 
     def act(self, M: tuple):
+
         # copy the selected action to the memory
         if not isinstance(M, (list, tuple)):
             raise TypeError("M must be a tuple or list!")
@@ -70,8 +75,7 @@ class Robot(object):
         return self.out_vars
 
     def wait(self):
-
-        sleep(max(0, self.config['wait_time'] ))
+        sleep(max(0, self.curr_wait_time))
 
     def read(self) -> tuple:
         # compute the sensor variables
@@ -141,7 +145,6 @@ class Robot_Frond(Robot):
 
         self.S_memory = deque(maxlen=self.config['sample_window'])
 
-
     def _set_default_config(self):
         super(Robot_Frond, self)._set_default_config()
 
@@ -152,7 +155,7 @@ class Robot_Frond(Robot):
         self.config['idling_prob'] = 0.98
 
         self.config['sample_window'] = 20
-        self.config['sample_period'] = 0.05
+        self.config['sample_period'] = 0.1
 
     def read(self) -> tuple:
 
@@ -160,7 +163,7 @@ class Robot_Frond(Robot):
         sample_period = max(self.config['sample_period'], self.config['wait_time'])
 
         # compute the sensor variables
-        for i in range(self.config['sample_window']):
+        for step in range(self.config['sample_window']):
             t0 = clock()
             S = []
             for i in range(len(self.in_vars)):
@@ -181,7 +184,7 @@ class Robot_Frond(Robot):
                 break
 
             # wait for next period
-            if i < self.config['sample_window'] - 1:
+            if step < self.config['sample_window'] - 1:
                 sleep(max(0, sample_period - (clock() - t0)))
 
         # compute average
@@ -221,8 +224,9 @@ class Robot_Protocell(Robot):
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
         self.config['idling_reward'] = -0.01
-        self.config['min_step_before_idling'] = 200
+        self.config['min_step_before_idling'] = 500
         self.config['idling_prob'] = 0.98
+        self.config['wait_time'] = 1.0
 
     def get_possible_action(self, num_sample=5) -> tuple:
 
@@ -237,6 +241,7 @@ class Robot_Protocell(Robot):
         M_candidates = tuple(set((map(tuple, X))))
 
         return M_candidates
+
 
 def toDigits(n, b):
     """Convert a positive number n to its digit representation in base b."""

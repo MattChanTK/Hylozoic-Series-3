@@ -13,7 +13,6 @@ USE_SAVED_DATA = False
 if len(sys.argv) > 1:
     USE_SAVED_DATA = bool(sys.argv[1])
 
-
 class CBLA2(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
@@ -21,7 +20,7 @@ class CBLA2(interactive_system.InteractiveCmd):
 
         data_file = None
         if USE_SAVED_DATA:
-            data_file= cbla_data_collect.retrieve_data()
+            data_file, _ = cbla_data_collect.retrieve_data()
 
         data_collector = cbla_data_collect.DataCollector(data_file=data_file)
 
@@ -65,7 +64,7 @@ class CBLA2(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-            # 3 tentacles
+            # ===== components for the 3 tentacles ====
             for j in range(3):
 
                 # 2 ir sensors each
@@ -96,23 +95,11 @@ class CBLA2(interactive_system.InteractiveCmd):
                 # 1 frond each
                 motion_type = Var(0)
                 frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                                                                                    right_sma=sma_1.in_var['output'],
-                                                                                    motion_type=motion_type)
+                              right_sma=sma_1.in_var['output'],
+                              motion_type=motion_type)
                 node_list[frond.node_name] = frond
 
-                # construct tentacle
-                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy, data_collector,
-                                                        node_name='cbla_tentacle_%d' % j,
-                                                        ir_0=ir_sensor_0.out_var['input'],
-                                                        ir_1=ir_sensor_1.out_var['input'],
-                                                        acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
-                                                        frond=frond.in_var['motion_type'],
-                                                        reflex_0=reflex_0.in_var['output'],
-                                                        reflex_1=reflex_1.in_var['output'])
-                node_list[cbla_tentacle.node_name] = cbla_tentacle
-
-
-            # creating components for Protocell Node
+            # ==== creating components for Protocell Node =====
 
             # 1 LED per protocell
             led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
@@ -122,20 +109,43 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             # 1 ambient light sensor per protocell
             als = Input_Node(messenger, teensy, node_name='protocell.als',
-                                     input='protocell_0_als_state')
+                             input='protocell_0_als_state')
 
             node_list[als.node_name] = als
 
-            # constructing the Protocell
+            shared_ir_0_var = node_list['%s.tentacle_0.ir_0' % teensy].out_var['input']
+            # ===== constructing the tentacle ====
+            for j in range(3):
+
+                ir_sensor_0 = node_list['%s.tentacle_%d.ir_0' % (teensy, j)]
+                ir_sensor_1 = node_list['%s.tentacle_%d.ir_1' % (teensy, j)]
+                acc = node_list['%s.tentacle_%d.acc' % (teensy, j)]
+                frond = node_list['%s.tentacle_%d.frond' % (teensy, j)]
+                reflex_0 = node_list['%s.tentacle_%d.reflex_0' % (teensy, j)]
+                reflex_1 = node_list['%s.tentacle_%d.reflex_1' % (teensy, j)]
+
+                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy, data_collector,
+                                                        node_name='cbla_tentacle_%d' % j,
+                                                        ir_0=ir_sensor_0.out_var['input'],
+                                                        ir_1=ir_sensor_1.out_var['input'],
+                                                        acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
+                                                        frond=frond.in_var['motion_type'],
+                                                        reflex_0=reflex_0.in_var['output'],
+                                                        reflex_1=reflex_1.in_var['output'],
+                                                        shared_ir_0=shared_ir_0_var)
+                node_list[cbla_tentacle.node_name] = cbla_tentacle
+
+            # ===== constructing the Protocell ======
+            als = node_list['%s.protocell.als' % teensy]
+            led = node_list['%s.protocell.led' % teensy]
             cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy, data_collector,
                                                       node_name='cbla_protocell',
                                                       als=als.out_var['input'],
-                                                      led=led.in_var['output'])
+                                                      led=led.in_var['output'],
+                                                      shared_ir_0=shared_ir_0_var)
             node_list[cbla_protocell.node_name] = cbla_protocell
 
-
-
-            # initialize each node
+        # initialize each node
         for name, node in node_list.items():
             node.start()
             print('%s initialized' % name)
@@ -164,6 +174,14 @@ class CBLA2(interactive_system.InteractiveCmd):
             # adding the data display frame for CBLA related stats
             cbla_learner_gui = gui.CBLA2_Learner_Frame(main_gui.root, node_list)
 
+            # adding the navigation gui
+            # page_dict = OrderedDict()
+            # page_dict['I/O States'] = display_gui
+            # page_dict['CBLA States'] = cbla_learner_gui
+            # navigation_gui = gui.Navigation_Frame(main_gui.root, page_dict)
+
+            # main_gui.add_frame(navigation_gui)
+
             main_gui.add_frame(display_gui)
             main_gui.add_frame(cbla_learner_gui)
 
@@ -177,7 +195,9 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             if input_str == 'save_states':
                 CBLA2.save_cbla_node_states(node_list)
-
+                print('state_saved')
+            else:
+                print('command does not exist!')
         # terminate the gui
         gui_root.quit()
         print('GUI is terminated.')
