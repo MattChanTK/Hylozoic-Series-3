@@ -27,7 +27,7 @@ class CBLA_Node(Node):
         self.cbla_robot = None
         self.cbla_learner = None
 
-    def instantiate(self):
+    def instantiate(self, learner_config=None):
 
         if self.cbla_robot is None:
             raise AttributeError("CBLA_Robot must be implemented in the child class")
@@ -42,7 +42,10 @@ class CBLA_Node(Node):
         except KeyError:
             past_state = None
 
-        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state, idle_mode_enable=False)
+        if not isinstance(learner_config, dict):
+            learner_config = dict()
+        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state, idle_mode_enable=True,
+                                                **learner_config)
 
         # load previous learner steps
         config = dict()
@@ -150,12 +153,22 @@ class CBLA_Tentacle(CBLA_Node):
         out_vars = [self.out_var['tentacle_out']]
         out_vars_name = ['motion type']
 
+        # learner configuration
+        learner_config = dict()
+        learner_config['split_thres'] = 30
+        learner_config['split_thres_growth_rate'] = 1.2
+        learner_config['split_lock_count_thres'] = 5
+        learner_config['mean_err_thres'] = 0.015
+        learner_config['reward_smoothing'] = 1
+        learner_config['kga_delta'] = 2
+        learner_config['kga_tau'] = 4
+
         # create robot
         self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range,
                                                   in_vars_name=in_vars_name, out_vars_name=out_vars_name)
 
         # instantiate
-        self.instantiate()
+        self.instantiate(learner_config=learner_config)
 
 
 class CBLA_Protocell(CBLA_Node):
@@ -174,15 +187,27 @@ class CBLA_Protocell(CBLA_Node):
         # defining the output variables
         self.out_var['protocell_out'] = led
 
-        in_vars = [self.in_var['als'],]# self.in_var['shared_ir_0']]
+        # in_vars = [self.in_var['als']]  # one-LED-one-ALS version
+        in_vars = [self.in_var['als'], self.in_var['shared_ir_0']]
+
         in_vars_range = [(0, 4096), (0, 4096)]
         in_vars_name = ['ambient light sensor', 'Shared IR Sensor']
 
         out_vars = [self.out_var['protocell_out']]
         out_vars_name = ['LED brightness']
 
+        # learner configuration
+        learner_config = dict()
+        learner_config['split_thres'] = 600
+        learner_config['split_thres_growth_rate'] = 1.5
+        learner_config['split_lock_count_thres'] = 250
+        learner_config['mean_err_thres'] = 0.015
+        learner_config['reward_smoothing'] = 1
+        learner_config['kga_delta'] = 10
+        learner_config['kga_tau'] = 25
+
         # create robot
         self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
                                                       in_vars_name=in_vars_name, out_vars_name=out_vars_name)
 
-        self.instantiate()
+        self.instantiate(learner_config=learner_config)
