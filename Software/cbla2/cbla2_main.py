@@ -115,7 +115,7 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
             # ===== constructing the tentacle ====
-            for j in range(3):
+            for j in range(1):
 
                 ir_sensor_0 = node_list['%s.tentacle_%d.ir_0' % (teensy, j)]
                 ir_sensor_1 = node_list['%s.tentacle_%d.ir_1' % (teensy, j)]
@@ -133,7 +133,7 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                         reflex_0=reflex_0.in_var['output'],
                                                         reflex_1=reflex_1.in_var['output'],
                                                         shared_ir_0=shared_ir_0_var)
-                #node_list[cbla_tentacle.node_name] = cbla_tentacle
+                node_list[cbla_tentacle.node_name] = cbla_tentacle
 
             # ===== constructing the Protocell ======
             als = node_list['%s.protocell.als' % teensy]

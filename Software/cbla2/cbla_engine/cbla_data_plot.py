@@ -39,13 +39,13 @@ class Plotter(object):
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(1, 0))
-        self.plot_models(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(1, 0))
+        self.plot_regions(tentacle_plot_dim=(4, 3, 0), protocell_plot_dim=(2, 0, 0))
+        self.plot_models(tentacle_plot_dim=(4, 3, 0), protocell_plot_dim=(2, 0, 0))
 
     def plot_histories(self):
 
         grid_dim = (2, 4)
-        engine_based_type = ('S', 'M', 'best_action', 'is_exploring',) #'in_idle_mode','S1_predicted',)
+        engine_based_type = ('S', 'M', 'best_action', 'in_idle_mode',) #, 'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         for node_name, node_data in self.data.items():

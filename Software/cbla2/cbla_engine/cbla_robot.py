@@ -116,6 +116,8 @@ class Robot(object):
         else:
             rewards_delta = 0
 
+        # if isinstance(self, Robot_Frond):
+        #     print('Reward: %f;   activation: %f' % (reward, self.config['activation_reward'] ))
         if self.in_idle_mode and (reward > self.config['activation_reward']
                                   or rewards_delta > self.config['activation_reward_delta']
                                   ):
@@ -161,14 +163,14 @@ class Robot_Frond(Robot):
     def _set_default_config(self):
         super(Robot_Frond, self)._set_default_config()
 
-        self.config['activation_reward_delta'] = 0.04
-        self.config['activation_reward'] = 0.02
+        self.config['activation_reward_delta'] = 0.006
+        self.config['activation_reward'] = 0.003
         self.config['idling_reward'] = 0.00001
         self.config['min_step_before_idling'] = 15
-        self.config['idling_prob'] = 0.2
+        self.config['idling_prob'] = 0.999
 
-        self.config['sample_window'] = 5
-        self.config['sample_period'] = 0.999
+        self.config['sample_window'] = 10
+        self.config['sample_period'] = 0.1
 
     def read(self) -> tuple:
 
@@ -233,7 +235,7 @@ class Robot_Protocell(Robot):
         super(Robot_Protocell, self)._set_default_config()
 
         self.config['activation_reward_delta'] = 0.1
-        self.config['activation_reward'] = 0.05
+        self.config['activation_reward'] = 0.01
         self.config['idling_reward'] = 0.00001
         self.config['min_step_before_idling'] = 500
         self.config['idling_prob'] = 0.999

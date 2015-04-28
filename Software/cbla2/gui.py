@@ -55,7 +55,7 @@ class CBLA2_Learner_Frame(Display_Frame):
                 val_text = "("
                 for element in val:
                     if isinstance(element, float):
-                        val_text += '%0.2f, ' % element
+                        val_text += '%0.5f, ' % element
                     elif isinstance(element, int):
                         val_text += '%d, ' % element
                     else:
