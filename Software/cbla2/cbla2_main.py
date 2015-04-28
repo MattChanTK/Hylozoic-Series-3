@@ -113,7 +113,7 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             node_list[als.node_name] = als
 
-            shared_ir_0_var = node_list['%s.tentacle_0.ir_0' % teensy].out_var['input']
+            shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
             # ===== constructing the tentacle ====
             for j in range(3):
 
@@ -133,7 +133,7 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                         reflex_0=reflex_0.in_var['output'],
                                                         reflex_1=reflex_1.in_var['output'],
                                                         shared_ir_0=shared_ir_0_var)
-                node_list[cbla_tentacle.node_name] = cbla_tentacle
+                #node_list[cbla_tentacle.node_name] = cbla_tentacle
 
             # ===== constructing the Protocell ======
             als = node_list['%s.protocell.als' % teensy]
@@ -197,7 +197,8 @@ class CBLA2(interactive_system.InteractiveCmd):
                 CBLA2.save_cbla_node_states(node_list)
                 print('state_saved')
             else:
-                print('command does not exist!')
+                if not input_str == 'exit':
+                    print('command does not exist!')
         # terminate the gui
         gui_root.quit()
         print('GUI is terminated.')

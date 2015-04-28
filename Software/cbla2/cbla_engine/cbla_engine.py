@@ -29,7 +29,6 @@ class CBLA_Engine(object):
         with self.robot_lock:
             self.robot = robot
 
-
         # instantiate the learner
         with self.learner_lock:
             self.learner = learner
@@ -65,6 +64,7 @@ class CBLA_Engine(object):
 
             # read
             S2 = self.robot.read()
+            # print('t = %d:  M = %f;   S2 = %f' % (self.update_count, self.M[0], S2[0]))
 
         # learn
         with self.learner_lock:

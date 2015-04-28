@@ -7,17 +7,18 @@ from copy import copy
 from sklearn import linear_model
 from collections import defaultdict
 
+
 class Expert():
 
     def __init__(self, id=0, level=0, **config_kwargs):
 
         # default expert configuration
         self.config = defaultdict(int)
-        self.config['split_thres'] = 100
+        self.config['split_thres'] = 600
         self.config['split_thres_growth_rate'] = 1.5
         self.config['split_lock_count_thres'] = 250
         self.config['split_quality_decay'] = 0.5
-        self.config['mean_err_thres'] = 0.00025
+        self.config['mean_err_thres'] = 0.015
         self.config['mean_err_0'] = 0.0
         self.config['action_value_0'] = 0.0
         self.config['reward_smoothing'] = 1
@@ -135,9 +136,9 @@ class Expert():
     def predict(self, S, M):
 
         if not isinstance(S, tuple):
-            raise(TypeError, "S must be a tuple")
+            raise TypeError("S must be a tuple")
         if not isinstance(M, tuple):
-            raise(TypeError, "M must be a tuple")
+            raise TypeError("M must be a tuple")
 
         # this is leaf node
         if self.left is None and self.right is None:
@@ -387,7 +388,7 @@ class KGA():
     def calc_reward(self):
         #remove old histories that are not needed
         self.errors = self.errors[-int(self.delta+self.tau):]
-        reward = round(self.metaM() - self.calc_mean_error(), 2)
+        reward = self.metaM() - self.calc_mean_error()
         if math.isnan(reward):  # happens when it's inf - inf
             reward = 0
         return reward

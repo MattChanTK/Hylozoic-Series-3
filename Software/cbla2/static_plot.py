@@ -4,7 +4,7 @@ from time import clock
 
 if __name__ == '__main__':
 
-    data_file_name = None #'cbla_data_15-04-14_09-32-25 (10).pkl'
+    data_file_name = None #'cbla_data_15-04-27_11-41-51 (1).pkl'
 
     data_file, data_file_name = cbla_data_collect.retrieve_data(file_name=data_file_name)
 

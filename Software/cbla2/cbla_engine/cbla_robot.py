@@ -7,6 +7,7 @@ import numpy as np
 import random
 from collections import deque
 from time import clock
+from collections import deque
 
 
 class Robot(object):
@@ -37,6 +38,7 @@ class Robot(object):
         self.curr_wait_time = self.config['wait_time']
 
         # idle mode related variables
+        self.prev_rewards = deque(maxlen=self.config['prev_rewards_deque_size'])
         self.in_idle_mode = False
         self.step_in_active_mode = 0
 
@@ -45,7 +47,8 @@ class Robot(object):
         self.S0 = Var(None)
 
     def _set_default_config(self):
-        self.config['wait_time'] = 0.02
+        self.config['wait_time'] = 0.05
+        self.config['prev_rewards_deque_size'] = 10
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
         self.config['idling_reward'] = -0.01
@@ -108,7 +111,14 @@ class Robot(object):
     def enter_idle_mode(self, reward) -> bool:
 
         # if it is in idle mode and reward is high enough to exit idle mode
-        if self.in_idle_mode and reward > self.config['activation_reward']:
+        if len(self.prev_rewards) > 2:
+            rewards_delta = np.fabs(reward - np.mean(list(self.prev_rewards)))
+        else:
+            rewards_delta = 0
+
+        if self.in_idle_mode and (reward > self.config['activation_reward']
+                                  or rewards_delta > self.config['activation_reward_delta']
+                                  ):
             self.in_idle_mode = False
             self.step_in_active_mode = 0
 
@@ -120,6 +130,9 @@ class Robot(object):
         # if it's in active mode
         elif not self.in_idle_mode:
             self.step_in_active_mode += 1
+
+        # save the reward value to memory
+        self.prev_rewards.append(reward)
 
         return self.in_idle_mode
 
@@ -148,14 +161,14 @@ class Robot_Frond(Robot):
     def _set_default_config(self):
         super(Robot_Frond, self)._set_default_config()
 
-        self.config['activation_reward_delta'] = 1.0
-        self.config['activation_reward'] = 0.8
-        self.config['idling_reward'] = 0.00
+        self.config['activation_reward_delta'] = 0.04
+        self.config['activation_reward'] = 0.02
+        self.config['idling_reward'] = 0.00001
         self.config['min_step_before_idling'] = 15
-        self.config['idling_prob'] = 0.98
+        self.config['idling_prob'] = 0.2
 
-        self.config['sample_window'] = 20
-        self.config['sample_period'] = 0.1
+        self.config['sample_window'] = 5
+        self.config['sample_period'] = 0.999
 
     def read(self) -> tuple:
 
@@ -211,9 +224,7 @@ class Robot_Frond(Robot):
         try:
             return tuple(random.sample(M_candidates, num_sample))
         except ValueError:
-            pass
-
-        return M_candidates
+            return M_candidates
 
 
 class Robot_Protocell(Robot):
@@ -221,11 +232,11 @@ class Robot_Protocell(Robot):
     def _set_default_config(self):
         super(Robot_Protocell, self)._set_default_config()
 
-        self.config['activation_reward_delta'] = 0.5
+        self.config['activation_reward_delta'] = 0.1
         self.config['activation_reward'] = 0.05
-        self.config['idling_reward'] = -0.01
+        self.config['idling_reward'] = 0.00001
         self.config['min_step_before_idling'] = 500
-        self.config['idling_prob'] = 0.98
+        self.config['idling_prob'] = 0.999
 
     def get_possible_action(self, num_sample=5) -> tuple:
 
@@ -242,7 +253,7 @@ class Robot_Protocell(Robot):
         return M_candidates
 
 
-def toDigits(n, b):
+def toDigits(n, b) -> list:
     """Convert a positive number n to its digit representation in base b."""
     digits = []
     while n > 0:

@@ -42,7 +42,7 @@ class CBLA_Node(Node):
         except KeyError:
             past_state = None
 
-        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state)
+        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state, idle_mode_enable=False)
 
         # load previous learner steps
         config = dict()
@@ -81,8 +81,8 @@ class CBLA_Node(Node):
         last_save_states_time = clock()
         while self.alive:
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.curr_wait_time = max(self.cbla_robot.curr_wait_time,
-                                                 self.messenger.estimated_msg_period * 4)
+            self.cbla_robot.curr_wait_time = max(self.cbla_robot.config['wait_time'],
+                                                 self.messenger.estimated_msg_period * 6)
 
             # update CBLA Engine
             data_packet = self.cbla_engine.update()
@@ -126,7 +126,6 @@ class CBLA_Tentacle(CBLA_Node):
         super(CBLA_Tentacle, self).__init__(messenger=messenger, teensy_name=teensy_name,
                                             data_collector=data_collector, node_name=node_name)
 
-
         # defining the input variables
         self.in_var['ir_0'] = ir_0
         self.in_var['ir_1'] = ir_1
@@ -166,7 +165,7 @@ class CBLA_Protocell(CBLA_Node):
                  led: Var=Var(0), node_name='cbla_protocell'):
 
         super(CBLA_Protocell, self).__init__(messenger=messenger, teensy_name=teensy_name,
-                                            data_collector=data_collector, node_name=node_name)
+                                             data_collector=data_collector, node_name=node_name)
 
         # defining the input variables
         self.in_var['als'] = als
@@ -175,11 +174,9 @@ class CBLA_Protocell(CBLA_Node):
         # defining the output variables
         self.out_var['protocell_out'] = led
 
-
-        in_vars = [self.in_var['als'], self.in_var['shared_ir_0']]
+        in_vars = [self.in_var['als'],]# self.in_var['shared_ir_0']]
         in_vars_range = [(0, 4096), (0, 4096)]
         in_vars_name = ['ambient light sensor', 'Shared IR Sensor']
-
 
         out_vars = [self.out_var['protocell_out']]
         out_vars_name = ['LED brightness']

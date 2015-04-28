@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.axes as axes
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from time import clock, sleep
 from collections import defaultdict
@@ -11,6 +12,7 @@ import cbla_data_collect as cbla_data
 from cbla_engine.save_figure import save
 import cbla_engine.cbla_expert as cbla_expert
 
+colour_map = 'Set1'
 
 class Plotter(object):
 
@@ -37,14 +39,14 @@ class Plotter(object):
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(tentacle_plot_dim=(4, 1), protocell_plot_dim=(2, 0))
-        self.plot_models(tentacle_plot_dim=(4, 1), protocell_plot_dim=(2, 0))
+        self.plot_regions(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(1, 0))
+        self.plot_models(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(1, 0))
 
     def plot_histories(self):
 
         grid_dim = (2, 4)
-        engine_based_type = ('S', 'M', 'S1_predicted', 'in_idle_mode',)#'is_exploring')
-        expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',) #'best_action')
+        engine_based_type = ('S', 'M', 'best_action', 'is_exploring',) #'in_idle_mode','S1_predicted',)
+        expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         for node_name, node_data in self.data.items():
 
@@ -58,9 +60,9 @@ class Plotter(object):
 
                     # instantiate axis
                     ax_name = '%s' % data_type
-                    ax_num = engine_based_type.index(data_type)+1
+                    ax_num = engine_based_type.index(data_type) + 1
                     self.plot_objects[(node_name, 'history')].add_ax(ax_name=ax_name,
-                                                        location=(grid_dim[0], grid_dim[1], ax_num))
+                                                                     location=(grid_dim[0], grid_dim[1], ax_num))
 
                     # configure the plot
                     plot_config = dict()
@@ -68,12 +70,19 @@ class Plotter(object):
                     plot_config['ylabel'] = 'value'
                     plot_config['title'] = '%s vs. time plot' % data_type
 
+                    # special configurations
                     if data_type in ('in_idle_mode', 'is_exploring'):
                         plot_config['int_yaxis'] = True
                         plot_config['ylim'] = (-0.5, 1.5)
-                    elif data_type == 'M' and 'tentacle' in node_name:
+                        plot_config['linestyle'] = ' '
+                        plot_config['marker'] = '.'
+                    elif data_type in ('M', 'best_action') :
                         plot_config['int_yaxis'] = True
-                        plot_config['ylim'] = (-0.5, 3.5)
+                        plot_config['linestyle'] = ' '
+                        plot_config['marker'] = '.'
+                        if 'tentacle' in node_name:
+                            plot_config['ylim'] = (-0.5, 3.5)
+                    elif data_type in ('S', 'S1'):
                         plot_config['linestyle'] = ' '
                         plot_config['marker'] = '.'
 
@@ -147,44 +156,73 @@ class Plotter(object):
 
             # instantiate axis
             ax_num = 1
+            in_3d = False
+            if len(plot_dims) > 2:
+                in_3d = True
+
             for i in selected_snapshot_ids:
 
                 # add axis to the plot object
                 ax_name = 'Exemplars at t = %f' % exemplars_snapshots['x'][i]
                 self.plot_objects[(node_name, 'regions_snapshot')].add_ax(ax_name=ax_name,
-                                                                          location=(grid_dim[0], grid_dim[1], ax_num))
+                                                                          location=(grid_dim[0], grid_dim[1], ax_num),
+                                                                          in_3d=in_3d)
 
                 # construct the data set for scatter plotting
                 scatter_plot_data = defaultdict(list)
                 for region_id, region_exemplars in exemplars_snapshots['y'][i].items():
+
+                    data_pts = list(zip(*region_exemplars[0]))
+                    label_pts = list(zip(*region_exemplars[1]))
+
+                    # x-axis
                     try:
-                        SM_data = tuple(list(zip(*region_exemplars[0]))[plot_dims[0]])
+                        SM_data = tuple(data_pts[plot_dims[0]])
                     except IndexError:
                         print('SM(t) does not have dimension %d' % plot_dims[0])
                         break
+
+                    # y-axis
                     try:
-                        S1_data = tuple(list(zip(*region_exemplars[1]))[plot_dims[1]])
+                        S1_data = tuple(label_pts[plot_dims[-1]])
                     except IndexError:
-                        print('S(t+1) does not have dimension %d' % plot_dims[1])
+                        print('S(t+1) does not have dimension %d' % plot_dims[-1])
                         break
-                    scatter_plot_data[region_id] = (SM_data, S1_data)
+
+                    # x2-axis if 3d
+                    if len(plot_dims) > 2:
+                        try:
+                            SM_data_2 = tuple(data_pts[plot_dims[1]])
+                        except IndexError:
+                            print('SM(t) does not have dimension %d' % plot_dims[1])
+                            break
+                        scatter_plot_data[region_id] = (SM_data, SM_data_2, S1_data)
+                    else:
+                        scatter_plot_data[region_id] = (SM_data, S1_data)
 
                 # configure the plot
                 plot_config = dict()
                 if 'input_label_name' in self.state_info[node_name]:
                     labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name]['output_label_name']
                     plot_config['xlabel'] = labels[plot_dims[0]]
+                    plot_config['x2label'] = labels[plot_dims[1]]
                 else:
                     plot_config['xlabel'] = 'SM(t) [%d]' % plot_dims[0]
+                    plot_config['x2label'] = 'SM(t) [%d]' % plot_dims[1]
+
                 if 'output_label_name' in self.state_info[node_name]:
-                    plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[1]]
+                    plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[-1]]
                 else:
-                    plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[1]
+                    plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[-1]
                 plot_config['title'] = 'Exemplars plot at t = %.2f' % exemplars_snapshots['x'][i]
 
                 plot_config['int_xaxis'] = True
                 plot_config['linestyle'] = ''
                 plot_config['marker'] = 'o'
+
+                # special configuration for tentacle nodes only
+                if 'tentacle' in node_name:
+                    plot_config['xlim'] = (-0.5, 3.5)
 
                 # plot the exemplars
                 plot_regional_points(self.plot_objects[(node_name, 'regions_snapshot')].ax[ax_name],
@@ -197,11 +235,14 @@ class Plotter(object):
     def plot_models(self, **config):
 
         grid_dim = (1, 1)
+
         exemplars_plot_dim = defaultdict(lambda: (0, 0))
 
         for config_key, config_val in config.items():
             if '_plot_dim' in config_key and isinstance(config_val, tuple):
                 exemplars_plot_dim[config_key.replace('_plot_dim', '')] = config_val
+
+
 
         for node_name, node_states in self.state_info.items():
 
@@ -213,11 +254,6 @@ class Plotter(object):
 
             expert = node_states['learner_expert']
 
-            # add axis to the plot object
-            ax_name = 'Expert Model for %s' % node_name
-            ax_num = 1
-            self.plot_objects[(node_name, 'model')].add_ax(ax_name=ax_name,
-                                                           location=(grid_dim[0], grid_dim[1], ax_num))
 
             # extract the exemplars
             info = defaultdict(dict)
@@ -231,21 +267,49 @@ class Plotter(object):
                 if node_type in node_name:
                     plot_dims = exemplars_plot_dim[node_type]
 
+            in_3d = False
+            if len(plot_dims) > 2:
+                in_3d = True
+
+            # add axis to the plot object
+            ax_name = 'Expert Model for %s' % node_name
+            ax_num = 1
+            self.plot_objects[(node_name, 'model')].add_ax(ax_name=ax_name,
+                                                           location=(grid_dim[0], grid_dim[1], ax_num),
+                                                           in_3d=in_3d)
+
+
             # construct the data set for scatter plotting
             scatter_plot_data = dict()
             model_func = dict()
             for region_id, region_exemplars in exemplars_data.items():
+                data_pts = list(zip(*region_exemplars[0]))
+                label_pts = list(zip(*region_exemplars[1]))
+
+                # x-axis
                 try:
-                    SM_data = tuple(list(zip(*region_exemplars[0]))[plot_dims[0]])
+                    SM_data = tuple(data_pts[plot_dims[0]])
                 except IndexError:
                     print('SM(t) does not have dimension %d' % plot_dims[0])
                     break
+
+                # y-axis
                 try:
-                    S1_data = tuple(list(zip(*region_exemplars[1]))[plot_dims[1]])
+                    S1_data = tuple(label_pts[plot_dims[-1]])
                 except IndexError:
-                    print('S(t+1) does not have dimension %d' % plot_dims[1])
+                    print('S(t+1) does not have dimension %d' % plot_dims[-1])
                     break
-                scatter_plot_data[region_id] = (SM_data, S1_data)
+
+                # x2-axis if 3d
+                if len(plot_dims) > 2:
+                    try:
+                        SM_data_2 = tuple(data_pts[plot_dims[1]])
+                    except IndexError:
+                        print('SM(t) does not have dimension %d' % plot_dims[1])
+                        break
+                    scatter_plot_data[region_id] = (SM_data, SM_data_2, S1_data)
+                else:
+                    scatter_plot_data[region_id] = (SM_data, S1_data)
 
                 model_func[region_id] = prediction_model[region_id].predict
 
@@ -255,21 +319,27 @@ class Plotter(object):
                 labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name][
                     'output_label_name']
                 plot_config['xlabel'] = labels[plot_dims[0]]
+                plot_config['x2label'] = labels[plot_dims[1]]
             else:
                 plot_config['xlabel'] = 'SM(t) [%d]' % plot_dims[0]
+                plot_config['x2label'] = 'SM(t) [%d]' % plot_dims[1]
+
             if 'output_label_name' in self.state_info[node_name]:
-                plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[1]]
+                plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[-1]]
             else:
-                plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[1]
+                plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[-1]
 
             plot_config['int_xaxis'] = True
             plot_config['linestyle'] = ''
             plot_config['marker'] = 'o'
 
+            # special configuration for tentacle nodes only
+            if 'tentacle' in node_name:
+                plot_config['xlim'] = (-0.5, 3.5)
+
             # plot the exemplars
             plot_expert_model(self.plot_objects[(node_name, 'model')].ax[ax_name],
                               region_data=scatter_plot_data, region_model_func=model_func, **plot_config)
-
 
     def show_plots(self, plot_names=None, plot_stay=True):
 
@@ -317,11 +387,16 @@ class PlotObject(object):
 
         self.ax = dict()
 
-    def add_ax(self, ax_name, location: tuple):
+    def add_ax(self, ax_name, location: tuple, in_3d: bool=False):
         if not isinstance(location, tuple) or len(location) != 3:
             raise TypeError('Location must be a tuple with 3 elements!')
 
-        self.ax[ax_name] = self.fig.add_subplot(*location)
+        if in_3d:
+            projection = '3d'
+        else:
+            projection = None
+
+        self.ax[ax_name] = self.fig.add_subplot(*location, projection=projection)
 
     def save_to_file(self, directory, filename, size=(20, 10), dpi=300):
         orig_size = self.fig.get_size_inches()
@@ -375,7 +450,7 @@ def plot_regional_evolution(ax: axes.Axes, y, x=None, **plot_config):
     # default config
     config = defaultdict(lambda: None)
     config['xlabel'] = 'time'
-    config['colourmap'] = 'prism'
+    config['colourmap'] = colour_map
     for key, value in plot_config.items():
         config[key] = value
 
@@ -409,10 +484,10 @@ def plot_regional_points(ax: axes.Axes, region_data, **plot_config):
 
     # default config
     config = defaultdict(lambda: None)
-    config['colourmap'] = 'prism'
+    config['colourmap'] = colour_map
     config['marker'] = 'o'
     config['linestyle'] = ''
-    config['markersize'] = 2
+    config['markersize'] = 3
     for key, value in plot_config.items():
         config[key] = value
 
@@ -422,8 +497,9 @@ def plot_regional_points(ax: axes.Axes, region_data, **plot_config):
 
     all_dots = []
     for i, data_i in region_data.items():
-        x_i, y_i = data_i
-        dots, = ax.plot(x_i, y_i)
+
+        dots, = ax.plot(*data_i)
+        # dots = ax.scatter(x_i, y_i)
         dots.set_color(colours[region_ids.index(i)])
         all_dots.append(dots)
 
@@ -444,17 +520,37 @@ def apply_plot_config(ax: axes.Axes, config):
     # set label
     ax.set_title(config['title'])
     ax.set_xlabel(config['xlabel'])
-    ax.set_ylabel(config['ylabel'])
+
+    if isinstance(ax, Axes3D):
+        ax.set_zlabel(config['ylabel'])
+        ax.set_ylabel(config['x2label'])
+    else:
+        ax.set_ylabel(config['ylabel'])
+
 
     # set limit
-    ax.set_ylim(config['ylim'])
     ax.set_xlim(config['xlim'])
 
+    if isinstance(ax, Axes3D):
+        ax.set_zlim(config['ylim'])
+        ax.set_ylim(config['x2lim'])
+    else:
+        ax.set_ylim(config['ylim'])
+
     # set tick
-    if config['int_yaxis']:
-        ax.get_yaxis().set_major_locator(plt.MaxNLocator(integer=True))
     if config['int_xaxis']:
         ax.get_xaxis().set_major_locator(plt.MaxNLocator(integer=True))
+    if config['int_yaxis']:
+        if isinstance(ax, Axes3D):
+            ax.get_zaxis().set_major_locator(plt.MaxNLocator(integer=True))
+        else:
+            ax.get_yaxis().set_major_locator(plt.MaxNLocator(integer=True))
+    if config['int_x2axis']:
+        if isinstance(ax, Axes3D):
+            ax.get_yaxis().set_major_locator(plt.MaxNLocator(integer=True))
+        else:
+            pass
+
 
     # line style
     if config['linestyle'] is not None:
@@ -477,6 +573,12 @@ def apply_plot_config(ax: axes.Axes, config):
         for line in ax.lines:
             try:
                 line.set_markersize(config['markersize'])
+            except:
+                pass
+
+        for line in ax.collections:
+            try:
+                line.set_lw(config['markersize'])
             except:
                 pass
 

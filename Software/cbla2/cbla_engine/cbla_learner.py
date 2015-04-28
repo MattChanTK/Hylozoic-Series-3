@@ -8,6 +8,7 @@ import warnings
 from collections import defaultdict
 from collections import OrderedDict
 
+
 class Learner(object):
 
     def __init__(self, S0, M0, past_state=None, **config_kwargs):
@@ -37,12 +38,12 @@ class Learner(object):
         # misc. variables
         self.exploring_rate = self.config['exploring_rate']
 
-
     def _set_default_config(self):
         self.config['exploring_rate'] = 0.5
-        self.config['exploring_rate_range'] = (0.05, 0.8)
-        self.config['exploring_reward_range'] = (-50.0, 10.0)
+        self.config['exploring_rate_range'] = (0.4, 0.01)
+        self.config['exploring_reward_range'] = (-0.03, 0.004)
         self.config['adapt_exploring_rate'] = True
+        self.config['idle_mode_enable'] = True
 
     def learn(self, S1, M):
 
@@ -65,10 +66,11 @@ class Learner(object):
 
         # if action-value is too low, enter idle mode
         is_doing_idle_action = False
-        if robot.enter_idle_mode(reward=val_best):
-            if robot.is_doing_idle_action():
-                M1 = robot.get_idle_action()
-                is_doing_idle_action = True
+        if self.config['idle_mode_enable']:
+            if robot.enter_idle_mode(reward=val_best):
+                if robot.is_doing_idle_action():
+                    M1 = robot.get_idle_action()
+                    is_doing_idle_action = True
 
         self.M = M1
 
@@ -91,7 +93,7 @@ class Learner(object):
     def action_selection(self, S1, M_candidates, method='oudeyer'):
 
         # compute the M with the highest learning rate
-        M_best = [0]
+        M_best = []
         val_best = -float("inf")
         for M_candidate in M_candidates:
             val = self.expert.evaluate_action(S1, M_candidate)
