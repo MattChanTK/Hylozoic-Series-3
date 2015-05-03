@@ -1,5 +1,6 @@
 __author__ = 'Matthew'
 import tkinter as tk
+
 from collections import OrderedDict
 
 from .low_level_node import *
@@ -36,59 +37,6 @@ class Main_GUI(object):
             frame.updateFrame()
 
         self.root.mainloop()
-
-    def pack_frames(self):
-
-        for frame in self.frame_list:
-            if isinstance(frame, Messenger_Frame):
-                frame.pack(side=tk.BOTTOM)
-            else:
-                frame.pack(side=tk.LEFT)
-
-
-class Main_GUI2(object):
-
-    def __init__(self, start_page='home'):
-
-        self.root = tk.Tk()
-
-        # messenger status panel
-        self.messenger_panel = None
-        # navigation panel
-        self.nav_panel = None
-        # content panel
-        self.content_panel = None
-
-        # the contents are stored in the page_dict
-        self.page_dict = OrderedDict()
-        self.start_page = start_page
-
-    def add_page(self, **child_pages):
-        for page_name, page_frame in child_pages.items():
-            self.page_dict[page_name] = page_frame
-
-    def start(self, messenger):
-
-        self.set_messenger_panel(messenger)
-        self.set_navigation_panel()
-
-    def run(self):
-        self.pack_frames()
-        for frame in self.frame_list:
-            frame.run()
-            frame.updateFrame()
-
-        self.root.mainloop()
-
-    def set_messenger_panel(self, messenger):
-
-        # add the messenger frame automatically
-        self.messenger_panel = Messenger_Frame(self.root, messenger)
-
-    def set_navigation_panel(self, ):
-        self.nav_panel = Navigation_Panel()
-
-
 
     def pack_frames(self):
 
