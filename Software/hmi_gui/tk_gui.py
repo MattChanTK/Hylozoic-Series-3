@@ -5,7 +5,6 @@ from tkinter import ttk
 from collections import OrderedDict
 from collections import defaultdict
 
-
 class Master_Frame(Tk):
 
     def __init__(self):
@@ -30,8 +29,6 @@ class Master_Frame(Tk):
 
         if isinstance(content_frame, Content_Frame):
             self.content_panel = content_frame
-            if start_page_key in self.content_panel.page_frames:
-                self.content_panel.set_curr_page(page_key=start_page_key)
         else:
             self.content_panel = Content_Frame(self)
 
@@ -39,6 +36,12 @@ class Master_Frame(Tk):
             self.nav_panel = nav_frame
         else:
             self.nav_panel = Navigation_Frame(self, self.content_panel)
+
+        if start_page_key in self.content_panel.page_frames:
+            if start_page_key in self.nav_panel.button_dict:
+                self.nav_panel.set_curr_page(page_key=start_page_key)
+            else:
+                self.content_panel.set_curr_page(page_key=start_page_key)
 
         self.__construct_gui()
         self.run()
@@ -142,41 +145,60 @@ class Navigation_Frame(ttk.Frame):
         self.content_panel = content_panel
 
         # list of all the buttons
-        self.button_list = []
+        self.button_dict = OrderedDict()
 
     def build_nav_buttons(self, max_per_col: int=8):
 
         if not isinstance(max_per_col, int):
             raise TypeError("max_per_col must be an integer!")
 
-        self.button_list = []
-
         for page_key, page_frame in self.content_panel.page_frames.items():
 
-            self.button_list.append(Nav_Button(self, page_frame.page_name, page_key))
+            self.button_dict[page_key] = Nav_Button(self, page_frame.page_name, page_key)
 
-        col_id = -1
-        for i in range(len(self.button_list)):
-            row_id = i % max_per_col
-            if row_id == 0:
+        col_id = 0
+        row_id = 0
+        for button in self.button_dict.values():
+            if row_id >= max_per_col:
                 col_id += 1
-            self.button_list[i].grid(row=row_id, column=col_id, sticky='nsew')
+                row_id = 0
+
+            button.grid(row=row_id, column=col_id, sticky='nsew')
+            row_id += 1
 
     def set_curr_page(self, page_key):
         if page_key in self.content_panel.page_frames \
                 and isinstance(self.content_panel.page_frames[page_key], ttk.Frame):
             self.content_panel.page_frames[page_key].tkraise()
 
+        for button in self.button_dict.values():
+            if button.page_key == page_key:
+                button.set_active()
+            else:
+                button.set_inactive()
 
 class Nav_Button(ttk.Button):
 
     def __init__(self, nav_frame: Navigation_Frame, page_label, page_key):
         self.nav_panel = nav_frame
         self.page_key = page_key
+
+      # style
+        active_style = ttk.Style()
+        active_style.configure("active_nav.TButton", background="yellow", font=('Helvetica', 10, 'bold'))
+        inactive_style = ttk.Style()
+        inactive_style.configure("inactive_nav.TButton", foreground="grey", font=('Helvetica', 10))
+
         super(Nav_Button, self).__init__(master=nav_frame, text=page_label,
+                                         style="inactive_nav.TButton", width=20,
                                          command=self.button_action)
 
 
     def button_action(self):
-
         self.nav_panel.set_curr_page(self.page_key)
+
+    def set_active(self):
+        self.configure(style="active_nav.TButton")
+
+    def set_inactive(self):
+        self.configure(style="inactive_nav.TButton")

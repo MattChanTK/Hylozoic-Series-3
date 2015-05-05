@@ -171,7 +171,7 @@ class Manual_Control(interactive_system.InteractiveCmd):
         self.hmi.start(status_frame=status_frame,
                        nav_frame=nav_frame,
                        content_frame=content_frame,
-                       start_page_key=next(iter(control_vars.keys()), ''))
+                       start_page_key=next(iter(page_frames.keys()), ''))
 
 
 class HMI_Manual_Mode(tk_gui.Page_Frame):
@@ -287,7 +287,7 @@ class HMI_Manual_Mode_Display_Frame(ttk.Frame):
         self.display_vars = display_vars
         self.var_dict = defaultdict(dict)
 
-        max_col_per_row = 3
+        max_col_per_row = 8
         row = 0
         col = 0
 
@@ -298,7 +298,7 @@ class HMI_Manual_Mode_Display_Frame(ttk.Frame):
                 col = 0
                 row += 2
 
-            output_label = ttk.Label(self, text=output_name.replace('_', ' '), width=10)
+            output_label = ttk.Label(self, text=output_name.replace('_', ' '))
             if output_var[1] == 'input_node':
                 output_label.configure(style="input_var.TLabel")
             elif output_var[1] == 'output_node':
@@ -306,19 +306,19 @@ class HMI_Manual_Mode_Display_Frame(ttk.Frame):
 
             if len(output_var[0]) == 1:
 
-                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 10))
+                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
 
                 var = next(iter(output_var[0].values()))
-                value_label = ttk.Label(self, text='%d' % var.val)
+                value_label = ttk.Label(self, text='%d' % var.val, width=8)
             else:
-                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 10))
+                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
 
                 value_tuple = []
                 for var_name, var in output_var[0].items():
                     value_tuple.append(var.val)
                 value_tuple = tuple(value_tuple)
 
-                value_label = ttk.Label(self, text=str(value_tuple))
+                value_label = ttk.Label(self, text=str(value_tuple), width=15)
 
             value_label.grid(row=row + 1, column=col, sticky='NW', pady=(0, 5))
 
