@@ -21,22 +21,24 @@ class Master_Frame(Tk):
         # content panel
         self.content_panel = None
 
-    def start(self, status_frame=None, nav_frame=None, content_frame=None):
+    def start(self, status_frame=None, nav_frame=None, content_frame=None, start_page_key=None):
 
-        if isinstance(status_frame, ttk.Frame):
+        if isinstance(status_frame, Status_Frame):
             self.status_panel = status_frame
         else:
-            self.status_panel = ttk.Frame(self)
+            self.status_panel = Status_Frame(self)
 
-        if isinstance(content_frame, ttk.Frame):
+        if isinstance(content_frame, Content_Frame):
             self.content_panel = content_frame
+            if start_page_key in self.content_panel.page_frames:
+                self.content_panel.set_curr_page(page_key=start_page_key)
         else:
-            self.content_panel = ttk.Frame(self)
+            self.content_panel = Content_Frame(self)
 
-        if isinstance(nav_frame, ttk.Frame):
+        if isinstance(nav_frame, Navigation_Frame):
             self.nav_panel = nav_frame
         else:
-            self.nav_panel = ttk.Frame(self)
+            self.nav_panel = Navigation_Frame(self, self.content_panel)
 
         self.__construct_gui()
         self.run()
@@ -48,28 +50,55 @@ class Master_Frame(Tk):
 
     def __construct_gui(self):
 
-        self.status_panel.grid(row=1, column=0, columnspan=2)
-        self.content_panel.grid(row=0, column=1)
-        self.nav_panel.grid(row=0, column=0)
+        self.status_panel.grid(row=1, column=0, columnspan=2, sticky=SE, padx=5)
+        self.content_panel.grid(row=0, column=1, sticky='nsew', padx=10, pady=10)
+        self.nav_panel.grid(row=0, column=0, sticky=NW, padx=10, pady=10)
+
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
 
 
 class Status_Frame(ttk.Frame):
 
     def __init__(self, tk_master: Tk):
-        super(Status_Frame, self).__init__(tk_master)
+        super(Status_Frame, self).__init__(tk_master, name='status_panel')
 
+        self._build_frame()
+
+    def _build_frame(self):
         self.status_label = ttk.Label(self, text="Status: Running")
+        self.status_label.grid(column=0, row=0)
 
-        self.build_frame()
 
-    def build_frame(self):
-        self.status_label.pack()
+class Messenger_Status_Frame(Status_Frame):
+
+    def __init__(self, tk_master: Tk, messenger):
+        self.messenger = messenger
+        super(Messenger_Status_Frame, self).__init__(tk_master)
+
+    def _build_frame(self):
+
+        self.status_label = ttk.Label(self, text="Messenger Update Period: ###")
+        self.status_label.grid(column=0, row=0)
+        self._update_frame()
+
+    def _update_frame(self):
+
+        try:
+            self.status_label["text"] = "Messenger Update Period: %.2fms" % (self.messenger.estimated_msg_period*1000)
+        except AttributeError:
+            return
+
+        self.after(250, self._update_frame)
+        self.update()
 
 
 class Content_Frame(ttk.Frame):
 
     def __init__(self, tk_master: Tk):
-        super(Content_Frame, self).__init__(tk_master)
+        super(Content_Frame, self).__init__(tk_master, name='content_panel')
 
         self.page_frames = defaultdict(ttk.Frame)
 
@@ -78,7 +107,7 @@ class Content_Frame(ttk.Frame):
         self.page_frames = page_dict
 
         for page in self.page_frames.values():
-            page.grid(row=0, column=0)
+            page.grid(row=0, column=0, sticky='nsew')
 
     def set_curr_page(self, page_key):
         if page_key in self.page_frames and isinstance(self.page_frames[page_key], ttk.Frame):
@@ -87,7 +116,7 @@ class Content_Frame(ttk.Frame):
 
 class Page_Frame(ttk.Frame):
 
-    def __init__(self, parent_frame: Content_Frame, page_name: str, page_key):
+    def __init__(self, parent_frame: Content_Frame, page_name: str, page_key, page_builder_args=()):
         super(Page_Frame, self).__init__(parent_frame)
 
         if not isinstance(page_name, str):
@@ -96,24 +125,28 @@ class Page_Frame(ttk.Frame):
         self.page_name = page_name
         self.page_key = page_key
 
-        self.page_label = ttk.Label(self, text="This page is called ==%s==" % page_name)
+        self._build_page(*page_builder_args)
+
+    def _build_page(self, *args):
+
+        self.page_label = ttk.Label(self, text="This page is called %s" % self.page_name)
         self.page_label.pack()
 
 
 class Navigation_Frame(ttk.Frame):
 
-    def __init__(self, tk_master: Tk, content_frame: Content_Frame):
+    def __init__(self, tk_master: Tk, content_panel: Content_Frame):
 
-        super(Navigation_Frame, self).__init__(tk_master)
+        super(Navigation_Frame, self).__init__(tk_master, name='nav_panel')
 
-        self.content_panel = content_frame
+        self.content_panel = content_panel
 
         # list of all the buttons
         self.button_list = []
 
     def build_nav_buttons(self, max_per_col: int=8):
 
-        if isinstance(max_per_col, int):
+        if not isinstance(max_per_col, int):
             raise TypeError("max_per_col must be an integer!")
 
         self.button_list = []
@@ -127,7 +160,7 @@ class Navigation_Frame(ttk.Frame):
             row_id = i % max_per_col
             if row_id == 0:
                 col_id += 1
-            self.button_list[i].grid(row=row_id, column=col_id)
+            self.button_list[i].grid(row=row_id, column=col_id, sticky='nsew')
 
     def set_curr_page(self, page_key):
         if page_key in self.content_panel.page_frames \
@@ -142,6 +175,7 @@ class Nav_Button(ttk.Button):
         self.page_key = page_key
         super(Nav_Button, self).__init__(master=nav_frame, text=page_label,
                                          command=self.button_action)
+
 
     def button_action(self):
 
