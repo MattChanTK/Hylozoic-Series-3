@@ -7,8 +7,8 @@ import os
 import interactive_system
 import interactive_system.CommunicationProtocol as CP
 
-from abstract_node import *
 from complex_node import *
+from abstract_node import *
 
 from tkinter import ttk
 import tk_gui
@@ -105,7 +105,6 @@ class Manual_Control(interactive_system.InteractiveCmd):
         self.messenger = messenger
 
         self.start_nodes()
-        #self.create_gui().run()
         self.hmi_init()
 
     def start_nodes(self):

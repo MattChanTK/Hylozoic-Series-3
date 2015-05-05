@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections import defaultdict
 from time import clock
 
 import interactive_system
@@ -6,6 +7,9 @@ from interactive_system import CommunicationProtocol as CP
 
 from complex_node import *
 from abstract_node import *
+
+from tkinter import ttk
+import tk_gui
 
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
@@ -151,22 +155,206 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             node_list[local_cluster.node_name] = local_cluster
 
-        for name, node in node_list.items():
+        self.node_list = node_list
+        self.messenger = messenger
+
+        self.start_nodes()
+        self.hmi_init()
+
+    def start_nodes(self):
+
+        for name, node in self.node_list.items():
             node.start()
             print('%s initialized' % name)
+        print('System Initialized with %d nodes' % len(self.node_list))
 
-        print('System Initialized with %d nodes' % len(node_list))
+    def hmi_init(self):
 
-        if len(node_list) > 0:
+        self.hmi = tk_gui.Master_Frame()
+        self.hmi.wm_title('Prescripted Mode')
 
-            # initialize the gui
-            main_gui = gui.Main_GUI(messenger)
-            # adding the data display frame
-            display_gui = gui.Display_Frame(main_gui.root, node_list)
+        status_frame = tk_gui.Messenger_Status_Frame(self.hmi, self.messenger)
+        content_frame = tk_gui.Content_Frame(self.hmi)
+        nav_frame = tk_gui.Navigation_Frame(self.hmi, content_frame)
 
-            main_gui.add_frame(display_gui)
+        control_vars = defaultdict(OrderedDict)
+        display_vars = defaultdict(OrderedDict)
 
-            main_gui.start()
+        if len(self.node_list) > 0:
+
+            for name, node in self.node_list.items():
+
+                node_name = name.split('.')
+                teensy_name = node_name[0]
+                device_name = node_name[1]
+                try:
+                    output_name = node_name[2]
+                except IndexError:
+                    output_name = "variables"
+
+                # specifying the displayable variables
+                if device_name not in display_vars[teensy_name]:
+                    display_vars[teensy_name][device_name] = OrderedDict()
+
+                if isinstance(node, Input_Node):
+                    display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
+                elif isinstance(node, Output_Node):
+                    display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
+                else:
+                    display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                    display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+
+        page_frames = OrderedDict()
+        for teensy_name, teensy_display_vars in display_vars.items():
+
+            teensy_control_vars = OrderedDict()
+            if teensy_name in control_vars.keys():
+                teensy_control_vars = control_vars[teensy_name]
+            frame = HMI_Prescripted_Mode(content_frame, teensy_name, (teensy_name, 'prescripted_display_page'),
+                                    teensy_control_vars, teensy_display_vars)
+            page_frames[frame.page_key] = frame
+
+            content_frame.build_pages(page_frames)
+
+            nav_frame.build_nav_buttons()
+
+        self.hmi.start(status_frame=status_frame,
+                       nav_frame=nav_frame,
+                       content_frame=content_frame,
+                       start_page_key=next(iter(page_frames.keys()), ''))
+
+
+class HMI_Prescripted_Mode(tk_gui.Page_Frame):
+
+    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
+                 control_var: OrderedDict, display_var: OrderedDict):
+
+        self.control_var = control_var
+        self.display_var = display_var
+
+        # label styles
+        device_label_style = ttk.Style()
+        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
+
+        super(HMI_Prescripted_Mode, self).__init__(parent_frame, page_name, page_key)
+
+    def _build_page(self):
+
+        row = 0
+
+        device_frames = dict()
+
+        for device_name, device in self.display_var.items():
+
+            # === device label ===
+            device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
+            device_label.grid(row=row, column=0, sticky='NW')
+            row += 1
+
+            # === display side ====
+            display_frame = HMI_Prescripted_Mode_Display_Frame(self, device)
+            display_frame.grid(row=row, column=0, sticky='NW', pady=(5, 10), padx=(30, 0))
+
+            device_frames[device_name] = (display_frame, )
+            row += 1
+
+
+class HMI_Prescripted_Mode_Display_Frame(ttk.Frame):
+
+    def __init__(self, tk_master: HMI_Prescripted_Mode, display_vars: OrderedDict):
+        super(HMI_Prescripted_Mode_Display_Frame, self).__init__(tk_master)
+
+        # label styles
+        input_style = ttk.Style()
+        input_style.configure("input_var.TLabel", foreground="magenta", font=('Helvetica', 10))
+        output_style = ttk.Style()
+        output_style.configure("output_var.TLabel", foreground="blue", font=('Helvetica', 10))
+        default_style = ttk.Style()
+        default_style.configure("default_var.TLabel", foreground="green", font=('Helvetica', 10))
+
+        self.display_vars = display_vars
+        self.var_dict = defaultdict(dict)
+
+        max_col_per_row = 7
+        row = 0
+        col = 0
+
+        # specifying the output label and entry box
+        for output_name, output_var in display_vars.items():
+
+            if col >= max_col_per_row:
+                col = 0
+                row += 2
+
+            output_label = ttk.Label(self, text=output_name.replace('_', ' '), style="default_var.TLabel")
+            if output_var[1] == 'input_node':
+                output_label.configure(style="input_var.TLabel")
+            elif output_var[1] == 'output_node':
+                output_label.configure(style="output_var.TLabel")
+
+            if len(output_var[0]) == 1:
+
+                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
+
+                var = next(iter(output_var[0].values()))
+                value_label = ttk.Label(self, text='%d' % var.val, width=8)
+            else:
+                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
+                value_label_string = HMI_Prescripted_Mode_Display_Frame.get_var_string(output_name, output_var[0])
+                label_width = len(value_label_string.split('\n')[0]) + 6
+                value_label = ttk.Label(self, text=value_label_string, width=label_width)
+
+            value_label.grid(row=row + 1, column=col, sticky='NW', pady=(5, 5))
+
+            col += 1
+
+            self.var_dict[output_name] = (output_label, value_label)
+
+        self.updateFrame()
+
+    @staticmethod
+    def get_var_string(output_name, output_var: dict):
+
+        if not isinstance(output_var, dict):
+            raise TypeError("output_var must be a dictionary!")
+
+        if output_name in ('acc',):
+
+            value_tuple = []
+            for var_name, var in output_var.items():
+                value_tuple.append(var.val)
+            value_tuple = tuple(value_tuple)
+
+            return str(value_tuple)
+        else:
+            var_string = ""
+            var_num = 1
+            for var_name, var in output_var.items():
+                if var_num % 3:
+                    end_string = '; '
+                else:
+                    end_string = '\n'
+                var_string += "%s=%d%s" % (var_name, var.val, end_string)
+                var_num += 1
+
+            return var_string
+
+
+    def updateFrame(self):
+        for output_name, output_var in self.var_dict.items():
+            label = output_var[0]
+            val = output_var[1]
+
+            curr_vals = self.display_vars[output_name][0]
+
+            if len(curr_vals) == 1:
+                val['text'] = '%d' % next(iter(curr_vals.values())).val
+            else:
+                value_label_string = HMI_Prescripted_Mode_Display_Frame.get_var_string(output_name, curr_vals)
+                val['text'] = value_label_string
+
+        self.after(500, self.updateFrame)
+        self.update()
 
 
 
