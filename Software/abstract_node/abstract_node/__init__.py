@@ -1,5 +1,5 @@
 __author__ = 'Matthew'
 
-from .gui import *
+from .basic_gui import *
 from .node import *
 from .low_level_node import *
