@@ -1,9 +1,19 @@
+from collections import OrderedDict
+from collections import defaultdict
+
 import interactive_system
+
 import interactive_system.CommunicationProtocol as CP
 
 from complex_node import *
-from custom_gui import *
 
+try:
+    from custom_gui import *
+except ImportError:
+    import sys
+    import os
+    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
+    from custom_gui.custom_gui import *
 
 class Manual_Control(interactive_system.InteractiveCmd):
 
