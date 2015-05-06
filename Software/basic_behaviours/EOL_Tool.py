@@ -28,7 +28,7 @@ def main():
 
 
 
-class Quality_Assurance(InteractiveCmd.InteractiveCmd):
+class Quality_Assurance(InteractiveCmd):
 
     def run(self):
 

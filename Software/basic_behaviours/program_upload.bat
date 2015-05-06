@@ -1,1 +1,1 @@
-python main.py 1
+python run_basic_behaviour.py 1
