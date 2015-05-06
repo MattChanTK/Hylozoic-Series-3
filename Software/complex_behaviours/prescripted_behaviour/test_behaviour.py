@@ -1,6 +1,5 @@
 import interactive_system
 from interactive_system import CommunicationProtocol as CP
-from abstract_node import *
 
 from complex_node import *
 
