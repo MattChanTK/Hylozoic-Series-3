@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from sklearn import linear_model
 
-from cbla_region_splitter import RegionSplitter_oudeyer as RegionSplitter
+from .cbla_region_splitter import RegionSplitter_oudeyer as RegionSplitter
 
 
 class Expert():

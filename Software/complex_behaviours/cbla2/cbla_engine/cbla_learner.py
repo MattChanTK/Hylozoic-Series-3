@@ -4,8 +4,8 @@ import random
 import warnings
 from collections import defaultdict
 
-from cbla_expert import Expert
-from cbla_robot import Robot
+from .cbla_expert import Expert
+from .cbla_robot import Robot
 
 
 class Learner(object):

@@ -3,8 +3,7 @@ from datetime import datetime
 import threading
 
 from .cbla_robot import *
-from cbla_learner import *
-
+from .cbla_learner import *
 
 class CBLA_Engine(object):
 
