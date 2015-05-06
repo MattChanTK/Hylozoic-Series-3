@@ -1,5 +1,3 @@
-from collections import OrderedDict
-from collections import defaultdict
 from time import clock
 import sys
 import os
@@ -8,10 +6,7 @@ import interactive_system
 import interactive_system.CommunicationProtocol as CP
 
 from complex_node import *
-from abstract_node import *
-
-from tkinter import ttk
-import tk_gui
+from custom_gui import *
 
 
 class Manual_Control(interactive_system.InteractiveCmd):
@@ -132,7 +127,10 @@ class Manual_Control(interactive_system.InteractiveCmd):
                 node_name = name.split('.')
                 teensy_name = node_name[0]
                 device_name = node_name[1]
-                output_name = node_name[2]
+                try:
+                    output_name = node_name[2]
+                except IndexError:
+                    output_name = "variables"
 
                 # specifying the controlable variables
                 if device_name not in control_vars[teensy_name]:
@@ -151,7 +149,9 @@ class Manual_Control(interactive_system.InteractiveCmd):
                     display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
                 elif isinstance(node, Output_Node):
                     display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
-
+                else:
+                    display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                    display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
 
         page_frames = OrderedDict()
         for teensy_name, teensy_display_vars in display_vars.items():
@@ -173,180 +173,6 @@ class Manual_Control(interactive_system.InteractiveCmd):
                        start_page_key=next(iter(page_frames.keys()), ''))
 
 
-class HMI_Manual_Mode(tk_gui.Page_Frame):
-
-    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
-                 control_var: OrderedDict, display_var: OrderedDict):
-
-        self.control_var = control_var
-        self.display_var = display_var
-
-        # label styles
-        device_label_style = ttk.Style()
-        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
-
-        super(HMI_Manual_Mode, self).__init__(parent_frame, page_name, page_key)
-
-    def _build_page(self):
-
-        row = 0
-
-        device_frames = dict()
-
-        for device_name, device in self.display_var.items():
-
-            # === device label ===
-            device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
-            device_label.grid(row=row, column=0, sticky='NW')
-            row += 1
-
-            # === control input side ======
-            control_frame = None
-            if device_name in self.control_var.keys():
-                control_frame = HMI_Manual_Mode_Control_Frame(self, self.control_var[device_name])
-                control_frame.grid(row=row, column=0, sticky='NW', pady=(5, 30))
-
-            # === display side ====
-            display_frame = HMI_Manual_Mode_Display_Frame(self, device)
-            display_frame.grid(row=row, column=1, sticky='NW', pady=(5, 10), padx=(30, 0))
-
-            device_frames[device_name] = (display_frame, control_frame)
-            row += 1
-
-
-class HMI_Manual_Mode_Control_Frame(ttk.Frame):
-
-    def __init__(self, tk_master: HMI_Manual_Mode, control_vars: OrderedDict):
-        super(HMI_Manual_Mode_Control_Frame, self).__init__(tk_master)
-
-        # label styles
-        invalid_style = ttk.Style()
-        invalid_style.configure("invalid.TLabel", foreground="red")
-        valid_style = ttk.Style()
-        valid_style.configure("valid.TLabel", foreground="black")
-
-        self.control_vars = control_vars
-        self.output_dict = dict()
-
-        max_col_per_row = 3
-        row = 0
-        col = 0
-        # specifying the output label and entry box
-        for output_name, output_var in control_vars.items():
-            output_label = ttk.Label(self, text=output_name.replace('_', ' '), width=15)
-            output_entry = ttk.Entry(self, width=5)
-            output_entry.insert(0, '0')
-
-            if col >= max_col_per_row:
-                col = 0
-                row += 2
-            output_label.grid(row=row, column=col, sticky='NW')
-            output_entry.grid(row=row + 1, column=col, padx=(0, 5), sticky='nsew')
-
-            self.output_dict[output_name] = (output_label, output_entry)
-
-            col += 1
-
-        self.updateFrame()
-
-    def updateFrame(self):
-
-        for output_name, output_var in self.output_dict.items():
-            label = output_var[0]
-            entry = output_var[1]
-
-            try:
-                curr_val = int(entry.get())
-                if curr_val > 255 or curr_val < 0:
-                    raise ValueError
-
-                if curr_val != self.control_vars[output_name].val:
-                    self.control_vars[output_name].val = curr_val
-
-            except ValueError:
-                label.configure(style="invalid.TLabel")
-            else:
-                label.configure(style="valid.TLabel")
-
-        self.after(500, self.updateFrame)
-        self.update()
-
-
-class HMI_Manual_Mode_Display_Frame(ttk.Frame):
-
-    def __init__(self, tk_master: HMI_Manual_Mode, display_vars: OrderedDict):
-        super(HMI_Manual_Mode_Display_Frame, self).__init__(tk_master)
-
-        # label styles
-        input_style = ttk.Style()
-        input_style.configure("input_var.TLabel", foreground="magenta")
-        output_style = ttk.Style()
-        output_style.configure("output_var.TLabel", foreground="blue")
-
-        self.display_vars = display_vars
-        self.var_dict = defaultdict(dict)
-
-        max_col_per_row = 8
-        row = 0
-        col = 0
-
-        # specifying the output label and entry box
-        for output_name, output_var in display_vars.items():
-
-            if col >= max_col_per_row:
-                col = 0
-                row += 2
-
-            output_label = ttk.Label(self, text=output_name.replace('_', ' '))
-            if output_var[1] == 'input_node':
-                output_label.configure(style="input_var.TLabel")
-            elif output_var[1] == 'output_node':
-                output_label.configure(style="output_var.TLabel")
-
-            if len(output_var[0]) == 1:
-
-                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
-
-                var = next(iter(output_var[0].values()))
-                value_label = ttk.Label(self, text='%d' % var.val, width=8)
-            else:
-                output_label.grid(row=row, column=col, sticky='NW', padx=(0, 5))
-
-                value_tuple = []
-                for var_name, var in output_var[0].items():
-                    value_tuple.append(var.val)
-                value_tuple = tuple(value_tuple)
-
-                value_label = ttk.Label(self, text=str(value_tuple), width=15)
-
-            value_label.grid(row=row + 1, column=col, sticky='NW', pady=(0, 5))
-
-            col += 1
-
-            self.var_dict[output_name] = (output_label, value_label)
-
-        self.updateFrame()
-
-    def updateFrame(self):
-        for output_name, output_var in self.var_dict.items():
-            label = output_var[0]
-            val = output_var[1]
-
-            curr_vals = self.display_vars[output_name][0]
-
-            if len(curr_vals) == 1:
-                val['text'] = '%d' % next(iter(curr_vals.values())).val
-            else:
-                value_tuple = []
-                for var_name, var in curr_vals.items():
-                    value_tuple.append(var.val)
-                value_tuple = tuple(value_tuple)
-
-                val['text'] = str(value_tuple)
-
-
-        self.after(500, self.updateFrame)
-        self.update()
 
 
 if __name__ == "__main__":

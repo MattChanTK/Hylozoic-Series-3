@@ -190,7 +190,7 @@ class Nav_Button(ttk.Button):
         inactive_style.configure("inactive_nav.TButton", foreground="grey", font=('Helvetica', 10))
 
         super(Nav_Button, self).__init__(master=nav_frame, text=page_label,
-                                         style="inactive_nav.TButton", width=20,
+                                         style="inactive_nav.TButton", width=16,
                                          command=self.button_action)
 
 
