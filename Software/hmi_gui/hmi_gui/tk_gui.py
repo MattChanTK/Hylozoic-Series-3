@@ -50,7 +50,6 @@ class Master_Frame(Tk):
         self.run()
 
     def run(self):
-        self.__construct_gui()
 
         self.mainloop()
 
