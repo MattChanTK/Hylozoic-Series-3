@@ -130,7 +130,7 @@ class CBLA2(interactive_system.InteractiveCmd):
             shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
 
             # ===== constructing the tentacle ====
-            for j in range(1):
+            for j in range(3):
 
                 ir_sensor_0 = node_list['%s.tentacle_%d.ir_0' % (teensy, j)]
                 ir_sensor_1 = node_list['%s.tentacle_%d.ir_1' % (teensy, j)]
@@ -208,6 +208,14 @@ class CBLA2(interactive_system.InteractiveCmd):
                 device_name = node_name[1]
 
                 if isinstance(node, cbla_node.CBLA_Node):
+                    for var_name, var in node.in_var.items():
+
+                        # specifying the displayable variables
+                        if device_name not in cbla_display_vars[teensy_name]:
+                            cbla_display_vars[teensy_name][device_name] = OrderedDict()
+
+                        cbla_display_vars[teensy_name][device_name][var_name] = ({var_name: var}, 'input_node')
+
                     for var_name, var in node.out_var.items():
 
                         # specifying the displayable variables
@@ -221,7 +229,6 @@ class CBLA2(interactive_system.InteractiveCmd):
                         output_name = node_name[2]
                     except IndexError:
                         output_name = "variables"
-
 
                     # specifying the displayable variables
                     if device_name not in device_display_vars[teensy_name]:
