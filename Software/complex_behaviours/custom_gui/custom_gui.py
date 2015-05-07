@@ -5,7 +5,7 @@ from collections import defaultdict
 from tkinter import ttk
 
 from hmi_gui import tk_gui
-
+from abstract_node import Var
 
 
 class HMI_Manual_Mode(tk_gui.Page_Frame):
@@ -84,6 +84,57 @@ class HMI_Prescripted_Mode(tk_gui.Page_Frame):
             col += 1
 
 
+class HMI_CBLA_Mode(tk_gui.Page_Frame):
+
+    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
+                 cbla_var: OrderedDict, display_var: OrderedDict):
+
+        self.display_var = display_var
+        self.cbla_var = cbla_var
+
+        # label styles
+        device_label_style = ttk.Style()
+        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
+
+        super(HMI_CBLA_Mode, self).__init__(parent_frame, page_name, page_key)
+
+    def _build_page(self):
+
+        col = 0
+
+        device_frames = dict()
+        cbla_frames = dict()
+
+        for device_name, device in self.display_var.items():
+
+            # === device label ===
+            device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
+            device_label.grid(row=0, column=col, sticky='NW', pady=(0, 10))
+
+            # === device display side ====
+            display_frame = HMI_Standard_Display_Frame(self, device)
+            display_frame.grid(row=1, column=col, sticky='NW', pady=(0, 20), padx=(0, 3))
+
+            device_frames[device_name] = (display_frame, )
+
+            col += 1
+
+        col = 0
+        for node_name, node in self.cbla_var.items():
+            # === cbla node label ===
+            node_label = ttk.Label(self, text=node_name, style="device_label.TLabel")
+            node_label.grid(row=2, column=col, sticky='NW', pady=(0, 10))
+
+            # === cbla display side ====
+            cbla_frame = HMI_Standard_Display_Frame(self, node)
+            cbla_frame.grid(row=3, column=col, sticky='NW', pady=(0, 2), padx=(0, 3))
+
+            cbla_frames[node_name] = (cbla_frame, )
+
+            col += 1
+
+
+
 class HMI_Standard_Display_Frame(ttk.Frame):
 
     def __init__(self, tk_master: tk_gui.Page_Frame, display_vars: OrderedDict, **kwargs):
@@ -125,11 +176,14 @@ class HMI_Standard_Display_Frame(ttk.Frame):
 
             if len(output_var[0]) == 1:
                 var = next(iter(output_var[0].values()))
-                value_label = ttk.Label(self, text='%d' % var.val, width=8)
+
+                value_label_string = to_tuple_string(var.val)
+
             else:
-                value_label_string = HMI_Prescripted_Mode_Display_Frame.get_var_string(output_name, output_var[0])
-                label_width = max([len(string) for string in value_label_string.split('\n')]) + 1
-                value_label = ttk.Label(self, text=value_label_string, width=label_width)
+                value_label_string = HMI_Standard_Display_Frame.get_var_string(output_name, output_var[0])
+
+            label_width = max([len(string) for string in value_label_string.split('\n')]) + 1
+            value_label = ttk.Label(self, text=value_label_string, width=-label_width)
 
             value_label.grid(row=row, column=col + 1, sticky='NW', pady=(2, 2))
 
@@ -146,13 +200,7 @@ class HMI_Standard_Display_Frame(ttk.Frame):
             raise TypeError("output_var must be a dictionary!")
 
         if output_name in ('acc',):
-
-            value_tuple = []
-            for var_name, var in output_var.items():
-                value_tuple.append(var.val)
-            value_tuple = tuple(value_tuple)
-
-            return str(value_tuple)
+            return to_tuple_string(output_var)
         else:
             var_string = ""
             var_num = 1
@@ -163,7 +211,8 @@ class HMI_Standard_Display_Frame(ttk.Frame):
                     end_string = ''
                 else:
                     end_string = '\n'
-                var_string += "%s=%d%s" % (var_name, var.val, end_string)
+                val_string = to_tuple_string(var.val)
+                var_string += "%s=%s%s" % (var_name, val_string, end_string)
                 var_num += 1
 
             return var_string
@@ -176,10 +225,12 @@ class HMI_Standard_Display_Frame(ttk.Frame):
             curr_vals = self.display_vars[output_name][0]
 
             if len(curr_vals) == 1:
-                val['text'] = '%d' % next(iter(curr_vals.values())).val
+                val['text'] = to_tuple_string(next(iter(curr_vals.values())).val)
             else:
                 value_label_string = HMI_Prescripted_Mode_Display_Frame.get_var_string(output_name, curr_vals)
                 val['text'] = value_label_string
+            label_width = max([len(string) for string in val['text'].split('\n')]) + 4
+            val.configure(width=max(val['width'], label_width))
 
         self.after(500, self.updateFrame)
         self.update()
@@ -262,3 +313,34 @@ class HMI_Manual_Mode_Control_Frame(HMI_Standard_Control_Frame):
     def __init__(self, tk_master: HMI_Manual_Mode, display_vars: OrderedDict):
 
         super(HMI_Manual_Mode_Control_Frame, self).__init__(tk_master, display_vars, max_col_per_row=5)
+
+
+def to_tuple_string(output_var):
+
+    if not isinstance(output_var, (float, int, list, tuple, dict)):
+        raise TypeError("output_var must be a int, float, list, a tuple or a dict")
+
+    if isinstance(output_var, dict):
+        var_list = tuple(output_var.values())
+    elif isinstance(output_var, (int, float)):
+        var_list = tuple([output_var])
+    else:
+        var_list = tuple(output_var)
+
+    text_string = ""
+    for var in var_list:
+        if isinstance(var, Var):
+            var = var.val
+        if isinstance(var, int):
+            text_string += '%d' % var
+        elif isinstance(var, float):
+            text_string += '%.4f' % var
+        else:
+            text_string += str(var)
+        text_string += ', '
+
+    if len(var_list) > 1:
+        text_string = '(' + text_string[:-2] + ')'
+    else:
+        text_string = text_string[:-2]
+    return text_string

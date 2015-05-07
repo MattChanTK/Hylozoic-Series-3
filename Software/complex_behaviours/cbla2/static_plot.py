@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
-import cbla_data_collect
-import cbla_data_plot
+from cbla_engine import cbla_data_plot
+from cbla_engine import cbla_data_collect
 
 if __name__ == '__main__':
 

@@ -5,6 +5,7 @@ from tkinter import ttk
 from collections import OrderedDict
 from collections import defaultdict
 
+
 class Master_Frame(Tk):
 
     def __init__(self):
@@ -19,6 +20,8 @@ class Master_Frame(Tk):
 
         # content panel
         self.content_panel = None
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def start(self, status_frame=None, nav_frame=None, content_frame=None, start_page_key=None):
 
@@ -61,6 +64,10 @@ class Master_Frame(Tk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
+
+    def on_closing(self):
+
+        self.iconify()
 
 
 class Status_Frame(ttk.Frame):
@@ -177,6 +184,7 @@ class Navigation_Frame(ttk.Frame):
             else:
                 button.set_inactive()
 
+
 class Nav_Button(ttk.Button):
 
     def __init__(self, nav_frame: Navigation_Frame, page_label, page_key):
@@ -202,3 +210,4 @@ class Nav_Button(ttk.Button):
 
     def set_inactive(self):
         self.configure(style="inactive_nav.TButton")
+

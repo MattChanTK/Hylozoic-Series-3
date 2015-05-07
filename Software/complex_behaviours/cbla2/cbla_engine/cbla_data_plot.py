@@ -7,7 +7,7 @@ import matplotlib.axes as axes
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from save_figure import save
+from .save_figure import save
 
 
 colour_map = 'Set1'

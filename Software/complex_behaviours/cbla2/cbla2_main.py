@@ -1,12 +1,25 @@
 import sys
+from collections import defaultdict
+from collections import OrderedDict
 
 from interactive_system import CommunicationProtocol as CP
 import interactive_system
 from abstract_node import *
 
-import gui
+#import old_gui
 import cbla_node
 from cbla_engine import cbla_data_collect
+
+from complex_node import *
+
+try:
+    from custom_gui import *
+except ImportError:
+    import sys
+    import os
+    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
+    from custom_gui.custom_gui import *
+
 
 
 USE_SAVED_DATA = False
@@ -115,6 +128,7 @@ class CBLA2(interactive_system.InteractiveCmd):
             node_list[als.node_name] = als
 
             shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
+
             # ===== constructing the tentacle ====
             for j in range(1):
 
@@ -146,15 +160,14 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                       shared_ir_0=shared_ir_0_var)
             node_list[cbla_protocell.node_name] = cbla_protocell
 
-        # initialize each node
-        for name, node in node_list.items():
-            node.start()
-            print('%s initialized' % name)
+        self.node_list = node_list
+        self.messenger = messenger
 
-        print('System initialized with %d nodes.' % len(node_list))
+        # initialize each node
+        self.start_nodes()
 
         # initialize the gui
-        main_gui = gui.CBLA2_Main_GUI(messenger)
+        self.hmi = tk_gui.Master_Frame()
         print('GUI initialized.')
 
         # start the Data Collector
@@ -163,32 +176,85 @@ class CBLA2(interactive_system.InteractiveCmd):
 
         # start thread that kill program with any input
         threading.Thread(target=self.termination_input_thread,
-                         args=(node_list, data_collector, main_gui.root),
+                         args=(node_list, data_collector, self.hmi),
                          daemon=True, name='termination_input').start()
 
+        self.hmi_init()
 
-        # start the GUI
-        if len(node_list) > 0:
+    def start_nodes(self):
 
-            # adding the data display frame
-            display_gui = gui.Display_Frame(main_gui.root, node_list)
-            # adding the data display frame for CBLA related stats
-            cbla_learner_gui = gui.CBLA2_Learner_Frame(main_gui.root, node_list)
+        for name, node in self.node_list.items():
+            node.start()
+            print('%s initialized' % name)
+        print('System Initialized with %d nodes' % len(self.node_list))
 
-            # adding the navigation gui
-            # page_frames = OrderedDict()
-            # page_frames['I/O States'] = display_gui
-            # page_frames['CBLA States'] = cbla_learner_gui
-            # navigation_gui = gui.Navigation_Frame(main_gui.root, page_frames)
+    def hmi_init(self):
 
-            # main_gui.add_frame(navigation_gui)
+        self.hmi.wm_title('CBLA Mode')
 
-            main_gui.add_frame(display_gui)
-            main_gui.add_frame(cbla_learner_gui)
+        status_frame = tk_gui.Messenger_Status_Frame(self.hmi, self.messenger)
+        content_frame = tk_gui.Content_Frame(self.hmi)
+        nav_frame = tk_gui.Navigation_Frame(self.hmi, content_frame)
 
-            main_gui.start()
+        cbla_display_vars = defaultdict(OrderedDict)
+        device_display_vars = defaultdict(OrderedDict)
 
-    def termination_input_thread(self, node_list, data_collector, gui_root):
+        if len(self.node_list) > 0:
+
+            for name, node in self.node_list.items():
+
+                node_name = name.split('.')
+                teensy_name = node_name[0]
+                device_name = node_name[1]
+
+                if isinstance(node, cbla_node.CBLA_Node):
+                    for var_name, var in node.out_var.items():
+
+                        # specifying the displayable variables
+                        if device_name not in cbla_display_vars[teensy_name]:
+                            cbla_display_vars[teensy_name][device_name] = OrderedDict()
+
+                        cbla_display_vars[teensy_name][device_name][var_name] = ({var_name: var}, 'output_node')
+
+                else:
+                    try:
+                        output_name = node_name[2]
+                    except IndexError:
+                        output_name = "variables"
+
+
+                    # specifying the displayable variables
+                    if device_name not in device_display_vars[teensy_name]:
+                        device_display_vars[teensy_name][device_name] = OrderedDict()
+
+                    if isinstance(node, Input_Node):
+                        device_display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
+                    elif isinstance(node, Output_Node):
+                        device_display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
+                    else:
+                        device_display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                        device_display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+
+        page_frames = OrderedDict()
+        for teensy_name, teensy_display_vars in device_display_vars.items():
+
+            teensy_cbla_vars = OrderedDict()
+            if teensy_name in cbla_display_vars.keys():
+                teensy_cbla_vars = cbla_display_vars[teensy_name]
+            frame = HMI_CBLA_Mode(content_frame, teensy_name, (teensy_name, 'cbla_display_page'),
+                                         teensy_cbla_vars, teensy_display_vars)
+            page_frames[frame.page_key] = frame
+
+            content_frame.build_pages(page_frames)
+
+            nav_frame.build_nav_buttons()
+
+        self.hmi.start(status_frame=status_frame,
+                       nav_frame=nav_frame,
+                       content_frame=content_frame,
+                       start_page_key=next(iter(page_frames.keys()), ''))
+
+    def termination_input_thread(self, node_list, data_collector: cbla_data_collect.DataCollector, gui_root: tk_gui.Tk):
 
         input_str = ''
         while not input_str == 'exit':
@@ -197,6 +263,7 @@ class CBLA2(interactive_system.InteractiveCmd):
             if input_str == 'save_states':
                 CBLA2.save_cbla_node_states(node_list)
                 print('state_saved')
+
             else:
                 if not input_str == 'exit':
                     print('command does not exist!')
