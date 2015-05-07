@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 from .HMI_Standard import *
-
+import matplotlib
 
 class HMI_CBLA_Mode(tk_gui.Page_Frame):
 
@@ -52,6 +52,16 @@ class HMI_CBLA_Mode(tk_gui.Page_Frame):
 
             col += 1
 
+
+class HMI_CBLA_Plot_Page(tk_gui.Page_Frame):
+
+    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key):
+
+        # label styles
+        device_label_style = ttk.Style()
+        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
+
+        super(HMI_CBLA_Plot_Page, self).__init__(parent_frame, page_name, page_key)
 
 
 
