@@ -6,11 +6,8 @@ from interactive_system import CommunicationProtocol as CP
 import interactive_system
 from abstract_node import *
 
-#import old_gui
 import cbla_node
 from cbla_engine import cbla_data_collect
-
-from complex_node import *
 
 try:
     from custom_gui import *
@@ -19,8 +16,6 @@ except ImportError:
     import os
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
     from custom_gui import *
-
-
 
 USE_SAVED_DATA = False
 
