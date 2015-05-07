@@ -8,134 +8,6 @@ from hmi_gui import tk_gui
 from abstract_node import Var
 
 
-class HMI_Manual_Mode(tk_gui.Page_Frame):
-
-    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
-                 control_var: OrderedDict, display_var: OrderedDict):
-
-        self.control_var = control_var
-        self.display_var = display_var
-
-        # label styles
-        device_label_style = ttk.Style()
-        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
-
-        super(HMI_Manual_Mode, self).__init__(parent_frame, page_name, page_key)
-
-    def _build_page(self):
-
-        row = 0
-
-        device_frames = dict()
-
-        for device_name, device in self.display_var.items():
-
-            # === device label ===
-            device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
-            device_label.grid(row=row, column=0, sticky='NW')
-            row += 1
-
-            # === control input side ======
-            control_frame = None
-            if device_name in self.control_var.keys():
-                control_frame = HMI_Manual_Mode_Control_Frame(self, self.control_var[device_name])
-                control_frame.grid(row=row, column=0, sticky='NW', pady=(5, 30))
-
-            # === display side ====
-            display_frame = HMI_Manual_Mode_Display_Frame(self, device)
-            display_frame.grid(row=row, column=1, sticky='NW', pady=(5, 10), padx=(30, 0))
-
-            device_frames[device_name] = (display_frame, control_frame)
-            row += 1
-
-
-class HMI_Prescripted_Mode(tk_gui.Page_Frame):
-
-    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
-                 control_var: OrderedDict, display_var: OrderedDict):
-
-        self.display_var = display_var
-
-        # label styles
-        device_label_style = ttk.Style()
-        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
-
-        super(HMI_Prescripted_Mode, self).__init__(parent_frame, page_name, page_key)
-
-    def _build_page(self):
-
-        col = 0
-
-        device_frames = dict()
-
-        for device_name, device in self.display_var.items():
-
-            row = 0
-            # === device label ===
-            device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
-            device_label.grid(row=row, column=col, sticky='NW')
-            row += 1
-
-            # === display side ====
-            display_frame = HMI_Prescripted_Mode_Display_Frame(self, device)
-            display_frame.grid(row=row, column=col, sticky='NW', pady=(0, 2), padx=(0, 3))
-
-            device_frames[device_name] = (display_frame, )
-            col += 1
-
-
-class HMI_CBLA_Mode(tk_gui.Page_Frame):
-
-    def __init__(self, parent_frame: tk_gui.Content_Frame, page_name: str, page_key,
-                 cbla_var: OrderedDict, display_var: OrderedDict):
-
-        self.display_var = display_var
-        self.cbla_var = cbla_var
-
-        # label styles
-        device_label_style = ttk.Style()
-        device_label_style.configure("device_label.TLabel", foreground="black", font=('Helvetica', 12))
-
-        super(HMI_CBLA_Mode, self).__init__(parent_frame, page_name, page_key)
-
-    def _build_page(self):
-
-        col = 0
-
-        device_frames = dict()
-        cbla_frames = dict()
-        row = 0
-        # for device_name, device in self.display_var.items():
-        #
-        #     # === device label ===
-        #     device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
-        #     device_label.grid(row=0, column=col, sticky='NW', pady=(0, 10))
-        #
-        #     # === device display side ====
-        #     display_frame = HMI_Standard_Display_Frame(self, device)
-        #     display_frame.grid(row=row+1, column=col, sticky='NW', pady=(0, 20), padx=(0, 3))
-        #
-        #     device_frames[device_name] = (display_frame, )
-        #
-        #     col += 1
-        #
-        # row += 2
-        col = 0
-        for node_name, node in self.cbla_var.items():
-            # === cbla node label ===
-            node_label = ttk.Label(self, text=node_name, style="device_label.TLabel")
-            node_label.grid(row=row, column=col, sticky='NW', pady=(0, 10))
-
-            # === cbla display side ====
-            cbla_frame = HMI_Standard_Display_Frame(self, node)
-            cbla_frame.grid(row=row+1, column=col, sticky='NW', pady=(0, 2), padx=(0, 3))
-
-            cbla_frames[node_name] = (cbla_frame, )
-
-            col += 1
-
-
-
 class HMI_Standard_Display_Frame(ttk.Frame):
 
     def __init__(self, tk_master: tk_gui.Page_Frame, display_vars: OrderedDict, **kwargs):
@@ -228,23 +100,13 @@ class HMI_Standard_Display_Frame(ttk.Frame):
             if len(curr_vals) == 1:
                 val['text'] = to_tuple_string(next(iter(curr_vals.values())).val)
             else:
-                value_label_string = HMI_Prescripted_Mode_Display_Frame.get_var_string(output_name, curr_vals)
+                value_label_string = HMI_Standard_Display_Frame.get_var_string(output_name, curr_vals)
                 val['text'] = value_label_string
             label_width = max([len(string) for string in val['text'].split('\n')]) + 4
             val.configure(width=max(val['width'], label_width))
 
         self.after(500, self.updateFrame)
         self.update()
-
-
-class HMI_Prescripted_Mode_Display_Frame(HMI_Standard_Display_Frame):
-    pass
-
-
-class HMI_Manual_Mode_Display_Frame(HMI_Standard_Display_Frame):
-
-    def __init__(self, tk_master: HMI_Manual_Mode, display_vars: OrderedDict):
-        super(HMI_Manual_Mode_Display_Frame, self).__init__(tk_master, display_vars, max_col_per_row=5)
 
 
 class HMI_Standard_Control_Frame(ttk.Frame):
@@ -307,13 +169,6 @@ class HMI_Standard_Control_Frame(ttk.Frame):
 
         self.after(500, self.updateFrame)
         self.update()
-
-
-class HMI_Manual_Mode_Control_Frame(HMI_Standard_Control_Frame):
-
-    def __init__(self, tk_master: HMI_Manual_Mode, display_vars: OrderedDict):
-
-        super(HMI_Manual_Mode_Control_Frame, self).__init__(tk_master, display_vars, max_col_per_row=5)
 
 
 def to_tuple_string(output_var):

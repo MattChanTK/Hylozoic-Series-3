@@ -13,7 +13,7 @@ except ImportError:
     import sys
     import os
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from custom_gui.custom_gui import *
+    from custom_gui import *
 
 class Manual_Control(interactive_system.InteractiveCmd):
 
