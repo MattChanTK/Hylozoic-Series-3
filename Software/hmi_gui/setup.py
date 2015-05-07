@@ -10,6 +10,6 @@ setup(name='hmi_gui',
       packages=['hmi_gui'],
 	  package_dir={'hmi_gui': 'hmi_gui'},
 	  install_requires=[
-          
+          'interactive_system'
       ],
       zip_safe=False)

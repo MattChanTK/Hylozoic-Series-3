@@ -105,24 +105,23 @@ class Manual_Control(interactive_system.InteractiveCmd):
         self.node_list = node_list
         self.messenger = messenger
 
-        self.start_nodes()
-        self.hmi_init()
-
-    def start_nodes(self):
+    def start_nodes(self, hmi: tk_gui.Master_Frame=None):
 
         for name, node in self.node_list.items():
             node.start()
             print('%s initialized' % name)
         print('System Initialized with %d nodes' % len(self.node_list))
 
-    def hmi_init(self):
+        if isinstance(hmi, tk_gui.Master_Frame):
+            self.__hmi_init(hmi)
 
-        self.hmi = tk_gui.Master_Frame()
-        self.hmi.wm_title('Manual Control Mode')
+    def __hmi_init(self, hmi: tk_gui.Master_Frame):
 
-        status_frame = tk_gui.Messenger_Status_Frame(self.hmi, self.messenger)
-        content_frame = tk_gui.Content_Frame(self.hmi)
-        nav_frame = tk_gui.Navigation_Frame(self.hmi, content_frame)
+        hmi.wm_title('Manual Control Mode')
+
+        status_frame = tk_gui.Messenger_Status_Frame(hmi, self.messenger)
+        content_frame = tk_gui.Content_Frame(hmi)
+        nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
         control_vars = defaultdict(OrderedDict)
         display_vars = defaultdict(OrderedDict)
@@ -173,10 +172,10 @@ class Manual_Control(interactive_system.InteractiveCmd):
 
             nav_frame.build_nav_buttons()
 
-        self.hmi.start(status_frame=status_frame,
-                       nav_frame=nav_frame,
-                       content_frame=content_frame,
-                       start_page_key=next(iter(page_frames.keys()), ''))
+        hmi.start(status_frame=status_frame,
+                  nav_frame=nav_frame,
+                  content_frame=content_frame,
+                  start_page_key=next(iter(page_frames.keys()), ''))
 
 
 
@@ -216,7 +215,16 @@ if __name__ == "__main__":
 
 
         # interactive code
+        # -- this create all the abstract nodes
         behaviours = cmd(teensy_manager)
+        behaviours.join()
+
+        # initialize the gui
+        hmi = tk_gui.Master_Frame()
+        print('GUI initialized.')
+
+        # start running the nodes
+        behaviours.start_nodes(hmi)
 
         print('done')
         for teensy_thread in teensy_manager._get_teensy_thread_list():

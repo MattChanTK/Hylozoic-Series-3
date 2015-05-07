@@ -17,6 +17,7 @@ except ImportError:
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
     from custom_gui import *
 
+
 USE_SAVED_DATA = False
 
 if len(sys.argv) > 1:
@@ -157,39 +158,34 @@ class CBLA2(interactive_system.InteractiveCmd):
 
         self.node_list = node_list
         self.messenger = messenger
+        self.data_collector = data_collector
 
-        # initialize each node
-        self.start_nodes()
-
-        # initialize the gui
-        self.hmi = tk_gui.Master_Frame()
-        print('GUI initialized.')
-
-        # start the Data Collector
-        data_collector.start()
-        print('Data Collector initialized.')
-
-        # start thread that kill program with any input
-        threading.Thread(target=self.termination_input_thread,
-                         args=(node_list, data_collector, self.hmi),
-                         daemon=True, name='termination_input').start()
-
-        self.hmi_init()
-
-    def start_nodes(self):
+    def start_nodes(self, hmi: tk_gui.Master_Frame=None):
 
         for name, node in self.node_list.items():
             node.start()
             print('%s initialized' % name)
         print('System Initialized with %d nodes' % len(self.node_list))
 
-    def hmi_init(self):
+        # start the Data Collector
+        self.data_collector.start()
+        print('Data Collector initialized.')
 
-        self.hmi.wm_title('CBLA Mode')
+        # start thread that kill program with any input
+        threading.Thread(target=self.termination_input_thread,
+                         args=(self.node_list, self.data_collector, hmi),
+                         daemon=True, name='termination_input').start()
 
-        status_frame = tk_gui.Messenger_Status_Frame(self.hmi, self.messenger)
-        content_frame = tk_gui.Content_Frame(self.hmi)
-        nav_frame = tk_gui.Navigation_Frame(self.hmi, content_frame)
+        if isinstance(hmi, tk_gui.Master_Frame):
+            self.__hmi_init(hmi)
+
+    def __hmi_init(self, hmi: tk_gui.Master_Frame):
+
+        hmi.wm_title('CBLA Mode')
+
+        status_frame = tk_gui.Messenger_Status_Frame(hmi, self.messenger)
+        content_frame = tk_gui.Content_Frame(hmi)
+        nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
         cbla_display_vars = defaultdict(OrderedDict)
         device_display_vars = defaultdict(OrderedDict)
@@ -251,10 +247,10 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             nav_frame.build_nav_buttons()
 
-        self.hmi.start(status_frame=status_frame,
-                       nav_frame=nav_frame,
-                       content_frame=content_frame,
-                       start_page_key=next(iter(page_frames.keys()), ''))
+        hmi.start(status_frame=status_frame,
+                  nav_frame=nav_frame,
+                  content_frame=content_frame,
+                  start_page_key=next(iter(page_frames.keys()), ''))
 
     def termination_input_thread(self, node_list, data_collector: cbla_data_collect.DataCollector, gui_root: tk_gui.Tk):
 
@@ -270,8 +266,9 @@ class CBLA2(interactive_system.InteractiveCmd):
                 if not input_str == 'exit':
                     print('command does not exist!')
         # terminate the gui
-        gui_root.quit()
-        print('GUI is terminated.')
+        if isinstance(gui_root, tk_gui.Tk):
+            gui_root.quit()
+            print('GUI is terminated.')
 
         # killing each of the Node
         for node in node_list.values():
@@ -295,8 +292,6 @@ class CBLA2(interactive_system.InteractiveCmd):
         for node in node_list.values():
             if isinstance(node, cbla_node.CBLA_Node):
                 node.save_states()
-
-
 
 
 
@@ -333,9 +328,17 @@ if __name__ == "__main__":
         # find all the Teensy
         print("Number of active Teensy devices: %s\n" % str(teensy_manager.get_num_teensy_thread()))
 
-
         # interactive code
+        # -- this create all the abstract nodes
         behaviours = cmd(teensy_manager)
+        behaviours.join()
+
+        # initialize the gui
+        hmi = tk_gui.Master_Frame()
+        print('GUI initialized.')
+
+        # start running the nodes
+        behaviours.start_nodes(hmi)
 
         for teensy_thread in teensy_manager._get_teensy_thread_list():
             teensy_thread.join()
