@@ -2,7 +2,7 @@ import interactive_system
 from interactive_system import CommunicationProtocol as CP
 
 from complex_node import *
-
+from abstract_node import basic_gui as gui
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
