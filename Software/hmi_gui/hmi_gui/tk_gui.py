@@ -51,6 +51,20 @@ class Master_Frame(Tk):
 
     def run(self):
 
+        self.update()
+        w = self.winfo_width()  #The value of the width
+        h = self.winfo_height()  #The value of the height of the window
+
+        # get screen width and height
+        ws = self.winfo_screenwidth()  #This value is the width of the screen
+        hs = self.winfo_screenheight()  #This is the height of the screen
+
+        # calculate position x, y
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
+
+        self.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
         self.mainloop()
 
     def __construct_gui(self):
