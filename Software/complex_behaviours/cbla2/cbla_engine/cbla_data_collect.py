@@ -90,7 +90,7 @@ class DataCollector(threading.Thread):
         # remove tmp files
         curr_dir = os.getcwd()
         os.chdir(os.path.join(curr_dir, "cbla_data"))
-        temp_files = glob.glob("*.tmp")
+        temp_files = glob.glob("*%s*.tmp" % self.data_file['file_name'])
         for temp_file in temp_files:
             os.remove(temp_file)
 
