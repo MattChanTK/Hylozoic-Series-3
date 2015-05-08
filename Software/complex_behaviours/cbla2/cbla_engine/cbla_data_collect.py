@@ -129,7 +129,10 @@ def retrieve_data(file_name=None):
     # ====== retrieving data ======
     # change folder to "cbla_data". This is where al the data will be stored
     curr_dir = os.getcwd()
-    os.chdir(os.path.join(curr_dir, "cbla_data"))
+    target_dir = os.path.join(curr_dir, "cbla_data")
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    os.chdir(target_dir)
 
     data_file = None
     disk_file = None
@@ -158,7 +161,10 @@ def save_to_file(filename, data):
 
     # change folder to "cbla_data". This is where al the data will be stored
     curr_dir = os.getcwd()
-    os.chdir(os.path.join(curr_dir, "cbla_data"))
+    target_dir = os.path.join(curr_dir, "cbla_data")
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    os.chdir(target_dir)
 
     # create a temp file
     temp_filename = "__%s.tmp" % filename
