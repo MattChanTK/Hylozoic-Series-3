@@ -1,0 +1,3 @@
+cd complex_behaviours
+cd prescripted_behaviour
+python prescripted_behaviour.py
