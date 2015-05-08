@@ -150,10 +150,10 @@ class Protocell2(Simple_Node):
                         self.out_var['output'].val = 0
                         while self.out_var['output'].val < 100:
                             self.out_var['output'].val += max(1, int(self.out_var['output'].val*0.1))
-                            sleep(self.in_var['sleep_time'])
+                            sleep(self.in_var['sleep_time'].val)
                         while self.out_var['output'].val > 0:
                             self.out_var['output'].val -= max(1, int(self.out_var['output'].val*0.1))
-                            sleep(self.in_var['sleep_time'])
+                            sleep(self.in_var['sleep_time'].val)
                         self.in_var['local_action_prob'].val = 0
                 t_cluster = clock()
 

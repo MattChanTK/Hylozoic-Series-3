@@ -127,13 +127,14 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             # creating Protocell Node
 
-            Parameter_Config(messenger, node_name='protocell.params', sleep_time=0.0025)
+            protocell_params = Parameter_Config(messenger, node_name='protocell.params', sleep_time=0.005)
+            
 
             # 1 LED per protocell
             led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
                               output='protocell_0_led_level')
             protocell = Protocell2(messenger, node_name='%s.protocell' % teensy,
-                                   led=led.in_var['output'],
+                                   led=led.in_var['output'], sleep_time=protocell_params.out_var['sleep_time'],
                                    local_action_prob=local_action_prob)
             node_list[led.node_name] = led
             node_list[protocell.node_name] = protocell
