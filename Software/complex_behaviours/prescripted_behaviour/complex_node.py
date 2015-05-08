@@ -139,7 +139,7 @@ class Protocell2(Simple_Node):
     def run(self):
 
         t_cluster = clock()
-        while True:
+        while self.alive:
 
             # cluster activity
             if clock() - t_cluster > 1.0:

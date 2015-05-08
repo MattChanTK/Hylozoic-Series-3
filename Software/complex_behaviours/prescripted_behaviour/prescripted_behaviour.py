@@ -14,6 +14,15 @@ except ImportError:
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
+    def __init__(self, Teensy_manager, auto_start=True):
+
+        self.node_list = None
+        self.messenger = None
+
+        self.all_nodes_created = threading.Condition()
+
+        super(Prescripted_Behaviour, self).__init__(Teensy_manager, auto_start=auto_start)
+
     # ========= the Run function for the prescripted behaviour system =====
     def run(self):
 
@@ -155,74 +164,105 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             node_list[local_cluster.node_name] = local_cluster
 
-        self.node_list = node_list
-        self.messenger = messenger
+        with self.all_nodes_created:
+            self.all_nodes_created.notify_all()
 
-    def start_nodes(self, hmi: tk_gui.Master_Frame=None):
+        self.start_nodes(node_list, messenger)
+
+        # wait for the nodes to destroy
+        for node in self.node_list.values():
+            node.join()
+
+        return 0
+
+    def start_nodes(self, node_list, messenger):
+
+        if not isinstance(node_list, dict) or \
+           not isinstance(messenger, interactive_system.Messenger):
+            raise AttributeError("Nodes have not been created properly!")
+        else:
+            self.node_list = node_list
+            self.messenger = messenger
 
         for name, node in self.node_list.items():
             node.start()
             print('%s initialized' % name)
         print('System Initialized with %d nodes' % len(self.node_list))
 
-        if isinstance(hmi, tk_gui.Master_Frame):
-            self.__hmi_init(hmi)
+    def terminate(self):
+        # killing each of the Node
+        for node in self.node_list.values():
+            node.alive = False
+        for node in self.node_list.values():
+            node.join()
+            print('%s is terminated.' % node.node_name)
+
+        print("All nodes are terminated")
+
+        # killing each of the Teensy threads
+        for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
+            self.teensy_manager.kill_teensy_thread(teensy_name)
 
 
-    def __hmi_init(self, hmi: tk_gui.Master_Frame):
+def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
 
-        hmi.wm_title('Prescripted Mode')
+    if not isinstance(hmi, tk_gui.Master_Frame):
+        raise TypeError("HMI must be Master_Frame")
+    if not isinstance(node_list, dict):
+        raise TypeError("node_list must be a dictionary")
 
-        status_frame = tk_gui.Messenger_Status_Frame(hmi, self.messenger)
-        content_frame = tk_gui.Content_Frame(hmi)
-        nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
+    hmi.wm_title('Prescripted Mode')
 
-        control_vars = defaultdict(OrderedDict)
-        display_vars = defaultdict(OrderedDict)
+    status_frame = tk_gui.Messenger_Status_Frame(hmi, messenger)
+    content_frame = tk_gui.Content_Frame(hmi)
+    nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
-        if len(self.node_list) > 0:
+    control_vars = defaultdict(OrderedDict)
+    display_vars = defaultdict(OrderedDict)
 
-            for name, node in self.node_list.items():
+    if len(node_list) > 0:
 
-                node_name = name.split('.')
-                teensy_name = node_name[0]
-                device_name = node_name[1]
-                try:
-                    output_name = node_name[2]
-                except IndexError:
-                    output_name = "variables"
+        for name, node in node_list.items():
 
-                # specifying the displayable variables
-                if device_name not in display_vars[teensy_name]:
-                    display_vars[teensy_name][device_name] = OrderedDict()
+            node_name = name.split('.')
+            teensy_name = node_name[0]
+            device_name = node_name[1]
+            try:
+                output_name = node_name[2]
+            except IndexError:
+                output_name = "variables"
 
-                if isinstance(node, Input_Node):
-                    display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
-                elif isinstance(node, Output_Node):
-                    display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
-                else:
-                    display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
-                    display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+            # specifying the displayable variables
+            if device_name not in display_vars[teensy_name]:
+                display_vars[teensy_name][device_name] = OrderedDict()
 
-        page_frames = OrderedDict()
-        for teensy_name, teensy_display_vars in display_vars.items():
+            if isinstance(node, Input_Node):
+                display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
+            elif isinstance(node, Output_Node):
+                display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
+            else:
+                display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
 
-            teensy_control_vars = OrderedDict()
-            if teensy_name in control_vars.keys():
-                teensy_control_vars = control_vars[teensy_name]
-            frame = HMI_Prescripted_Mode(content_frame, teensy_name, (teensy_name, 'prescripted_display_page'),
-                                    teensy_control_vars, teensy_display_vars)
-            page_frames[frame.page_key] = frame
+    page_frames = OrderedDict()
+    for teensy_name, teensy_display_vars in display_vars.items():
 
-            content_frame.build_pages(page_frames)
+        teensy_control_vars = OrderedDict()
+        if teensy_name in control_vars.keys():
+            teensy_control_vars = control_vars[teensy_name]
+        frame = HMI_Prescripted_Mode(content_frame, teensy_name, (teensy_name, 'prescripted_display_page'),
+                                teensy_control_vars, teensy_display_vars)
+        page_frames[frame.page_key] = frame
 
-            nav_frame.build_nav_buttons()
+        content_frame.build_pages(page_frames)
 
-        hmi.start(status_frame=status_frame,
-                  nav_frame=nav_frame,
-                  content_frame=content_frame,
-                  start_page_key=next(iter(page_frames.keys()), ''))
+        nav_frame.build_nav_buttons()
 
+    print('GUI initialized.')
+    hmi.start(status_frame=status_frame,
+              nav_frame=nav_frame,
+              content_frame=content_frame,
+              start_page_key=next(iter(page_frames.keys()), ''))
 
 
 if __name__ == "__main__":
@@ -261,14 +301,18 @@ if __name__ == "__main__":
 
         # interactive code
         behaviours = cmd(teensy_manager)
-        behaviours.join()
+
+        if not isinstance(behaviours, Prescripted_Behaviour):
+            raise TypeError("Behaviour must be Prescripted_Behaviour type!")
+
+        with behaviours.all_nodes_created:
+            behaviours.all_nodes_created.wait()
 
         # initialize the gui
         hmi = tk_gui.Master_Frame()
-        print('GUI initialized.')
+        hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
-        # start running the nodes
-        behaviours.start_nodes(hmi)
+        behaviours.terminate()
 
 
         for teensy_thread in teensy_manager._get_teensy_thread_list():
@@ -277,3 +321,4 @@ if __name__ == "__main__":
         print("All Teensy threads terminated")
 
     main()
+    print("\n===== Program Safely Terminated=====")

@@ -55,9 +55,11 @@ class DataCollector(threading.Thread):
 
         packet_count = 0
         sleep_time = 0.001
+
         while not self.program_terminating or not self.packet_queue.empty() or not self.states_update_queue.empty():
 
             with self.data_file_lock:
+
                 # saving run-time data to memory
                 if not self.packet_queue.empty():
 

@@ -79,15 +79,14 @@ class Master_Frame(Tk):
         self.grid_rowconfigure(1, weight=0)
 
     def on_closing(self):
-
-        self.iconify()
+        self.quit()
+        # self.iconify()
 
 
 class Status_Frame(ttk.Frame):
 
     def __init__(self, tk_master: Tk):
         super(Status_Frame, self).__init__(tk_master, name='status_panel')
-
         self._build_frame()
 
     def _build_frame(self):
@@ -102,7 +101,6 @@ class Messenger_Status_Frame(Status_Frame):
         super(Messenger_Status_Frame, self).__init__(tk_master)
 
     def _build_frame(self):
-
         self.status_label = ttk.Label(self, text="Messenger Update Period: ###")
         self.status_label.grid(column=0, row=0)
         self._update_frame()
@@ -126,7 +124,6 @@ class Content_Frame(ttk.Frame):
         self.page_frames = defaultdict(ttk.Frame)
 
     def build_pages(self, page_dict: dict):
-
         self.page_frames = page_dict
 
         for page in self.page_frames.values():
