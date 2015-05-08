@@ -66,12 +66,14 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
+            # configuration node
             local_action_prob = Var(0)
 
             # 3 tentacles
             half_frond_list = []
             reflex_actuator_list = []
-            cluster_activity = Var(0)
+
+
             for j in range(3):
 
                 # 2 ir sensors each
@@ -124,6 +126,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 half_frond_list.append(half_frond_right)
 
             # creating Protocell Node
+
+            Parameter_Config(messenger, node_name='protocell.params', sleep_time=0.0025)
 
             # 1 LED per protocell
             led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',

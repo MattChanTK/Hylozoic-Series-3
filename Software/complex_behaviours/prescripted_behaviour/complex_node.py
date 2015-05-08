@@ -130,11 +130,11 @@ class Protocell(Node):
 class Protocell2(Simple_Node):
 
     def __init__(self, messenger: Messenger, node_name='protocell2',
-                 als: Var=Var(0), local_action_prob: Var=Var(0),
-                 led: Var=Var(0), ):
+                 als: Var=Var(0), local_action_prob: Var=Var(0), sleep_time: Var=Var(0.025),
+                 led: Var=Var(0)):
 
         super(Protocell2, self).__init__(messenger, node_name='%s' % node_name, output=led,
-                                         als=als, local_action_prob=local_action_prob)
+                                         als=als, local_action_prob=local_action_prob, sleep_time=sleep_time)
 
     def run(self):
 
@@ -150,10 +150,10 @@ class Protocell2(Simple_Node):
                         self.out_var['output'].val = 0
                         while self.out_var['output'].val < 100:
                             self.out_var['output'].val += max(1, int(self.out_var['output'].val*0.1))
-                            sleep(0.025)
+                            sleep(self.in_var['sleep_time'])
                         while self.out_var['output'].val > 0:
                             self.out_var['output'].val -= max(1, int(self.out_var['output'].val*0.1))
-                            sleep(0.025)
+                            sleep(self.in_var['sleep_time'])
                         self.in_var['local_action_prob'].val = 0
                 t_cluster = clock()
 
@@ -300,3 +300,21 @@ class Cluster_Activity(Simple_Node):
 
             sleep(max(0, self.messenger.estimated_msg_period * 2))
            #print(self.out_var['output'].val)
+
+
+class Parameter_Config(Node):
+
+    def __init__(self, messenger: Messenger, node_name='param_config',
+                 **params):
+
+        super(Parameter_Config, self).__init__(messenger, node_name=node_name)
+
+        # defining the input variables
+        for param_name, init_value in params.items():
+            if isinstance(init_value, Var):
+                self.out_var[param_name] = init_value
+            else:
+                self.out_var[param_name] = Var(init_value)
+
+    def run(self):
+        pass
