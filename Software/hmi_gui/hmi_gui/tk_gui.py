@@ -21,7 +21,7 @@ class Master_Frame(Tk):
         # content panel
         self.content_panel = None
 
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        # self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def start(self, status_frame=None, nav_frame=None, content_frame=None, start_page_key=None):
 
