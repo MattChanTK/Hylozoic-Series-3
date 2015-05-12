@@ -38,8 +38,11 @@ for teensy_name in teensy_names:
 
         # find the g-force per LSB (assume first 10 data points is zero G
         acc_state_raw_0 = [np.mean(np.array(state[5])[0:10]), np.mean(np.array(state[6])[0:10]), np.mean(np.array(state[7])[0:10])]
-        acc_magnitude = np.sqrt((acc_state_raw_0[0] ** 2 + acc_state_raw_0[1] ** 2 + acc_state_raw_0[1] ** 2))
-        ACC_MG_PER_LSB = 1000/acc_magnitude
+        acc_magnitude = float(np.sqrt((acc_state_raw_0[0] ** 2 + acc_state_raw_0[1] ** 2 + acc_state_raw_0[1] ** 2)))
+        if acc_magnitude <= 0:
+            ACC_MG_PER_LSB = 3.8
+        else:
+            ACC_MG_PER_LSB = 1000/acc_magnitude
         acc_state = [np.array(state[5]) * ACC_MG_PER_LSB, np.array(state[6]) * ACC_MG_PER_LSB,
                      np.array(state[7]) * ACC_MG_PER_LSB]
         acc_magnitude = np.sqrt((acc_state[0]**2+acc_state[1]**2+acc_state[1]**2))

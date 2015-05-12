@@ -287,7 +287,7 @@ class System_Identification_Behaviour(InteractiveCmd):
 
 
             # output to files
-            if t - t_pre_output > 3:
+            if t0 - t_pre_output > 3:
                 t_pre_output = clock()
                 for device, states in state_history.items():
                     curr_dir = os.getcwd()
