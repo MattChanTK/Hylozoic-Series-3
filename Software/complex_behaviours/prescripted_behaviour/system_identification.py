@@ -95,7 +95,7 @@ class System_Identification(interactive_system.InteractiveCmd):
                 motion_type = Var(0)
                 #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
                 frond = Frond_Auto(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                              right_sma=sma_1.in_var['output'], motion_type=motion_type,)
+                              right_sma=sma_1.in_var['output'], motion_type=motion_type)
                               #left_config=sma_param, right_config=sma_param)
                 node_list[frond.node_name] = frond
 
@@ -108,10 +108,28 @@ class System_Identification(interactive_system.InteractiveCmd):
                 node_list[reflex_0.node_name] = reflex_0
                 node_list[reflex_1.node_name] = reflex_1
 
+                # acc diff
+                acc_x_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_x_diff' %(teensy, j),
+                                                    input_var=acc.out_var['x'], diff_gap=15, smoothing=30, step_period=0.1)
+                acc_y_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_y_diff' % (teensy, j),
+                                                    input_var=acc.out_var['y'], diff_gap=15, smoothing=30, step_period=0.1)
+                acc_z_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_z_diff' % (teensy, j),
+                                                    input_var=acc.out_var['z'], diff_gap=15, smoothing=30, step_period=0.1)
+
+                node_list[acc_x_diff.node_name] = acc_x_diff
+                node_list[acc_y_diff.node_name] = acc_y_diff
+                node_list[acc_z_diff.node_name] = acc_z_diff
+
+
                 # collecting data
                 data_variables['%s.tentacle_%d.acc_x' % (teensy, j)] = acc.out_var['x']
                 data_variables['%s.tentacle_%d.acc_y' % (teensy, j)] = acc.out_var['y']
                 data_variables['%s.tentacle_%d.acc_z' % (teensy, j)] = acc.out_var['z']
+                data_variables['%s.tentacle_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
+                data_variables['%s.tentacle_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
+                data_variables['%s.tentacle_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
+
+
                 data_variables['%s.tentacle_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.tentacle_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
                 data_variables['%s.tentacle_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
@@ -130,6 +148,8 @@ class System_Identification(interactive_system.InteractiveCmd):
             # collecting their values
             data_variables['%s.protocell.led' % teensy] = led.in_var['output']
             data_variables['%s.protocell.als' % teensy] = als.out_var['input']
+
+
 
         self.data_collector = Data_Collector_Node(messenger, file_header='sys_id_data', **data_variables)
 

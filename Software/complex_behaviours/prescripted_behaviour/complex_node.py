@@ -1,8 +1,11 @@
 from time import sleep
 import random
+from collections import deque
+import numpy as np
 
 from abstract_node import *
 from abstract_node.simple_data_collect import*
+
 
 class Tentacle(Node):
 
@@ -91,11 +94,11 @@ class Frond_Auto(Frond):
     def run(self):
 
         t0 = clock()
-        exp_step = (10, 50, 200)
+        exp_step = (10, 100, 180)
 
         # initial values
         motion_type = 0
-        t_flip = 1.0
+        t_flip = 5.0
         t_flip_k = 0
 
         while self.alive:
@@ -105,7 +108,6 @@ class Frond_Auto(Frond):
             # no movement
             if delta_t < exp_step[0]:
                 motion_type = 0
-
 
             # rapid L-R-L-R...
             elif delta_t < exp_step[1]:
@@ -423,9 +425,51 @@ class Data_Collector_Node(Node):
             for packet_name, data_packet in data_packets.items():
                 data_packet['time'] = datetime.now()
                 data_packet['step'] = loop_count
+
                 self.data_collect.append_data_packet(packet_name, data_packet)
 
             sleep(self.messenger.estimated_msg_period*2)
 
         self.data_collect.end_data_collection()
         self.data_collect.join()
+
+
+class Pseudo_Differentiation(Node):
+
+    def __init__(self, messenger: Messenger, node_name='Pseudo_Differentiation',
+                 input_var: Var=Var(0),
+                 diff_gap=1, smoothing=1, step_period=0.1):
+
+        if not isinstance(input_var, Var):
+            raise TypeError("input_var must be of type Var!")
+
+        super(Pseudo_Differentiation, self).__init__(messenger, node_name=node_name)
+
+        self.diff_gap = diff_gap
+        self.smoothing = smoothing
+
+        self.in_var['input'] = input_var
+        self.out_var['output'] = Var()
+        self.out_var['output'].val = 0
+
+        self.input_deque = deque(maxlen=(self.smoothing+self.diff_gap))
+        self.step_period = step_period
+
+    def run(self):
+
+        while self.alive:
+
+            self.input_deque.append(copy(self.in_var['input'].val))
+
+            # calculate differences
+            val_list = list(self.input_deque)
+            if len(val_list) >= self.diff_gap + 1:
+                self.out_var['output'].val = np.mean(val_list[-self.smoothing:]) \
+                                             - np.mean(val_list[:-self.diff_gap])
+            sleep(self.step_period)
+
+
+
+
+
+
