@@ -3,6 +3,7 @@ __author__ = 'Matthew'
 import math
 from copy import copy
 from collections import defaultdict
+from collections import deque
 
 from sklearn import linear_model
 
@@ -26,7 +27,7 @@ class Expert():
         self.config['learning_rate'] = 0.25
         self.config['kga_delta'] = 10
         self.config['kga_tau'] = 30
-        self.config['max_training_data_num'] = 3000
+        self.config['max_training_data_num'] = 1000
         self.config['prediction_model'] = linear_model.LinearRegression()
 
         # custom configurations
@@ -45,8 +46,8 @@ class Expert():
         self.region_splitter = None
 
         # memory
-        self.training_data = []
-        self.training_label = []
+        self.training_data = deque(maxlen=max(self.config['split_thres'], self.config['max_training_data_num']))
+        self.training_label = deque(maxlen=max(self.config['split_thres'], self.config['max_training_data_num']))
 
         # prediction model
         self.predict_model = self.config['prediction_model']
@@ -80,7 +81,6 @@ class Expert():
         self.split_lock_count = 0
         self.split_lock_count_thres = self.config['split_lock_count_thres']
 
-        self.max_training_data_num = self.config['max_training_data_num']
 
     def append(self, SM, S1, S1_predicted=None):
 
@@ -96,11 +96,6 @@ class Expert():
         if self.left is None and self.right is None:
             self.training_data.append(SM)
             self.training_label.append(S1)
-
-            if len(self.training_data) > max(self.split_thres, self.max_training_data_num):
-                self.training_data.pop(0)
-                self.training_label.pop(0)
-                #print("reach max Training data")
 
             # update prediction model
             self.train()
@@ -237,8 +232,8 @@ class Expert():
                 self.left.split_quality_thres = self.region_splitter.split_quality * self.split_quality_decay
 
                 # clear the training data at the parent node so they don't get modified accidentally
-                self.training_data = []
-                self.training_label = []
+                self.training_data.clear()
+                self.training_label.cleaR()
                 # clear everything as they are not needed any more
                 self.mean_error = None
                 self.predict_model = None
