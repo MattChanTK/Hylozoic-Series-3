@@ -2,6 +2,7 @@ from time import sleep
 import random
 
 from abstract_node import *
+from abstract_node.simple_data_collect import*
 
 class Tentacle(Node):
 
@@ -83,6 +84,73 @@ class Tentacle(Node):
             #     self.out_var['reflex_out_1'].val = 0
 
             sleep(self.messenger.estimated_msg_period*2)
+
+
+class Frond_Auto(Frond):
+
+    def run(self):
+
+        t0 = clock()
+        exp_step = (10, 50, 200)
+
+        # initial values
+        motion_type = 0
+        t_flip = 1.0
+        t_flip_k = 0
+
+        while self.alive:
+
+            delta_t = clock() - t0
+
+            # no movement
+            if delta_t < exp_step[0]:
+                motion_type = 0
+
+
+            # rapid L-R-L-R...
+            elif delta_t < exp_step[1]:
+
+                if delta_t > (t_flip*t_flip_k + exp_step[0]):
+
+                    if motion_type == 1:
+                        motion_type = 2
+                    else:
+                        motion_type = 1
+                    t_flip_k += 1
+
+            # slow up-down-up-down...
+            elif delta_t < exp_step[2]:
+                if delta_t < (exp_step[2]-exp_step[1])/2 + exp_step[1]:
+                    motion_type = 3
+                else:
+                    motion_type = 0
+
+
+
+            self.in_var['motion_type'].val = motion_type
+
+            if self.in_var['motion_type'].val == Frond.ON_LEFT:
+
+                T_left_ref = Frond.T_ON_REF
+                T_right_ref = 0
+
+            elif self.in_var['motion_type'].val == Frond.ON_RIGHT:
+                T_left_ref = 0
+                T_right_ref = Frond.T_ON_REF
+
+            elif self.in_var['motion_type'].val == Frond.ON_CENTRE:
+                T_left_ref = Frond.T_ON_REF
+                T_right_ref = Frond.T_ON_REF
+
+            else:
+                T_left_ref = 0
+                T_right_ref = 0
+
+            self.ctrl_left.update(T_left_ref)
+            self.ctrl_right.update(T_right_ref)
+
+            sleep(self.messenger.estimated_msg_period * 2)
+
 
 
 class Protocell(Node):
@@ -318,3 +386,46 @@ class Parameter_Config(Node):
 
     def run(self):
         pass
+
+
+class Data_Collector_Node(Node):
+
+    def __init__(self, messenger: Messenger, node_name='data_collector', file_header='sys_id_data',
+                 **variables):
+        super(Data_Collector_Node, self).__init__(messenger, node_name=node_name)
+
+        # defining the input variables
+        for var_name, var in variables.items():
+            if isinstance(var, Var):
+                self.in_var[var_name] = var
+            else:
+                raise TypeError("Variables must be of Var type!")
+
+        self.data_collect = SimpleDataCollector(file_header=file_header)
+
+    def run(self):
+
+        self.data_collect.start()
+
+        loop_count = 0
+        while self.alive:
+            loop_count += 1
+            data_packets = defaultdict(OrderedDict)
+
+            for var_name, var in self.in_var.items():
+                var_split = var_name.split('.')
+                teensy_name = var_split[0]
+                device_name = var_split[1]
+                point_name = var_split[2]
+                data_packets['%s.%s' % (teensy_name, device_name)][point_name] = copy(var.val)
+
+
+            for packet_name, data_packet in data_packets.items():
+                data_packet['time'] = datetime.now()
+                data_packet['step'] = loop_count
+                self.data_collect.append_data_packet(packet_name, data_packet)
+
+            sleep(self.messenger.estimated_msg_period*2)
+
+        self.data_collect.end_data_collection()
+        self.data_collect.join()
