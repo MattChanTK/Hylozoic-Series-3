@@ -139,6 +139,8 @@ class Page_Frame(ttk.Frame):
     def __init__(self, parent_frame: Content_Frame, page_name: str, page_key, page_builder_args=()):
         super(Page_Frame, self).__init__(parent_frame)
 
+        self.root = parent_frame
+
         if not isinstance(page_name, str):
             raise TypeError("Page name must be a string!")
 

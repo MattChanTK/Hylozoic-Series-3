@@ -13,6 +13,8 @@ class HMI_Standard_Display_Frame(ttk.Frame):
     def __init__(self, tk_master: tk_gui.Page_Frame, display_vars: OrderedDict, **kwargs):
         super(HMI_Standard_Display_Frame, self).__init__(tk_master)
 
+        self.root = tk_master
+
         # label styles
         input_style = ttk.Style()
         input_style.configure("input_var.TLabel", foreground="magenta", font=('Helvetica', 10))
@@ -107,7 +109,7 @@ class HMI_Standard_Display_Frame(ttk.Frame):
 
         self.after(500, self.updateFrame)
         self.update()
-
+        #updateRecursive(self)
 
 class HMI_Standard_Control_Frame(ttk.Frame):
 
@@ -200,3 +202,11 @@ def to_tuple_string(output_var):
     else:
         text_string = text_string[:-2]
     return text_string
+
+
+def updateRecursive(tk_root):
+    tk_root.update()
+    try:
+        updateRecursive(tk_root.root)
+    except AttributeError:
+        pass
