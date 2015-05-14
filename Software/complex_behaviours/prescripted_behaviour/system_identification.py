@@ -120,6 +120,18 @@ class System_Identification(interactive_system.InteractiveCmd):
                 node_list[acc_y_diff.node_name] = acc_y_diff
                 node_list[acc_z_diff.node_name] = acc_z_diff
 
+                # acc running average
+                # acc_x_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_x_avg' % (teensy, j),
+                #                             input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
+                # acc_y_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_y_avg' % (teensy, j),
+                #                             input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
+                # acc_z_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_z_avg' % (teensy, j),
+                #                             input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
+                #
+                # node_list[acc_x_avg.node_name] = acc_x_avg
+                # node_list[acc_y_avg.node_name] = acc_y_avg
+                # node_list[acc_z_avg.node_name] = acc_z_avg
+
 
                 # collecting data
                 data_variables['%s.tentacle_%d.acc_x' % (teensy, j)] = acc.out_var['x']
@@ -128,7 +140,9 @@ class System_Identification(interactive_system.InteractiveCmd):
                 data_variables['%s.tentacle_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
                 data_variables['%s.tentacle_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
                 data_variables['%s.tentacle_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
-
+                # data_variables['%s.tentacle_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
+                # data_variables['%s.tentacle_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
+                # data_variables['%s.tentacle_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
 
                 data_variables['%s.tentacle_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.tentacle_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']

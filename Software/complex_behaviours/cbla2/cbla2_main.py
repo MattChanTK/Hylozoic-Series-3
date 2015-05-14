@@ -18,7 +18,7 @@ except ImportError:
     from custom_gui import *
 
 
-USE_SAVED_DATA = False
+USE_SAVED_DATA = True
 
 if len(sys.argv) > 1:
     USE_SAVED_DATA = bool(sys.argv[1])
@@ -96,6 +96,33 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                                                      y='tentacle_%d_acc_y_state' % j,
                                                                                      z='tentacle_%d_acc_z_state' % j)
 
+                # acc diff
+                acc_x_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_x_diff' % (teensy, j),
+                                                    input_var=acc.out_var['x'], diff_gap=5, smoothing=10,
+                                                    step_period=0.1)
+                acc_y_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_y_diff' % (teensy, j),
+                                                    input_var=acc.out_var['y'], diff_gap=5, smoothing=10,
+                                                    step_period=0.1)
+                acc_z_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_z_diff' % (teensy, j),
+                                                    input_var=acc.out_var['z'], diff_gap=5, smoothing=10,
+                                                    step_period=0.1)
+
+                # acc running average
+                acc_x_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_x_avg' % (teensy, j),
+                                            input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
+                acc_y_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_y_avg' % (teensy, j),
+                                            input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
+                acc_z_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_z_avg' % (teensy, j),
+                                            input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
+
+                node_list[acc_x_avg.node_name] = acc_x_avg
+                node_list[acc_y_avg.node_name] = acc_y_avg
+                node_list[acc_z_avg.node_name] = acc_z_avg
+
+                node_list[acc_x_diff.node_name] = acc_x_diff
+                node_list[acc_y_diff.node_name] = acc_y_diff
+                node_list[acc_z_diff.node_name] = acc_z_diff
+
                 # 2 SMA wires each
                 sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
                 sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
@@ -135,6 +162,11 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
 
+            # 1 LED driver
+            led_driver = LED_Driver(messenger, node_name="%s.protocell.led_driver" % teensy,
+                                    led_out=led.in_var['output'], step_period=0.001)
+            node_list[led_driver.node_name] = led_driver
+
             # ===== constructing the tentacle ====
             for j in range(3):
 
@@ -145,11 +177,26 @@ class CBLA2(interactive_system.InteractiveCmd):
                 reflex_0 = node_list['%s.tentacle_%d.reflex_0' % (teensy, j)]
                 reflex_1 = node_list['%s.tentacle_%d.reflex_1' % (teensy, j)]
 
-                cbla_tentacle = cbla_node.CBLA_Tentacle(messenger, teensy, data_collector,
+                # derived features
+                acc_x_diff = node_list['%s.tentacle_%d.acc_x_diff' % (teensy, j)]
+                acc_y_diff = node_list['%s.tentacle_%d.acc_y_diff' % (teensy, j)]
+                acc_z_diff = node_list['%s.tentacle_%d.acc_z_diff' % (teensy, j)]
+
+                acc_x_avg = node_list['%s.tentacle_%d.acc_x_avg' % (teensy, j)]
+                acc_y_avg = node_list['%s.tentacle_%d.acc_y_avg' % (teensy, j)]
+                acc_z_avg = node_list['%s.tentacle_%d.acc_z_avg' % (teensy, j)]
+
+                cbla_tentacle = cbla_node.CBLA_Tentacle2(messenger, teensy, data_collector,
                                                         node_name='cbla_tentacle_%d' % j,
                                                         ir_0=ir_sensor_0.out_var['input'],
                                                         ir_1=ir_sensor_1.out_var['input'],
                                                         acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
+                                                        acc_diff=Var([acc_x_diff.out_var['output'],
+                                                                  acc_y_diff.out_var['output'],
+                                                                  acc_z_diff.out_var['output']]),
+                                                        acc_avg=Var([acc_x_avg.out_var['output'],
+                                                                 acc_y_avg.out_var['output'],
+                                                                 acc_z_avg.out_var['output'],]),
                                                         frond=frond.in_var['motion_type'],
                                                         reflex_0=reflex_0.in_var['output'],
                                                         reflex_1=reflex_1.in_var['output'],
@@ -158,11 +205,11 @@ class CBLA2(interactive_system.InteractiveCmd):
 
             # ===== constructing the Protocell ======
             als = node_list['%s.protocell.als' % teensy]
-            led = node_list['%s.protocell.led' % teensy]
+            led_driver = node_list['%s.protocell.led_driver' % teensy]
             cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy, data_collector,
                                                       node_name='cbla_protocell',
                                                       als=als.out_var['input'],
-                                                      led=led.in_var['output'],
+                                                      led=led_driver.in_var['led_ref'],
                                                       shared_ir_0=shared_ir_0_var)
             node_list[cbla_protocell.node_name] = cbla_protocell
 

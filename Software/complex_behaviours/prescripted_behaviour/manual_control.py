@@ -49,7 +49,8 @@ class Manual_Control(interactive_system.InteractiveCmd):
         teensy_3 = 'HK_teensy_2'
         teensy_4 = 'HK_teensy_3'
 
-        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
+        teensy_in_use = self.teensy_manager.get_teensy_name_list()
+        #teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
 
         node_list = OrderedDict()
 

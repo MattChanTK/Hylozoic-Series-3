@@ -46,8 +46,8 @@ class Expert():
         self.region_splitter = None
 
         # memory
-        self.training_data = deque(maxlen=max(self.config['split_thres'], self.config['max_training_data_num']))
-        self.training_label = deque(maxlen=max(self.config['split_thres'], self.config['max_training_data_num']))
+        self.training_data = deque(maxlen=int(max(self.config['split_thres'], self.config['max_training_data_num'])))
+        self.training_label = deque(maxlen=int(max(self.config['split_thres'], self.config['max_training_data_num'])))
 
         # prediction model
         self.predict_model = self.config['prediction_model']
@@ -233,7 +233,7 @@ class Expert():
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data.clear()
-                self.training_label.cleaR()
+                self.training_label.clear()
                 # clear everything as they are not needed any more
                 self.mean_error = None
                 self.predict_model = None

@@ -231,7 +231,6 @@ class Protocell2(Simple_Node):
 
             sleep(self.messenger.estimated_msg_period * 2)
 
-
 class Reflex_Actuator(Simple_Node):
 
     def __init__(self, messenger: Messenger, node_name='reflex_actuator', output: Var=Var(0), ir_sensor: Var=Var(0), **config):
@@ -388,86 +387,6 @@ class Parameter_Config(Node):
 
     def run(self):
         pass
-
-
-class Data_Collector_Node(Node):
-
-    def __init__(self, messenger: Messenger, node_name='data_collector', file_header='sys_id_data',
-                 **variables):
-        super(Data_Collector_Node, self).__init__(messenger, node_name=node_name)
-
-        # defining the input variables
-        for var_name, var in variables.items():
-            if isinstance(var, Var):
-                self.in_var[var_name] = var
-            else:
-                raise TypeError("Variables must be of Var type!")
-
-        self.data_collect = SimpleDataCollector(file_header=file_header)
-
-    def run(self):
-
-        self.data_collect.start()
-
-        loop_count = 0
-        while self.alive:
-            loop_count += 1
-            data_packets = defaultdict(OrderedDict)
-
-            for var_name, var in self.in_var.items():
-                var_split = var_name.split('.')
-                teensy_name = var_split[0]
-                device_name = var_split[1]
-                point_name = var_split[2]
-                data_packets['%s.%s' % (teensy_name, device_name)][point_name] = copy(var.val)
-
-
-            for packet_name, data_packet in data_packets.items():
-                data_packet['time'] = datetime.now()
-                data_packet['step'] = loop_count
-
-                self.data_collect.append_data_packet(packet_name, data_packet)
-
-            sleep(self.messenger.estimated_msg_period*2)
-
-        self.data_collect.end_data_collection()
-        self.data_collect.join()
-
-
-class Pseudo_Differentiation(Node):
-
-    def __init__(self, messenger: Messenger, node_name='Pseudo_Differentiation',
-                 input_var: Var=Var(0),
-                 diff_gap=1, smoothing=1, step_period=0.1):
-
-        if not isinstance(input_var, Var):
-            raise TypeError("input_var must be of type Var!")
-
-        super(Pseudo_Differentiation, self).__init__(messenger, node_name=node_name)
-
-        self.diff_gap = diff_gap
-        self.smoothing = smoothing
-
-        self.in_var['input'] = input_var
-        self.out_var['output'] = Var()
-        self.out_var['output'].val = 0
-
-        self.input_deque = deque(maxlen=(self.smoothing+self.diff_gap))
-        self.step_period = step_period
-
-    def run(self):
-
-        while self.alive:
-
-            self.input_deque.append(copy(self.in_var['input'].val))
-
-            # calculate differences
-            val_list = list(self.input_deque)
-            if len(val_list) >= self.diff_gap + 1:
-                self.out_var['output'].val = np.mean(val_list[-self.smoothing:]) \
-                                             - np.mean(val_list[:-self.diff_gap])
-            sleep(self.step_period)
-
 
 
 

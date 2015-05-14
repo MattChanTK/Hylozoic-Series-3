@@ -46,7 +46,7 @@ class CBLA_Node(Node):
 
         if not isinstance(learner_config, dict):
             learner_config = dict()
-        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state, idle_mode_enable=True,
+        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state,
                                                 **learner_config)
 
         # load previous learner steps
@@ -157,21 +157,87 @@ class CBLA_Tentacle(CBLA_Node):
 
         # learner configuration
         learner_config = dict()
-        learner_config['split_thres'] = 30
+        learner_config['split_thres'] = 10
         learner_config['split_thres_growth_rate'] = 1.2
         learner_config['split_lock_count_thres'] = 5
         learner_config['mean_err_thres'] = 0.015
         learner_config['reward_smoothing'] = 1
-        learner_config['kga_delta'] = 2
-        learner_config['kga_tau'] = 4
+        learner_config['kga_delta'] = 1
+        learner_config['kga_tau'] = 2
+        learner_config['idle_mode_enable'] = True
 
         # create robot
         self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range,
-                                                  in_vars_name=in_vars_name, out_vars_name=out_vars_name)
+                                                  in_vars_name=in_vars_name, out_vars_name=out_vars_name,
+                                                  sample_window=20, sample_period=0.1,
+                                                  )
 
         # instantiate
         self.instantiate(learner_config=learner_config)
 
+class CBLA_Tentacle2(CBLA_Node):
+
+    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+                 ir_0: Var=Var(0), ir_1: Var=Var(0),
+                 acc: Var=Var((0,0,0)), acc_diff: Var=Var((0,0,0)), acc_avg: Var=Var((0,0,0)),
+                 left_ir: Var=Var(0), right_ir: Var=Var(0), shared_ir_0: Var=Var(0),
+                 frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
+
+
+        super(CBLA_Tentacle2, self).__init__(messenger=messenger, teensy_name=teensy_name,
+                                            data_collector=data_collector, node_name=node_name)
+
+        # defining the input variables
+        self.in_var['ir_0'] = ir_0
+        self.in_var['ir_1'] = ir_1
+        self.in_var['acc_x'] = acc.val[0]
+        self.in_var['acc_y'] = acc.val[1]
+        self.in_var['acc_z'] = acc.val[2]
+        self.in_var['acc_x_diff'] = acc_diff.val[0]
+        self.in_var['acc_y_diff'] = acc_diff.val[1]
+        self.in_var['acc_z_diff'] = acc_diff.val[2]
+        self.in_var['acc_x_avg'] = acc_avg.val[0]
+        self.in_var['acc_y_avg'] = acc_avg.val[1]
+        self.in_var['acc_z_avg'] = acc_avg.val[2]
+        self.in_var['left_ir'] = left_ir
+        self.in_var['right_ir'] = right_ir
+        self.in_var['shared_ir_0'] = shared_ir_0
+
+        # defining the output variables
+        self.out_var['tentacle_out'] = frond
+        self.out_var['reflex_out_0'] = reflex_0
+        self.out_var['reflex_out_1'] = reflex_1
+
+        # defining the input variables
+        in_vars = [self.in_var['acc_x_diff'], self.in_var['acc_x_avg'], ]
+        in_vars_range = [(-6, 6), (-512, 512) ]
+        in_vars_name = ['Acc Diff (x-axis)', 'Acce Avg (x-axis)',]
+
+
+        # defining the output variables
+        out_vars = [self.out_var['tentacle_out']]
+        out_vars_name = ['motion type']
+
+        # learner configuration
+        learner_config = dict()
+        learner_config['split_thres'] = 10
+        learner_config['split_thres_growth_rate'] = 1.2
+        learner_config['split_lock_count_thres'] = 5
+        learner_config['mean_err_thres'] = 0.015
+        learner_config['reward_smoothing'] = 1
+        learner_config['kga_delta'] = 1
+        learner_config['kga_tau'] = 2
+        learner_config['idle_mode_enable'] = False
+
+        # create robot
+        self.cbla_robot = cbla_engine.Robot_Frond_0(in_vars, out_vars, in_vars_range=in_vars_range,
+                                                  in_vars_name=in_vars_name, out_vars_name=out_vars_name,
+                                                  wait_time=0,
+                                                  sample_window=50, sample_period=0.1,
+                                                   )
+
+        # instantiate
+        self.instantiate(learner_config=learner_config)
 
 class CBLA_Protocell(CBLA_Node):
 
@@ -200,16 +266,18 @@ class CBLA_Protocell(CBLA_Node):
 
         # learner configuration
         learner_config = dict()
-        learner_config['split_thres'] = 600
+        learner_config['split_thres'] = 120
         learner_config['split_thres_growth_rate'] = 1.5
-        learner_config['split_lock_count_thres'] = 250
-        learner_config['mean_err_thres'] = 0.015
+        learner_config['split_lock_count_thres'] = 10
+        learner_config['mean_err_thres'] = 0.025
         learner_config['reward_smoothing'] = 1
-        learner_config['kga_delta'] = 10
-        learner_config['kga_tau'] = 25
+        learner_config['kga_delta'] = 2
+        learner_config['kga_tau'] = 8
 
         # create robot
         self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
-                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name)
+                                                      in_vars_name=in_vars_name, out_vars_name=out_vars_name,
+                                                      wait_time=1.0)
 
         self.instantiate(learner_config=learner_config)
+

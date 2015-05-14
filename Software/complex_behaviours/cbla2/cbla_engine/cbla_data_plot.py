@@ -37,8 +37,8 @@ class Plotter(object):
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(2, 0, 0))
-        self.plot_models(tentacle_plot_dim=(4, 0, 0), protocell_plot_dim=(2, 0, 0))
+        self.plot_regions(tentacle_plot_dim=(2, 1, 0), protocell_plot_dim=(2, 0, 0))
+        self.plot_models(tentacle_plot_dim=(2, 1, 0), protocell_plot_dim=(2, 0, 0))
 
     def plot_histories(self):
 
@@ -200,7 +200,7 @@ class Plotter(object):
 
                 # configure the plot
                 plot_config = dict()
-                if 'input_label_name' in self.state_info[node_name]:
+                if 'input_label_name' in self.state_info[node_name] and 'output_label_name' in self.state_info[node_name]:
                     labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name]['output_label_name']
                     plot_config['xlabel'] = labels[plot_dims[0]]
                     plot_config['x2label'] = labels[plot_dims[1]]
@@ -313,7 +313,7 @@ class Plotter(object):
 
             # configure the plot
             plot_config = dict()
-            if 'input_label_name' in self.state_info[node_name]:
+            if 'input_label_name' in self.state_info[node_name] and 'output_label_name' in self.state_info[node_name]:
                 labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name][
                     'output_label_name']
                 plot_config['xlabel'] = labels[plot_dims[0]]
