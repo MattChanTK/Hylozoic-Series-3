@@ -10,21 +10,23 @@ import cbla_engine
 
 class CBLA_Node(Node):
 
-    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+    def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
                  node_name='cbla_node'):
 
 
-        if not isinstance(teensy_name, str):
-            raise TypeError('teensy_name must be a string!')
+        if not isinstance(cluster_name, str):
+            raise TypeError('cluster_name must be a string!')
 
-        self.teensy_name = teensy_name
+        if not isinstance(node_name, str):
+            raise TypeError('node_name must be a string!')
+
 
         # reference to the data collector
         self.data_collector = data_collector
 
-        super(CBLA_Node, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+        super(CBLA_Node, self).__init__(messenger, node_name="%s.%s" % (cluster_name, node_name))
 
-        self.state_save_period = 200  # seconds
+        self.state_save_period = 20  # seconds
 
         self.cbla_robot = None
         self.cbla_learner = None
@@ -121,16 +123,15 @@ class CBLA_Node(Node):
 
         self.data_collector.update_state(self.node_name, self.cbla_states)
 
-
 class CBLA_Tentacle(CBLA_Node):
 
-    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+    def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
                  ir_0: Var=Var(0), ir_1: Var=Var(0), acc: Var=Var(0),
                  left_ir: Var=Var(0), right_ir: Var=Var(0), shared_ir_0: Var=Var(0),
                  frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
 
 
-        super(CBLA_Tentacle, self).__init__(messenger=messenger, teensy_name=teensy_name,
+        super(CBLA_Tentacle, self).__init__(messenger=messenger, cluster_name=cluster_name,
                                             data_collector=data_collector, node_name=node_name)
 
         # defining the input variables
@@ -179,14 +180,14 @@ class CBLA_Tentacle(CBLA_Node):
 
 class CBLA_Tentacle2(CBLA_Node):
 
-    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+    def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
                  ir_0: Var=Var(0), ir_1: Var=Var(0),
                  acc: Var=Var((0,0,0)), acc_diff: Var=Var((0,0,0)), acc_avg: Var=Var((0,0,0)),
                  left_ir: Var=Var(0), right_ir: Var=Var(0), shared_ir_0: Var=Var(0),
                  frond: Var=Var(0), reflex_0: Var=Var(0), reflex_1: Var=Var(0), node_name='cbla_tentacle'):
 
 
-        super(CBLA_Tentacle2, self).__init__(messenger=messenger, teensy_name=teensy_name,
+        super(CBLA_Tentacle2, self).__init__(messenger=messenger, cluster_name=cluster_name,
                                             data_collector=data_collector, node_name=node_name)
 
         # defining the input variables
@@ -243,11 +244,11 @@ class CBLA_Tentacle2(CBLA_Node):
 
 class CBLA_Protocell(CBLA_Node):
 
-    def __init__(self, messenger: Messenger, teensy_name: str, data_collector: cbla_engine.DataCollector,
+    def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
                  als: Var=Var(0), shared_ir_0: Var=Var(0),
                  led: Var=Var(0), node_name='cbla_protocell'):
 
-        super(CBLA_Protocell, self).__init__(messenger=messenger, teensy_name=teensy_name,
+        super(CBLA_Protocell, self).__init__(messenger=messenger, cluster_name=cluster_name,
                                              data_collector=data_collector, node_name=node_name)
 
         # defining the input variables

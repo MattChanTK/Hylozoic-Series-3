@@ -86,8 +86,8 @@ class Robot(object):
         for i in range(len(self.in_vars)):
             s = self.in_vars[i].val
             # normalize if the range is specified
-            if 'in_vars_range' in self.config:
-                val_range = self.config['in_vars_range'][i]
+            if 's_ranges' in self.config:
+                val_range = self.config['s_ranges'][i]
                 if isinstance(val_range, tuple) and len(val_range) == 2:
                     s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
             S.append(s)
@@ -226,8 +226,8 @@ class Robot_Frond_0(Robot_Frond):
                 s = self.in_vars[i].val
 
                 # normalize if the range is specified
-                if 'in_vars_range' in self.config:
-                    val_range = self.config['in_vars_range'][i]
+                if 's_ranges' in self.config:
+                    val_range = self.config['s_ranges'][i]
                     if isinstance(val_range, tuple) and len(val_range) == 2:
                         s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
                 S.append(s)

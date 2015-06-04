@@ -6,13 +6,14 @@ from cbla_node import *
 class CBLA_Abstract_Node(CBLA_Node):
 
     def __init__(self, messenger: Messenger, data_collector: cbla_engine.DataCollector,
-                 teensy_name: str, node_type: str, node_id: int,
+                 cluster_name: str, node_type: str, node_id: int,
                  in_vars: OrderedDict, out_vars: OrderedDict,
                  s_keys: tuple=(), s_ranges: tuple=(), s_names: tuple=(),
                  m_keys: tuple=(), m_ranges: tuple=(), m_names: tuple=(),
                  node_version: str=''):
 
         # defining the name of the node
+        self.cluster_name = str(cluster_name)
         self.node_type = str(node_type)
         if '_' in self.node_type:
             raise NameError('node_type can not have any \'_\'!')
@@ -23,8 +24,8 @@ class CBLA_Abstract_Node(CBLA_Node):
             node_name += '-%s' % self.node_version
 
         # initializing the cbla_node
-        super(CBLA_Abstract_Node, self).__init__(messenger=messenger, teensy_name=teensy_name,
-                                            data_collector=data_collector, node_name=node_name)
+        super(CBLA_Abstract_Node, self).__init__(messenger=messenger, data_collector=data_collector,
+                                                 cluster_name=cluster_name, node_name=node_name)
 
         # defining the input variables
         for in_var_name, in_var in in_vars.items():
@@ -47,16 +48,16 @@ class CBLA_Abstract_Node(CBLA_Node):
             if key not in self.in_var:
                 raise AttributeError('%s key is not in in_var' % key)
         for key in m_keys:
-            if key not in self.in_var:
-                raise AttributeError('%s key is not in in_var' % key)
+            if key not in self.out_var:
+                raise AttributeError('%s key is not in out_var' % key)
 
         self.s_keys = tuple(s_keys)
         self.s_ranges = tuple(s_ranges)
         self.s_names = tuple(s_names)
 
-        self.m_keys = tuple(s_keys)
-        self.m_ranges = tuple(s_ranges)
-        self.m_names = tuple(s_names)
+        self.m_keys = tuple(m_keys)
+        self.m_ranges = tuple(m_ranges)
+        self.m_names = tuple(m_names)
 
         # instantiate
         self.instantiate(cbla_robot=self._build_robot(),
@@ -72,7 +73,7 @@ class CBLA_Abstract_Node(CBLA_Node):
         m_vars = []
         # defining the output variables
         for m_key in self.m_keys:
-            m_vars.append(self.in_var[m_key])
+            m_vars.append(self.out_var[m_key])
 
         # create robot
         cbla_robot = cbla_engine.Robot(s_vars, m_vars,
