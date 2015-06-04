@@ -16,6 +16,7 @@ class Expert():
 
         # default expert configuration
         self.config = defaultdict(int)
+        self.config['reward_smoothing'] = 1
         self.config['split_thres'] = 600
         self.config['split_thres_growth_rate'] = 1.5
         self.config['split_lock_count_thres'] = 250

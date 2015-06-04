@@ -249,9 +249,9 @@ bool TeensyUnit::FinPort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int
 
 	teensy_unit.Wire.beginTransmission(ACCEL);
 	teensy_unit.Wire.write(ACC_X_LSB_ADDR);
-	teensy_unit.Wire.endTransmission(I2C_STOP, i2c_timeout);
+	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
 	
-	teensy_unit.Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, i2c_timeout); // Read 6 bytes      
+	teensy_unit.Wire.requestFrom(ACCEL, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
 	
 	uint8_t i = 0;
 	byte buffer[6] = {0};
@@ -294,7 +294,7 @@ void TeensyUnit::FinPort::writeToAccel(const byte address, const byte val) {
 	teensy_unit.Wire.beginTransmission(ACCEL); // start transmission to device 
 	teensy_unit.Wire.write(address);            // send register address
 	teensy_unit.Wire.write(val);                // send value to write
-	teensy_unit.Wire.endTransmission(I2C_NOSTOP, i2c_timeout);         // end transmission
+	teensy_unit.Wire.endTransmission(I2C_NOSTOP, I2C_TIMEOUT);         // end transmission
 	interrupts();
 }
 

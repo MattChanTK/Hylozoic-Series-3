@@ -64,7 +64,7 @@ class FinVar{
 	
 		//~~Reflex wave type~~
 		// {channel 1, channel 2}
-		uint8_t fin_reflex_wave_type[2] =  {0, 1};
+		uint8_t reflex_wave_type[2] =  {0, 1};
 
 };
 
@@ -184,7 +184,7 @@ class Behaviours : public TeensyUnit{
 		//>>> Wave Forms <<<
 		
 		//~~ instances ~~~
-		// WaveTable wave[NUM_WAVE];
+		WaveTable wave[NUM_WAVE];
 				
 		//~~ waveform definitions ~~~
 		// const_wave_t cos_wave_1[wave_size] = {0, 2, 9, 21, 37, 56, 78, 102, 127, 151, 175, 197, 216, 232, 244, 251, 254, 251, 244, 232, 216, 197, 175, 151, 127, 102, 78, 56, 37, 21, 9, 2};

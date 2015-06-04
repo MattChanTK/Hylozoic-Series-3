@@ -29,9 +29,11 @@ class CBLA_Node(Node):
         self.cbla_robot = None
         self.cbla_learner = None
 
-    def instantiate(self, learner_config=None):
+    def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
 
-        if self.cbla_robot is None:
+        if isinstance(cbla_robot, cbla_engine.Robot):
+            self.cbla_robot = cbla_robot
+        else:
             raise AttributeError("CBLA_Robot must be implemented in the child class")
 
         # create learner
@@ -75,10 +77,10 @@ class CBLA_Node(Node):
 
         # add information about the robot's label to data_collector
         label_info = dict()
-        if 'in_vars_name' in self.cbla_robot.config:
-            label_info['input_label_name'] = self.cbla_robot.config['in_vars_name']
-        if 'out_vars_name' in self.cbla_robot.config:
-            label_info['output_label_name'] = self.cbla_robot.config['out_vars_name']
+        if 's_name' in self.cbla_robot.config:
+            label_info['input_label_name'] = self.cbla_robot.config['s_names']
+        if 'm_name' in self.cbla_robot.config:
+            label_info['output_label_name'] = self.cbla_robot.config['m_names']
 
         if label_info:
             self.data_collector.update_state(node_name=self.node_name, states_update=label_info)
@@ -167,13 +169,13 @@ class CBLA_Tentacle(CBLA_Node):
         learner_config['idle_mode_enable'] = True
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range,
+        cbla_robot = cbla_engine.Robot_Frond(in_vars, out_vars, in_vars_range=in_vars_range,
                                                   in_vars_name=in_vars_name, out_vars_name=out_vars_name,
                                                   sample_window=20, sample_period=0.1,
                                                   )
 
         # instantiate
-        self.instantiate(learner_config=learner_config)
+        self.instantiate(cbla_robot=cbla_robot, learner_config=learner_config)
 
 class CBLA_Tentacle2(CBLA_Node):
 
@@ -230,14 +232,14 @@ class CBLA_Tentacle2(CBLA_Node):
         learner_config['idle_mode_enable'] = False
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot_Frond_0(in_vars, out_vars, in_vars_range=in_vars_range,
+        cbla_robot = cbla_engine.Robot_Frond_0(in_vars, out_vars, in_vars_range=in_vars_range,
                                                   in_vars_name=in_vars_name, out_vars_name=out_vars_name,
                                                   wait_time=0,
                                                   sample_window=50, sample_period=0.1,
                                                    )
 
         # instantiate
-        self.instantiate(learner_config=learner_config)
+        self.instantiate(cbla_robot=cbla_robot, learner_config=learner_config)
 
 class CBLA_Protocell(CBLA_Node):
 
@@ -275,9 +277,9 @@ class CBLA_Protocell(CBLA_Node):
         learner_config['kga_tau'] = 8
 
         # create robot
-        self.cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
+        cbla_robot = cbla_engine.Robot_Protocell(in_vars, out_vars, in_vars_range=in_vars_range,
                                                       in_vars_name=in_vars_name, out_vars_name=out_vars_name,
                                                       wait_time=1.0)
 
-        self.instantiate(learner_config=learner_config)
+        self.instantiate(cbla_robot=cbla_robot, learner_config=learner_config)
 

@@ -96,13 +96,26 @@ class Robot(object):
 
     def get_possible_action(self, num_sample=100) -> tuple:
 
+        if 'm_ranges' in self.config:
+            m_ranges = self.config['m_ranges']
+        else:
+            m_ranges = ()
+
         num_dim = len(self.M0.val)
 
         X = np.zeros((num_sample, num_dim))
 
         for i in range(num_sample):
             for x_dim in range(num_dim):
-                X[i, x_dim - 1] = random.randint(0, 255)
+
+                try:
+                    m_range = m_ranges[x_dim]
+                    if not isinstance(m_range, (tuple, list)):
+                        raise TypeError
+                except (IndexError, TypeError):
+                    m_range = (0, 255)
+
+                X[i, x_dim - 1] = random.randint(m_range[0], m_range[1])
 
         M_candidates = tuple(set((map(tuple, X))))
 
@@ -238,7 +251,6 @@ class Robot_Frond_0(Robot_Frond):
 
         self.S0.val = tuple(S_mean)
         return tuple(S_mean)
-
 
 
 class Robot_Protocell(Robot):

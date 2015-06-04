@@ -18,7 +18,7 @@ except ImportError:
     from custom_gui import *
 
 
-USE_SAVED_DATA = True
+USE_SAVED_DATA = False
 
 if len(sys.argv) > 1:
     USE_SAVED_DATA = bool(sys.argv[1])
@@ -27,22 +27,22 @@ class CBLA2(interactive_system.InteractiveCmd):
 
     def __init__(self, Teensy_manager, auto_start=True):
 
-        self.node_list = None
-        self.messenger = None
-        self.data_collector = None
+        data_file = None
+        if USE_SAVED_DATA:
+            data_file, _ = cbla_data_collect.retrieve_data()
+
+        self.data_collector = cbla_data_collect.DataCollector(data_file=data_file)
+        self.node_list = OrderedDict()
 
         self.all_nodes_created = threading.Condition()
 
         super(CBLA2, self).__init__(Teensy_manager, auto_start=auto_start)
 
+
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
 
-        data_file = None
-        if USE_SAVED_DATA:
-            data_file, _ = cbla_data_collect.retrieve_data()
-
-        data_collector = cbla_data_collect.DataCollector(data_file=data_file)
+        self.messenger = interactive_system.Messenger(self, 0.000)
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
@@ -64,18 +64,11 @@ class CBLA2(interactive_system.InteractiveCmd):
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
         # start the messenger
-        messenger = interactive_system.Messenger(self, 0.000)
-        messenger.start()
+        self.messenger.start()
 
-        teensy_0 = 'test_teensy_1'
-        teensy_1 = 'test_teensy_2'
-        teensy_2 = 'HK_teensy_1'
-        teensy_3 = 'HK_teensy_2'
-        teensy_4 = 'HK_teensy_3'
+        teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
-        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
 
-        node_list = OrderedDict()
         # instantiate all the basic components
         for teensy in teensy_in_use:
 
@@ -84,109 +77,35 @@ class CBLA2(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-            # ===== components for the 3 tentacles ====
+            # ===== components for the 3 Fins ====
             for j in range(3):
-
-                # 2 ir sensors each
-                ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
-                ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
-
-                # 1 3-axis acceleromter each
-                acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j, x='tentacle_%d_acc_x_state' % j,
-                                                                                     y='tentacle_%d_acc_y_state' % j,
-                                                                                     z='tentacle_%d_acc_z_state' % j)
-
-                # acc diff
-                acc_x_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_x_diff' % (teensy, j),
-                                                    input_var=acc.out_var['x'], diff_gap=5, smoothing=10,
-                                                    step_period=0.1)
-                acc_y_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_y_diff' % (teensy, j),
-                                                    input_var=acc.out_var['y'], diff_gap=5, smoothing=10,
-                                                    step_period=0.1)
-                acc_z_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_z_diff' % (teensy, j),
-                                                    input_var=acc.out_var['z'], diff_gap=5, smoothing=10,
-                                                    step_period=0.1)
-
-                # acc running average
-                acc_x_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_x_avg' % (teensy, j),
-                                            input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-                acc_y_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_y_avg' % (teensy, j),
-                                            input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-                acc_z_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_z_avg' % (teensy, j),
-                                            input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
-
-                node_list[acc_x_avg.node_name] = acc_x_avg
-                node_list[acc_y_avg.node_name] = acc_y_avg
-                node_list[acc_z_avg.node_name] = acc_z_avg
-
-                node_list[acc_x_diff.node_name] = acc_x_diff
-                node_list[acc_y_diff.node_name] = acc_y_diff
-                node_list[acc_z_diff.node_name] = acc_z_diff
-
-                # 2 SMA wires each
-                sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
-                sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
-
-                # 2 reflex each
-                reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
-                reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
-
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
-                node_list[acc.node_name] = acc
-                node_list[sma_0.node_name] = sma_0
-                node_list[sma_1.node_name] = sma_1
-                node_list[reflex_0.node_name] = reflex_0
-                node_list[reflex_1.node_name] = reflex_1
-
-                # 1 frond each
-                motion_type = Var(0)
-                frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                              right_sma=sma_1.in_var['output'],
-                              motion_type=motion_type)
-                node_list[frond.node_name] = frond
+                self.node_list.update(self.build_fin_components(teensy_name=teensy, fin_id=j))
 
             # ==== creating components for Protocell Node =====
 
-            # 1 LED per protocell
-            led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
-                              output='protocell_0_led_level')
-
-            node_list[led.node_name] = led
-
-            # 1 ambient light sensor per protocell
-            als = Input_Node(messenger, teensy, node_name='protocell.als',
-                             input='protocell_0_als_state')
-
-            node_list[als.node_name] = als
-
-            shared_ir_0_var = node_list['%s.tentacle_2.ir_0' % teensy].out_var['input']
-
-            # 1 LED driver
-            led_driver = LED_Driver(messenger, node_name="%s.protocell.led_driver" % teensy,
-                                    led_out=led.in_var['output'], step_period=0.001)
-            node_list[led_driver.node_name] = led_driver
+            for j in range(3):
+               self.node_list.update(self.build_light_components(teensy_name=teensy, light_id=j))
 
             # ===== constructing the tentacle ====
             for j in range(3):
 
-                ir_sensor_0 = node_list['%s.tentacle_%d.ir_0' % (teensy, j)]
-                ir_sensor_1 = node_list['%s.tentacle_%d.ir_1' % (teensy, j)]
-                acc = node_list['%s.tentacle_%d.acc' % (teensy, j)]
-                frond = node_list['%s.tentacle_%d.frond' % (teensy, j)]
-                reflex_0 = node_list['%s.tentacle_%d.reflex_0' % (teensy, j)]
-                reflex_1 = node_list['%s.tentacle_%d.reflex_1' % (teensy, j)]
+                ir_sensor_0 = self.node_list['%s.tentacle_%d.ir_0' % (teensy, j)]
+                ir_sensor_1 = self.node_list['%s.tentacle_%d.ir_1' % (teensy, j)]
+                acc = self.node_list['%s.tentacle_%d.acc' % (teensy, j)]
+                frond = self.node_list['%s.tentacle_%d.frond' % (teensy, j)]
+                reflex_0 = self.node_list['%s.tentacle_%d.reflex_0' % (teensy, j)]
+                reflex_1 = self.node_list['%s.tentacle_%d.reflex_1' % (teensy, j)]
 
                 # derived features
-                acc_x_diff = node_list['%s.tentacle_%d.acc_x_diff' % (teensy, j)]
-                acc_y_diff = node_list['%s.tentacle_%d.acc_y_diff' % (teensy, j)]
-                acc_z_diff = node_list['%s.tentacle_%d.acc_z_diff' % (teensy, j)]
+                acc_x_diff = self.node_list['%s.tentacle_%d.acc_x_diff' % (teensy, j)]
+                acc_y_diff = self.node_list['%s.tentacle_%d.acc_y_diff' % (teensy, j)]
+                acc_z_diff = self.node_list['%s.tentacle_%d.acc_z_diff' % (teensy, j)]
 
-                acc_x_avg = node_list['%s.tentacle_%d.acc_x_avg' % (teensy, j)]
-                acc_y_avg = node_list['%s.tentacle_%d.acc_y_avg' % (teensy, j)]
-                acc_z_avg = node_list['%s.tentacle_%d.acc_z_avg' % (teensy, j)]
+                acc_x_avg = self.node_list['%s.tentacle_%d.acc_x_avg' % (teensy, j)]
+                acc_y_avg = self.node_list['%s.tentacle_%d.acc_y_avg' % (teensy, j)]
+                acc_z_avg = self.node_list['%s.tentacle_%d.acc_z_avg' % (teensy, j)]
 
-                cbla_tentacle = cbla_node.CBLA_Tentacle2(messenger, teensy, data_collector,
+                cbla_tentacle = cbla_node.CBLA_Tentacle2(self.messenger, teensy, self.data_collector,
                                                         node_name='cbla_tentacle_%d' % j,
                                                         ir_0=ir_sensor_0.out_var['input'],
                                                         ir_1=ir_sensor_1.out_var['input'],
@@ -201,22 +120,22 @@ class CBLA2(interactive_system.InteractiveCmd):
                                                         reflex_0=reflex_0.in_var['output'],
                                                         reflex_1=reflex_1.in_var['output'],
                                                         shared_ir_0=shared_ir_0_var)
-                node_list[cbla_tentacle.node_name] = cbla_tentacle
+                self.node_list[cbla_tentacle.node_name] = cbla_tentacle
 
             # ===== constructing the Protocell ======
-            als = node_list['%s.protocell.als' % teensy]
-            led_driver = node_list['%s.protocell.led_driver' % teensy]
-            cbla_protocell = cbla_node.CBLA_Protocell(messenger, teensy, data_collector,
+            als = self.node_list['%s.protocell.als' % teensy]
+            led_driver = self.node_list['%s.protocell.led_driver' % teensy]
+            cbla_protocell = cbla_node.CBLA_Protocell(self.messenger, teensy, self.data_collector,
                                                       node_name='cbla_protocell',
                                                       als=als.out_var['input'],
                                                       led=led_driver.in_var['led_ref'],
                                                       shared_ir_0=shared_ir_0_var)
-            node_list[cbla_protocell.node_name] = cbla_protocell
+            self.node_list[cbla_protocell.node_name] = cbla_protocell
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
-        self.start_nodes(node_list, messenger, data_collector)
+        self.start_nodes()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -224,16 +143,103 @@ class CBLA2(interactive_system.InteractiveCmd):
 
         return 0
 
-    def start_nodes(self, node_list, messenger, data_collector):
+    def build_fin_components(self, teensy_name, fin_id):
 
-        if not isinstance(node_list, dict) or \
-           not isinstance(data_collector, cbla_data_collect.DataCollector) or \
-           not isinstance(messenger, interactive_system.Messenger):
+        fin_comps = OrderedDict()
+
+        # 2 ir sensors each
+        ir_s = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % fin_id, input='tentacle_%d_ir_0_state' % fin_id)
+        ir_f = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % fin_id, input='tentacle_%d_ir_1_state' % fin_id)
+
+        # 1 3-axis acceleromter each
+        acc = Input_Node(self.messenger, teensy_name, node_name='f%d.acc' % fin_id,
+                         x='tentacle_%d_acc_x_state' % fin_id,
+                         y='tentacle_%d_acc_y_state' % fin_id,
+                         z='tentacle_%d_acc_z_state' % fin_id)
+
+        # acc diff
+        acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.x_diff' % (teensy_name, fin_id),
+                                            input_var=acc.out_var['x'], diff_gap=5, smoothing=10,
+                                            step_period=0.1)
+        acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.y_diff' % (teensy_name, fin_id),
+                                            input_var=acc.out_var['y'], diff_gap=5, smoothing=10,
+                                            step_period=0.1)
+        acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.z_diff' % (teensy_name, fin_id),
+                                            input_var=acc.out_var['z'], diff_gap=5, smoothing=10,
+                                            step_period=0.1)
+
+        # acc running average
+        acc_x_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.x_avg' % (teensy_name, fin_id),
+                                    input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
+        acc_y_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.y_avg' % (teensy_name, fin_id),
+                                    input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
+        acc_z_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.z_avg' % (teensy_name, fin_id),
+                                    input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
+
+        fin_comps[acc_x_avg.node_name] = acc_x_avg
+        fin_comps[acc_y_avg.node_name] = acc_y_avg
+        fin_comps[acc_z_avg.node_name] = acc_z_avg
+
+        fin_comps[acc_x_diff.node_name] = acc_x_diff
+        fin_comps[acc_y_diff.node_name] = acc_y_diff
+        fin_comps[acc_z_diff.node_name] = acc_z_diff
+
+        # 2 SMA wires each
+        sma_l = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % fin_id, output='tentacle_%d_sma_0_level' % fin_id)
+        sma_r = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % fin_id, output='tentacle_%d_sma_1_level' % fin_id)
+
+        # 2 reflex each
+        reflex_l = Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % fin_id, output='tentacle_%d_reflex_0_level' % fin_id)
+        reflex_m = Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-m' % fin_id, output='tentacle_%d_reflex_1_level' % fin_id)
+
+        fin_comps[ir_s.node_name] = ir_s
+        fin_comps[ir_f.node_name] = ir_f
+        fin_comps[acc.node_name] = acc
+        fin_comps[sma_l.node_name] = sma_l
+        fin_comps[sma_r.node_name] = sma_r
+        fin_comps[reflex_l.node_name] = reflex_l
+        fin_comps[reflex_m.node_name] = reflex_m
+
+        # 1 frond each
+        motion_type = Var(0)
+        frond = Frond(self.messenger, teensy_name, node_name='f%d' % fin_id, left_sma=sma_l.in_var['output'],
+                      right_sma=sma_r.in_var['output'],
+                      motion_type=motion_type)
+        fin_comps[frond.node_name] = frond
+
+        return fin_comps
+
+    def build_light_components(self, teensy_name, light_id):
+
+        light_comps = OrderedDict()
+
+        # 1 LED per protocell
+        led = Output_Node(self.messenger, teensy_name=teensy_name, node_name='protocell.led',
+                          output='protocell_0_led_level')
+
+        light_comps[led.node_name] = led
+
+        # 1 ambient light sensor per protocell
+        als = Input_Node(self.messenger, teensy_name=teensy_name, node_name='protocell.als',
+                         input='protocell_0_als_state')
+
+        light_comps[als.node_name] = als
+
+        shared_ir_0_var = self.node_list['%s.tentacle_2.ir_0' % teensy_name].out_var['input']
+
+        # 1 LED driver
+        led_driver = LED_Driver(self.messenger, node_name="%s.protocell.led_driver" % teensy_name,
+                                led_out=led.in_var['output'], step_period=0.001)
+        light_comps[led_driver.node_name] = led_driver
+
+        return light_comps
+
+    def start_nodes(self):
+
+        if not isinstance(self.node_list, dict) or \
+           not isinstance(self.data_collector, cbla_data_collect.DataCollector) or \
+           not isinstance(self.messenger, interactive_system.Messenger):
             raise AttributeError("Nodes have not been created properly!")
-        else:
-            self.node_list = node_list
-            self.messenger = messenger
-            self.data_collector = data_collector
 
         for name, node in self.node_list.items():
             node.start()
