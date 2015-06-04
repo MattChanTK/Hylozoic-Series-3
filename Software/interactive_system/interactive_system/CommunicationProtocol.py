@@ -248,7 +248,7 @@ class CBLATestBed_FAST(CBLATestBed):
 
         self._import_param_from_file()
 
-class CBLATestBed_Fast2(CBLATestBed):
+class CBLATestBed2(CBLATestBed):
 
      NUM_FIN = 3
      NUM_LIGHT = 3
@@ -257,8 +257,8 @@ class CBLATestBed_Fast2(CBLATestBed):
         self.var_encode_func["int8s"] = self._set_int8_array
 
         # import parameters from files
-        self.output_param_config_filename = 'CBLATestBed_FAST2_output_config'
-        self.input_param_config_filename = 'CBLATestBed_FAST2_input_config'
+        self.output_param_config_filename = 'CBLATestBed_2_output_config'
+        self.input_param_config_filename = 'CBLATestBed_2_input_config'
 
         self._import_param_from_file()
 
@@ -280,7 +280,7 @@ class CBLATestBed_Fast2(CBLATestBed):
 			# >>>>> byte 16 to byte 29: FIN 1
 			# >>>>> byte 30 to byte 43: FIN 2
 
-            for j in range(CBLATestBed_Fast2.NUM_FIN):
+            for j in range(CBLATestBed2.NUM_FIN):
                 device_header = 'fin_%d_' % j
                 byte_offset = 14*j + device_offset
 
@@ -299,18 +299,18 @@ class CBLATestBed_Fast2(CBLATestBed):
 
             # === LIGHT ====
 
-            device_offset += 14*CBLATestBed_Fast2.NUM_FIN
+            device_offset += 14*CBLATestBed2.NUM_FIN
             # >>>>> byte 2 to byte 5: Light 0
 			# >>>>> byte 6 to byte 9: Light 0
 			# >>>>> byte 10 to byte 13: Light 0
 
-            for j in range(CBLATestBed_Fast2.NUM_LIGHT):
+            for j in range(CBLATestBed2.NUM_LIGHT):
 
                 device_header = 'light_%d_' % j
                 byte_offset = 4*j + device_offset
 
                 # byte 2 to 3: ambient light sensor  state
-                self.input_state[device_header + 'als_state'] = struct.unpack_from('H', msg[byte_offset])[0]
+                self.input_state[device_header + 'als_state'] = msg[byte_offset]
 
 
      def _compose_outgoing_msg(self, content):
@@ -347,7 +347,7 @@ class CBLATestBed_Fast2(CBLATestBed):
             # >>>>> byte 16 to byte 29: TENTACLE 1
             # >>>>> byte 30 to byte 43: TENTACLE 2
 
-            for j in range(CBLATestBed_Fast2.NUM_FIN):
+            for j in range(CBLATestBed2.NUM_FIN):
                 device_header = 'fin_%d_' % j
                 byte_offset = 14*j
 
@@ -380,7 +380,7 @@ class CBLATestBed_Fast2(CBLATestBed):
             # >>>>> byte 2 to byte 15: TENTACLE 0
             # >>>>> byte 16 to byte 29: TENTACLE 1
             # >>>>> byte 30 to byte 43: TENTACLE 2
-            for j in range(CBLATestBed_Fast2.NUM_FIN):
+            for j in range(CBLATestBed2.NUM_FIN):
                 device_header = 'fin_%d_' % j
                 byte_offset = 14*j
 
@@ -398,7 +398,7 @@ class CBLATestBed_Fast2(CBLATestBed):
 			# >>>>> byte 2 to byte 15: LIGHT 0
 			# >>>>> byte 16 to byte 29: LIGHT 1
 			# >>>>> byte 30 to byte 43: LIGHT 2
-            for j in range(CBLATestBed_Fast2.NUM_LIGHT):
+            for j in range(CBLATestBed2.NUM_LIGHT):
                 device_header = 'light_%d_' % j
                 byte_offset = 14*j
 
@@ -418,7 +418,7 @@ class CBLATestBed_Fast2(CBLATestBed):
             # >>>>> byte 2 to byte 9 : FIN 0
 			# >>>>> byte 10 to byte 17 : FIN 1
 			# >>>>> byte 18 to byte 25 : FIN 2
-            for j in range(CBLATestBed_Fast2.NUM_FIN):
+            for j in range(CBLATestBed2.NUM_FIN):
                 device_header = 'fin_%d_' % j
                 byte_offset = 8*j + device_offset
 
@@ -434,12 +434,12 @@ class CBLATestBed_Fast2(CBLATestBed):
                 content[byte_offset+4] = self.output_param[device_header+'sma_1_level']
 
             # === LIGHT ===
-            device_offset += 8*CBLATestBed_Fast2.NUM_FIN + device_offset
+            device_offset += 8*CBLATestBed2.NUM_FIN + device_offset
             # (4 bytes each)
 			# >>>>> byte 26 to byte 29: LIGHT 0
 			# >>>>> byte 30 to byte 33: LIGHT 1
 			# >>>>> byte 34 to byte 37: LIGHT 2
-            for j in range(CBLATestBed_Fast2.NUM_LIGHT):
+            for j in range(CBLATestBed2.NUM_LIGHT):
                 device_header = 'light_%d_' % j
                 byte_offset = 4*j + device_offset
 
@@ -454,3 +454,15 @@ class CBLATestBed_Fast2(CBLATestBed):
 
         elif self.request_type == 'read_only':
             pass
+
+
+class CBLATestBed2_FAST(CBLATestBed2):
+
+    def additional_config_routine(self):
+        self.var_encode_func["int8s"] = self._set_int8_array
+
+        # import parameters from files
+        self.output_param_config_filename = 'CBLATestBed_2_FAST_output_config'
+        self.input_param_config_filename = 'CBLATestBed_2_FAST_input_config'
+
+        self._import_param_from_file()
