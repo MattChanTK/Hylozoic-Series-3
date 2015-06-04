@@ -4,6 +4,9 @@ from matplotlib.ticker import MaxNLocator
 import os
 import numpy as np
 
+NUM_FIN = 3
+NUM_LIGHT = 3
+
 
 ACC_MG_PER_LSB = 3.9
 ADC_RES = 2**12
@@ -17,8 +20,8 @@ os.chdir(os.path.join(curr_dir, "pickle_jar"))
 figure_num = 1
 for teensy_name in teensy_names:
 
-    for j in range(4):
-        filename = teensy_name + '_tentacle_' + str(j) + '_state_history.pkl'
+    for j in range(NUM_FIN):
+        filename = teensy_name + '_fin_' + str(j) + '_state_history.pkl'
 
         state = None
         try:
@@ -101,8 +104,8 @@ for teensy_name in teensy_names:
 
         figure_num += 1
 
-    for j in range(1):
-        filename = teensy_name + '_protocell_' + str(j) + '_state_history.pkl'
+    for j in range(NUM_FIN):
+        filename = teensy_name + '_light_' + str(j) + '_state_history.pkl'
 
         state = None
         try:
