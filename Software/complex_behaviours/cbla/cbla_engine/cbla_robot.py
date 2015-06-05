@@ -165,44 +165,16 @@ class Robot(object):
         return tuple([0] * len(self.M0.val))
 
 
-class Robot_Frond(Robot):
-
-    def _set_default_config(self):
-        super(Robot_Frond, self)._set_default_config()
-
-        self.config['activation_reward_delta'] = 0.03
-        self.config['activation_reward'] = 0.015
-        self.config['idling_reward'] = 0.000001
-        self.config['min_step_before_idling'] = 1
-        self.config['idling_prob'] = 0.999
-
-    def get_possible_action(self, num_sample=10):
-        # constructing a list of all possible action
-        x_dim = len(self.M0.val)
-        X = list(range(0, 4 ** x_dim))
-        for i in range(len(X)):
-            X[i] = toDigits(X[i], 4)
-            filling = [0] * (x_dim - len(X[i]))
-            X[i] = filling + X[i]
-
-        M_candidates = tuple(set(map(tuple, X)))
-
-        try:
-            return tuple(random.sample(M_candidates, num_sample))
-        except ValueError:
-            return M_candidates
-
-
-class Robot_Frond_0(Robot_Frond):
+class Robot_HalfFin(Robot):
 
     def __init__(self, in_vars: list, out_vars: list, **config_kwargs):
 
-        super(Robot_Frond_0, self).__init__(in_vars, out_vars, **config_kwargs)
+        super(Robot_HalfFin, self).__init__(in_vars, out_vars, **config_kwargs)
 
         self.S_memory = deque(maxlen=self.config['sample_window'])
 
     def _set_default_config(self):
-        super(Robot_Frond_0, self)._set_default_config()
+        super(Robot_HalfFin, self)._set_default_config()
 
         self.config['activation_reward_delta'] = 0.006
         self.config['activation_reward'] = 0.003
@@ -252,11 +224,27 @@ class Robot_Frond_0(Robot_Frond):
         self.S0.val = tuple(S_mean)
         return tuple(S_mean)
 
+    def get_possible_action(self, num_sample=10):
+        # constructing a list of all possible action
+        x_dim = len(self.M0.val)
+        X = list(range(0, 4 ** x_dim))
+        for i in range(len(X)):
+            X[i] = toDigits(X[i], 4)
+            filling = [0] * (x_dim - len(X[i]))
+            X[i] = filling + X[i]
 
-class Robot_Protocell(Robot):
+        M_candidates = tuple(set(map(tuple, X)))
+
+        try:
+            return tuple(random.sample(M_candidates, num_sample))
+        except ValueError:
+            return M_candidates
+
+
+class Robot_Light(Robot):
 
     def _set_default_config(self):
-        super(Robot_Protocell, self)._set_default_config()
+        super(Robot_Light, self)._set_default_config()
         self.config['wait_time'] = 0.1
         self.config['activation_reward_delta'] = 0.2
         self.config['activation_reward'] = 0.06
@@ -277,6 +265,12 @@ class Robot_Protocell(Robot):
         M_candidates = tuple(set((map(tuple, X))))
 
         return M_candidates
+
+
+class Robot_Reflex(Robot):
+
+    pass
+
 
 
 def toDigits(n, b) -> list:
