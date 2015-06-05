@@ -112,42 +112,97 @@ class CBLA2(interactive_system.InteractiveCmd):
                 self.node_list[light_node.node_name] = light_node
 
 
+            # ===== constructing the Half-Fin Nodes =====
+            for j in range(self.num_fin):
 
-            # # ===== constructing the fin ====
-            # for j in range(self.num_fin)
-            #
-            #     ir_sensor_0 = self.node_list['%s.fin_%d.ir_0' % (teensy, j)]
-            #     ir_sensor_1 = self.node_list['%s.fin_%d.ir_1' % (teensy, j)]
-            #     acc = self.node_list['%s.fin_%d.acc' % (teensy, j)]
-            #     frond = self.node_list['%s.fin_%d.frond' % (teensy, j)]
-            #     reflex_0 = self.node_list['%s.fin_%d.reflex_0' % (teensy, j)]
-            #     reflex_1 = self.node_list['%s.fin_%d.reflex_1' % (teensy, j)]
-            #
-            #     # derived features
-            #     acc_x_diff = self.node_list['%s.fin_%d.acc_x_diff' % (teensy, j)]
-            #     acc_y_diff = self.node_list['%s.fin_%d.acc_y_diff' % (teensy, j)]
-            #     acc_z_diff = self.node_list['%s.fin_%d.acc_z_diff' % (teensy, j)]
-            #
-            #     acc_x_avg = self.node_list['%s.fin_%d.acc_x_avg' % (teensy, j)]
-            #     acc_y_avg = self.node_list['%s.fin_%d.acc_y_avg' % (teensy, j)]
-            #     acc_z_avg = self.node_list['%s.fin_%d.acc_z_avg' % (teensy, j)]
-            #
-            #     cbla_fin = cbla_node.CBLA_Tentacle2(self.messenger, teensy, self.data_collector,
-            #                                             node_name='cbla_fin_%d' % j,
-            #                                             ir_0=ir_sensor_0.out_var['input'],
-            #                                             ir_1=ir_sensor_1.out_var['input'],
-            #                                             acc=Var([acc.out_var['x'], acc.out_var['y'], acc.out_var['z']]),
-            #                                             acc_diff=Var([acc_x_diff.out_var['output'],
-            #                                                       acc_y_diff.out_var['output'],
-            #                                                       acc_z_diff.out_var['output']]),
-            #                                             acc_avg=Var([acc_x_avg.out_var['output'],
-            #                                                      acc_y_avg.out_var['output'],
-            #                                                      acc_z_avg.out_var['output'],]),
-            #                                             frond=frond.in_var['motion_type'],
-            #                                             reflex_0=reflex_0.in_var['output'],
-            #                                             reflex_1=reflex_1.in_var['output'],
-            #                                             shared_ir_0=shared_ir_0_var)
-            #     self.node_list[cbla_fin.node_name] = cbla_fin
+                # ===== constructing the shared part of the Half-Fin Nodes ====
+                in_vars = OrderedDict()
+                in_vars['ir-f'] = fin_components['%s.f%d.ir-f' % (teensy, j)].out_var['input']
+                in_vars['acc-x'] = fin_components['%s.f%d.acc' % (teensy, j)].out_var['x']
+                in_vars['acc-y'] = fin_components['%s.f%d.acc' % (teensy, j)].out_var['y']
+                in_vars['acc-z'] = fin_components['%s.f%d.acc' % (teensy, j)].out_var['z']
+                in_vars['acc-x_diff'] = fin_components['%s.f%d.acc-x_diff' % (teensy, j)].out_var['output']
+                in_vars['acc-y_diff'] = fin_components['%s.f%d.acc-y_diff' % (teensy, j)].out_var['output']
+                in_vars['acc-z_diff'] = fin_components['%s.f%d.acc-z_diff' % (teensy, j)].out_var['output']
+                in_vars['acc-x_avg'] = fin_components['%s.f%d.acc-x_avg' % (teensy, j)].out_var['output']
+                in_vars['acc-y_avg'] = fin_components['%s.f%d.acc-y_avg' % (teensy, j)].out_var['output']
+                in_vars['acc-z_avg'] = fin_components['%s.f%d.acc-z_avg' % (teensy, j)].out_var['output']
+
+                # ===== constructing the left Half-Fin Nodes ====
+                in_vars_left = in_vars.copy()
+                in_vars_left['ir-s'] = fin_components['%s.f%d.ir-s' % (teensy, j)].out_var['input']
+
+                out_vars_left = OrderedDict()
+                out_vars_left['hf-l'] = fin_components['%s.f%d.hf-l' % (teensy, j)].in_var['temp_ref']
+
+                half_fin_left = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
+                                                  cluster_name=teensy, node_type='halfFin', node_id=j, node_version='l',
+                                                  in_vars=in_vars_left, out_vars=out_vars_left,
+                                                  s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
+                                                  s_ranges=((0, 4095), (0, 4095), (-6, 6), (-6, 6), (-6, 6)),
+                                                  s_names=('fin IR sensor', 'scout IR sensor',
+                                                           'accelerometer (x-diff)', 'accelerometer (y-diff)', 'accelerometer (z-diff)',),
+                                                  m_keys=('hf-l', ), m_ranges=((0, 300), ), m_names=('Half Fin Input',)
+                                                  )
+
+                self.node_list[half_fin_left.node_name] = half_fin_left
+
+                # ===== constructing the right Half-Fin Nodes ====
+                in_vars_right = in_vars.copy()
+                in_vars_right['ir-s'] = fin_components['%s.f%d.ir-s' % (teensy, (j + 1) % self.num_fin)].out_var['input']
+
+                out_vars_right= OrderedDict()
+                out_vars_right['hf-r'] = fin_components['%s.f%d.hf-r' % (teensy, j)].in_var['temp_ref']
+
+                half_fin_right = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
+                                                   cluster_name=teensy, node_type='halfFin', node_id=j, node_version='r',
+                                                   in_vars=in_vars_right, out_vars=out_vars_right,
+                                                   s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
+                                                   s_ranges=((0, 4095), (0, 4095), (-6, 6), (-6, 6), (-6, 6)),
+                                                   s_names=('fin IR sensor', 'scout IR sensor',
+                                                            'accelerometer (x-diff)', 'accelerometer (y-diff)', 'accelerometer (z-diff)',),
+                                                   m_keys=('hf-r', ), m_ranges=((0, 300), ), m_names=('half-fin input',)
+                                                  )
+
+                self.node_list[half_fin_right.node_name] = half_fin_right
+
+            # ===== constructing the Reflex Nodes =====
+            for j in range(self.num_fin):
+
+                # ===== constructing the shared part of the Reflex Nodes ====
+                in_vars = OrderedDict()
+                in_vars['ir-s'] = fin_components['%s.f%d.ir-s' % (teensy, j)].out_var['input']
+                in_vars['sma-l'] = fin_components['%s.f%d.sma-l' % (teensy, j)].in_var['output']
+                in_vars['sma-r'] = fin_components['%s.f%d.sma-r' % (teensy, j)].in_var['output']
+
+                # ===== constructing the Reflex Motor Node ====
+                out_vars_motor = OrderedDict()
+                out_vars_motor['rfx-m'] = fin_components['%s.f%d.rfx-m' % (teensy, j)].in_var['output']
+                reflex_motor = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
+                                                cluster_name=teensy, node_type='reflex', node_id=j, node_version='m',
+                                                in_vars=in_vars, out_vars=out_vars_motor,
+                                                s_keys=('ir-s', 'sma-l', 'sma-r'),
+                                                s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                                s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
+                                                m_keys=('rfx-m', ), m_ranges=((0, 255), ), m_names=('reflex motor',)
+                                               )
+
+                self.node_list[reflex_motor.node_name] = reflex_motor
+
+                # ===== constructing the Reflex LED Node ====
+                out_vars_led = OrderedDict()
+                out_vars_led['rfx-l'] = fin_components['%s.f%d.rfx-l' % (teensy, j)].in_var['output']
+                reflex_motor = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
+                                                cluster_name=teensy, node_type='reflex', node_id=j, node_version='l',
+                                                in_vars=in_vars, out_vars=out_vars_led,
+                                                s_keys=('ir-s', 'sma-l', 'sma-r'),
+                                                s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                                s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
+                                                m_keys=('rfx-l', ), m_ranges=((0, 255), ), m_names=('reflex led',)
+                                               )
+
+                self.node_list[reflex_motor.node_name] = reflex_motor
+
 
 
         with self.all_nodes_created:
@@ -166,7 +221,7 @@ class CBLA2(interactive_system.InteractiveCmd):
         fin_comps = OrderedDict()
 
         # 2 ir sensors each
-        ir_s = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % fin_id, input='fin_%d_ir_0_state' % fin_id)
+        ir_s = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-s' % fin_id, input='fin_%d_ir_0_state' % fin_id)
         ir_f = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % fin_id, input='fin_%d_ir_1_state' % fin_id)
 
         # 1 3-axis acceleromter each
@@ -176,22 +231,22 @@ class CBLA2(interactive_system.InteractiveCmd):
                          z='fin_%d_acc_z_state' % fin_id)
 
         # acc diff
-        acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.x_diff' % (teensy_name, fin_id),
+        acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-x_diff' % (teensy_name, fin_id),
                                             input_var=acc.out_var['x'], diff_gap=5, smoothing=10,
                                             step_period=0.1)
-        acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.y_diff' % (teensy_name, fin_id),
+        acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-y_diff' % (teensy_name, fin_id),
                                             input_var=acc.out_var['y'], diff_gap=5, smoothing=10,
                                             step_period=0.1)
-        acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc.z_diff' % (teensy_name, fin_id),
+        acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-z_diff' % (teensy_name, fin_id),
                                             input_var=acc.out_var['z'], diff_gap=5, smoothing=10,
                                             step_period=0.1)
 
         # acc running average
-        acc_x_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.x_avg' % (teensy_name, fin_id),
+        acc_x_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-x_avg' % (teensy_name, fin_id),
                                     input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-        acc_y_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.y_avg' % (teensy_name, fin_id),
+        acc_y_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-y_avg' % (teensy_name, fin_id),
                                     input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-        acc_z_avg = Running_Average(self.messenger, node_name='%s.f%d.acc.z_avg' % (teensy_name, fin_id),
+        acc_z_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-z_avg' % (teensy_name, fin_id),
                                     input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
 
         fin_comps[acc_x_avg.node_name] = acc_x_avg
@@ -218,12 +273,16 @@ class CBLA2(interactive_system.InteractiveCmd):
         fin_comps[reflex_l.node_name] = reflex_l
         fin_comps[reflex_m.node_name] = reflex_m
 
-        # 1 frond each
-        motion_type = Var(0)
-        frond = Frond(self.messenger, teensy_name, node_name='f%d' % fin_id, left_sma=sma_l.in_var['output'],
-                      right_sma=sma_r.in_var['output'],
-                      motion_type=motion_type)
-        fin_comps[frond.node_name] = frond
+        # 2 half-fin modules
+        sma_temp_l = Var(0)
+        half_fin_l = Half_Fin(self.messenger, node_name='%s.f%d.hf-l' % (teensy_name, fin_id),
+                              sma=sma_l.in_var['output'], temp_ref=sma_temp_l)
+        sma_temp_r = Var(0)
+        half_fin_r = Half_Fin(self.messenger, node_name='%s.f%d.hf-r' % (teensy_name, fin_id),
+                              sma=sma_r.in_var['output'], temp_ref=sma_temp_r)
+
+        fin_comps[half_fin_l.node_name] = half_fin_l
+        fin_comps[half_fin_r.node_name] = half_fin_r
 
         return fin_comps
 
