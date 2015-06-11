@@ -52,7 +52,7 @@ class CBLA(interactive_system.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2)
             self.enter_command(cmd_obj)
 
             # ------ configuration ------
@@ -72,7 +72,6 @@ class CBLA(interactive_system.InteractiveCmd):
         self.messenger.start()
 
         teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
-
 
         # instantiate all the basic components
         for teensy in teensy_in_use:
@@ -94,7 +93,6 @@ class CBLA(interactive_system.InteractiveCmd):
                 fin_components.update(self.build_fin_components(teensy_name=teensy, fin_id=j))
             self.node_list.update(fin_components)
 
-
         # ===== creating the CBLA Nodes ====
         if self.mode == 'spatial':
             for teensy in teensy_in_use:
@@ -103,8 +101,6 @@ class CBLA(interactive_system.InteractiveCmd):
             self.mode = 'spatial'
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_spatial_nodes(teensy, self.node_list))
-
-
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
@@ -233,7 +229,6 @@ class CBLA(interactive_system.InteractiveCmd):
                                          )
 
             cbla_nodes[light_node.node_name] = light_node
-
 
         # ===== constructing the Half-Fin Nodes =====
         for j in range(self.num_fin):
