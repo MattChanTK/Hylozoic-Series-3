@@ -186,10 +186,11 @@ class CBLA_Node(CBLA_Base_Node):
             robot_class = cbla_engine.Robot
 
         # instantiate
-        self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class),
+        self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class,
+                                                      sample_window=20, sample_period=0.1),
                          learner_config=self._get_learner_config())
 
-    def _build_robot(self, RobotClass=cbla_engine.Robot) -> cbla_engine.Robot:
+    def _build_robot(self, RobotClass=cbla_engine.Robot, **robot_config) -> cbla_engine.Robot:
 
         s_vars = []
         # defining the input variables
@@ -205,7 +206,7 @@ class CBLA_Node(CBLA_Base_Node):
         cbla_robot = RobotClass(s_vars, m_vars,
                                 s_ranges=self.s_ranges, m_ranges=self.m_ranges,
                                 s_names=self.s_names, m_names=self.m_names,
-                                sample_window=20, sample_period=0.1,
+                                **robot_config
                                )
         return cbla_robot
 

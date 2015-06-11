@@ -210,18 +210,18 @@ class CBLA(interactive_system.InteractiveCmd):
 
         return light_comps
 
-    def build_spatial_nodes(self, teensy_name, node_list):
+    def build_spatial_nodes(self, teensy_name, components):
 
         cbla_nodes = OrderedDict()
 
         # ===== constructing the Light Node =====
         for j in range(self.num_light):
             in_vars = OrderedDict()
-            in_vars['als'] = node_list['%s.l%d.als' % (teensy_name, j)].out_var['input']
-            in_vars['ir-f'] = node_list['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+            in_vars['als'] = components['%s.l%d.als' % (teensy_name, j)].out_var['input']
+            in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
 
             out_vars = OrderedDict()
-            out_vars['led'] = node_list['%s.l%d.led' % (teensy_name, j)].in_var['output']
+            out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
 
             light_node = CBLA_Light_Node(messenger=self.messenger, data_collector=self.data_collector,
                                          cluster_name=teensy_name, node_type='light', node_id=j,
@@ -240,23 +240,23 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the shared part of the Half-Fin Nodes ====
             in_vars = OrderedDict()
-            in_vars['ir-f'] = node_list['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
-            in_vars['acc-x'] = node_list['%s.f%d.acc' % (teensy_name, j)].out_var['x']
-            in_vars['acc-y'] = node_list['%s.f%d.acc' % (teensy_name, j)].out_var['y']
-            in_vars['acc-z'] = node_list['%s.f%d.acc' % (teensy_name, j)].out_var['z']
-            in_vars['acc-x_diff'] = node_list['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-y_diff'] = node_list['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-z_diff'] = node_list['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-x_avg'] = node_list['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output']
-            in_vars['acc-y_avg'] = node_list['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output']
-            in_vars['acc-z_avg'] = node_list['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output']
+            in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+            in_vars['acc-x'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['x']
+            in_vars['acc-y'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['y']
+            in_vars['acc-z'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['z']
+            in_vars['acc-x_diff'] = components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output']
+            in_vars['acc-y_diff'] = components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output']
+            in_vars['acc-z_diff'] = components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output']
+            in_vars['acc-x_avg'] = components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output']
+            in_vars['acc-y_avg'] = components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output']
+            in_vars['acc-z_avg'] = components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output']
 
             # ===== constructing the left Half-Fin Nodes ====
             in_vars_left = in_vars.copy()
-            in_vars_left['ir-s'] = node_list['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+            in_vars_left['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
 
             out_vars_left = OrderedDict()
-            out_vars_left['hf-l'] = node_list['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
+            out_vars_left['hf-l'] = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
 
             half_fin_left = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
                                               cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='l',
@@ -272,10 +272,10 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the right Half-Fin Nodes ====
             in_vars_right = in_vars.copy()
-            in_vars_right['ir-s'] = node_list['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+            in_vars_right['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
 
             out_vars_right= OrderedDict()
-            out_vars_right['hf-r'] = node_list['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
+            out_vars_right['hf-r'] = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
 
             half_fin_right = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
                                                cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='r',
@@ -294,13 +294,13 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the shared part of the Reflex Nodes ====
             in_vars = OrderedDict()
-            in_vars['ir-s'] = node_list['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
-            in_vars['sma-l'] = node_list['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
-            in_vars['sma-r'] = node_list['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
+            in_vars['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+            in_vars['sma-l'] = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
+            in_vars['sma-r'] = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
 
             # ===== constructing the Reflex Motor Node ====
             out_vars_motor = OrderedDict()
-            out_vars_motor['rfx-m'] = node_list['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
+            out_vars_motor['rfx-m'] = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
             reflex_motor = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='m',
                                             in_vars=in_vars, out_vars=out_vars_motor,
@@ -314,8 +314,8 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the Reflex LED Node ====
             out_vars_led = OrderedDict()
-            out_vars_led['rfx-l'] = node_list['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
-            reflex_motor = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
+            out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
+            reflex_led = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='l',
                                             in_vars=in_vars, out_vars=out_vars_led,
                                             s_keys=('ir-s', 'sma-l', 'sma-r'),
@@ -324,7 +324,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                             m_keys=('rfx-l', ), m_ranges=((0, 255), ), m_names=('reflex led',)
                                            )
 
-            cbla_nodes[reflex_motor.node_name] = reflex_motor
+            cbla_nodes[reflex_led.node_name] = reflex_led
 
         return cbla_nodes
 
