@@ -103,7 +103,7 @@ class Manual_Control(interactive_system.InteractiveCmd):
                 node_list[reflex_0.node_name] = reflex_0
                 node_list[reflex_1.node_name] = reflex_1
 
-            # for Protocell
+            # for Interactive_Light
             # 1 ambient light sensor
             als = Input_Node(messenger, teensy, node_name='protocell.als', input='protocell_0_als_state')
             node_list[als.node_name] = als

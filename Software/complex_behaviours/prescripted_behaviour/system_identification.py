@@ -94,7 +94,7 @@ class System_Identification(interactive_system.InteractiveCmd):
                 # 1 frond
                 motion_type = Var(0)
                 #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                frond = Frond_Auto(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
+                frond = Cycling_Fin(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
                               right_sma=sma_1.in_var['output'], motion_type=motion_type)
                               #left_config=sma_param, right_config=sma_param)
                 node_list[frond.node_name] = frond
@@ -149,7 +149,7 @@ class System_Identification(interactive_system.InteractiveCmd):
                 data_variables['%s.tentacle_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
 
 
-            # for Protocell
+            # for Interactive_Light
             # 1 ambient light sensor
             als = Input_Node(messenger, teensy, node_name='protocell.als', input='protocell_0_als_state')
             node_list[als.node_name] = als
