@@ -19,7 +19,9 @@ class HMI_Manual_Mode(tk_gui.Page_Frame):
 
     def _build_page(self):
 
+        max_row_per_col = 3
         row = 0
+        col = 0
 
         device_frames = dict()
 
@@ -27,21 +29,25 @@ class HMI_Manual_Mode(tk_gui.Page_Frame):
 
             # === device label ===
             device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
-            device_label.grid(row=row, column=0, sticky='NW')
+            device_label.grid(row=row, column=col, sticky='NW')
             row += 1
 
             # === control input side ======
             control_frame = None
             if device_name in self.control_var.keys():
                 control_frame = HMI_Manual_Mode_Control_Frame(self, self.control_var[device_name])
-                control_frame.grid(row=row, column=0, sticky='NW', pady=(5, 30))
+                control_frame.grid(row=row, column=col, sticky='NW', pady=(5, 30))
 
             # === display side ====
             display_frame = HMI_Manual_Mode_Display_Frame(self, device)
-            display_frame.grid(row=row, column=1, sticky='NW', pady=(5, 10), padx=(30, 0))
+            display_frame.grid(row=row, column=col+1, sticky='NW', pady=(5, 10), padx=(30, 0))
 
             device_frames[device_name] = (display_frame, control_frame)
             row += 1
+
+            if row/2 == max_row_per_col:
+                row = 0
+                col +=2
 
 
 class HMI_Manual_Mode_Display_Frame(HMI_Standard_Display_Frame):

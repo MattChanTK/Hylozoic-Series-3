@@ -40,7 +40,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             # ------ configuration ------
             # set the Fin on/off periods
             cmd_obj = interactive_system.command_object(teensy_name, 'fin_high_level')
-            for j in range(3):
+            for j in range(self.num_fin):
                 device_header = 'fin_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
                 cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)

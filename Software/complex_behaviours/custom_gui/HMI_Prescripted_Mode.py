@@ -17,24 +17,28 @@ class HMI_Prescripted_Mode(tk_gui.Page_Frame):
 
     def _build_page(self):
 
+        max_col_per_row = 5
         col = 0
+        row = 0
 
         device_frames = dict()
 
         for device_name, device in self.display_var.items():
 
-            row = 0
             # === device label ===
             device_label = ttk.Label(self, text=device_name, style="device_label.TLabel")
             device_label.grid(row=row, column=col, sticky='NW')
-            row += 1
 
             # === display side ====
             display_frame = HMI_Prescripted_Mode_Display_Frame(self, device)
-            display_frame.grid(row=row, column=col, sticky='NW', pady=(0, 2), padx=(0, 3))
+            display_frame.grid(row=row+1, column=col, sticky='NW', pady=(0, 2), padx=(0, 3))
 
             device_frames[device_name] = (display_frame, )
             col += 1
+
+            if col == max_col_per_row:
+                col = 0
+                row += 2
 
 
 class HMI_Prescripted_Mode_Display_Frame(HMI_Standard_Display_Frame):

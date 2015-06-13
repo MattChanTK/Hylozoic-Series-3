@@ -43,7 +43,6 @@ class CBLA(interactive_system.InteractiveCmd):
 
         super(CBLA, self).__init__(Teensy_manager, auto_start=auto_start)
 
-
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
 
@@ -58,7 +57,7 @@ class CBLA(interactive_system.InteractiveCmd):
             # ------ configuration ------
             # set the Fin on/off periods
             cmd_obj = interactive_system.command_object(teensy_name, 'fin_high_level')
-            for j in range(3):
+            for j in range(self.num_fin):
                 device_header = 'fin_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
                 cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)
@@ -410,22 +409,37 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             teensy_name = node_name[0]
             device_name = node_name[1]
 
+            footer = '\nMisc.'
+            if isinstance(node, CBLA_HalfFin_Node):
+                footer = '\nHalf Fin'
+                if device_name[-1] == 'l':
+                    footer += ' Left'
+                elif device_name[-1] == 'r':
+                    footer += ' right'
+
+            elif isinstance(node, CBLA_Reflex_Node):
+                footer = '\nReflex'
+            elif isinstance(node, CBLA_Light_Node):
+                footer = '\nLight'
+
+            page_name = teensy_name + footer
+
             if isinstance(node, CBLA_Base_Node):
                 for var_name, var in node.in_var.items():
 
                     # specifying the displayable variables
-                    if device_name not in cbla_display_vars[teensy_name]:
-                        cbla_display_vars[teensy_name][device_name] = OrderedDict()
+                    if device_name not in cbla_display_vars[page_name]:
+                        cbla_display_vars[page_name][device_name] = OrderedDict()
 
-                    cbla_display_vars[teensy_name][device_name][var_name] = ({var_name: var}, 'input_node')
+                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'input_node')
 
                 for var_name, var in node.out_var.items():
 
                     # specifying the displayable variables
-                    if device_name not in cbla_display_vars[teensy_name]:
-                        cbla_display_vars[teensy_name][device_name] = OrderedDict()
+                    if device_name not in cbla_display_vars[page_name]:
+                        cbla_display_vars[page_name][device_name] = OrderedDict()
 
-                    cbla_display_vars[teensy_name][device_name][var_name] = ({var_name: var}, 'output_node')
+                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'output_node')
 
             else:
                 try:
@@ -434,24 +448,29 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                     output_name = "variables"
 
                 # specifying the displayable variables
-                if device_name not in device_display_vars[teensy_name]:
-                    device_display_vars[teensy_name][device_name] = OrderedDict()
+                if device_name not in device_display_vars[page_name]:
+                    device_display_vars[page_name][device_name] = OrderedDict()
 
                 if isinstance(node, Input_Node):
-                    device_display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
+                    device_display_vars[page_name][device_name][output_name] = (node.out_var, 'input_node')
                 elif isinstance(node, Output_Node):
-                    device_display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
+                    device_display_vars[page_name][device_name][output_name] = (node.in_var, 'output_node')
                 else:
-                    device_display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
-                    device_display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+                    device_display_vars[page_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                    device_display_vars[page_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
 
     page_frames = OrderedDict()
-    for teensy_name, teensy_display_vars in device_display_vars.items():
+    for page_name, page_vars in tuple(cbla_display_vars.items()) + tuple(device_display_vars.items()):
 
+        teensy_display_vars = OrderedDict()
         teensy_cbla_vars = OrderedDict()
-        if teensy_name in cbla_display_vars.keys():
-            teensy_cbla_vars = cbla_display_vars[teensy_name]
-        frame = HMI_CBLA_Mode(content_frame, teensy_name, (teensy_name, 'cbla_display_page'),
+
+        if page_name in device_display_vars.keys():
+            teensy_display_vars = device_display_vars[page_name]
+        elif page_name in cbla_display_vars.keys():
+            teensy_cbla_vars = cbla_display_vars[page_name]
+
+        frame = HMI_CBLA_Mode(content_frame, page_name, (page_name, 'cbla_display_page'),
                                      teensy_cbla_vars, teensy_display_vars)
         page_frames[frame.page_key] = frame
 
