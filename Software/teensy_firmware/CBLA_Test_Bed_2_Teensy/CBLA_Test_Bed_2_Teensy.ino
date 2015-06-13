@@ -38,6 +38,7 @@ void setup() {
 	
 	//--- Teensy Unit ---
 	teensy_unit.init();
+	#teensy_unit.operation_mode = 0;
 	randomSeed(analogRead(A0));
 	
 	//--- check msg timer ---
@@ -101,6 +102,13 @@ void cbla2(){
 
 }
 
+void cbla2_manual(){
+	cbla2();
+}
+
+void cbla2_prescripted(){
+	cbla2();
+}
 
 void self_running_test(){
 	uint32_t curr_time = get_time();
@@ -188,6 +196,18 @@ void loop() {
 		case 7:
 			if (loop_since_last_msg < keep_alive_thres)
 				cbla2();
+			else
+				inactive_mode();			
+			break;
+		case 8:
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla2_manual();
+			else
+				inactive_mode();			
+			break;
+		case 9:
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla2_prescripted();
 			else
 				inactive_mode();			
 			break;
