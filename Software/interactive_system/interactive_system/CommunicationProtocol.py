@@ -5,7 +5,7 @@ from collections import deque
 import math
 
 from . import SystemParameters
-#import SystemParameters as SysParam
+# import SystemParameters as SysParam
 
 
 class CBLATestBed(SystemParameters):
@@ -18,6 +18,8 @@ class CBLATestBed(SystemParameters):
     MODE_PREPROGRAMMED_BEHAVIOUR = 5
     MODE_QUALITY_ASSURANCE = 6
     MODE_CBLA2 = 7
+    MODE_CBLA2_MANUAL = 8
+    MODE_CBLA2_PRESCRIPTED = 9
     MODE_INACTIVE = 255
 
     def __init__(self):
@@ -395,9 +397,9 @@ class CBLATestBed_Triplet(CBLATestBed):
 
         elif self.request_type == 'light':
             # (14 bytes each)
-			# >>>>> byte 2 to byte 15: LIGHT 0
-			# >>>>> byte 16 to byte 29: LIGHT 1
-			# >>>>> byte 30 to byte 43: LIGHT 2
+            # >>>>> byte 2 to byte 15: LIGHT 0
+            # >>>>> byte 16 to byte 29: LIGHT 1
+            # >>>>> byte 30 to byte 43: LIGHT 2
             for j in range(CBLATestBed_Triplet.NUM_LIGHT):
                 device_header = 'light_%d_' % j
                 byte_offset = 14*j
@@ -416,8 +418,8 @@ class CBLATestBed_Triplet(CBLATestBed):
             # === FIN ===
             device_offset = 0
             # >>>>> byte 2 to byte 9 : FIN 0
-			# >>>>> byte 10 to byte 17 : FIN 1
-			# >>>>> byte 18 to byte 25 : FIN 2
+            # >>>>> byte 10 to byte 17 : FIN 1
+            # >>>>> byte 18 to byte 25 : FIN 2
             for j in range(CBLATestBed_Triplet.NUM_FIN):
                 device_header = 'fin_%d_' % j
                 byte_offset = 8*j + device_offset

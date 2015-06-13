@@ -52,7 +52,7 @@ class CBLA(interactive_system.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_PRESCRIPTED)
             self.enter_command(cmd_obj)
 
             # ------ configuration ------
