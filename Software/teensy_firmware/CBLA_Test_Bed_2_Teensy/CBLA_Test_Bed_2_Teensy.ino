@@ -38,7 +38,7 @@ void setup() {
 	
 	//--- Teensy Unit ---
 	teensy_unit.init();
-	#teensy_unit.operation_mode = 0;
+	//teensy_unit.operation_mode = 0;
 	randomSeed(analogRead(A0));
 	
 	//--- check msg timer ---
