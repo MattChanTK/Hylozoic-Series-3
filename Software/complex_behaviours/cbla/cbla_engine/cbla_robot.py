@@ -86,7 +86,7 @@ class Robot(object):
         for i in range(len(self.in_vars)):
             s = self.in_vars[i].val
             # normalize if the range is specified
-            if 's_ranges' in self.config:
+            if 's_ranges' in self.config and len(self.config['s_ranges']) > 0:
                 val_range = self.config['s_ranges'][i]
                 if isinstance(val_range, tuple) and len(val_range) == 2:
                     s = normalize(self.in_vars[i].val, val_range[0], val_range[1])

@@ -1,4 +1,5 @@
 import sys
+import random
 from collections import defaultdict
 from collections import OrderedDict
 
@@ -96,6 +97,9 @@ class CBLA(interactive_system.InteractiveCmd):
         if self.mode == 'spatial':
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_spatial_nodes(teensy, self.node_list))
+        elif self.mode == 'random':
+            for teensy in teensy_in_use:
+                self.node_list.update(self.build_random_nodes(teensy, self.node_list))
         else:
             self.mode = 'spatial'
             for teensy in teensy_in_use:
@@ -322,6 +326,92 @@ class CBLA(interactive_system.InteractiveCmd):
 
         return cbla_nodes
 
+    def build_random_nodes(self, teensy_name, components, s_per_node=3):
+
+        cbla_nodes = OrderedDict()
+
+        # ===== specifying variables that are being used ====
+        cbla_s_vars = []
+        cbla_m_vars = []
+        for j in range(self.num_light):
+            cbla_s_vars.append(('%s.l%d.als', components['%s.l%d.als' % (teensy_name, j)].out_var['input'],
+                                (0,4095), 'Ambient Light Sensor'))
+            cbla_m_vars.append(('%s.l%d.leddriver', components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref'],
+                                (0, 255), 'LED input'))
+        for j in range(self.num_fin):
+            cbla_s_vars.append(('%s.f%d.ir-f', components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input'],
+                                (0, 4095), 'fin IR Sensor'))
+            cbla_s_vars.append(('%s.f%d.ir-s', components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input'],
+                                (0, 4095), 'scout IR Sensor'))
+            cbla_s_vars.append(('%s.f%d.acc-x', components['%s.f%d.acc' % (teensy_name, j)].out_var['x'],
+                                (-255, 255), 'SMA (x-axis)'))
+            cbla_s_vars.append(('%s.f%d.acc-y', components['%s.f%d.acc' % (teensy_name, j)].out_var['y'],
+                                (-255, 255), 'SMA (y-axis)'))
+            cbla_s_vars.append(('%s.f%d.acc-z', components['%s.f%d.acc' % (teensy_name, j)].out_var['z'],
+                                (-255, 255), 'SMA (z-axis)'))
+
+            cbla_s_vars.append(('%s.f%d.acc-xdiff', components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output'],
+                                (-6, 6), 'SMA (x-diff)'))
+            cbla_s_vars.append(('%s.f%d.acc-ydiff', components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output'],
+                                (-6, 6), 'SMA (y-diff)'))
+            cbla_s_vars.append(('%s.f%d.acc-zdiff', components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output'],
+                                (-6, 6), 'SMA (z-diff)'))
+            cbla_s_vars.append(('%s.f%d.acc-xavg', components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output'],
+                                (-255, 255), 'SMA (x-avg)'))
+            cbla_s_vars.append(('%s.f%d.acc-yavg', components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output'],
+                                (-255, 255), 'SMA (y-avg)'))
+            cbla_s_vars.append(('%s.f%d.acc-zavg', components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output'],
+                                (-255, 255), 'SMA (z-avg)'))
+
+            cbla_m_vars.append(('%s.f%d.rfx-l',components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output'],
+                                (0, 255), 'reflex led'))
+            cbla_m_vars.append(('%s.f%d.rfx-m',components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output'],
+                                (0, 255), 'reflex motor'))
+            cbla_m_vars.append(('%s.f%d.hf-l', components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref'],
+                                (0, 300), 'half-input (left)'))
+            cbla_m_vars.append(('%s.f%d.hf-r', components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref'],
+                                (0, 300), 'half-input (right)'))
+
+
+        num_s_vars = len(cbla_s_vars)
+        node_counter = 0
+        for m_key, m_var, m_range, m_name in cbla_m_vars:
+            out_vars= OrderedDict()
+            out_vars[m_key] = m_var
+            m_keys = (m_key, )
+            m_ranges = (m_range,)
+            m_names = (m_name,)
+
+
+            s_idx = random.sample(range(num_s_vars), s_per_node)
+            in_vars = OrderedDict()
+            s_keys = []
+            s_ranges = []
+            s_names = []
+            for idx in s_idx:
+                try:
+                    s_key = cbla_s_vars[idx][0]
+                    s_var =  cbla_s_vars[idx][1]
+                    s_range = cbla_s_vars[idx][2]
+                    s_name = cbla_s_vars[idx][3]
+                except IndexError:
+                    raise IndexError('%s out of range' % str(cbla_s_vars[idx]))
+                in_vars[s_key] = s_var
+                s_keys.append(s_key)
+                s_ranges.append(s_range)
+                s_names.append(s_name)
+
+
+            cbla_node = CBLA_Node(messenger=self.messenger, data_collector=self.data_collector,
+                                  cluster_name=teensy_name, node_type='random', node_id=node_counter,
+                                  in_vars=in_vars, out_vars=out_vars,
+                                  s_keys=tuple(s_keys), s_ranges=tuple(s_ranges), s_names=tuple(s_names),
+                                  m_keys=tuple(m_keys), m_ranges=tuple(m_ranges), m_names=tuple(m_names)
+                                  )
+            cbla_nodes[cbla_node.node_name] = cbla_node
+            node_counter += 1
+
+        return cbla_nodes
 
     def start_nodes(self):
 
@@ -523,7 +613,7 @@ if __name__ == "__main__":
 
         # interactive code
         # -- this create all the abstract nodes
-        behaviours = CBLA(teensy_manager, auto_start=True, mode='spatial')
+        behaviours = CBLA(teensy_manager, auto_start=True, mode='random')
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
