@@ -73,7 +73,7 @@ class System_Identification(interactive_system.InteractiveCmd):
                 self.node_list[ir_sensor_0.node_name] = ir_sensor_0
                 self.node_list[ir_sensor_1.node_name] = ir_sensor_1
 
-                # 1 3-axis acceleromter each
+                # 1 3-axis accelerometer each
                 acc = Input_Node(self.messenger, teensy, node_name='fin_%d.acc' % j,
                                  x='fin_%d_acc_x_state' % j,
                                  y='fin_%d_acc_y_state' % j,

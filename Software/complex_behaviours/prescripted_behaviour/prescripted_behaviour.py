@@ -17,6 +17,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
     def __init__(self, Teensy_manager, auto_start=True, mode='default'):
 
         self.node_list = OrderedDict()
+        self.data_collector = None
 
         self.all_nodes_created = threading.Condition()
 
@@ -55,6 +56,9 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
         teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
+        # table of all data variables being collected
+        data_variables = dict()
+
         # instantiate all the basic components
         for teensy in teensy_in_use:
 
@@ -66,14 +70,18 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
              # ==== creating components related to the Light =====
             light_components = OrderedDict()
             for j in range(self.num_light):
-               light_components.update(self.build_light_components(teensy_name=teensy, light_id=j))
+                components, data_vars = self.build_light_components(teensy_name=teensy, light_id=j)
+                light_components.update(components)
+                data_variables.update(data_vars)
             self.node_list.update(light_components)
 
 
             # ===== creating components for related to the Fins ====
             fin_components = OrderedDict()
             for j in range(self.num_fin):
-                fin_components.update(self.build_fin_components(teensy_name=teensy, fin_id=j))
+                components, data_vars = self.build_fin_components(teensy_name=teensy, fin_id=j)
+                fin_components.update(components)
+                data_variables.update(data_vars)
             self.node_list.update(fin_components)
 
 
@@ -86,10 +94,13 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_default_nodes(teensy, self.node_list))
 
+        self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
+
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
         self.start_nodes()
+        self.data_collector.start()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -127,8 +138,23 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         fin_comps[reflex_l.node_name] = reflex_l
         fin_comps[reflex_m.node_name] = reflex_m
 
+        # collecting data
+        data_variables = OrderedDict()
+        # collecting their values
+        data_variables['%s.fin_%d.ir-s' % (teensy_name, fin_id)] = ir_s.out_var['input']
+        data_variables['%s.fin_%d.ir-f' % (teensy_name, fin_id)] = ir_f.out_var['input']
 
-        return fin_comps
+        data_variables['%s.fin_%d.acc-x' % (teensy_name, fin_id)] = acc.out_var['x']
+        data_variables['%s.fin_%d.acc-y' % (teensy_name, fin_id)] = acc.out_var['y']
+        data_variables['%s.fin_%d.acc-z' % (teensy_name, fin_id)] = acc.out_var['z']
+
+        data_variables['%s.fin_%d.sma-l' % (teensy_name, fin_id)] = sma_l.in_var['output']
+        data_variables['%s.fin_%d.sma-r' % (teensy_name, fin_id)] = sma_r.in_var['output']
+        data_variables['%s.fin_%d.rfx-l' % (teensy_name, fin_id)] = reflex_l.in_var['output']
+        data_variables['%s.fin_%d.rfx-m' % (teensy_name, fin_id)] = reflex_m.in_var['output']
+
+
+        return fin_comps, data_variables
 
     def build_light_components(self, teensy_name, light_id):
 
@@ -151,7 +177,13 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                                 led_out=led.in_var['output'], step_period=0.001)
         light_comps[led_driver.node_name] = led_driver
 
-        return light_comps
+        # collecting data
+        data_variables = OrderedDict()
+        # collecting their values
+        data_variables['%s.light_%d.led' % (teensy_name, light_id)] = led.in_var['output']
+        data_variables['%s.light_%d.als' % (teensy_name, light_id)] = als.out_var['input']
+
+        return light_comps, data_variables
 
     def build_default_nodes(self, teensy_name, components):
 
@@ -259,6 +291,12 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         print('System Initialized with %d nodes' % len(self.node_list))
 
     def terminate(self):
+
+        # terminate data collector
+        self.data_collector.alive = False
+        self.data_collector.join()
+        print("Data Collector terminated")
+
         # killing each of the Node
         for node in self.node_list.values():
             node.alive = False
