@@ -12,29 +12,33 @@ try:
 except ImportError:
     import sys
     import os
+
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
     from custom_gui import *
 
 
 class System_Identification(interactive_system.InteractiveCmd):
-
     def __init__(self, Teensy_manager, auto_start=True):
 
-        self.node_list = None
-        self.messenger = None
+        self.node_list = OrderedDict()
         self.data_collector = None
 
         self.all_nodes_created = threading.Condition()
+
+        self.num_fin = 3
+        self.num_light = 3
 
         super(System_Identification, self).__init__(Teensy_manager, auto_start=auto_start)
 
     # ========= the Run function for the manual control =====
     def run(self):
 
+        self.messenger = interactive_system.Messenger(self, 0.000)
+
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_PREPROGRAMMED_BEHAVIOUR)
             self.enter_command(cmd_obj)
 
         self.send_commands()
@@ -42,18 +46,9 @@ class System_Identification(interactive_system.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = Messenger(self, 0.000)
-        messenger.start()
+        self.messenger.start()
 
-        teensy_0 = 'test_teensy_1'
-        teensy_1 = 'test_teensy_3'
-        teensy_2 = 'HK_teensy_1'
-        teensy_3 = 'HK_teensy_2'
-        teensy_4 = 'HK_teensy_3'
-
-        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
-
-        node_list = OrderedDict()
+        teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
         # instantiate all the basic components
 
@@ -67,110 +62,119 @@ class System_Identification(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-            # 3 tentacles
-            for j in range(3):
-
+            # 3 fins
+            for j in range(self.num_fin):
                 # 2 ir sensors each
-                ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
-                ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
+                ir_sensor_0 = Input_Node(self.messenger, teensy, node_name='fin_%d.ir_0' % j,
+                                         input='fin_%d_ir_0_state' % j)
+                ir_sensor_1 = Input_Node(self.messenger, teensy, node_name='fin_%d.ir_1' % j,
+                                         input='fin_%d_ir_1_state' % j)
 
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
+                self.node_list[ir_sensor_0.node_name] = ir_sensor_0
+                self.node_list[ir_sensor_1.node_name] = ir_sensor_1
 
                 # 1 3-axis acceleromter each
-                acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
-                                         x='tentacle_%d_acc_x_state' % j,
-                                         y='tentacle_%d_acc_y_state' % j,
-                                         z='tentacle_%d_acc_z_state' % j)
-                node_list[acc.node_name] = acc
+                acc = Input_Node(self.messenger, teensy, node_name='fin_%d.acc' % j,
+                                 x='fin_%d_acc_x_state' % j,
+                                 y='fin_%d_acc_y_state' % j,
+                                 z='fin_%d_acc_z_state' % j)
+                self.node_list[acc.node_name] = acc
 
                 # 2 SMA wires each
-                sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
-                sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
+                sma_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.sma_0' % j,
+                                    output='fin_%d_sma_0_level' % j)
+                sma_1 = Output_Node(self.messenger, teensy, node_name='fin_%d.sma_1' % j,
+                                    output='fin_%d_sma_1_level' % j)
 
-                node_list[sma_0.node_name] = sma_0
-                node_list[sma_1.node_name] = sma_1
+                self.node_list[sma_0.node_name] = sma_0
+                self.node_list[sma_1.node_name] = sma_1
 
                 # 1 frond
                 motion_type = Var(0)
-                #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                frond = Cycling_Fin(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
-                              right_sma=sma_1.in_var['output'], motion_type=motion_type)
-                              #left_config=sma_param, right_config=sma_param)
-                node_list[frond.node_name] = frond
+                # sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
+                frond = Cycling_Fin(self.messenger, teensy, node_name='fin_%d.frond' % j,
+                                    left_sma=sma_0.in_var['output'],
+                                    right_sma=sma_1.in_var['output'], motion_type=motion_type)
+                # left_config=sma_param, right_config=sma_param)
+                self.node_list[frond.node_name] = frond
 
 
                 # 2 reflex each
-                reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
-                reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
+                reflex_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_0' % j,
+                                       output='fin_%d_reflex_0_level' % j)
+                reflex_1 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_1' % j,
+                                       output='fin_%d_reflex_1_level' % j)
 
-
-                node_list[reflex_0.node_name] = reflex_0
-                node_list[reflex_1.node_name] = reflex_1
+                self.node_list[reflex_0.node_name] = reflex_0
+                self.node_list[reflex_1.node_name] = reflex_1
 
                 # acc diff
-                acc_x_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_x_diff' %(teensy, j),
-                                                    input_var=acc.out_var['x'], diff_gap=15, smoothing=30, step_period=0.1)
-                acc_y_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_y_diff' % (teensy, j),
-                                                    input_var=acc.out_var['y'], diff_gap=15, smoothing=30, step_period=0.1)
-                acc_z_diff = Pseudo_Differentiation(messenger, node_name='%s.tentacle_%d.acc_z_diff' % (teensy, j),
-                                                    input_var=acc.out_var['z'], diff_gap=15, smoothing=30, step_period=0.1)
+                acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_x_diff' % (teensy, j),
+                                                    input_var=acc.out_var['x'], diff_gap=15, smoothing=30,
+                                                    step_period=0.1)
+                acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_y_diff' % (teensy, j),
+                                                    input_var=acc.out_var['y'], diff_gap=15, smoothing=30,
+                                                    step_period=0.1)
+                acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_z_diff' % (teensy, j),
+                                                    input_var=acc.out_var['z'], diff_gap=15, smoothing=30,
+                                                    step_period=0.1)
 
-                node_list[acc_x_diff.node_name] = acc_x_diff
-                node_list[acc_y_diff.node_name] = acc_y_diff
-                node_list[acc_z_diff.node_name] = acc_z_diff
+                self.node_list[acc_x_diff.node_name] = acc_x_diff
+                self.node_list[acc_y_diff.node_name] = acc_y_diff
+                self.node_list[acc_z_diff.node_name] = acc_z_diff
 
                 # acc running average
-                # acc_x_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_x_avg' % (teensy, j),
+                # acc_x_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_x_avg' % (teensy, j),
                 #                             input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-                # acc_y_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_y_avg' % (teensy, j),
+                # acc_y_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_y_avg' % (teensy, j),
                 #                             input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-                # acc_z_avg = Running_Average(messenger, node_name='%s.tentacle_%d.acc_z_avg' % (teensy, j),
+                # acc_z_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_z_avg' % (teensy, j),
                 #                             input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
                 #
-                # node_list[acc_x_avg.node_name] = acc_x_avg
-                # node_list[acc_y_avg.node_name] = acc_y_avg
-                # node_list[acc_z_avg.node_name] = acc_z_avg
+                # self.node_list[acc_x_avg.node_name] = acc_x_avg
+                # self.node_list[acc_y_avg.node_name] = acc_y_avg
+                # self.node_list[acc_z_avg.node_name] = acc_z_avg
 
 
                 # collecting data
-                data_variables['%s.tentacle_%d.acc_x' % (teensy, j)] = acc.out_var['x']
-                data_variables['%s.tentacle_%d.acc_y' % (teensy, j)] = acc.out_var['y']
-                data_variables['%s.tentacle_%d.acc_z' % (teensy, j)] = acc.out_var['z']
-                data_variables['%s.tentacle_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
-                data_variables['%s.tentacle_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
-                data_variables['%s.tentacle_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
-                # data_variables['%s.tentacle_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
-                # data_variables['%s.tentacle_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
-                # data_variables['%s.tentacle_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
+                data_variables['%s.fin_%d.acc_x' % (teensy, j)] = acc.out_var['x']
+                data_variables['%s.fin_%d.acc_y' % (teensy, j)] = acc.out_var['y']
+                data_variables['%s.fin_%d.acc_z' % (teensy, j)] = acc.out_var['z']
+                data_variables['%s.fin_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
+                data_variables['%s.fin_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
+                data_variables['%s.fin_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
+                # data_variables['%s.fin_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
+                # data_variables['%s.fin_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
+                # data_variables['%s.fin_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
 
-                data_variables['%s.tentacle_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
-                data_variables['%s.tentacle_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
-                data_variables['%s.tentacle_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
+                data_variables['%s.fin_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
+                data_variables['%s.fin_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
+                data_variables['%s.fin_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
 
 
             # for Interactive_Light
-            # 1 ambient light sensor
-            als = Input_Node(messenger, teensy, node_name='protocell.als', input='protocell_0_als_state')
-            node_list[als.node_name] = als
+            for j in range(self.num_light):
 
-            # 1 led
-            led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
-                              output='protocell_0_led_level')
-            node_list[led.node_name] = led
+                # 1 ambient light sensor
+                als = Input_Node(self.messenger, teensy, node_name='light_%d.als' % j,
+                                 input='light_%d_als_state' % j)
+                self.node_list[als.node_name] = als
 
-            # collecting their values
-            data_variables['%s.protocell.led' % teensy] = led.in_var['output']
-            data_variables['%s.protocell.als' % teensy] = als.out_var['input']
+                # 1 led
+                led = Output_Node(self.messenger, teensy_name=teensy, node_name='light_%d.led' % j,
+                                  output='light_%d_led_level' % j )
+                self.node_list[led.node_name] = led
 
+                # collecting their values
+                data_variables['%s.light_%d.led' % (teensy, j)] = led.in_var['output']
+                data_variables['%s.light_%d.als' % (teensy, j)] = als.out_var['input']
 
-
-        self.data_collector = Data_Collector_Node(messenger, file_header='sys_id_data', **data_variables)
+        self.data_collector = Data_Collector_Node(self.messenger, file_header='sys_id_data', **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
-        self.start_nodes(node_list, messenger)
+        self.start_nodes()
         self.data_collector.start()
 
         # wait for the nodes to destroy
@@ -179,14 +183,11 @@ class System_Identification(interactive_system.InteractiveCmd):
 
         return 0
 
-    def start_nodes(self, node_list, messenger):
+    def start_nodes(self):
 
-        if not isinstance(node_list, dict) or \
-           not isinstance(messenger, interactive_system.Messenger):
+        if not isinstance(self.node_list, dict) or \
+           not isinstance(self.messenger, interactive_system.Messenger):
             raise AttributeError("Nodes have not been created properly!")
-        else:
-            self.node_list = node_list
-            self.messenger = messenger
 
         for name, node in self.node_list.items():
             node.start()
@@ -211,9 +212,7 @@ class System_Identification(interactive_system.InteractiveCmd):
             self.teensy_manager.kill_teensy_thread(teensy_name)
 
 
-
 def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
-
     if not isinstance(hmi, tk_gui.Master_Frame):
         raise TypeError("HMI must be Master_Frame")
     if not isinstance(node_list, dict):
@@ -252,8 +251,6 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
     page_frames = OrderedDict()
     for teensy_name, teensy_display_vars in display_vars.items():
-
-
         frame = HMI_Prescripted_Mode(content_frame, teensy_name, (teensy_name, 'system_identification_page'),
                                      None, teensy_display_vars)
         page_frames[frame.page_key] = frame
@@ -267,8 +264,6 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
               nav_frame=nav_frame,
               content_frame=content_frame,
               start_page_key=next(iter(page_frames.keys()), ''))
-
-
 
 
 if __name__ == "__main__":

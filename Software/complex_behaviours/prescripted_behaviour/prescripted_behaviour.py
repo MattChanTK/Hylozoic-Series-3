@@ -63,7 +63,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-
              # ==== creating components related to the Light =====
             light_components = OrderedDict()
             for j in range(self.num_light):
