@@ -334,42 +334,59 @@ class CBLA(interactive_system.InteractiveCmd):
         cbla_s_vars = []
         cbla_m_vars = []
         for j in range(self.num_light):
-            cbla_s_vars.append(('%s.l%d.als', components['%s.l%d.als' % (teensy_name, j)].out_var['input'],
+            cbla_s_vars.append(('%s.l%d.als' % (teensy_name, j),
+                                components['%s.l%d.als' % (teensy_name, j)].out_var['input'],
                                 (0,4095), 'Ambient Light Sensor'))
-            cbla_m_vars.append(('%s.l%d.leddriver', components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref'],
+            cbla_m_vars.append(('%s.l%d.leddriver' % (teensy_name, j),
+                                components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref'],
                                 (0, 255), 'LED input'))
         for j in range(self.num_fin):
-            cbla_s_vars.append(('%s.f%d.ir-f', components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input'],
+            cbla_s_vars.append(('%s.f%d.ir-f' % (teensy_name, j),
+                                components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input'],
                                 (0, 4095), 'fin IR Sensor'))
-            cbla_s_vars.append(('%s.f%d.ir-s', components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input'],
+            cbla_s_vars.append(('%s.f%d.ir-s' % (teensy_name, j),
+                                components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input'],
                                 (0, 4095), 'scout IR Sensor'))
-            cbla_s_vars.append(('%s.f%d.acc-x', components['%s.f%d.acc' % (teensy_name, j)].out_var['x'],
+            cbla_s_vars.append(('%s.f%d.acc-x' % (teensy_name, j),
+                                components['%s.f%d.acc' % (teensy_name, j)].out_var['x'],
                                 (-255, 255), 'SMA (x-axis)'))
-            cbla_s_vars.append(('%s.f%d.acc-y', components['%s.f%d.acc' % (teensy_name, j)].out_var['y'],
+            cbla_s_vars.append(('%s.f%d.acc-y' % (teensy_name, j),
+                                components['%s.f%d.acc' % (teensy_name, j)].out_var['y'],
                                 (-255, 255), 'SMA (y-axis)'))
-            cbla_s_vars.append(('%s.f%d.acc-z', components['%s.f%d.acc' % (teensy_name, j)].out_var['z'],
+            cbla_s_vars.append(('%s.f%d.acc-z' % (teensy_name, j),
+                                components['%s.f%d.acc' % (teensy_name, j)].out_var['z'],
                                 (-255, 255), 'SMA (z-axis)'))
 
-            cbla_s_vars.append(('%s.f%d.acc-xdiff', components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-xdiff' % (teensy_name, j),
+                                components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output'],
                                 (-6, 6), 'SMA (x-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-ydiff', components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-ydiff' % (teensy_name, j),
+                                components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output'],
                                 (-6, 6), 'SMA (y-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-zdiff', components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-zdiff' % (teensy_name, j),
+                                components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output'],
                                 (-6, 6), 'SMA (z-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-xavg', components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-xavg' % (teensy_name, j),
+                                components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output'],
                                 (-255, 255), 'SMA (x-avg)'))
-            cbla_s_vars.append(('%s.f%d.acc-yavg', components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-yavg' % (teensy_name, j),
+                                components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output'],
                                 (-255, 255), 'SMA (y-avg)'))
-            cbla_s_vars.append(('%s.f%d.acc-zavg', components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output'],
+            cbla_s_vars.append(('%s.f%d.acc-zavg' % (teensy_name, j),
+                                components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output'],
                                 (-255, 255), 'SMA (z-avg)'))
 
-            cbla_m_vars.append(('%s.f%d.rfx-l',components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output'],
+            cbla_m_vars.append(('%s.f%d.rfx-l' % (teensy_name, j),
+                                components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output'],
                                 (0, 255), 'reflex led'))
-            cbla_m_vars.append(('%s.f%d.rfx-m',components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output'],
+            cbla_m_vars.append(('%s.f%d.rfx-m' % (teensy_name, j),
+                                components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output'],
                                 (0, 255), 'reflex motor'))
-            cbla_m_vars.append(('%s.f%d.hf-l', components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref'],
+            cbla_m_vars.append(('%s.f%d.hf-l' % (teensy_name, j),
+                                components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref'],
                                 (0, 300), 'half-input (left)'))
-            cbla_m_vars.append(('%s.f%d.hf-r', components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref'],
+            cbla_m_vars.append(('%s.f%d.hf-r' % (teensy_name, j),
+                                components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref'],
                                 (0, 300), 'half-input (right)'))
 
 
@@ -511,6 +528,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 footer = '\nReflex'
             elif isinstance(node, CBLA_Light_Node):
                 footer = '\nLight'
+            elif isinstance(node, CBLA_Node):
+                footer = '\nCBLA'
+
 
             page_name = teensy_name + footer
 

@@ -192,7 +192,8 @@ class SystemParameters():
                 raise TypeError(input_type + " must be an integer.")
 
         if input > 2**num_bit - 1 or input < 0:
-            raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + ".")
+            raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + "."
+                            + "[value = %s]" % str(input))
         self.output_param[input_type] = input
 
     def _set_int8_var(self, input_type, input):

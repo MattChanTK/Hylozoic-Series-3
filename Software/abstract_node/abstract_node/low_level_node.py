@@ -136,11 +136,13 @@ class LED_Driver(Simple_Node):
         while self.alive:
 
             if self.out_var['output'].val < self.in_var['led_ref'].val:
-                self.out_var['output'].val += max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val + max(1, int(self.out_var['output'].val * 0.1))
+                self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
 
             elif self.out_var['output'].val > self.in_var['led_ref'].val:
-                self.out_var['output'].val -= max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val - max(1, int(self.out_var['output'].val * 0.1))
+                self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
             else:
                 sleeping_time = max(0,self.messenger.estimated_msg_period * 2)
