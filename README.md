@@ -35,14 +35,3 @@ sculpture, by using a curiosity-based learning algorithm (CBLA) to adjust the sc
 experience. The results of this study will enable designers to design more engaging and interesting interactive art sculptures.
 
 
-Project Page: http://tuzzer.github.io/CBLA-Test-Bed
-
-## Software
-<b>InteractiveSystem</b>: code for the Teensy-based system to communicate with the computer
-
-<b>CBLA</b>: simulation of the curiosity-based learning algorithm
-
-## Hardware
-<b>PCB Design</b>: Eagle schematic, PCB layout, and library files for the CBLA Test Bed. Also contains gerber files sent to PCB fabrication house. 
-
-<b>Reference</b>: contains datasheets and useful tutorials relevant to the project. 
