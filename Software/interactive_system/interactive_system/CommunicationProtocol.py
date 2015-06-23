@@ -311,8 +311,8 @@ class CBLATestBed_Triplet(CBLATestBed):
                 device_header = 'light_%d_' % j
                 byte_offset = 4*j + device_offset
 
-                # byte 2 to 3: ambient light sensor  state
-                self.input_state[device_header + 'als_state'] = msg[byte_offset]
+                # byte 2 to 4: ambient light sensor state
+                self.input_state[device_header + 'als_state'] = struct.unpack_from('H', msg[byte_offset+0:byte_offset+2])[0]
 
 
      def _compose_outgoing_msg(self, content):
