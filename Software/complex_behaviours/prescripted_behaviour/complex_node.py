@@ -152,7 +152,8 @@ class Interactive_Light(Simple_Node):
                  local_action_prob: Var=Var(0), sleep_time: Var=Var(0.025)):
 
         super(Interactive_Light, self).__init__(messenger, node_name='%s' % node_name, output=led,
-                                         als=als, local_action_prob=local_action_prob, sleep_time=sleep_time)
+                                         als=als, fin_ir=fin_ir,
+                                         local_action_prob=local_action_prob, sleep_time=sleep_time)
 
     def run(self):
 
@@ -162,16 +163,19 @@ class Interactive_Light(Simple_Node):
             # cluster activity
             if clock() - t_cluster > 1.0:
                 do_local_action = random.random() < self.in_var['local_action_prob'].val
-                if do_local_action:
+                if do_local_action or self.in_var['fin_ir'].val > 1000:
 
                     for i in range(5):
                         self.out_var['output'].val = 0
                         while self.out_var['output'].val < 100:
-                            self.out_var['output'].val += max(1, int(self.out_var['output'].val*0.1))
+                            out_val = self.out_var['output'].val + max(1, int(self.out_var['output'].val*0.1))
+                            self.out_var['output'].val = max(0, min(255, out_val))
                             sleep(self.in_var['sleep_time'].val)
                         while self.out_var['output'].val > 0:
-                            self.out_var['output'].val -= max(1, int(self.out_var['output'].val*0.1))
+                            out_val = self.out_var['output'].val - max(1, int(self.out_var['output'].val*0.1))
+                            self.out_var['output'].val = max(0, min(255, out_val))
                             sleep(self.in_var['sleep_time'].val)
+
                         self.in_var['local_action_prob'].val = 0
                 t_cluster = clock()
 
@@ -188,32 +192,41 @@ class Interactive_Scout_Reflex(Simple_Node):
 
         # default parameters
         self.config = dict()
-        self.config['ir_on_thres'] = 1400
-        self.config['ir_off_thres'] = 1000
+        self.config['ir_on_thres'] = 950
+        self.config['ir_off_thres'] = 700
+        self.config['step_period'] = 0.025
+        self.config['max_val'] = 255
+
         # custom parameters
         if isinstance(config, dict):
             for name, arg in config.items():
                 self.config[name] = arg
+
+
 
     def run(self):
 
         reached_max = False
         while self.alive:
 
+
             # scout's sensor
             if self.in_var['ir_sensor'].val > self.config['ir_on_thres'] and not reached_max:
 
-                if self.out_var['output'].val < 100:
-                    self.out_var['output'].val += max(1, int(self.out_var['output'].val*0.1))
-                    sleep(0.01)
+                if self.out_var['output'].val < self.config['max_val']:
+                    out_val = self.out_var['output'].val + max(1, int(self.out_var['output'].val*0.1))
+                    self.out_var['output'].val = max(0, min(255, out_val))
+
+                    sleep(self.config['step_period'])
                 else:
                     reached_max = True
 
             elif self.in_var['ir_sensor'].val < self.config['ir_off_thres'] or reached_max:
 
                 if self.out_var['output'].val > 0:
-                    self.out_var['output'].val -= max(1, int(self.out_var['output'].val * 0.1))
-                    sleep(0.01)
+                    out_val = self.out_var['output'].val - max(1, int(self.out_var['output'].val*0.1))
+                    self.out_var['output'].val = max(0, min(255, out_val))
+                    sleep(self.config['step_period'])
                 else:
                     reached_max = False
 
@@ -232,8 +245,8 @@ class Interactive_Half_Fin(Simple_Node):
 
         # default parameters
         self.config = dict()
-        self.config['ir_on_thres'] = 1600
-        self.config['ir_off_thres'] = 1100
+        self.config['ir_on_thres'] = 950
+        self.config['ir_off_thres'] = 700
         self.config['T_on'] = 300
         self.config['T_off'] = 5
         # custom parameters

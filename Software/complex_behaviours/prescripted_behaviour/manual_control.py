@@ -81,13 +81,13 @@ class Manual_Control(interactive_system.InteractiveCmd):
                 self.node_list[sma_0.node_name] = sma_0
                 self.node_list[sma_1.node_name] = sma_1
 
-                # 1 frond
+                # 1 fin
                 motion_type = Var(0)
                 #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                frond = Fin(self.messenger, teensy, node_name='fin_%d.frond' % j, left_sma=sma_0.in_var['output'],
+                fin = Fin(self.messenger, teensy, node_name='fin_%d.fin' % j, left_sma=sma_0.in_var['output'],
                               right_sma=sma_1.in_var['output'], motion_type=motion_type,)
                               #left_config=sma_param, right_config=sma_param)
-                self.node_list[frond.node_name] = frond
+                self.node_list[fin.node_name] = fin
 
 
                 # 2 reflex each

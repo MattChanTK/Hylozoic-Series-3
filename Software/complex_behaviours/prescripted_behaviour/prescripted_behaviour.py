@@ -17,7 +17,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
     def __init__(self, Teensy_manager, auto_start=True, mode='default'):
 
         self.node_list = OrderedDict()
-        self.data_collector = None
+        #self.data_collector = None
 
         self.all_nodes_created = threading.Condition()
 
@@ -35,17 +35,9 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_PREPROGRAMMED_BEHAVIOUR)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_PRESCRIPTED)
             self.enter_command(cmd_obj)
 
-            # ------ configuration ------
-            # set the Fin on/off periods
-            cmd_obj = interactive_system.command_object(teensy_name, 'fin_high_level')
-            for j in range(self.num_fin):
-                device_header = 'fin_%d_' % j
-                cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
-                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)
-            self.enter_command(cmd_obj)
         self.send_commands()
 
         # initially update the Teensys with all the output parameters here
@@ -57,7 +49,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
         # table of all data variables being collected
-        data_variables = dict()
+       # data_variables = dict()
 
         # instantiate all the basic components
         for teensy in teensy_in_use:
@@ -72,7 +64,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for j in range(self.num_light):
                 components, data_vars = self.build_light_components(teensy_name=teensy, light_id=j)
                 light_components.update(components)
-                data_variables.update(data_vars)
+             #   data_variables.update(data_vars)
             self.node_list.update(light_components)
 
 
@@ -81,7 +73,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for j in range(self.num_fin):
                 components, data_vars = self.build_fin_components(teensy_name=teensy, fin_id=j)
                 fin_components.update(components)
-                data_variables.update(data_vars)
+             #   data_variables.update(data_vars)
             self.node_list.update(fin_components)
 
 
@@ -94,13 +86,13 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_default_nodes(teensy, self.node_list))
 
-        self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
+        #self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
         self.start_nodes()
-        self.data_collector.start()
+        #self.data_collector.start()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -123,8 +115,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                          z='fin_%d_acc_z_state' % fin_id)
 
         # 2 SMA wires each
-        sma_l = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % fin_id, output='fin_%d_sma_0_level' % fin_id)
-        sma_r = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % fin_id, output='fin_%d_sma_1_level' % fin_id)
+        sma_r = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % fin_id, output='fin_%d_sma_0_level' % fin_id)
+        sma_l = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % fin_id, output='fin_%d_sma_1_level' % fin_id)
 
         # 2 reflex each
         reflex_l = Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % fin_id, output='fin_%d_reflex_0_level' % fin_id)
@@ -172,10 +164,10 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
         light_comps[als.node_name] = als
 
-        # 1 LED driver
-        led_driver = LED_Driver(self.messenger, node_name="%s.l%d.led_driver" % (teensy_name, light_id),
-                                led_out=led.in_var['output'], step_period=0.001)
-        light_comps[led_driver.node_name] = led_driver
+        # # 1 LED driver
+        # led_driver = LED_Driver(self.messenger, node_name="%s.l%d.led_driver" % (teensy_name, light_id),
+        #                         led_out=led.in_var['output'], step_period=0.001)
+        # light_comps[led_driver.node_name] = led_driver
 
         # collecting data
         data_variables = OrderedDict()
@@ -216,7 +208,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             fin_ir_l = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
             scout_ir_l = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
-            side_ir_l = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+            side_ir_l = components['%s.f%d.ir-s' % (teensy_name, (j - 1) % self.num_fin)].out_var['input']
             sma_l = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
 
             # left half-fin modules
@@ -230,7 +222,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             # ===== constructing the right Half-Fin Nodes ====
             fin_ir_r = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
-            scout_ir_r = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+            scout_ir_r = components['%s.f%d.ir-s' % (teensy_name, (j - 1) % self.num_fin)].out_var['input']
             side_ir_r = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
             sma_r = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
 
@@ -257,7 +249,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             rfx_m = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
             reflex_motor = Interactive_Scout_Reflex(messenger=self.messenger,
                                                     node_name='%s.scoutReflex%d-m' % (teensy_name, j),
-                                                    ir_sensor=ir_s, output=rfx_m)
+                                                    ir_sensor=ir_s, output=rfx_m,
+                                                    max_val=40, step_period=0.05)
 
 
             interactive_nodes[reflex_motor.node_name] = reflex_motor
@@ -266,7 +259,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             rfx_l = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
             reflex_light = Interactive_Scout_Reflex(messenger=self.messenger,
                                                     node_name='%s.scoutReflex%d-l' % (teensy_name, j),
-                                                    ir_sensor=ir_s, output=rfx_l)
+                                                    ir_sensor=ir_s, output=rfx_l,
+                                                    max_val=255, step_period=0.001)
 
 
             interactive_nodes[reflex_light.node_name] = reflex_light
@@ -293,8 +287,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
     def terminate(self):
 
         # terminate data collector
-        self.data_collector.alive = False
-        self.data_collector.join()
+        #self.data_collector.alive = False
+        #self.data_collector.join()
         print("Data Collector terminated")
 
         # killing each of the Node
