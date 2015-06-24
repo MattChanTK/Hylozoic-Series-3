@@ -1,4 +1,9 @@
 import sys
+# import resource
+# # Increase max stack size from 8MB to 512MB
+# resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+# sys.setrecursionlimit(10**6)
+
 import random
 from collections import defaultdict
 from collections import OrderedDict
@@ -633,7 +638,7 @@ if __name__ == "__main__":
 
         # interactive code
         # -- this create all the abstract nodes
-        behaviours = CBLA(teensy_manager, auto_start=True, mode='random')
+        behaviours = CBLA(teensy_manager, auto_start=True, mode='spatial')
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")

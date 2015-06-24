@@ -112,8 +112,8 @@ class Messenger_Status_Frame(Status_Frame):
         except AttributeError:
             return
 
-        self.after(250, self._update_frame)
         self.update()
+        self.after(250, self._update_frame)
 
 
 class Content_Frame(ttk.Frame):

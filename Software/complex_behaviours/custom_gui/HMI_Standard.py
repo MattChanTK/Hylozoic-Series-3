@@ -107,8 +107,8 @@ class HMI_Standard_Display_Frame(ttk.Frame):
             label_width = max([len(string) for string in val['text'].split('\n')]) + 4
             val.configure(width=max(val['width'], label_width))
 
-        self.after(500, self.updateFrame)
         self.update()
+        self.after(500, self.updateFrame)
         #updateRecursive(self)
 
 class HMI_Standard_Control_Frame(ttk.Frame):
@@ -169,8 +169,8 @@ class HMI_Standard_Control_Frame(ttk.Frame):
             else:
                 label.configure(style="valid.TLabel")
 
-        self.after(500, self.updateFrame)
         self.update()
+        self.after(500, self.updateFrame)
 
 
 def to_tuple_string(output_var):
