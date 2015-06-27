@@ -38,6 +38,7 @@ void setup() {
 	
 	//--- Teensy Unit ---
 	teensy_unit.init();
+	//teensy_unit.operation_mode = 0;
 	randomSeed(analogRead(A0));
 	
 	//--- check msg timer ---
@@ -51,9 +52,9 @@ void setup() {
 void manual_control(){
 	uint32_t curr_time = get_time();
 	
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.high_level_direct_control_fin_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_fin_reflex_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 
 }
 
@@ -62,8 +63,8 @@ void internode_test() {
 	uint32_t curr_time = get_time();
 	//teensy_unit.sample_inputs();
 	
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
+	teensy_unit.high_level_direct_control_fin_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_fin_reflex_behaviour();
 
 	
 
@@ -74,9 +75,9 @@ void system_identification() {
 	uint32_t curr_time = get_time();
 	//teensy_unit.sample_inputs();
 	
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.high_level_direct_control_fin_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_fin_reflex_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 	
 
 }
@@ -85,9 +86,9 @@ void cbla(){
 	uint32_t curr_time = get_time();
 	//teensy_unit.sample_inputs();
 	
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour(curr_time);
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.high_level_direct_control_fin_arm_behaviour(curr_time);
+	teensy_unit.low_level_control_fin_reflex_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 
 }
 
@@ -95,29 +96,36 @@ void cbla2(){
 	uint32_t curr_time = get_time();
 	//teensy_unit.sample_inputs();
 	
-	teensy_unit.low_level_control_tentacle_behaviour();
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.low_level_control_fin_behaviour();
+	teensy_unit.low_level_control_fin_reflex_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 
 }
 
+void cbla2_manual(){
+	cbla2();
+}
+
+void cbla2_prescripted(){
+	cbla2();
+}
 
 void self_running_test(){
 	uint32_t curr_time = get_time();
 	teensy_unit.sample_inputs();
 
-	teensy_unit.tentacle_arm_test_behaviour(curr_time);
+	teensy_unit.fin_arm_test_behaviour(curr_time);
 	teensy_unit.reflex_test_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 }
 
 void quality_assurance(){
 
 	uint32_t curr_time = get_time();
 	
-	teensy_unit.high_level_direct_control_tentacle_arm_behaviour_continuous(curr_time);
-	teensy_unit.low_level_control_tentacle_reflex_led_behaviour();
-	teensy_unit.low_level_control_protocell_behaviour();
+	teensy_unit.high_level_direct_control_fin_arm_behaviour_continuous(curr_time);
+	teensy_unit.low_level_control_fin_reflex_behaviour();
+	teensy_unit.low_level_control_light_behaviour();
 }	
 
 void preprogrammed_behaviour(){
@@ -133,7 +141,7 @@ void inactive_mode(){
 //===== MAIN LOOP =====
 
 uint16_t loop_since_last_msg = 0;
-const uint16_t keep_alive_thres = 200;
+const uint16_t keep_alive_thres = 2000;
 
 void loop() {
 
@@ -188,6 +196,18 @@ void loop() {
 		case 7:
 			if (loop_since_last_msg < keep_alive_thres)
 				cbla2();
+			else
+				inactive_mode();			
+			break;
+		case 8:
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla2_manual();
+			else
+				inactive_mode();			
+			break;
+		case 9:
+			if (loop_since_last_msg < keep_alive_thres)
+				cbla2_prescripted();
 			else
 				inactive_mode();			
 			break;

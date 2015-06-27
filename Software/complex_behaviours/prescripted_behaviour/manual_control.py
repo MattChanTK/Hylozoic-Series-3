@@ -19,20 +19,24 @@ class Manual_Control(interactive_system.InteractiveCmd):
 
     def __init__(self, Teensy_manager, auto_start=True):
 
-        self.node_list = None
-        self.messenger = None
+        self.node_list = OrderedDict()
 
         self.all_nodes_created = threading.Condition()
+
+        self.num_fin = 3
+        self.num_light = 3
 
         super(Manual_Control, self).__init__(Teensy_manager, auto_start=auto_start)
 
     # ========= the Run function for the manual control =====
     def run(self):
 
+        self.messenger = interactive_system.Messenger(self, 0.000)
+
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_MANUAL)
             self.enter_command(cmd_obj)
 
         self.send_commands()
@@ -40,19 +44,10 @@ class Manual_Control(interactive_system.InteractiveCmd):
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = Messenger(self, 0.000)
-        messenger.start()
+        # start the messenger
+        self.messenger.start()
 
-        teensy_0 = 'test_teensy_1'
-        teensy_1 = 'test_teensy_3'
-        teensy_2 = 'HK_teensy_1'
-        teensy_3 = 'HK_teensy_2'
-        teensy_4 = 'HK_teensy_3'
-
-        teensy_in_use = self.teensy_manager.get_teensy_name_list()
-        #teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
-
-        node_list = OrderedDict()
+        teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
         # instantiate all the basic components
         for teensy in teensy_in_use:
@@ -62,60 +57,62 @@ class Manual_Control(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-            # 3 tentacles
-            for j in range(3):
+            # 3 fins
+            for j in range(self.num_fin):
 
                 # 2 ir sensors each
-                ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
-                ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
+                ir_sensor_0 = Input_Node(self.messenger, teensy, node_name='fin_%d.ir_0' % j, input='fin_%d_ir_0_state' % j)
+                ir_sensor_1 = Input_Node(self.messenger, teensy, node_name='fin_%d.ir_1' % j, input='fin_%d_ir_1_state' % j)
 
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
+                self.node_list[ir_sensor_0.node_name] = ir_sensor_0
+                self.node_list[ir_sensor_1.node_name] = ir_sensor_1
 
                 # 1 3-axis acceleromter each
-                acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
-                                         x='tentacle_%d_acc_x_state' % j,
-                                         y='tentacle_%d_acc_y_state' % j,
-                                         z='tentacle_%d_acc_z_state' % j)
-                node_list[acc.node_name] = acc
+                acc = Input_Node(self.messenger, teensy, node_name='fin_%d.acc' % j,
+                                         x='fin_%d_acc_x_state' % j,
+                                         y='fin_%d_acc_y_state' % j,
+                                         z='fin_%d_acc_z_state' % j)
+                self.node_list[acc.node_name] = acc
 
                 # 2 SMA wires each
-                sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
-                sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
+                sma_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.sma_0' % j, output='fin_%d_sma_0_level' % j)
+                sma_1 = Output_Node(self.messenger, teensy, node_name='fin_%d.sma_1' % j, output='fin_%d_sma_1_level' % j)
 
-                node_list[sma_0.node_name] = sma_0
-                node_list[sma_1.node_name] = sma_1
+                self.node_list[sma_0.node_name] = sma_0
+                self.node_list[sma_1.node_name] = sma_1
 
-                # 1 frond
+                # 1 fin
                 motion_type = Var(0)
                 #sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                frond = Frond(messenger, teensy, node_name='tentacle_%d.frond' % j, left_sma=sma_0.in_var['output'],
+                fin = Fin(self.messenger, teensy, node_name='fin_%d.fin' % j, left_sma=sma_0.in_var['output'],
                               right_sma=sma_1.in_var['output'], motion_type=motion_type,)
                               #left_config=sma_param, right_config=sma_param)
-                node_list[frond.node_name] = frond
+                self.node_list[fin.node_name] = fin
 
 
                 # 2 reflex each
-                reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
-                reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
+                reflex_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_0' % j, output='fin_%d_reflex_0_level' % j)
+                reflex_1 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_1' % j, output='fin_%d_reflex_1_level' % j)
 
 
-                node_list[reflex_0.node_name] = reflex_0
-                node_list[reflex_1.node_name] = reflex_1
+                self.node_list[reflex_0.node_name] = reflex_0
+                self.node_list[reflex_1.node_name] = reflex_1
 
-            # for Protocell
-            # 1 ambient light sensor
-            als = Input_Node(messenger, teensy, node_name='protocell.als', input='protocell_0_als_state')
-            node_list[als.node_name] = als
-            # 1 led
-            led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
-                              output='protocell_0_led_level')
-            node_list[led.node_name] = led
+            # for Interactive_Light
+            for j in range(self.num_light):
+                # 1 ambient light sensor
+                als = Input_Node(self.messenger, teensy, node_name='light_%d.als' % j,
+                                 input='light_%d_als_state' % j)
+                self.node_list[als.node_name] = als
+                # 1 led
+                led = Output_Node(self.messenger, teensy_name=teensy, node_name='light_%d.led' % j,
+                                  output='light_%d_led_level' % j)
+                self.node_list[led.node_name] = led
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
-        self.start_nodes(node_list, messenger)
+        self.start_nodes()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -123,14 +120,11 @@ class Manual_Control(interactive_system.InteractiveCmd):
 
         return 0
 
-    def start_nodes(self, node_list, messenger):
+    def start_nodes(self):
 
-        if not isinstance(node_list, dict) or \
-           not isinstance(messenger, interactive_system.Messenger):
+        if not isinstance(self.node_list, dict) or \
+           not isinstance(self.messenger, interactive_system.Messenger):
             raise AttributeError("Nodes have not been created properly!")
-        else:
-            self.node_list = node_list
-            self.messenger = messenger
 
         for name, node in self.node_list.items():
             node.start()
@@ -144,6 +138,8 @@ class Manual_Control(interactive_system.InteractiveCmd):
         for node in self.node_list.values():
             node.join()
             print('%s is terminated.' % node.node_name)
+
+        print("All nodes are terminated")
 
         # killing each of the Teensy threads
         for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
@@ -181,7 +177,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             if device_name not in control_vars[teensy_name]:
                 control_vars[teensy_name][device_name] = OrderedDict()
 
-            if isinstance(node, Frond):
+            if isinstance(node, Fin):
                 control_vars[teensy_name][device_name][output_name] = node.in_var['motion_type']
             elif isinstance(node, Output_Node) and 'sma' not in name:
                 control_vars[teensy_name][device_name][output_name] = node.in_var['output']

@@ -166,6 +166,10 @@ class TeensyInterface(threading.Thread):
             from .CommunicationProtocol import CBLATestBed as SysParam
         elif unit_config == 'CBLA_TEST_BED_FAST':
             from .CommunicationProtocol import CBLATestBed_FAST as SysParam
+        elif unit_config == 'CBLA_TEST_BED_TRIPLET':
+            from .CommunicationProtocol import CBLATestBed_Triplet as SysParam
+        elif unit_config == 'CBLA_TEST_BED_TRIPLET_FAST':
+            from .CommunicationProtocol import CBLATestBed_Triplet_FAST as SysParam
 
         else:
             from .SystemParameters import SystemParameters as SysParam

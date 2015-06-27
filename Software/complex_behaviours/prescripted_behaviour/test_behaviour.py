@@ -91,7 +91,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 node_list[reflex_1.node_name] = reflex_1
 
                 # instantiate the Tentacle Node
-                tentacle = Tentacle(messenger, teensy_name=teensy,
+                tentacle = Test_Fin(messenger, teensy_name=teensy,
                                     node_name='tentacle_%d' % j,
                                     ir_0=ir_sensor_0.out_var['input'],
                                     ir_1=ir_sensor_1.out_var['input'],
@@ -105,7 +105,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
             tentacle_list = []
             for tentacle in node_list.values():
-                if isinstance(tentacle, Tentacle):
+                if isinstance(tentacle, Test_Fin):
                     tentacle_list.append(tentacle)
             for id in range(len(tentacle_list)):
                 tentacle_list[id].in_var['left_ir'] = tentacle_list[id].in_var['ir_sensor_0']
@@ -113,12 +113,12 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                     'ir_sensor_0']
 
 
-            # creating Protocell Node
+            # creating Interactive_Light Node
 
             # 1 LED per protocell
             led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
                               output='protocell_0_led_level')
-            protocell = Protocell(messenger, teensy_name=teensy, node_name='protocell',
+            protocell = Interactive_Light(messenger, teensy_name=teensy, node_name='protocell',
                                   led=led.in_var['output'],
                                   cluster_activity=cluster_activity)
             node_list[led.node_name] = led

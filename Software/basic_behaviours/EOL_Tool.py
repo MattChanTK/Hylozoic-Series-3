@@ -32,9 +32,14 @@ class Quality_Assurance(InteractiveCmd):
 
     def run(self):
 
+        NUM_FIN = 3
+        NUM_LIGHT = 3
+
         # save to a text file
         now = time.strftime("%y-%m-%d %H-%M-%S", time.localtime())
         log_file_name = 'log (%s).txt' % now
+        if not os.path.exists("qa_log"):
+            os.makedirs("qa_log")
         log_file = open(os.path.join(os.getcwd(), "qa_log", log_file_name), 'w')
 
 
@@ -63,55 +68,55 @@ class Quality_Assurance(InteractiveCmd):
             self.enter_command(cmd_obj)
 
            # ------ configuration ------
-           # set the Tentacle on/off periods
-            cmd_obj = command_object(teensy_name, 'tentacle_high_level')
-            for j in range(3):
-                device_header = 'tentacle_%d_' % j
+           # set the Fin on/off periods
+            cmd_obj = command_object(teensy_name, 'fin_high_level')
+            for j in range(NUM_FIN):
+                device_header = 'fin_%d_' % j
                 cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
                 cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
             self.enter_command(cmd_obj)
         self.send_commands()
 
         log_file.write("\n====== Test Results =======\n")
-        # testing each Tentacle one by one
+        # testing each Fin one by one
         for teensy_name in teensy_names:
 
             print("\n........ Testing ", teensy_name, '........')
             log_file.write("\n------ %s ------" % teensy_name)
 
-            for j in range(3):
+            for j in range(NUM_FIN):
 
-                # turn on Tentacle arm
+                # turn on Fin arm
                 cmd_obj = command_object(teensy_name)
-                cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, 3)
+                cmd_obj.add_param_change('fin_%d_arm_motion_on' % j, 3)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
                 # prompt user
-                print("\nTentacle %d's frond is activated" % j)
+                print("\nFin %d's arm is activated" % j)
                 result = input("Enter [y] if passed and [f] if failed\t")
-                log_file.write("\nTentacle %d's frond:\t%s" % (j, result))
+                log_file.write("\nFin %d's arm:\t%s" % (j, result))
 
                 # turn off Tentalce arm
-                cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, 0)
+                cmd_obj.add_param_change('fin_%d_arm_motion_on' % j, 0)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
                 # turn on reflex actuators
                 cmd_obj = command_object(teensy_name)
-                cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
-                cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 100)
+                cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 100)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
                 # prompt user
-                print("Tentacle %d's reflex actuators are activated" % j)
+                print("Fin %d's reflex actuators are activated" % j)
                 result = input("Enter [y] if passed and [f] if failed\t")
-                log_file.write("\nTentacle %d's reflex actuators:\t%s" % (j, result))
+                log_file.write("\nFin %d's reflex actuators:\t%s" % (j, result))
 
                 # turn off reflex actuator
-                cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
-                cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+                cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 0)
+                cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 0)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
@@ -121,14 +126,14 @@ class Quality_Assurance(InteractiveCmd):
                     self.update_input_states((teensy_name,))
 
                     # specify the desired measurements
-                    input_type = ('tentacle_%d_ir_0_state'%j, 'tentacle_%d_ir_1_state'%j)
+                    input_type = ('fin_%d_ir_0_state'%j, 'fin_%d_ir_1_state'%j)
 
                     # retrieve the desired measurements
                     input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
                     sample, is_new_update = input_states[teensy_name]
 
-                    device_header = 'tentacle_%d_' % j
-                    print("Sampled Tentacle %d's IR sensors" % j, end=":\t")
+                    device_header = 'fin_%d_' % j
+                    print("Sampled Fin %d's IR sensors" % j, end=":\t")
                     ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
                                                  sample[device_header + 'ir_1_state'])) / ADC_RES * 100)
 
@@ -137,7 +142,7 @@ class Quality_Assurance(InteractiveCmd):
 
                     result = input("Enter [y] if passed or [f] if failed; [s] to re-sample\t")
 
-                log_file.write("\nTentacle %d's IR Sensors (%.2f%%, %.2f%%):\t%s" % ((j,) + ir_percent + (result,)))
+                log_file.write("\nFin %d's IR Sensors (%.2f%%, %.2f%%):\t%s" % ((j,) + ir_percent + (result,)))
 
 
                 # +++testing the Accelerometers++++
@@ -146,16 +151,16 @@ class Quality_Assurance(InteractiveCmd):
                     self.update_input_states((teensy_name,))
 
                     # specify the desired measurements
-                    input_type = ('tentacle_%d_acc_x_state' % j, 'tentacle_%d_acc_y_state' % j,
-                                  'tentacle_%d_acc_z_state' % j)
+                    input_type = ('fin_%d_acc_x_state' % j, 'fin_%d_acc_y_state' % j,
+                                  'fin_%d_acc_z_state' % j)
 
                     # retrieve the desired measurements
                     input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
                     sample, is_new_update = input_states[teensy_name]
 
-                    device_header = 'tentacle_%d_' % j
+                    device_header = 'fin_%d_' % j
 
-                    print("Sampled Tentacle %d's Accelerometers" % j, end=":\t")
+                    print("Sampled Fin %d's Accelerometers" % j, end=":\t")
                     acc_g = tuple(np.array((sample[device_header + 'acc_x_state'],
                                             sample[device_header + 'acc_y_state'],
                                             sample[device_header + 'acc_z_state'])) * ACC_MG_PER_LSB)
@@ -163,22 +168,22 @@ class Quality_Assurance(InteractiveCmd):
                     print("( %.2f, %.2f, %.2f ) " % acc_g)
                     result = input("Enter [y] if passed or [f] if failed; [s] to re-sample\t")
 
-                log_file.write("\nTentacle %d's Accelerometers (%.2f, %.2f, %.2f):\t%s" % ((j,) +acc_g + (result,)))
+                log_file.write("\nFin %d's Accelerometers (%.2f, %.2f, %.2f):\t%s" % ((j,) +acc_g + (result,)))
 
             cmd_obj = command_object(teensy_name)
-            for j in range(1):
+            for j in range(NUM_LIGHT):
 
-                # turn on protocell
-                cmd_obj.add_param_change('protocell_%d_led_level' % j, 100)
+                # turn on light
+                cmd_obj.add_param_change('light_%d_led_level' % j, 100)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
-                print("\nProtocell %d's LED is activated" % j)
+                print("\nLight %d's LED is activated" % j)
                 result = input("Enter [y] if passed or [f] if failed\t")
-                log_file.write("\nProtocell %d's LED:\t%s" % (j, result))
+                log_file.write("\nLight %d's LED:\t%s" % (j, result))
 
-                # turn off protocell
-                cmd_obj.add_param_change('protocell_%d_led_level' % j, 0)
+                # turn off light
+                cmd_obj.add_param_change('light_%d_led_level' % j, 0)
                 self.enter_command(cmd_obj)
                 self.send_commands()
 
@@ -188,19 +193,19 @@ class Quality_Assurance(InteractiveCmd):
                     self.update_input_states((teensy_name,))
 
                     # specify the desired measurements
-                    input_type = ('protocell_%d_als_state' % j,)
+                    input_type = ('light_%d_als_state' % j,)
 
                     # retrieve the desired measurements
                     input_states = self.get_input_states((teensy_name,), input_types=input_type, timeout=1)
                     sample, is_new_update = input_states[teensy_name]
 
-                    device_header = 'protocell_%d_' % j
-                    print("Sampled Protocell %d's ambient light sensors" % j, end=":\t")
+                    device_header = 'light_%d_' % j
+                    print("Sampled Light %d's ambient light sensors" % j, end=":\t")
                     als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
                     print("ALS ( %.2f%% )" % als_percent)
 
                     result = input("Enter [y] if passed or [f] if failed; [s] to re-sample\t")
-                log_file.write("\nProtocell %d's Ambient Light Sensors (%.2f%%):\t%s" % ((j,) + (als_percent,) + (result,)))
+                log_file.write("\nLight %d's Ambient Light Sensors (%.2f%%):\t%s" % ((j,) + (als_percent,) + (result,)))
 
 
         # terminate all threads

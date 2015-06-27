@@ -86,8 +86,8 @@ class Robot(object):
         for i in range(len(self.in_vars)):
             s = self.in_vars[i].val
             # normalize if the range is specified
-            if 'in_vars_range' in self.config:
-                val_range = self.config['in_vars_range'][i]
+            if 's_ranges' in self.config and len(self.config['s_ranges']) > 0:
+                val_range = self.config['s_ranges'][i]
                 if isinstance(val_range, tuple) and len(val_range) == 2:
                     s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
             S.append(s)
@@ -96,13 +96,26 @@ class Robot(object):
 
     def get_possible_action(self, num_sample=100) -> tuple:
 
+        if 'm_ranges' in self.config:
+            m_ranges = self.config['m_ranges']
+        else:
+            m_ranges = ()
+
         num_dim = len(self.M0.val)
 
         X = np.zeros((num_sample, num_dim))
 
         for i in range(num_sample):
             for x_dim in range(num_dim):
-                X[i, x_dim - 1] = random.randint(0, 255)
+
+                try:
+                    m_range = m_ranges[x_dim]
+                    if not isinstance(m_range, (tuple, list)):
+                        raise TypeError
+                except (IndexError, TypeError):
+                    m_range = (0, 255)
+
+                X[i, x_dim - 1] = random.randint(m_range[0], m_range[1])
 
         M_candidates = tuple(set((map(tuple, X))))
 
@@ -152,44 +165,16 @@ class Robot(object):
         return tuple([0] * len(self.M0.val))
 
 
-class Robot_Frond(Robot):
-
-    def _set_default_config(self):
-        super(Robot_Frond, self)._set_default_config()
-
-        self.config['activation_reward_delta'] = 0.03
-        self.config['activation_reward'] = 0.015
-        self.config['idling_reward'] = 0.000001
-        self.config['min_step_before_idling'] = 1
-        self.config['idling_prob'] = 0.999
-
-    def get_possible_action(self, num_sample=10):
-        # constructing a list of all possible action
-        x_dim = len(self.M0.val)
-        X = list(range(0, 4 ** x_dim))
-        for i in range(len(X)):
-            X[i] = toDigits(X[i], 4)
-            filling = [0] * (x_dim - len(X[i]))
-            X[i] = filling + X[i]
-
-        M_candidates = tuple(set(map(tuple, X)))
-
-        try:
-            return tuple(random.sample(M_candidates, num_sample))
-        except ValueError:
-            return M_candidates
-
-
-class Robot_Frond_0(Robot_Frond):
+class Robot_HalfFin(Robot):
 
     def __init__(self, in_vars: list, out_vars: list, **config_kwargs):
 
-        super(Robot_Frond_0, self).__init__(in_vars, out_vars, **config_kwargs)
+        super(Robot_HalfFin, self).__init__(in_vars, out_vars, **config_kwargs)
 
         self.S_memory = deque(maxlen=self.config['sample_window'])
 
     def _set_default_config(self):
-        super(Robot_Frond_0, self)._set_default_config()
+        super(Robot_HalfFin, self)._set_default_config()
 
         self.config['activation_reward_delta'] = 0.006
         self.config['activation_reward'] = 0.003
@@ -213,8 +198,8 @@ class Robot_Frond_0(Robot_Frond):
                 s = self.in_vars[i].val
 
                 # normalize if the range is specified
-                if 'in_vars_range' in self.config:
-                    val_range = self.config['in_vars_range'][i]
+                if 's_ranges' in self.config:
+                    val_range = self.config['s_ranges'][i]
                     if isinstance(val_range, tuple) and len(val_range) == 2:
                         s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
                 S.append(s)
@@ -239,32 +224,62 @@ class Robot_Frond_0(Robot_Frond):
         self.S0.val = tuple(S_mean)
         return tuple(S_mean)
 
+    # def get_possible_action(self, num_sample=10):
+    #     # constructing a list of all possible action
+    #     x_dim = len(self.M0.val)
+    #     X = list(range(0, 4 ** x_dim))
+    #     for i in range(len(X)):
+    #         X[i] = toDigits(X[i], 4)
+    #         filling = [0] * (x_dim - len(X[i]))
+    #         X[i] = filling + X[i]
+    #
+    #     M_candidates = tuple(set(map(tuple, X)))
+    #
+    #     try:
+    #         return tuple(random.sample(M_candidates, num_sample))
+    #     except ValueError:
+    #         return M_candidates
 
 
-class Robot_Protocell(Robot):
+class Robot_Light(Robot):
 
     def _set_default_config(self):
-        super(Robot_Protocell, self)._set_default_config()
-        self.config['wait_time'] = 0.1
+        super(Robot_Light, self)._set_default_config()
+        self.config['wait_time'] = 2.0
         self.config['activation_reward_delta'] = 0.2
         self.config['activation_reward'] = 0.06
         self.config['idling_reward'] = 0.01
         self.config['min_step_before_idling'] = 20
         self.config['idling_prob'] = 0.999
 
-    def get_possible_action(self, num_sample=5) -> tuple:
+    # def get_possible_action(self, num_sample=5) -> tuple:
+    #
+    #     num_dim = len(self.M0.val)
+    #
+    #     X = np.zeros((num_sample, num_dim))
+    #
+    #     for i in range(num_sample):
+    #         for x_dim in range(num_dim):
+    #             X[i, x_dim - 1] = random.randint(0, 100)
+    #
+    #     M_candidates = tuple(set((map(tuple, X))))
+    #
+    #     return M_candidates
 
-        num_dim = len(self.M0.val)
 
-        X = np.zeros((num_sample, num_dim))
 
-        for i in range(num_sample):
-            for x_dim in range(num_dim):
-                X[i, x_dim - 1] = random.randint(0, 100)
 
-        M_candidates = tuple(set((map(tuple, X))))
+class Robot_Reflex(Robot):
 
-        return M_candidates
+    def _set_default_config(self):
+        self.config['wait_time'] = 2.0
+        self.config['prev_rewards_deque_size'] = 10
+        self.config['activation_reward_delta'] = 0.5
+        self.config['activation_reward'] = 0.05
+        self.config['idling_reward'] = -0.01
+        self.config['min_step_before_idling'] = 200
+        self.config['idling_prob'] = 0.98
+
 
 
 def toDigits(n, b) -> list:

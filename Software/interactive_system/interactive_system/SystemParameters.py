@@ -21,9 +21,9 @@ class SystemParameters():
 
         #~~~~ variable type ~~~~
         self.var_list = dict()
-        self.var_list["bool"] = set(('program_teensy', 'indicator_led_on'))
+        self.var_list["bool"] = {'program_teensy', 'indicator_led_on'}
         self.var_list["int8"] = set()
-        self.var_list["int16"] = set(('indicator_led_period',))
+        self.var_list["int16"] = {'indicator_led_period',}
 
         #~~~ function to encode variable type ~~~~
         self.var_encode_func = dict()
@@ -37,8 +37,8 @@ class SystemParameters():
         #=== request type ====
         self.request_types = dict()
         # variables associated to the request type
-        self.request_types['basic'] = set(('indicator_led_on', 'indicator_led_period'))
-        self.request_types['prgm'] = set(('program_teensy', ))
+        self.request_types['basic'] = {'indicator_led_on', 'indicator_led_period'}
+        self.request_types['prgm'] = {'program_teensy', }
         self.request_type_ids = dict()
         self.request_type_ids['basic'] = 0
         self.request_type_ids['prgm'] = 1
@@ -75,7 +75,7 @@ class SystemParameters():
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
             print("Cannot find the file: " + filename)
-            raise(FileNotFoundError)
+            raise FileNotFoundError
 
         else:
             for line in param_config:
@@ -94,11 +94,11 @@ class SystemParameters():
 
                     # add name to the variable list
                     if var_type not in self.var_list.keys():
-                        self.var_list[var_type] = set((name,))
+                        self.var_list[var_type] = {name, }
                     else:
                         self.var_list[var_type].add(name)
                     if req_type not in self.request_types.keys():
-                        self.request_types[req_type] = set((name, ))
+                        self.request_types[req_type] = {name, }
                         self.request_type_ids[req_type] = int(req_type_id)
                     else:
                         self.request_types[req_type].add(name)
@@ -115,7 +115,7 @@ class SystemParameters():
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
             print("Cannot find the file: " + filename)
-            raise(FileNotFoundError)
+            raise FileNotFoundError
         else:
             for line in param_config:
                 entry = re.split('\W*', line)
@@ -130,7 +130,7 @@ class SystemParameters():
 
                     # add name to the variable list
                     if rep_type not in self.reply_types.keys():
-                        self.reply_types[rep_type] = set((name, ))
+                        self.reply_types[rep_type] = {name, }
                     else:
                         self.reply_types[rep_type].add(name)
 
@@ -192,7 +192,8 @@ class SystemParameters():
                 raise TypeError(input_type + " must be an integer.")
 
         if input > 2**num_bit - 1 or input < 0:
-            raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + ".")
+            raise TypeError(input_type + " must be positive and less than " + str(2**num_bit) + "."
+                            + "[value = %s]" % str(input))
         self.output_param[input_type] = input
 
     def _set_int8_var(self, input_type, input):

@@ -172,7 +172,7 @@ void Behaviours::parse_msg(){
 				temp_val = 0;
 				for (uint8_t i = 0; i < wave_size; i++)
 					temp_val += recv_data_buff[byte_offset+i+0] << (8*i);
-				light_var[j].reflex_period[1] = temp_val;
+				light_var[j].als_threshold = temp_val;
 					
 				// byte x2 --- high-power LED cycle period 
 				temp_val = 0;
@@ -199,7 +199,7 @@ void Behaviours::parse_msg(){
 			// (8 bytes each)
 			// >>>>> byte 2 to byte 9 : FIN 0
 			// >>>>> byte 10 to byte 17 : FIN 1
-			// >>>>> byte 18 to byte 25: FIN 2	
+			// >>>>> byte 18 to byte 25 : FIN 2	
 			for (uint8_t j = 0; j < NUM_FIN; j++){
 						
 				const uint8_t byte_offset = 8*(j) + device_offset;
@@ -220,7 +220,7 @@ void Behaviours::parse_msg(){
 				
 
 			}
-			device_offset = 8*(NUM_FIN+1) + device_offset;
+			device_offset = 8*(NUM_FIN) + device_offset;
 			
 			// (4 bytes each)
 			// >>>>> byte 26 to byte 29: LIGHT 0
@@ -246,7 +246,7 @@ void Behaviours::parse_msg(){
 			//byte 2 wave type to change
 			uint8_t wave_type = recv_data_buff[2];
 			
-			if (wave_type < num_wave){
+			if (wave_type < NUM_WAVE){
 				
 				// byte 12 to 43 --- indicator LED wave 
 				for (uint8_t i = 0; i < wave_size; i++)
@@ -328,6 +328,8 @@ void Behaviours::compose_reply(byte front_signature, byte back_signature, byte m
 				send_data_buff[byte_offset+10] = (uint8_t) fin_var[j].cycling;
 	
 			}
+			
+			device_offset = 14*NUM_FIN + device_offset;
 			
 			// (4 bytes each)
 			// >>>>> byte 2 to byte 5: Light 0
@@ -657,7 +659,7 @@ void Behaviours::low_level_control_fin_behaviour(){
 		fin[j].set_led_level(1, fin_var[j].reflex_level[1]);
 	}
 }
-void Behaviours::low_level_control_fin_reflex_led_behaviour(){
+void Behaviours::low_level_control_fin_reflex_behaviour(){
 
 	
 	//>>>> FIN <<<<<
@@ -689,34 +691,34 @@ void Behaviours::high_level_control_fin_reflex_behaviour(const uint32_t &curr_ti
 	for (uint8_t j=0; j<NUM_FIN; j++){
 	
 		
-		bool reflex_led_on = false;
+		bool reflex_on = false;
 		
 		//if something is very close
 		if (fin_var[j].ir_state[0] > fin_var[j].ir_threshold[0]){
-			reflex_led_on = true;
+			reflex_on = true;
 			high_level_ctrl_fin_reflex_period[j] = fin_var[j].reflex_period[0];
 		}		
 		//if there is no object detected
 		else{
-			reflex_led_on = false;
+			reflex_on = false;
 		}
 		
 		for (uint8_t i=0; i<NUM_LIGHT; i++){	
 			
 			//Actuation
 			
-			if (reflex_led_on){
+			if (reflex_on){
 				fin[j].set_led_level(i, 128);
 				// wave[fin_var[j].fin_reflex_wave_type[i]].set_duration(fin_var[j].fin_reflex_period[i]);
-				// uint8_t reflex_led_level = wave[fin_var[j].fin_reflex_wave_type[i]].wave_function(curr_time);
-				// fin[j].set_led_level(i, reflex_led_level);
+				// uint8_t reflex_level = wave[fin_var[j].fin_reflex_wave_type[i]].wave_function(curr_time);
+				// fin[j].set_led_level(i, reflex_level);
 			}
 			else{
 				fin[j].set_led_level(i, 0);
 
-				// uint8_t reflex_led_level = 0; 
+				// uint8_t reflex_level = 0; 
 				
-				// fin[j].set_led_level(i, reflex_led_level);
+				// fin[j].set_led_level(i, reflex_level);
 				// wave[fin_var[j].fin_reflex_wave_type[i]].restart_wave_function();
 			}
 		}

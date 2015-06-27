@@ -19,6 +19,9 @@ class Test_Behaviours(InteractiveCmd):
 
     def run(self):
 
+        NUM_FIN = 3
+        NUM_LIGHT = 3
+
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
 
@@ -62,23 +65,21 @@ class Test_Behaviours(InteractiveCmd):
 
                     cmd_obj.add_param_change('reply_type_request', 0)
 
-                    #=== tentacle low-level commands"
-                    # cmd_obj.add_param_change('tentacle_0_sma_0_level',  int((loop*2)%255))
-                    # cmd_obj.add_param_change('tentacle_0_sma_1_level', int((loop*2)%255))
-                    cmd_obj.add_param_change('tentacle_0_reflex_0_level',  int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_0_reflex_1_level', int((loop*6+40)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_0_level', int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_1_reflex_1_level', int((loop*6)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_0_level',  int((loop*6+80)%128))
-                    cmd_obj.add_param_change('tentacle_2_reflex_1_level', int((loop*6+80)%128))
 
-                    # === tentacle high-level commands"
-                    cmd_obj.add_param_change('tentacle_0_arm_motion_on', 3)#int(loop % 4))
-                    cmd_obj.add_param_change('tentacle_1_arm_motion_on', 3)#int(loop % 4))
-                    cmd_obj.add_param_change('tentacle_2_arm_motion_on', 3)#int(loop % 4))
+                    for j in range(NUM_FIN):
+                        #=== fin low-level commands"
+                        cmd_obj.add_param_change('fin_%d_reflex_0_level' % j,  int((loop*6)%128))
+                        cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, int((loop*6)%128))
 
-                    #=== protocell command====
-                    cmd_obj.add_param_change('protocell_0_led_level', int((loop*30)%128))
+
+                        # === fin high-level commands"
+                        cmd_obj.add_param_change('fin_%d_arm_motion_on' % j, 3)#int(loop % 4))
+
+
+                    #=== light command====
+                    for j in range(NUM_LIGHT):
+                        cmd_obj.add_param_change('light_%d_led_level' % j, int((loop*30)%128))
+
                     self.enter_command(cmd_obj)
 
                     #=== change wave command====
@@ -105,9 +106,9 @@ class Test_Behaviours(InteractiveCmd):
 
                 print("[", teensy_name, "]")
 
-                for j in range(4):
-                    device_header = 'tentacle_%d_' % j
-                    print("Tentacle %d" % j, end=" ---\t")
+                for j in range(NUM_FIN):
+                    device_header = 'fin_%d_' % j
+                    print("Fin %d" % j, end=" ---\t")
                     ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
                                                  sample[device_header + 'ir_1_state'])) / ADC_RES * 100)
                     print("IR ( %.2f%%, %.2f%% )" % ir_percent, end="  \t")
@@ -116,9 +117,9 @@ class Test_Behaviours(InteractiveCmd):
                                             sample[device_header + 'acc_z_state'])) * ACC_MG_PER_LSB)
                     print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
 
-                for j in range(2):
-                    device_header = 'protocell_%d_' % j
-                    print("Protocell %d" % j, end=" ---\t")
+                for j in range(NUM_LIGHT):
+                    device_header = 'light_%d_' % j
+                    print("Light %d" % j, end=" ---\t")
                     als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
                     print("ALS ( %.2f%% )" % als_percent)
                 print('')
@@ -138,16 +139,19 @@ class System_Identification_Behaviour(InteractiveCmd):
 
     def run(self):
 
+        NUM_FIN = 3
+        NUM_LIGHT = 3
+
         teensy_names = self.teensy_manager.get_teensy_name_list()
         self.update_input_states(teensy_names)
         self.update_output_params(teensy_names)
 
         loop = 0
         num_loop = 10000
-        tentacle_action = [0, 0, 0, 0]
-        tentacle_time = [0, 0, 0, 0]
-        protocell_brightness = [0, 0]
-        protocell_time = [0,0]
+        fin_action = [0] * NUM_FIN
+        fin_time = [0] * NUM_FIN
+        light_brightness = [0] * NUM_LIGHT
+        light_time = [0] * NUM_LIGHT
 
 
         state_history = dict()
@@ -176,10 +180,10 @@ class System_Identification_Behaviour(InteractiveCmd):
                     self.enter_command(cmd_obj)
 
                     # ------ configuration ------
-                    # set the Tentacle on/off periods
-                    cmd_obj = command_object(teensy_name, 'tentacle_high_level')
-                    for j in range(3):
-                        device_header = 'tentacle_%d_' % j
+                    # set the Fin on/off periods
+                    cmd_obj = command_object(teensy_name, 'fin_high_level')
+                    for j in range(NUM_FIN):
+                        device_header = 'fin_%d_' % j
                         cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
                         cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 105)
                     self.enter_command(cmd_obj)
@@ -193,32 +197,32 @@ class System_Identification_Behaviour(InteractiveCmd):
                 print('t = %f' % clock())
                 print('delta t = %f'%(clock()-t0))
 
-                # === tentacle high-level commands"
+                # === fin high-level commands"
                 cmd_obj = command_object(teensy_name, msg_setting=1)
-                for j in range(3):
+                for j in range(NUM_FIN):
 
                     t = clock()
 
 
-                    device_header = 'tentacle_%d_' % j
+                    device_header = 'fin_%d_' % j
 
-                    # cycling the tentacle
+                    # cycling the fin
                     #if sample[device_header + 'cycling'] == :
-                    cmd_obj.add_param_change('tentacle_%d_arm_motion_on' % j, tentacle_action[j]%4)
+                    cmd_obj.add_param_change('fin_%d_arm_motion_on' % j, fin_action[j]%4)
 
 
                     # reflex sensor trigger LED and vibration motor
                     if (sample[device_header + 'ir_0_state']) > 1400:
-                        cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                        cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 100)
+                        cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 100)
                     else:
-                        cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+                        cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 0)
+                        cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 0)
 
 
                     # output the reading
-                    print("Tentacle %d" % j, end=" ---\t")
-                    print("Action (", tentacle_action[j] % 4, ")", end="  \n")
+                    print("Fin %d" % j, end=" ---\t")
+                    print("Action (", fin_action[j] % 4, ")", end="  \n")
                     print("Cycling (", sample[device_header + 'cycling'], ")", end="  \t")
 
                     ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
@@ -230,51 +234,51 @@ class System_Identification_Behaviour(InteractiveCmd):
                     print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
 
 
-                    state = [t, tentacle_action[j]%4, sample[device_header + 'cycling'],
+                    state = [t, fin_action[j]%4, sample[device_header + 'cycling'],
                              sample[device_header + 'ir_0_state'], sample[device_header + 'ir_1_state'],
                              sample[device_header + 'acc_x_state'], sample[device_header + 'acc_y_state'], sample[device_header + 'acc_z_state']]
 
                     try:
-                        state_history[teensy_name + '_tentacle_' + str(j)].append(copy(state))
+                        state_history[teensy_name + '_fin_' + str(j)].append(copy(state))
                     except KeyError:
-                        state_history[teensy_name + '_tentacle_' + str(j)] = []
-                        state_history[teensy_name + '_tentacle_' + str(j)].append(copy(state))
+                        state_history[teensy_name + '_fin_' + str(j)] = []
+                        state_history[teensy_name + '_fin_' + str(j)].append(copy(state))
 
-                    if t - tentacle_time[j] > 60:
-                        tentacle_action[j] += 1
-                        tentacle_time[j] = t
+                    if t - fin_time[j] > 60:
+                        fin_action[j] += 1
+                        fin_time[j] = t
 
                 self.enter_command(cmd_obj)
 
-                # ==== protocell low-level command
+                # ==== light low-level command
                 cmd_obj = command_object(teensy_name, msg_setting=1)
-                for j in range(1):
+                for j in range(NUM_LIGHT):
 
                     t = clock()
 
-                    device_header = 'protocell_%d_' % j
-                    # cycling the protocell
-                    cmd_obj.add_param_change(device_header + 'led_level', protocell_brightness[j] % 256)
+                    device_header = 'light_%d_' % j
+                    # cycling the light
+                    cmd_obj.add_param_change(device_header + 'led_level', light_brightness[j] % 256)
 
-                    print("Protocell %d" % j, end=" ---\t")
+                    print("Light %d" % j, end=" ---\t")
 
-                    print("Brightness (%d)" % (protocell_brightness[j]%256))
+                    print("Brightness (%d)" % (light_brightness[j]%256))
                     als_state = sample[device_header + 'als_state'] #/ ADC_RES * 100
                     print("ALS ( %d )" % als_state)
 
 
-                    state = [t, protocell_brightness[j]%256 , sample[device_header + 'als_state']]
+                    state = [t, light_brightness[j]%256 , sample[device_header + 'als_state']]
 
                     try:
-                        state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
+                        state_history[teensy_name + '_light_' + str(j)].append(copy(state))
                     except KeyError:
-                        state_history[teensy_name + '_protocell_' + str(j)] = []
-                        state_history[teensy_name + '_protocell_' + str(j)].append(copy(state))
+                        state_history[teensy_name + '_light_' + str(j)] = []
+                        state_history[teensy_name + '_light_' + str(j)].append(copy(state))
 
-                    if True:#t - protocell_time[j] > 1.0:
-                        protocell_brightness[j] = random.randint(0, 255)
-                        #protocell_brightness[j] += 1
-                        protocell_time[j] = t
+                    if True:#t - light_time[j] > 1.0:
+                        light_brightness[j] = random.randint(0, 255)
+                        #light_brightness[j] += 1
+                        light_time[j] = t
 
                 self.enter_command(cmd_obj)
                 print('')
@@ -291,6 +295,8 @@ class System_Identification_Behaviour(InteractiveCmd):
                 t_pre_output = clock()
                 for device, states in state_history.items():
                     curr_dir = os.getcwd()
+                    if not os.path.exists('pickle_jar'):
+                        os.makedirs('pickle_jar')
                     os.chdir(os.path.join(curr_dir, 'pickle_jar'))
                     with open(str(device) + '_state_history.pkl', 'wb') as output:
                         pickle.dump(states, output, protocol=3)
@@ -303,6 +309,10 @@ class System_Identification_Behaviour(InteractiveCmd):
 class Internode_Test_Behaviour(InteractiveCmd):
 
     def run(self):
+
+        NUM_FIN = 3
+        NUM_LIGHT = 3
+
         teensy_names = self.teensy_manager.get_teensy_name_list()
         self.update_input_states(teensy_names)
         self.update_output_params(teensy_names)
@@ -338,22 +348,22 @@ class Internode_Test_Behaviour(InteractiveCmd):
                 next_teensy = teensy_names_list[(teensy_names_list.index(teensy_name)+1)%len(teensy_names)]
                 print("Controlling --- [", next_teensy, "]")
 
-                # === tentacle high-level commands"
+                # === fin high-level commands"
                 cmd_obj = command_object(next_teensy)
-                for j in range(3):
+                for j in range(NUM_FIN):
 
-                    device_header = 'tentacle_%d_' % j
+                    device_header = 'fin_%d_' % j
                     if (sample[device_header + 'ir_0_state']) > 1200:
 
-                        cmd_obj.add_param_change('tentacle_%d_arm_motion_on' %j, 3)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 100)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 100)
+                        cmd_obj.add_param_change('fin_%d_arm_motion_on' %j, 3)
+                        cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 100)
+                        cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 100)
                     else:
-                        cmd_obj.add_param_change('tentacle_%d_arm_motion_on' %j, 0)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_0_level' % j, 0)
-                        cmd_obj.add_param_change('tentacle_%d_reflex_1_level' % j, 0)
+                        cmd_obj.add_param_change('fin_%d_arm_motion_on' %j, 0)
+                        cmd_obj.add_param_change('fin_%d_reflex_0_level' % j, 0)
+                        cmd_obj.add_param_change('fin_%d_reflex_1_level' % j, 0)
 
-                    print("Tentacle %d" % j, end=" ---\t")
+                    print("Fin %d" % j, end=" ---\t")
                     print("IR (", sample[device_header + 'ir_0_state'], ", ", sample[device_header + 'ir_1_state'], ")",
                           end="  \n")
 
@@ -365,6 +375,10 @@ class Internode_Test_Behaviour(InteractiveCmd):
 class Default_Behaviour(InteractiveCmd):
 
     def run(self):
+
+        NUM_FIN = 3
+        NUM_LIGHT = 3
+
         teensy_names = self.teensy_manager.get_teensy_name_list()
 
         # initially update the Teensys with all the output parameters here
@@ -396,9 +410,9 @@ class Default_Behaviour(InteractiveCmd):
 
                 print("[", teensy_name, "]")
 
-                for j in range(4):
-                    device_header = 'tentacle_%d_' % j
-                    print("Tentacle %d" % j, end=" ---\t")
+                for j in range(NUM_FIN):
+                    device_header = 'fin_%d_' % j
+                    print("Fin %d" % j, end=" ---\t")
                     ir_percent = tuple(np.array((sample[device_header + 'ir_0_state'],
                                                  sample[device_header + 'ir_1_state']))/ADC_RES*100)
                     print("IR ( %.2f%%, %.2f%% )" % ir_percent, end="  \t")
@@ -407,9 +421,9 @@ class Default_Behaviour(InteractiveCmd):
                                             sample[device_header + 'acc_z_state']))*ACC_MG_PER_LSB)
                     print("ACC ( %.2f, %.2f, %.2f ) " % acc_g)
 
-                for j in range(2):
-                    device_header = 'protocell_%d_' % j
-                    print("Protocell %d" % j, end=" ---\t")
+                for j in range(NUM_LIGHT):
+                    device_header = 'light_%d_' % j
+                    print("Light %d" % j, end=" ---\t")
                     als_percent = sample[device_header + 'als_state'] / ADC_RES * 100
                     print("ALS ( %.2f%% )" % als_percent)
                 print('')

@@ -10,7 +10,7 @@ from interactive_system import Messenger
 from .simple_data_collect import *
 
 
-class Frond(Node):
+class Fin(Node):
 
     ON_LEFT = 1
     ON_RIGHT = 2
@@ -22,7 +22,7 @@ class Frond(Node):
     def __init__(self, messenger: Messenger, teensy_name, node_name='frond', left_sma: Var=Var(0), right_sma: Var=Var(0),
                  motion_type: Var=Var(0), left_config=None, right_config=None):
 
-        super(Frond, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
+        super(Fin, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
         # output variables
         self.out_var['left_sma'] = left_sma
@@ -45,18 +45,18 @@ class Frond(Node):
 
         while self.alive:
 
-            if self.in_var['motion_type'].val == Frond.ON_LEFT:
+            if self.in_var['motion_type'].val == Fin.ON_LEFT:
 
-                T_left_ref = Frond.T_ON_REF
+                T_left_ref = Fin.T_ON_REF
                 T_right_ref = 0
 
-            elif self.in_var['motion_type'].val == Frond.ON_RIGHT:
+            elif self.in_var['motion_type'].val == Fin.ON_RIGHT:
                 T_left_ref = 0
-                T_right_ref = Frond.T_ON_REF
+                T_right_ref = Fin.T_ON_REF
 
-            elif self.in_var['motion_type'].val == Frond.ON_CENTRE:
-                T_left_ref = Frond.T_ON_REF
-                T_right_ref = Frond.T_ON_REF
+            elif self.in_var['motion_type'].val == Fin.ON_CENTRE:
+                T_left_ref = Fin.T_ON_REF
+                T_right_ref = Fin.T_ON_REF
 
             else:
                 T_left_ref = 0
@@ -104,11 +104,11 @@ class SMA_Controller(object):
         return self.output.val
 
 
-class Frond_SMA(Simple_Node):
+class Half_Fin(Simple_Node):
 
     def __init__(self, messenger: Messenger, node_name='frond_sma', sma: Var=Var(0), temp_ref: Var=Var(0), **config):
 
-        super(Frond_SMA, self).__init__(messenger, node_name='%s' % node_name, output=sma, temp_ref=temp_ref)
+        super(Half_Fin, self).__init__(messenger, node_name='%s' % node_name, output=sma, temp_ref=temp_ref)
 
         # controller
         self.controller = SMA_Controller(self.out_var['output'], **config)
@@ -117,7 +117,7 @@ class Frond_SMA(Simple_Node):
 
         while self.alive:
 
-            self.controller.update(self.in_var['temp_ref'])
+            self.controller.update(self.in_var['temp_ref'].val)
             sleep(self.messenger.estimated_msg_period*2)
 
 
@@ -136,11 +136,13 @@ class LED_Driver(Simple_Node):
         while self.alive:
 
             if self.out_var['output'].val < self.in_var['led_ref'].val:
-                self.out_var['output'].val += max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val + max(1, int(self.out_var['output'].val * 0.1))
+                self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
 
             elif self.out_var['output'].val > self.in_var['led_ref'].val:
-                self.out_var['output'].val -= max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val - max(1, int(self.out_var['output'].val * 0.1))
+                self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
             else:
                 sleeping_time = max(0,self.messenger.estimated_msg_period * 2)

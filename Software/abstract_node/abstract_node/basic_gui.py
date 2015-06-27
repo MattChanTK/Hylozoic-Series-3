@@ -82,7 +82,7 @@ class Display_Frame(tk.Frame):
                                                                    text="###",
                                                                    fg='blue', width='8', anchor=tk.E, justify=tk.RIGHT)]
 
-            elif isinstance(node, Output_Node) or isinstance(node, Frond):
+            elif isinstance(node, Output_Node) or isinstance(node, Fin):
                 for var_name in node.in_var_list:
                     self.action_text[(name, var_name)] = [tk.Label(self.action_frame, text="%s" % name, fg='red'),
                                                           tk.Label(self.action_frame,

@@ -14,49 +14,42 @@ except ImportError:
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
-    def __init__(self, Teensy_manager, auto_start=True):
+    def __init__(self, Teensy_manager, auto_start=True, mode='default'):
 
-        self.node_list = None
-        self.messenger = None
+        self.node_list = OrderedDict()
+        #self.data_collector = None
 
         self.all_nodes_created = threading.Condition()
+
+        self.num_fin = 3
+        self.num_light = 3
+        self.mode = mode
 
         super(Prescripted_Behaviour, self).__init__(Teensy_manager, auto_start=auto_start)
 
     # ========= the Run function for the prescripted behaviour system =====
     def run(self):
 
+        self.messenger = interactive_system.Messenger(self, 0.000)
+
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_FAST.MODE_CBLA2)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_PRESCRIPTED)
             self.enter_command(cmd_obj)
 
-            # ------ configuration ------
-            # set the Tentacle on/off periods
-            cmd_obj = interactive_system.command_object(teensy_name, 'tentacle_high_level')
-            for j in range(3):
-                device_header = 'tentacle_%d_' % j
-                cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
-                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)
-            self.enter_command(cmd_obj)
         self.send_commands()
 
         # initially update the Teensys with all the output parameters here
         self.update_output_params(self.teensy_manager.get_teensy_name_list())
 
-        messenger = interactive_system.Messenger(self, 0.001)
-        messenger.start()
+        # start the messenger
+        self.messenger.start()
 
-        teensy_0 = 'test_teensy_1'
-        teensy_1 = 'test_teensy_3'
-        teensy_2 = 'HK_teensy_1'
-        teensy_3 = 'HK_teensy_2'
-        teensy_4 = 'HK_teensy_3'
+        teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
-        teensy_in_use = (teensy_0, teensy_1, teensy_2, teensy_3, teensy_4,)
-
-        node_list = OrderedDict()
+        # table of all data variables being collected
+       # data_variables = dict()
 
         # instantiate all the basic components
         for teensy in teensy_in_use:
@@ -66,113 +59,40 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 print('%s does not exist!' % teensy)
                 continue
 
-            # configuration node
-            local_action_prob = Var(0)
-
-            # 3 tentacles
-            half_frond_list = []
-            reflex_actuator_list = []
-
-
-            for j in range(3):
-
-                # 2 ir sensors each
-                ir_sensor_0 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_0' % j, input='tentacle_%d_ir_0_state' % j)
-                ir_sensor_1 = Input_Node(messenger, teensy, node_name='tentacle_%d.ir_1' % j, input='tentacle_%d_ir_1_state' % j)
-
-                node_list[ir_sensor_0.node_name] = ir_sensor_0
-                node_list[ir_sensor_1.node_name] = ir_sensor_1
-
-                # 1 3-axis acceleromter each
-                acc = Input_Node(messenger, teensy, node_name='tentacle_%d.acc' % j,
-                                         x='tentacle_%d_acc_x_state' % j,
-                                         y='tentacle_%d_acc_y_state' % j,
-                                         z='tentacle_%d_acc_z_state' % j)
-                node_list[acc.node_name] = acc
-
-                # 2 SMA wires each
-                sma_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_0' % j, output='tentacle_%d_sma_0_level' % j)
-                sma_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.sma_1' % j, output='tentacle_%d_sma_1_level' % j)
-
-                node_list[sma_0.node_name] = sma_0
-                node_list[sma_1.node_name] = sma_1
+             # ==== creating components related to the Light =====
+            light_components = OrderedDict()
+            for j in range(self.num_light):
+                components, data_vars = self.build_light_components(teensy_name=teensy, light_id=j)
+                light_components.update(components)
+             #   data_variables.update(data_vars)
+            self.node_list.update(light_components)
 
 
-                # 2 reflex each
-                reflex_0 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_0' % j, output='tentacle_%d_reflex_0_level' % j)
-                reflex_1 = Output_Node(messenger, teensy, node_name='tentacle_%d.reflex_1' % j, output='tentacle_%d_reflex_1_level' % j)
-
-                node_list[reflex_0.node_name] = reflex_0
-                node_list[reflex_1.node_name] = reflex_1
-
-                # 1 reflex actuator node
-                scout_reflex_0 = Reflex_Actuator(messenger, node_name='%s.tentacle_%d.scout_reflex_0' % (teensy, j),
-                                                 output=reflex_0.in_var['output'], ir_sensor=ir_sensor_0.out_var['input'])
-                node_list[scout_reflex_0.node_name] = scout_reflex_0
-                reflex_actuator_list.append(scout_reflex_0)
-
-                # two half-fronds
-                half_frond_left = Half_Frond(messenger, node_name='%s.tentacle_%d.half_frond_left' % (teensy, j),
-                                             output=sma_0.in_var['output'], frond_ir=ir_sensor_1.out_var['input'],
-                                             scout_ir=ir_sensor_0.out_var['input'], local_action_prob=local_action_prob)
-
-                half_frond_right = Half_Frond(messenger, node_name='%s.tentacle_%d.half_frond_right' % (teensy, j),
-                                              output=sma_1.in_var['output'], frond_ir=ir_sensor_1.out_var['input'],
-                                              side_ir=ir_sensor_0.out_var['input'], local_action_prob=local_action_prob)
-
-                node_list[half_frond_left.node_name] = half_frond_left
-                node_list[half_frond_right.node_name] = half_frond_right
-                half_frond_list.append(half_frond_left)
-                half_frond_list.append(half_frond_right)
-
-            # creating Protocell Node
-
-            protocell_params = Parameter_Config(messenger, node_name='protocell.params', sleep_time=0.005)
-            
-
-            # 1 LED per protocell
-            led = Output_Node(messenger, teensy_name=teensy, node_name='protocell.led',
-                              output='protocell_0_led_level')
-            protocell = Protocell2(messenger, node_name='%s.protocell' % teensy,
-                                   led=led.in_var['output'], sleep_time=protocell_params.out_var['sleep_time'],
-                                   local_action_prob=local_action_prob)
-            node_list[led.node_name] = led
-            node_list[protocell.node_name] = protocell
-
-            # == establishing relationship among devices ===
-
-            # setting their side_ir to the neighbouring tentacle one
-            half_frond_right_list = []
-            half_frond_left_list = []
-            for half_frond in half_frond_list:
-                if isinstance(half_frond, Half_Frond):
-                    if 'right' in half_frond.node_name:
-                        half_frond_right_list.append(half_frond)
-                    elif 'left' in half_frond.node_name:
-                        half_frond_left_list.append(half_frond)
-
-            for j in range(len(half_frond_right_list)):
-                right_id = (j - 1) % len(half_frond_right_list)
-                half_frond_right_list[j].in_var['scout_ir'] = half_frond_right_list[right_id].in_var['side_ir']
-            for j in range(len(half_frond_left_list)):
-                right_id = (j - 1) % len(half_frond_left_list)
-                half_frond_left_list[j].in_var['side_ir'] = half_frond_left_list[right_id].in_var['scout_ir']
-
-            # setting up local activity node
-            local_cluster_input = []
-            for device in half_frond_list + reflex_actuator_list:
-                local_cluster_input.append(device.out_var['output'])
-
-            local_cluster = Cluster_Activity(messenger, node_name='%s.local_cluster' % teensy,
-                                             output=local_action_prob, inputs=tuple(local_cluster_input))
+            # ===== creating components for related to the Fins ====
+            fin_components = OrderedDict()
+            for j in range(self.num_fin):
+                components, data_vars = self.build_fin_components(teensy_name=teensy, fin_id=j)
+                fin_components.update(components)
+             #   data_variables.update(data_vars)
+            self.node_list.update(fin_components)
 
 
-            node_list[local_cluster.node_name] = local_cluster
+         # ===== creating the CBLA Nodes ====
+        if self.mode == 'default':
+            for teensy in teensy_in_use:
+                self.node_list.update(self.build_default_nodes(teensy, self.node_list))
+        else:
+            self.mode = 'default'
+            for teensy in teensy_in_use:
+                self.node_list.update(self.build_default_nodes(teensy, self.node_list))
+
+        #self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
-        self.start_nodes(node_list, messenger)
+        self.start_nodes()
+        #self.data_collector.start()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -180,14 +100,184 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
         return 0
 
-    def start_nodes(self, node_list, messenger):
+    def build_fin_components(self, teensy_name, fin_id):
 
-        if not isinstance(node_list, dict) or \
-           not isinstance(messenger, interactive_system.Messenger):
+        fin_comps = OrderedDict()
+
+        # 2 ir sensors each
+        ir_s = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-s' % fin_id, input='fin_%d_ir_0_state' % fin_id)
+        ir_f = Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % fin_id, input='fin_%d_ir_1_state' % fin_id)
+
+        # 1 3-axis acceleromter each
+        acc = Input_Node(self.messenger, teensy_name, node_name='f%d.acc' % fin_id,
+                         x='fin_%d_acc_x_state' % fin_id,
+                         y='fin_%d_acc_y_state' % fin_id,
+                         z='fin_%d_acc_z_state' % fin_id)
+
+        # 2 SMA wires each
+        sma_r = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % fin_id, output='fin_%d_sma_0_level' % fin_id)
+        sma_l = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % fin_id, output='fin_%d_sma_1_level' % fin_id)
+
+        # 2 reflex each
+        reflex_l = Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % fin_id, output='fin_%d_reflex_0_level' % fin_id)
+        reflex_m = Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-m' % fin_id, output='fin_%d_reflex_1_level' % fin_id)
+
+        fin_comps[ir_s.node_name] = ir_s
+        fin_comps[ir_f.node_name] = ir_f
+        fin_comps[acc.node_name] = acc
+        fin_comps[sma_l.node_name] = sma_l
+        fin_comps[sma_r.node_name] = sma_r
+        fin_comps[reflex_l.node_name] = reflex_l
+        fin_comps[reflex_m.node_name] = reflex_m
+
+        # collecting data
+        data_variables = OrderedDict()
+        # collecting their values
+        data_variables['%s.fin_%d.ir-s' % (teensy_name, fin_id)] = ir_s.out_var['input']
+        data_variables['%s.fin_%d.ir-f' % (teensy_name, fin_id)] = ir_f.out_var['input']
+
+        data_variables['%s.fin_%d.acc-x' % (teensy_name, fin_id)] = acc.out_var['x']
+        data_variables['%s.fin_%d.acc-y' % (teensy_name, fin_id)] = acc.out_var['y']
+        data_variables['%s.fin_%d.acc-z' % (teensy_name, fin_id)] = acc.out_var['z']
+
+        data_variables['%s.fin_%d.sma-l' % (teensy_name, fin_id)] = sma_l.in_var['output']
+        data_variables['%s.fin_%d.sma-r' % (teensy_name, fin_id)] = sma_r.in_var['output']
+        data_variables['%s.fin_%d.rfx-l' % (teensy_name, fin_id)] = reflex_l.in_var['output']
+        data_variables['%s.fin_%d.rfx-m' % (teensy_name, fin_id)] = reflex_m.in_var['output']
+
+
+        return fin_comps, data_variables
+
+    def build_light_components(self, teensy_name, light_id):
+
+        light_comps = OrderedDict()
+
+        # 1 LED per protocell
+        led = Output_Node(self.messenger, teensy_name=teensy_name, node_name='l%d.led' % light_id,
+                          output='light_%d_led_level' % light_id)
+
+        light_comps[led.node_name] = led
+
+        # 1 ambient light sensor per protocell
+        als = Input_Node(self.messenger, teensy_name=teensy_name, node_name='l%d.als' % light_id,
+                         input='light_%d_als_state' % light_id)
+
+        light_comps[als.node_name] = als
+
+        # # 1 LED driver
+        # led_driver = LED_Driver(self.messenger, node_name="%s.l%d.led_driver" % (teensy_name, light_id),
+        #                         led_out=led.in_var['output'], step_period=0.001)
+        # light_comps[led_driver.node_name] = led_driver
+
+        # collecting data
+        data_variables = OrderedDict()
+        # collecting their values
+        data_variables['%s.light_%d.led' % (teensy_name, light_id)] = led.in_var['output']
+        data_variables['%s.light_%d.als' % (teensy_name, light_id)] = als.out_var['input']
+
+        return light_comps, data_variables
+
+    def build_default_nodes(self, teensy_name, components):
+
+        interactive_nodes = OrderedDict()
+
+        # configuration node
+        local_action_prob = Var(0)
+        local_cluster_input = []
+
+
+        # ===== constructing the Light Node =====
+        for j in range(self.num_light):
+            als = components['%s.l%d.als' % (teensy_name, j)].out_var['input']
+            ir_f = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+
+            led = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
+
+            light_node = Interactive_Light(messenger=self.messenger, node_name='%s.light%d' % (teensy_name, j),
+                                           als=als, fin_ir=ir_f, led=led,
+                                           local_action_prob=local_action_prob
+                                           )
+
+            # local_cluster_input.append(light_node.out_var['output'])
+            interactive_nodes[light_node.node_name] = light_node
+
+        # ===== constructing the Half-Fin Nodes =====
+        for j in range(self.num_fin):
+
+            # ===== constructing the left Half-Fin Nodes ====
+
+            fin_ir_l = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+            scout_ir_l = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+            side_ir_l = components['%s.f%d.ir-s' % (teensy_name, (j - 1) % self.num_fin)].out_var['input']
+            sma_l = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
+
+            # left half-fin modules
+            half_fin_l = Interactive_Half_Fin(self.messenger, node_name='%s.halfFin%d-l' % (teensy_name, j),
+                                              output=sma_l, fin_ir=fin_ir_l,
+                                              scout_ir=scout_ir_l, side_ir=side_ir_l,
+                                              local_action_prob=local_action_prob
+                                              )
+            local_cluster_input.append(half_fin_l.out_var['output'])
+            interactive_nodes[half_fin_l.node_name] = half_fin_l
+
+            # ===== constructing the right Half-Fin Nodes ====
+            fin_ir_r = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+            scout_ir_r = components['%s.f%d.ir-s' % (teensy_name, (j - 1) % self.num_fin)].out_var['input']
+            side_ir_r = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+            sma_r = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
+
+            # right half-fin modules
+            half_fin_r = Interactive_Half_Fin(self.messenger, node_name='%s.halfFin%d-r' % (teensy_name, j),
+                                              output=sma_r, fin_ir=fin_ir_r,
+                                              scout_ir=scout_ir_r, side_ir=side_ir_r,
+                                              local_action_prob=local_action_prob
+                                              )
+
+            local_cluster_input.append(half_fin_r.out_var['output'])
+            interactive_nodes[half_fin_r.node_name] = half_fin_r
+
+
+
+        # ===== constructing the Reflex Nodes =====
+        for j in range(self.num_fin):
+
+            # ===== constructing the shared part of the Reflex Nodes ====
+            ir_s = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+
+
+            # ===== constructing the Reflex Motor Node ====
+            rfx_m = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
+            reflex_motor = Interactive_Scout_Reflex(messenger=self.messenger,
+                                                    node_name='%s.scoutReflex%d-m' % (teensy_name, j),
+                                                    ir_sensor=ir_s, output=rfx_m,
+                                                    max_val=100, step_period=0.05)
+
+
+            interactive_nodes[reflex_motor.node_name] = reflex_motor
+
+            # ===== constructing the Reflex LED Node ====
+            rfx_l = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
+            reflex_light = Interactive_Scout_Reflex(messenger=self.messenger,
+                                                    node_name='%s.scoutReflex%d-l' % (teensy_name, j),
+                                                    ir_sensor=ir_s, output=rfx_l,
+                                                    max_val=255, step_period=0.001)
+
+
+            interactive_nodes[reflex_light.node_name] = reflex_light
+
+
+        # setting up local activity node
+        local_cluster = Cluster_Activity(self.messenger, node_name='%s.local_cluster' % teensy_name,
+                                         output=local_action_prob, inputs=tuple(local_cluster_input))
+        interactive_nodes[local_cluster.node_name] = local_cluster
+
+        return interactive_nodes
+
+    def start_nodes(self):
+
+        if not isinstance(self.node_list, dict) or \
+           not isinstance(self.messenger, interactive_system.Messenger):
             raise AttributeError("Nodes have not been created properly!")
-        else:
-            self.node_list = node_list
-            self.messenger = messenger
 
         for name, node in self.node_list.items():
             node.start()
@@ -195,6 +285,12 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         print('System Initialized with %d nodes' % len(self.node_list))
 
     def terminate(self):
+
+        # terminate data collector
+        #self.data_collector.alive = False
+        #self.data_collector.join()
+        print("Data Collector terminated")
+
         # killing each of the Node
         for node in self.node_list.values():
             node.alive = False
