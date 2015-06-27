@@ -163,7 +163,7 @@ void Behaviours::parse_msg(){
 			// >>>>> byte 2 to byte 15: LIGHT 0
 			// >>>>> byte 16 to byte 29: LIGHT 1
 			// >>>>> byte 30 to byte 43: LIGHT 2
-			for (uint8_t j = 0; j < 2; j++){
+			for (uint8_t j = 0; j < NUM_LIGHT; j++){
 						
 				const uint8_t byte_offset = 14*(j) + device_offset;
 				
