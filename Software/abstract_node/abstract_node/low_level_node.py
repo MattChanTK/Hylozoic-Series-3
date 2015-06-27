@@ -154,6 +154,7 @@ class LED_Driver(Simple_Node):
 class Data_Collector_Node(Node):
 
     def __init__(self, messenger: Messenger, node_name='data_collector', file_header='sys_id_data',
+                 data_collect_period=1.0,
                  **variables):
         super(Data_Collector_Node, self).__init__(messenger, node_name=node_name)
 
@@ -164,6 +165,7 @@ class Data_Collector_Node(Node):
             else:
                 raise TypeError("Variables must be of Var type!")
 
+        self.data_collect_period = data_collect_period
         self.data_collect = SimpleDataCollector(file_header=file_header)
 
     def run(self):
@@ -189,7 +191,7 @@ class Data_Collector_Node(Node):
 
                 self.data_collect.append_data_packet(packet_name, data_packet)
 
-            sleep(self.messenger.estimated_msg_period*2)
+            sleep(max(self.messenger.estimated_msg_period*2, self.data_collect_period))
 
         self.data_collect.end_data_collection()
         self.data_collect.join()

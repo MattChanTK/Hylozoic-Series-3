@@ -17,7 +17,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
     def __init__(self, Teensy_manager, auto_start=True, mode='default'):
 
         self.node_list = OrderedDict()
-        #self.data_collector = None
+        self.data_collector = None
 
         self.all_nodes_created = threading.Condition()
 
@@ -49,7 +49,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         teensy_in_use = tuple(self.teensy_manager.get_teensy_name_list())
 
         # table of all data variables being collected
-       # data_variables = dict()
+        data_variables = dict()
 
         # instantiate all the basic components
         for teensy in teensy_in_use:
@@ -64,7 +64,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for j in range(self.num_light):
                 components, data_vars = self.build_light_components(teensy_name=teensy, light_id=j)
                 light_components.update(components)
-             #   data_variables.update(data_vars)
+                data_variables.update(data_vars)
             self.node_list.update(light_components)
 
 
@@ -73,7 +73,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for j in range(self.num_fin):
                 components, data_vars = self.build_fin_components(teensy_name=teensy, fin_id=j)
                 fin_components.update(components)
-             #   data_variables.update(data_vars)
+                data_variables.update(data_vars)
             self.node_list.update(fin_components)
 
 
@@ -86,13 +86,13 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_default_nodes(teensy, self.node_list))
 
-        #self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
+        self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
 
         self.start_nodes()
-        #self.data_collector.start()
+        self.data_collector.start()
 
         # wait for the nodes to destroy
         for node in self.node_list.values():
@@ -287,8 +287,8 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
     def terminate(self):
 
         # terminate data collector
-        #self.data_collector.alive = False
-        #self.data_collector.join()
+        self.data_collector.alive = False
+        self.data_collector.join()
         print("Data Collector terminated")
 
         # killing each of the Node
