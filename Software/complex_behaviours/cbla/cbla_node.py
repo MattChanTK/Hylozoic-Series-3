@@ -67,12 +67,6 @@ class CBLA_Base_Node(Node):
         self.out_var['S'] = self.cbla_robot.S0
         self.out_var['M'] = self.cbla_robot.M0
 
-        # output variables
-        self.out_var['loop_time'] = Var(0)
-        self.out_var['idle_mode'] = Var(False)
-        self.out_var['node_step'] = Var(0)
-        self.out_var['best_val'] = Var(0)
-
         self.cbla_states = dict()
 
     def run(self):
@@ -98,11 +92,6 @@ class CBLA_Base_Node(Node):
 
             # save the data
             self.data_collector.append_data_packet(self.node_name, data_packet)
-
-            self.out_var['loop_time'].val = data_packet['loop_period']
-            self.out_var['idle_mode'].val = data_packet['in_idle_mode']
-            self.out_var['node_step'].val = data_packet['step']
-            self.out_var['best_val'].val = data_packet['best_action_value']
 
             # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
 
@@ -131,7 +120,7 @@ class CBLA_Node(CBLA_Base_Node):
                  in_vars: OrderedDict, out_vars: OrderedDict,
                  s_keys: tuple=(), s_ranges: tuple=(), s_names: tuple=(),
                  m_keys: tuple=(), m_ranges: tuple=(), m_names: tuple=(),
-                 node_version: str='', RobotClass=None):
+                 node_version: str='', RobotClass=None, robot_config=None):
 
         # defining the name of the node
         self.cluster_name = str(cluster_name)
@@ -186,8 +175,10 @@ class CBLA_Node(CBLA_Base_Node):
             robot_class = cbla_engine.Robot
 
         # instantiate
+        if not isinstance(robot_config, dict):
+            robot_config = dict()
         self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class,
-                                                      sample_window=20, sample_period=0.1),
+                                                      sample_window=20, sample_period=0.1, **robot_config),
                          learner_config=self._get_learner_config())
 
     def _build_robot(self, RobotClass=cbla_engine.Robot, **robot_config) -> cbla_engine.Robot:

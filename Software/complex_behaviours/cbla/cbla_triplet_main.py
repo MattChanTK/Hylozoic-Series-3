@@ -178,6 +178,18 @@ class CBLA(interactive_system.InteractiveCmd):
         fin_comps[reflex_l.node_name] = reflex_l
         fin_comps[reflex_m.node_name] = reflex_m
 
+         # 2 reflex driver
+        reflex_l_driver_ref_temp = Var(0)
+        reflex_l_driver = LED_Driver(self.messenger, node_name="%s.f%d.rfx_driver-l" % (teensy_name, fin_id),
+                                    led_ref=reflex_l_driver_ref_temp,
+                                    led_out=reflex_l.in_var['output'], step_period=0.001)
+        fin_comps[reflex_l_driver.node_name] = reflex_l_driver
+        reflex_m_driver_ref_temp = Var(0)
+        reflex_m_driver = LED_Driver(self.messenger, node_name="%s.f%d.rfx_driver-m" % (teensy_name, fin_id),
+                                    led_ref=reflex_m_driver_ref_temp,
+                                    led_out=reflex_m.in_var['output'], step_period=0.001)
+        fin_comps[reflex_m_driver.node_name] = reflex_m_driver
+
         # 2 half-fin modules
         sma_temp_l = Var(0)
         half_fin_l = Half_Fin(self.messenger, node_name='%s.f%d.hf-l' % (teensy_name, fin_id),
@@ -208,10 +220,11 @@ class CBLA(interactive_system.InteractiveCmd):
         light_comps[als.node_name] = als
 
         # 1 LED driver
+        led_ref_temp = Var(0)
         led_driver = LED_Driver(self.messenger, node_name="%s.l%d.led_driver" % (teensy_name, light_id),
+                                led_ref=led_ref_temp,
                                 led_out=led.in_var['output'], step_period=0.001)
         light_comps[led_driver.node_name] = led_driver
-
         return light_comps
 
     def build_spatial_nodes(self, teensy_name, components):
@@ -225,14 +238,15 @@ class CBLA(interactive_system.InteractiveCmd):
             in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
 
             out_vars = OrderedDict()
-            out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
-
-            light_node = CBLA_Light_Node(messenger=self.messenger, data_collector=self.data_collector,
+            # out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
+            out_vars['led'] = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
+            light_node = CBLA_Light_Node(RobotClass=cbla_robot.Robot_Light,
+                                         messenger=self.messenger, data_collector=self.data_collector,
                                          cluster_name=teensy_name, node_type='light', node_id=j,
                                          in_vars=in_vars, out_vars=out_vars,
                                          s_keys=('als', 'ir-f'), s_ranges=((0,4095), (0, 4095)),
                                          s_names=('ambient light sensor', 'fin IR sensor'),
-                                         m_keys=('led',), m_ranges=((0, 255),),
+                                         m_keys=('led',), m_ranges=((0, 50),),
                                          m_names=('High-power LED', ),
                                          )
 
@@ -261,7 +275,8 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_left = OrderedDict()
             out_vars_left['hf-l'] = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
 
-            half_fin_left = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
+            half_fin_left = CBLA_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
+                                              messenger=self.messenger, data_collector=self.data_collector,
                                               cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='l',
                                               in_vars=in_vars_left, out_vars=out_vars_left,
                                               s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
@@ -280,7 +295,8 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_right= OrderedDict()
             out_vars_right['hf-r'] = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
 
-            half_fin_right = CBLA_HalfFin_Node(messenger=self.messenger, data_collector=self.data_collector,
+            half_fin_right = CBLA_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
+                                               messenger=self.messenger, data_collector=self.data_collector,
                                                cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='r',
                                                in_vars=in_vars_right, out_vars=out_vars_right,
                                                s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
@@ -303,14 +319,16 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the Reflex Motor Node ====
             out_vars_motor = OrderedDict()
-            out_vars_motor['rfx-m'] = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
-            reflex_motor = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
+            # out_vars_motor['rfx-m'] = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
+            out_vars_motor['rfx-m'] = components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref']
+            reflex_motor = CBLA_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
+                                            messenger=self.messenger, data_collector=self.data_collector,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='m',
                                             in_vars=in_vars, out_vars=out_vars_motor,
                                             s_keys=('ir-s', 'sma-l', 'sma-r'),
                                             s_ranges=((0, 4095), (0, 255), (0, 255)),
                                             s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
-                                            m_keys=('rfx-m', ), m_ranges=((0, 255), ), m_names=('reflex motor',)
+                                            m_keys=('rfx-m', ), m_ranges=((0, 100), ), m_names=('reflex motor',)
                                            )
 
             cbla_nodes[reflex_motor.node_name] = reflex_motor
@@ -318,13 +336,15 @@ class CBLA(interactive_system.InteractiveCmd):
             # ===== constructing the Reflex LED Node ====
             out_vars_led = OrderedDict()
             out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
+            out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
             reflex_led = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='l',
                                             in_vars=in_vars, out_vars=out_vars_led,
                                             s_keys=('ir-s', 'sma-l', 'sma-r'),
                                             s_ranges=((0, 4095), (0, 255), (0, 255)),
                                             s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
-                                            m_keys=('rfx-l', ), m_ranges=((0, 255), ), m_names=('reflex led',)
+                                            m_keys=('rfx-l', ), m_ranges=((0, 255), ), m_names=('reflex led',),
+                                            #robot_config=sample_size
                                            )
 
             cbla_nodes[reflex_led.node_name] = reflex_led
@@ -646,10 +666,11 @@ if __name__ == "__main__":
         with behaviours.all_nodes_created:
             behaviours.all_nodes_created.wait()
 
-        # initialize the gui
+        # # initialize the gui
         hmi = tk_gui.Master_Frame()
         hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
+        #input()
         behaviours.terminate()
 
         for teensy_thread in teensy_manager._get_teensy_thread_list():
