@@ -141,7 +141,7 @@ void inactive_mode(){
 //===== MAIN LOOP =====
 
 uint16_t loop_since_last_msg = 0;
-const uint16_t keep_alive_thres = 200;
+const uint16_t keep_alive_thres = 2000;
 
 void loop() {
 
