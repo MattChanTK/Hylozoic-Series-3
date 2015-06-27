@@ -86,7 +86,9 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_default_nodes(teensy, self.node_list))
 
-        self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data', **data_variables)
+        self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data',
+                                                  data_collect_period=0.5,
+                                                  **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
