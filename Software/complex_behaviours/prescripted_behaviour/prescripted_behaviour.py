@@ -250,7 +250,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             reflex_motor = Interactive_Scout_Reflex(messenger=self.messenger,
                                                     node_name='%s.scoutReflex%d-m' % (teensy_name, j),
                                                     ir_sensor=ir_s, output=rfx_m,
-                                                    max_val=40, step_period=0.05)
+                                                    max_val=100, step_period=0.05)
 
 
             interactive_nodes[reflex_motor.node_name] = reflex_motor
