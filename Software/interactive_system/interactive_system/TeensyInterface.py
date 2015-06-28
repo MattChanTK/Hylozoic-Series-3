@@ -5,6 +5,7 @@ import sys
 import re
 from time import clock
 from time import sleep
+from collections import OrderedDict
 
 import usb.core
 import usb.util
@@ -19,7 +20,7 @@ class TeensyManager():
     def __init__(self, import_config=True):
 
         # table that store all the Teensy threads
-        self.teensy_thread_table = dict()
+        self.teensy_thread_table = OrderedDict()
 
         # configuration of the Teensy threads
         self.unit_config_default = 'DEFAULT'
@@ -54,12 +55,11 @@ class TeensyManager():
         except Exception as e:
             print(e)
 
-
         # create all the initial Teensy Threads
         unknown_Teensy_id = 0
 
+        teensy_thread_list = []
         for serial_num in serial_num_list:
-
 
             # if the serial_num appears in the config file
             if serial_num in teensy_config_table:
@@ -77,6 +77,11 @@ class TeensyManager():
             # create a new thread for communicating with
 
             Teensy_thread = TeensyInterface(serial_num, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
+            teensy_thread_list.append((Teensy_name, Teensy_thread))
+
+        # sort threads by name
+        teensy_thread_list = sorted(teensy_thread_list, key=lambda Teensy_tuple: Teensy_tuple[0], reverse=False)
+        for Teensy_name, Teensy_thread in teensy_thread_list:
             self.teensy_thread_table[Teensy_name] = Teensy_thread
 
     def _get_teensy_serial_num_list(self):
@@ -141,7 +146,6 @@ class TeensyManager():
         except KeyError:
             print(teensy_name + ' does not exist!')
             return -1
-
 
     def __find_teensy_serial_number(self, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID):
 

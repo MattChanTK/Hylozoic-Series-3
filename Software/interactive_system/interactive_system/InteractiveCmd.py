@@ -196,6 +196,8 @@ class InteractiveCmd(threading.Thread):
 
         if not teensy_thread.lock_received_event.wait(0.5):
             print("Teensy thread ", cmd_obj.teensy_name, " is not responding.")
+            print("Command not delivered.")
+            cmd_obj.print()
         else:
             teensy_thread.lock_received_event.clear()
 
