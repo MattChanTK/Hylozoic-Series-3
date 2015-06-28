@@ -67,7 +67,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 data_variables.update(data_vars)
             self.node_list.update(light_components)
 
-
             # ===== creating components for related to the Fins ====
             fin_components = OrderedDict()
             for j in range(self.num_fin):
@@ -76,8 +75,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                 data_variables.update(data_vars)
             self.node_list.update(fin_components)
 
-
-         # ===== creating the CBLA Nodes ====
+        # ===== creating the CBLA Nodes ====
         if self.mode == 'default':
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_default_nodes(teensy, self.node_list))
@@ -147,7 +145,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         data_variables['%s.fin_%d.rfx-l' % (teensy_name, fin_id)] = reflex_l.in_var['output']
         data_variables['%s.fin_%d.rfx-m' % (teensy_name, fin_id)] = reflex_m.in_var['output']
 
-
         return fin_comps, data_variables
 
     def build_light_components(self, teensy_name, light_id):
@@ -186,7 +183,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
         # configuration node
         local_action_prob = Var(0)
         local_cluster_input = []
-
 
         # ===== constructing the Light Node =====
         for j in range(self.num_light):
@@ -238,14 +234,11 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             local_cluster_input.append(half_fin_r.out_var['output'])
             interactive_nodes[half_fin_r.node_name] = half_fin_r
 
-
-
         # ===== constructing the Reflex Nodes =====
         for j in range(self.num_fin):
 
             # ===== constructing the shared part of the Reflex Nodes ====
             ir_s = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
-
 
             # ===== constructing the Reflex Motor Node ====
             rfx_m = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
@@ -254,7 +247,6 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
                                                     ir_sensor=ir_s, output=rfx_m,
                                                     max_val=100, step_period=0.05)
 
-
             interactive_nodes[reflex_motor.node_name] = reflex_motor
 
             # ===== constructing the Reflex LED Node ====
@@ -262,11 +254,9 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
             reflex_light = Interactive_Scout_Reflex(messenger=self.messenger,
                                                     node_name='%s.scoutReflex%d-l' % (teensy_name, j),
                                                     ir_sensor=ir_s, output=rfx_l,
-                                                    max_val=255, step_period=0.001)
-
+                                                    max_val=255, step_period=0.01)
 
             interactive_nodes[reflex_light.node_name] = reflex_light
-
 
         # setting up local activity node
         local_cluster = Cluster_Activity(self.messenger, node_name='%s.local_cluster' % teensy_name,
@@ -401,7 +391,6 @@ if __name__ == "__main__":
         # find all the Teensy
         print("Number of active Teensy devices: %s\n" % str(teensy_manager.get_num_teensy_thread()))
 
-
         # interactive code
         behaviours = cmd(teensy_manager)
 
@@ -416,7 +405,6 @@ if __name__ == "__main__":
         hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
         behaviours.terminate()
-
 
         for teensy_thread in teensy_manager._get_teensy_thread_list():
             teensy_thread.join()

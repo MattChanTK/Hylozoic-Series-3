@@ -165,7 +165,7 @@ class Interactive_Light(Simple_Node):
                 do_local_action = random.random() < self.in_var['local_action_prob'].val
                 if do_local_action or self.in_var['fin_ir'].val > 1000:
 
-                    for i in range(5):
+                    for i in range(3):
                         self.out_var['output'].val = 0
                         while self.out_var['output'].val < 100:
                             out_val = self.out_var['output'].val + max(1, int(self.out_var['output'].val*0.1))
@@ -192,8 +192,8 @@ class Interactive_Scout_Reflex(Simple_Node):
 
         # default parameters
         self.config = dict()
-        self.config['ir_on_thres'] = 950
-        self.config['ir_off_thres'] = 700
+        self.config['ir_on_thres'] = 800
+        self.config['ir_off_thres'] = 400
         self.config['step_period'] = 0.025
         self.config['max_val'] = 255
 
@@ -202,13 +202,10 @@ class Interactive_Scout_Reflex(Simple_Node):
             for name, arg in config.items():
                 self.config[name] = arg
 
-
-
     def run(self):
 
         reached_max = False
         while self.alive:
-
 
             # scout's sensor
             if self.in_var['ir_sensor'].val > self.config['ir_on_thres'] and not reached_max:
