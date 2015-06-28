@@ -79,7 +79,8 @@ class Master_Frame(Tk):
         self.grid_rowconfigure(1, weight=0)
 
     def on_closing(self):
-        self.quit()
+        #self.quit()
+        self.destroy()
         # self.iconify()
 
 

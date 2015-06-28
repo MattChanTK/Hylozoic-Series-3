@@ -611,7 +611,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
         content_frame.build_pages(page_frames)
 
-        nav_frame.build_nav_buttons()
+        nav_frame.build_nav_buttons(max_per_col=15)
 
     print('GUI initialized.')
     hmi.start(status_frame=status_frame,
