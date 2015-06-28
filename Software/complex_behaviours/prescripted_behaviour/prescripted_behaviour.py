@@ -325,6 +325,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             except IndexError:
                 output_name = "variables"
 
+            if teensy_name not in control_vars:
+                control_vars[teensy_name] = OrderedDict()
+
             if teensy_name not in display_vars:
                 display_vars[teensy_name] = OrderedDict()
 

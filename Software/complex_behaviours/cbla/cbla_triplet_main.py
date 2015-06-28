@@ -531,8 +531,8 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     content_frame = tk_gui.Content_Frame(hmi)
     nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
-    cbla_display_vars = defaultdict(OrderedDict)
-    device_display_vars = defaultdict(OrderedDict)
+    cbla_display_vars = OrderedDict()
+    device_display_vars = OrderedDict()
 
     if len(node_list) > 0:
 
@@ -562,6 +562,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             if isinstance(node, CBLA_Base_Node):
                 for var_name, var in node.in_var.items():
 
+                    if page_name not in cbla_display_vars:
+                        cbla_display_vars[page_name] = OrderedDict()
+
                     # specifying the displayable variables
                     if device_name not in cbla_display_vars[page_name]:
                         cbla_display_vars[page_name][device_name] = OrderedDict()
@@ -583,6 +586,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                     output_name = "variables"
 
                 # specifying the displayable variables
+                if page_name not in device_display_vars:
+                        device_display_vars[page_name] = OrderedDict()
+
                 if device_name not in device_display_vars[page_name]:
                     device_display_vars[page_name][device_name] = OrderedDict()
 

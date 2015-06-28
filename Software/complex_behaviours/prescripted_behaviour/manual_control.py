@@ -159,8 +159,8 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     content_frame = tk_gui.Content_Frame(hmi)
     nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
-    control_vars = defaultdict(OrderedDict)
-    display_vars = defaultdict(OrderedDict)
+    control_vars = OrderedDict()
+    display_vars = OrderedDict()
 
     if len(node_list) > 0:
 
@@ -172,6 +172,12 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 output_name = node_name[2]
             except IndexError:
                 output_name = "variables"
+
+            if teensy_name not in control_vars:
+                control_vars[teensy_name] = OrderedDict()
+
+            if teensy_name not in display_vars:
+                display_vars[teensy_name] = OrderedDict()
 
             # specifying the controlable variables
             if device_name not in control_vars[teensy_name]:

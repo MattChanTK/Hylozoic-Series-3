@@ -135,7 +135,6 @@ class System_Identification(interactive_system.InteractiveCmd):
                 # self.node_list[acc_y_avg.node_name] = acc_y_avg
                 # self.node_list[acc_z_avg.node_name] = acc_z_avg
 
-
                 # collecting data
                 data_variables['%s.fin_%d.acc_x' % (teensy, j)] = acc.out_var['x']
                 data_variables['%s.fin_%d.acc_y' % (teensy, j)] = acc.out_var['y']
@@ -150,7 +149,6 @@ class System_Identification(interactive_system.InteractiveCmd):
                 data_variables['%s.fin_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.fin_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
                 data_variables['%s.fin_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
-
 
             # for Interactive_Light
             for j in range(self.num_light):
@@ -224,7 +222,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     content_frame = tk_gui.Content_Frame(hmi)
     nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
-    display_vars = defaultdict(OrderedDict)
+    display_vars = OrderedDict()
 
     if len(node_list) > 0:
 
@@ -236,6 +234,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 output_name = node_name[2]
             except IndexError:
                 output_name = "variables"
+
+            if teensy_name not in display_vars:
+                display_vars[teensy_name] = OrderedDict()
 
             # specifying the displayable variables
             if device_name not in display_vars[teensy_name]:
@@ -298,7 +299,6 @@ if __name__ == "__main__":
 
         # find all the Teensy
         print("Number of active Teensy devices: %s\n" % str(teensy_manager.get_num_teensy_thread()))
-
 
         # interactive code
         # -- this create all the abstract nodes
