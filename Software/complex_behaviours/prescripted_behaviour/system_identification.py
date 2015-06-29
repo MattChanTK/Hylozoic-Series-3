@@ -38,7 +38,7 @@ class System_Identification(interactive_system.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_PREPROGRAMMED_BEHAVIOUR)
+            cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_MANUAL)
             self.enter_command(cmd_obj)
 
         self.send_commands()
@@ -92,11 +92,11 @@ class System_Identification(interactive_system.InteractiveCmd):
                 # 1 frond
                 motion_type = Var(0)
                 # sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                frond = Cycling_Fin(self.messenger, teensy, node_name='fin_%d.frond' % j,
+                fin = Cycling_Fin(self.messenger, teensy, node_name='fin_%d.fin' % j,
                                     left_sma=sma_0.in_var['output'],
                                     right_sma=sma_1.in_var['output'], motion_type=motion_type)
                 # left_config=sma_param, right_config=sma_param)
-                self.node_list[frond.node_name] = frond
+                self.node_list[fin.node_name] = fin
 
 
                 # 2 reflex each
@@ -124,16 +124,16 @@ class System_Identification(interactive_system.InteractiveCmd):
                 self.node_list[acc_z_diff.node_name] = acc_z_diff
 
                 # acc running average
-                # acc_x_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_x_avg' % (teensy, j),
-                #                             input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-                # acc_y_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_y_avg' % (teensy, j),
-                #                             input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-                # acc_z_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_z_avg' % (teensy, j),
-                #                             input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
-                #
-                # self.node_list[acc_x_avg.node_name] = acc_x_avg
-                # self.node_list[acc_y_avg.node_name] = acc_y_avg
-                # self.node_list[acc_z_avg.node_name] = acc_z_avg
+                acc_x_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_x_avg' % (teensy, j),
+                                            input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
+                acc_y_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_y_avg' % (teensy, j),
+                                            input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
+                acc_z_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_z_avg' % (teensy, j),
+                                            input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
+
+                self.node_list[acc_x_avg.node_name] = acc_x_avg
+                self.node_list[acc_y_avg.node_name] = acc_y_avg
+                self.node_list[acc_z_avg.node_name] = acc_z_avg
 
                 # collecting data
                 data_variables['%s.fin_%d.acc_x' % (teensy, j)] = acc.out_var['x']
@@ -142,13 +142,13 @@ class System_Identification(interactive_system.InteractiveCmd):
                 data_variables['%s.fin_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
                 data_variables['%s.fin_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
                 data_variables['%s.fin_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
-                # data_variables['%s.fin_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
-                # data_variables['%s.fin_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
-                # data_variables['%s.fin_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
+                data_variables['%s.fin_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
+                data_variables['%s.fin_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
+                data_variables['%s.fin_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
 
                 data_variables['%s.fin_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.fin_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
-                data_variables['%s.fin_%d.frond' % (teensy, j)] = frond.in_var['motion_type']
+                data_variables['%s.fin_%d.fin' % (teensy, j)] = fin.in_var['motion_type']
 
             # for Interactive_Light
             for j in range(self.num_light):
