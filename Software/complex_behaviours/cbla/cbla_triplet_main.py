@@ -235,7 +235,9 @@ class CBLA(interactive_system.InteractiveCmd):
         for j in range(self.num_light):
             in_vars = OrderedDict()
             in_vars['als'] = components['%s.l%d.als' % (teensy_name, j)].out_var['input']
-            in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+            in_vars['sma-l'] = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
+            in_vars['sma-r'] = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
+            #in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
 
             out_vars = OrderedDict()
             # out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
@@ -244,8 +246,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                          messenger=self.messenger, data_collector=self.data_collector,
                                          cluster_name=teensy_name, node_type='light', node_id=j,
                                          in_vars=in_vars, out_vars=out_vars,
-                                         s_keys=('als', 'ir-f'), s_ranges=((0,4095), (0, 4095)),
-                                         s_names=('ambient light sensor', 'fin IR sensor'),
+                                         s_keys=('als', 'sma-l', 'sma-r'), s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                         s_names=('ambient light sensor', 'left sma, right sma'),
                                          m_keys=('led',), m_ranges=((0, 50),),
                                          m_names=('High-power LED', ),
                                          )
@@ -634,7 +636,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None  # ('test_teensy_88',)
+    ACTIVE_TEENSY_NAMES = ('c3', ) # None
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():

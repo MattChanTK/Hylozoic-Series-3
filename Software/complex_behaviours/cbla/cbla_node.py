@@ -13,13 +13,11 @@ class CBLA_Base_Node(Node):
     def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
                  node_name='cbla_node'):
 
-
         if not isinstance(cluster_name, str):
             raise TypeError('cluster_name must be a string!')
 
         if not isinstance(node_name, str):
             raise TypeError('node_name must be a string!')
-
 
         # reference to the data collector
         self.data_collector = data_collector
@@ -84,8 +82,7 @@ class CBLA_Base_Node(Node):
         last_save_states_time = clock()
         while self.alive:
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.curr_wait_time = max(self.cbla_robot.config['wait_time'],
-                                                 self.messenger.estimated_msg_period * 6)
+            self.cbla_robot.sample_speed_limit = self.messenger.estimated_msg_period * 2
 
             # update CBLA Engine
             data_packet = self.cbla_engine.update()
@@ -135,7 +132,7 @@ class CBLA_Node(CBLA_Base_Node):
 
         # initializing the cbla_node
         super(CBLA_Node, self).__init__(messenger=messenger, data_collector=data_collector,
-                                                 cluster_name=cluster_name, node_name=node_name)
+                                        cluster_name=cluster_name, node_name=node_name)
 
         # defining the input variables
         for in_var_name, in_var in in_vars.items():
@@ -177,8 +174,7 @@ class CBLA_Node(CBLA_Base_Node):
         # instantiate
         if not isinstance(robot_config, dict):
             robot_config = dict()
-        self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class,
-                                                      sample_window=20, sample_period=0.1, **robot_config),
+        self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class, **robot_config),
                          learner_config=self._get_learner_config())
 
     def _build_robot(self, RobotClass=cbla_engine.Robot, **robot_config) -> cbla_engine.Robot:

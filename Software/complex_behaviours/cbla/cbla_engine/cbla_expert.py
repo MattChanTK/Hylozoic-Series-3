@@ -276,9 +276,9 @@ class Expert():
     def evaluate_action(self, S1, M1):
 
         if not isinstance(S1, tuple):
-            raise(TypeError, "S1 must be a tuple")
+            raise TypeError("S1 must be a tuple (current value = %s)" % str(S1) )
         if not isinstance(M1, tuple):
-            raise(TypeError, "M1 must be a tuple")
+            raise TypeError("M1 must be a tuple (current value = %s)" % str(S1))
 
         # this is leaf node
         if self.left is None and self.right is None:

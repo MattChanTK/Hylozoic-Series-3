@@ -35,7 +35,8 @@ class Robot(object):
             self.out_vars.append(var)
 
         # the current wait_time
-        self.curr_wait_time = self.config['wait_time']
+        self.sample_speed_limit = 0.0
+        self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
 
         # idle mode related variables
         self.prev_rewards = deque(maxlen=self.config['prev_rewards_deque_size'])
@@ -48,6 +49,9 @@ class Robot(object):
 
     def _set_default_config(self):
         self.config['wait_time'] = 0.05
+        self.config['sample_number'] = 10
+        self.config['sample_period'] = 0.1
+
         self.config['prev_rewards_deque_size'] = 10
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
@@ -55,12 +59,27 @@ class Robot(object):
         self.config['min_step_before_idling'] = 200
         self.config['idling_prob'] = 0.98
 
+
     def compute_initial_motor(self) -> tuple:
         # compute the motor variables
         M0 = []
         for var in self.out_vars:
             M0.append(var.val)
         return tuple(M0)
+
+    def get_possible_action(self, num_sample=50) -> tuple:
+
+        num_dim = len(self.M0.val)
+
+        X = np.zeros((num_sample, num_dim))
+
+        for i in range(num_sample):
+            for x_dim in range(num_dim):
+                X[i, x_dim - 1] = random.random()
+
+        M_candidates = tuple(set((map(tuple, X))))
+
+        return M_candidates
 
     def act(self, M: tuple):
 
@@ -72,54 +91,125 @@ class Robot(object):
 
         # compute the actual output variable
         for i in range(len(self.out_vars)):
-            self.out_vars[i].val = M[i]
+            # un-normalize if the range is specified
+            if 'm_ranges' in self.config and len(self.config['m_ranges']) > 0:
+                val_range = self.config['m_ranges'][i]
+            self.out_vars[i].val = int(unnormalize(M[i], val_range[0], val_range[1]))
 
         self.M0.val = tuple(M)
         return self.out_vars
 
     def wait(self):
+        if self.config['sample_period'] <= 0:
+            self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
+        else:
+            self.curr_wait_time = 0
         sleep(max(0, self.curr_wait_time))
 
-    def read(self) -> tuple:
-        # compute the sensor variables
+    def read(self, sample_method='default') -> tuple:
+
         S = []
-        for i in range(len(self.in_vars)):
-            s = self.in_vars[i].val
-            # normalize if the range is specified
+
+        # sample the sensor variables
+        in_vals = self._sample(method=sample_method)
+
+        if not isinstance(in_vals, tuple):
+            raise TypeError('in_vals must be a tuple! It cannot be a %s' % str(in_vals))
+
+        # normalize if the range is specified
+        for i in range(len(in_vals)):
+            s = None
             if 's_ranges' in self.config and len(self.config['s_ranges']) > 0:
                 val_range = self.config['s_ranges'][i]
                 if isinstance(val_range, tuple) and len(val_range) == 2:
-                    s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
+                    s = normalize(in_vals[i], val_range[0], val_range[1])
+            if s is None:
+                s = in_vals[i]
+
             S.append(s)
+
         self.S0.val = tuple(S)
         return tuple(S)
 
-    def get_possible_action(self, num_sample=100) -> tuple:
+    def _sample(self, method='default') -> tuple:
 
-        if 'm_ranges' in self.config:
-            m_ranges = self.config['m_ranges']
+        # sample the sensor variables
+        if method == 'average':
+            return self._sample_average()
+        elif method == 'max':
+            return self._sample_max()
         else:
-            m_ranges = ()
+            return self.__sample_current()
 
-        num_dim = len(self.M0.val)
+    def __sample_current(self) -> tuple:
+        in_vals = []
+        for i in range(len(self.in_vars)):
+            in_val = self.in_vars[i].val
+            if not isinstance(in_val, (int, float)):
+                raise TypeError('Value of in_var[%d] is not an int nor a float' % i)
+            in_vals.append(in_val)
+        return tuple(in_vals)
 
-        X = np.zeros((num_sample, num_dim))
+    def _sample_few(self) -> tuple:
 
-        for i in range(num_sample):
-            for x_dim in range(num_dim):
+        # making sure sample_period does not exceed the messenger reading speed
+        sample_period = max(self.config['sample_period'], self.sample_speed_limit)
 
-                try:
-                    m_range = m_ranges[x_dim]
-                    if not isinstance(m_range, (tuple, list)):
-                        raise TypeError
-                except (IndexError, TypeError):
-                    m_range = (0, 255)
+        try:
+            max_sample_number = max(1, int(sample_period/self.sample_speed_limit))
+        except ZeroDivisionError:
+            max_sample_number = 100
 
-                X[i, x_dim - 1] = random.randint(m_range[0], m_range[1])
+        sample_number = min(self.config['sample_number'], max_sample_number)
 
-        M_candidates = tuple(set((map(tuple, X))))
+        # sample the sensor variables
+        samples = []
+        t0 = clock()
 
-        return M_candidates
+        while sample_number > 0:
+
+            # if first run
+            if self.S0.val is None:
+                sample_number = 0
+            else:
+                # sleep first
+                time_remained = sample_period - (clock() - t0)
+                if time_remained > 0:
+                    sleep(time_remained/sample_number)
+                    sample_number -= 1
+                else:
+                    sample_number = 0
+
+            # collect sample
+            in_vals = self.__sample_current()
+
+            # store into memory
+            samples.append(in_vals)
+
+        return tuple(samples)
+
+    def _sample_average(self):
+
+        samples = self._sample_few()
+
+        # compute average
+        sample_mean = []
+        samples_zipped = zip(*list(samples))
+        for sample in samples_zipped:
+            sample_mean.append(np.average(sample))
+
+        return tuple(sample_mean)
+
+    def _sample_max(self):
+
+        samples = self._sample_few()
+        # compute max
+        sample_max = []
+        samples_zipped = zip(*list(samples))
+        for sample in samples_zipped:
+            sample_max.append(np.max(sample))
+
+        return tuple(sample_max)
 
     def enter_idle_mode(self, reward) -> bool:
 
@@ -167,14 +257,12 @@ class Robot(object):
 
 class Robot_HalfFin(Robot):
 
-    def __init__(self, in_vars: list, out_vars: list, **config_kwargs):
-
-        super(Robot_HalfFin, self).__init__(in_vars, out_vars, **config_kwargs)
-
-        self.S_memory = deque(maxlen=self.config['sample_window'])
-
     def _set_default_config(self):
         super(Robot_HalfFin, self)._set_default_config()
+
+        self.config['sample_number'] = 10
+        self.config['sample_period'] = 4.0
+        self.config['wait_time'] = 0.0
 
         self.config['activation_reward_delta'] = 0.006
         self.config['activation_reward'] = 0.003
@@ -182,96 +270,38 @@ class Robot_HalfFin(Robot):
         self.config['min_step_before_idling'] = 15
         self.config['idling_prob'] = 0.999
 
-        self.config['sample_window'] = 10
-        self.config['sample_period'] = 0.1
-
-    def read(self) -> tuple:
-
-        # making sure sample_period does not exceed the messenger reading speed
-        sample_period = max(self.config['sample_period'], self.config['wait_time'])
-
-        # compute the sensor variables
-        for step in range(self.config['sample_window']):
-            t0 = clock()
-            S = []
-            for i in range(len(self.in_vars)):
-                s = self.in_vars[i].val
-
-                # normalize if the range is specified
-                if 's_ranges' in self.config:
-                    val_range = self.config['s_ranges'][i]
-                    if isinstance(val_range, tuple) and len(val_range) == 2:
-                        s = normalize(self.in_vars[i].val, val_range[0], val_range[1])
-                S.append(s)
-
-            # store into memory
-            self.S_memory.append(tuple(S))
-
-            # if first run
-            if self.S0.val is None:
-                break
-
-            # wait for next period
-            if step < self.config['sample_window'] - 1:
-                sleep(max(0, sample_period - (clock() - t0)))
-
-        # compute average
-        S_mean = []
-        s_zipped = zip(*list(self.S_memory))
-        for s in s_zipped:
-            S_mean.append(np.average(s))
-
-        self.S0.val = tuple(S_mean)
-        return tuple(S_mean)
-
-    # def get_possible_action(self, num_sample=10):
-    #     # constructing a list of all possible action
-    #     x_dim = len(self.M0.val)
-    #     X = list(range(0, 4 ** x_dim))
-    #     for i in range(len(X)):
-    #         X[i] = toDigits(X[i], 4)
-    #         filling = [0] * (x_dim - len(X[i]))
-    #         X[i] = filling + X[i]
-    #
-    #     M_candidates = tuple(set(map(tuple, X)))
-    #
-    #     try:
-    #         return tuple(random.sample(M_candidates, num_sample))
-    #     except ValueError:
-    #         return M_candidates
+    def read(self, sample_method=None):
+        return super(Robot_HalfFin, self).read(sample_method='default')
 
 
 class Robot_Light(Robot):
 
     def _set_default_config(self):
         super(Robot_Light, self)._set_default_config()
-        self.config['wait_time'] = 2.0
+
+        self.config['sample_number'] = 30
+        self.config['sample_period'] = 1.0
+        self.config['wait_time'] = 0.0
+
         self.config['activation_reward_delta'] = 0.2
         self.config['activation_reward'] = 0.06
         self.config['idling_reward'] = 0.01
         self.config['min_step_before_idling'] = 20
         self.config['idling_prob'] = 0.999
 
-    # def get_possible_action(self, num_sample=5) -> tuple:
-    #
-    #     num_dim = len(self.M0.val)
-    #
-    #     X = np.zeros((num_sample, num_dim))
-    #
-    #     for i in range(num_sample):
-    #         for x_dim in range(num_dim):
-    #             X[i, x_dim - 1] = random.randint(0, 100)
-    #
-    #     M_candidates = tuple(set((map(tuple, X))))
-    #
-    #     return M_candidates
+    def read(self, sample_method=None):
 
-
+        return super(Robot_Light, self).read(sample_method='default')
 
 
 class Robot_Reflex(Robot):
 
     def _set_default_config(self):
+        super(Robot_Reflex, self)._set_default_config()
+
+        self.config['sample_number'] = 30
+        self.config['sample_period'] = 1.0
+
         self.config['wait_time'] = 2.0
         self.config['prev_rewards_deque_size'] = 10
         self.config['activation_reward_delta'] = 0.5
@@ -280,6 +310,8 @@ class Robot_Reflex(Robot):
         self.config['min_step_before_idling'] = 200
         self.config['idling_prob'] = 0.98
 
+    def read(self, sample_method=None):
+        return super(Robot_Reflex, self).read(sample_method='default')
 
 
 def toDigits(n, b) -> list:
@@ -298,3 +330,9 @@ def normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
         raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
 
     return (orig_val - low_bound)/(hi_bound - low_bound)
+
+def unnormalize(norm_val: float, low_bound: float, hi_bound: float) -> float:
+    if low_bound >= hi_bound:
+        raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
+
+    return norm_val*(hi_bound - low_bound) + low_bound
