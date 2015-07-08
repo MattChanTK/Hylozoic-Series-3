@@ -48,7 +48,7 @@ class Robot(object):
         self.S0 = Var(None)
 
     def _set_default_config(self):
-        self.config['wait_time'] = 0.05
+        self.config['wait_time'] = 0.00005
         self.config['sample_number'] = 10
         self.config['sample_period'] = 0.1
 
@@ -100,10 +100,7 @@ class Robot(object):
         return self.out_vars
 
     def wait(self):
-        if self.config['sample_period'] <= 0:
-            self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
-        else:
-            self.curr_wait_time = 0
+        self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
         sleep(max(0, self.curr_wait_time))
 
     def read(self, sample_method='default') -> tuple:
@@ -262,7 +259,7 @@ class Robot_HalfFin(Robot):
 
         self.config['sample_number'] = 10
         self.config['sample_period'] = 4.0
-        self.config['wait_time'] = 0.0
+        self.config['wait_time'] = 0.0 #4.0
 
         self.config['activation_reward_delta'] = 0.006
         self.config['activation_reward'] = 0.003
@@ -271,7 +268,7 @@ class Robot_HalfFin(Robot):
         self.config['idling_prob'] = 0.999
 
     def read(self, sample_method=None):
-        return super(Robot_HalfFin, self).read(sample_method='default')
+        return super(Robot_HalfFin, self).read(sample_method='average')
 
 
 class Robot_Light(Robot):
@@ -281,7 +278,7 @@ class Robot_Light(Robot):
 
         self.config['sample_number'] = 30
         self.config['sample_period'] = 1.0
-        self.config['wait_time'] = 0.0
+        self.config['wait_time'] = 0.0 #4.0
 
         self.config['activation_reward_delta'] = 0.2
         self.config['activation_reward'] = 0.06
@@ -291,7 +288,7 @@ class Robot_Light(Robot):
 
     def read(self, sample_method=None):
 
-        return super(Robot_Light, self).read(sample_method='default')
+        return super(Robot_Light, self).read(sample_method='average')
 
 
 class Robot_Reflex(Robot):
@@ -301,8 +298,8 @@ class Robot_Reflex(Robot):
 
         self.config['sample_number'] = 30
         self.config['sample_period'] = 1.0
+        self.config['wait_time'] = 0.0 #2.0
 
-        self.config['wait_time'] = 2.0
         self.config['prev_rewards_deque_size'] = 10
         self.config['activation_reward_delta'] = 0.5
         self.config['activation_reward'] = 0.05
@@ -311,7 +308,7 @@ class Robot_Reflex(Robot):
         self.config['idling_prob'] = 0.98
 
     def read(self, sample_method=None):
-        return super(Robot_Reflex, self).read(sample_method='default')
+        return super(Robot_Reflex, self).read(sample_method='average')
 
 
 def toDigits(n, b) -> list:

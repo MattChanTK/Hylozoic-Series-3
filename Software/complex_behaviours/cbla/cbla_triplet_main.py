@@ -5,6 +5,7 @@ import sys
 # sys.setrecursionlimit(10**6)
 
 import random
+from time import clock
 from collections import defaultdict
 from collections import OrderedDict
 
@@ -671,8 +672,9 @@ if __name__ == "__main__":
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
 
-        with behaviours.all_nodes_created:
-            behaviours.all_nodes_created.wait()
+        behaviours.all_nodes_created.acquire()
+        behaviours.all_nodes_created.wait()
+        behaviours.all_nodes_created.release()
 
         # # initialize the gui
         hmi = tk_gui.Master_Frame()
