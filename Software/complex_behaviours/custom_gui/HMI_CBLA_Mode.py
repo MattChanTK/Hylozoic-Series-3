@@ -41,7 +41,6 @@ class HMI_CBLA_Mode(tk_gui.Page_Frame):
                 col = 0
                 row += 2
 
-
         for node_name, node in self.cbla_var.items():
             # === cbla node label ===
             node_label = ttk.Label(self, text=node_name, style="device_label.TLabel")
@@ -58,7 +57,6 @@ class HMI_CBLA_Mode(tk_gui.Page_Frame):
             if col == max_col_per_row:
                 col = 0
                 row += 2
-
 
 
 class HMI_CBLA_Plot_Page(tk_gui.Page_Frame):
