@@ -173,7 +173,7 @@ class Data_Collector_Node(Node):
         log_dir_path = os.path.join(os.getcwd(), 'data_log')
 
         # create new entry folder if creating new log
-        if create_new_log:
+        if create_new_log or not os.path.exists(log_dir_path):
             latest_log_dir = None
         # add a new session folder if continuing from old log
         else:
@@ -184,7 +184,6 @@ class Data_Collector_Node(Node):
                 if os.path.isdir(dir_path):
                     all_log_dir.append(dir_path)
             latest_log_dir = max(all_log_dir, key=os.path.getmtime)
-        log_dir_path = os.path.join(os.getcwd(), 'data_log')
 
         # create the data_collector
         self.data_collect = DataLogger(log_dir=log_dir_path, log_header=file_header,

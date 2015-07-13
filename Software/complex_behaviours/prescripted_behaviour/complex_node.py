@@ -4,7 +4,6 @@ from collections import deque
 import numpy as np
 
 from abstract_node import *
-from abstract_node.simple_data_collect import*
 
 
 class Test_Fin(Node):
@@ -18,7 +17,6 @@ class Test_Fin(Node):
             raise TypeError('teensy_name must be a string!')
 
         self.teensy_name = teensy_name
-
 
         super(Test_Fin, self).__init__(messenger, node_name='%s.%s' % (teensy_name, node_name))
 
@@ -59,7 +57,6 @@ class Test_Fin(Node):
                     motion_type = 2
 
                 self.out_var['fin_out'].val = motion_type
-
 
             elif self.in_var['ir_sensor_1'].val <= self.ir_off_thres and self.out_var['fin_out'].val > 0:
                 self.out_var['fin_out'].val = 0
@@ -117,8 +114,6 @@ class Cycling_Fin(Fin):
                     motion_type = 3
                 else:
                     motion_type = 0
-
-
 
             self.in_var['motion_type'].val = motion_type
 
