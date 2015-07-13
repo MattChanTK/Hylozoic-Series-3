@@ -4,12 +4,8 @@ import threading
 from queue import Queue
 from collections import defaultdict
 from copy import copy
-from copy import deepcopy
-import pickle
 import os
-import shutil
-import datetime
-import glob
+
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
 import shelve
@@ -49,7 +45,7 @@ class DataLogger(threading.Thread):
             if log_timestamp == None:
                 log_timestamp = now
 
-            log_name =  '%s_%s' % (log_header, log_timestamp)
+            self.log_name =  '%s_%s' % (log_header, log_timestamp)
             log_dir_path = os.path.join(os.getcwd(), log_dir, log_name)
 
         # check if log directory even exist
@@ -58,7 +54,7 @@ class DataLogger(threading.Thread):
             os.makedirs(log_dir_path)
 
         # check if the log file exist
-        log_path = os.path.join(log_dir_path, log_name)
+        log_path = os.path.join(log_dir_path, self.log_name)
         self.log_index_file = shelve.open(log_path, protocol=3, writeback=False)
 
         # if from previous session
@@ -81,8 +77,12 @@ class DataLogger(threading.Thread):
         session_dir_path = os.path.join(log_dir_path, self.log_index_file[str(curr_session)])
         os.mkdir(session_dir_path)
 
-        # open the shelve for the session
         session_path = os.path.join(session_dir_path, self.log_index_file[str(curr_session)])
+
+        # close the index file's shelf
+        self.log_index_file.close()
+
+        # open the shelve for the session
         self.session_shelf = shelve.open(session_path, protocol=3, writeback=False)
         self.session_shelf[DataLogger.session_id_key] = curr_session
 
@@ -156,6 +156,7 @@ class DataLogger(threading.Thread):
 
         # save all remaining data in buffer to disk
         self.__save_to_shelf()
+        self.session_shelf.close()
         print("Data Logger saved all data to disk.")
 
     def append_data_packet(self, node_name, data_packet):
@@ -241,8 +242,11 @@ class DataLogger(threading.Thread):
                 DataLogger.__insert_to_struct(data_dict, data_struct, packet_blocks)
 
             log_sessions.append(data_dict)
+            session_shelf.close()
 
-        return log_sessions
+        log_index_file.close()
+
+        return log_sessions, log_index_name
 
     @staticmethod
     def __insert_to_struct(data_dict, structure, value):
@@ -280,14 +284,6 @@ class DataLogger(threading.Thread):
         if not isinstance(struct_str, str):
             raise ValueError("struct_str must be a str!")
         return struct_str.split(separator)
-
-
-class DataPlotter():
-
-    def __init__(self, log_dir, log_header=None, log_timestamp=None, log_name=None):
-
-        self.log_dict = DataLogger.retrieve_data(log_dir=log_dir, log_header=log_header,
-                                                log_timestamp=log_timestamp, log_name=log_name)
 
 
 # test script
