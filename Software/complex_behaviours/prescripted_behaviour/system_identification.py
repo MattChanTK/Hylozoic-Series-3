@@ -98,7 +98,6 @@ class System_Identification(interactive_system.InteractiveCmd):
                 # left_config=sma_param, right_config=sma_param)
                 self.node_list[fin.node_name] = fin
 
-
                 # 2 reflex each
                 reflex_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_0' % j,
                                        output='fin_%d_reflex_0_level' % j)
@@ -167,7 +166,8 @@ class System_Identification(interactive_system.InteractiveCmd):
                 data_variables['%s.light_%d.led' % (teensy, j)] = led.in_var['output']
                 data_variables['%s.light_%d.als' % (teensy, j)] = als.out_var['input']
 
-        self.data_collector = Data_Collector_Node(self.messenger, file_header='sys_id_data', **data_variables)
+        self.data_collector = Data_Collector_Node(self.messenger, file_header='sys_id_data',
+                                                  data_collect_period=0.05, create_new_log=True, **data_variables)
 
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()

@@ -40,13 +40,13 @@ class DataLogger(threading.Thread):
         # if a specific path is specified
         if isinstance(log_path, str) and os.path.isdir(log_path):
             log_dir_path = log_path
-            log_name = os.path.split(log_dir_path)[-1]
+            self.log_name = os.path.split(log_dir_path)[-1]
         else:
             if log_timestamp == None:
                 log_timestamp = now
 
             self.log_name =  '%s_%s' % (log_header, log_timestamp)
-            log_dir_path = os.path.join(os.getcwd(), log_dir, log_name)
+            log_dir_path = os.path.join(os.getcwd(), log_dir, self.log_name)
 
         # check if log directory even exist
         if not os.path.exists(log_dir_path):
