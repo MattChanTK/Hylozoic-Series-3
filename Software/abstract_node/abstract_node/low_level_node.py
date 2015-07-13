@@ -1,13 +1,15 @@
 __author__ = 'Matthew'
 
-from time import clock
+from time import perf_counter, clock
 from collections import deque
 from copy import copy
 import numpy as np
+from collections import defaultdict
+import os
 
 from abstract_node.node import *
+from abstract_node.data_logger import DataLogger
 from interactive_system import Messenger
-from .simple_data_collect import *
 
 
 class Fin(Node):
@@ -154,7 +156,7 @@ class LED_Driver(Simple_Node):
 class Data_Collector_Node(Node):
 
     def __init__(self, messenger: Messenger, node_name='data_collector', file_header='sys_id_data',
-                 data_collect_period=1.0,
+                 data_collect_period=1.0, create_new_log=True,
                  **variables):
         super(Data_Collector_Node, self).__init__(messenger, node_name=node_name)
 
@@ -166,7 +168,27 @@ class Data_Collector_Node(Node):
                 raise TypeError("Variables must be of Var type!")
 
         self.data_collect_period = data_collect_period
-        self.data_collect = SimpleDataCollector(file_header=file_header)
+
+        # setting up the data collector
+        log_dir_path = os.path.join(os.getcwd(), 'data_log')
+
+        # create new entry folder if creating new log
+        if create_new_log:
+            latest_log_dir = None
+        # add a new session folder if continuing from old log
+        else:
+            # use the latest data log
+            all_log_dir = []
+            for dir in os.listdir(log_dir_path):
+                dir_path = os.path.join(log_dir_path, dir)
+                if os.path.isdir(dir_path):
+                    all_log_dir.append(dir_path)
+            latest_log_dir = max(all_log_dir, key=os.path.getmtime)
+        log_dir_path = os.path.join(os.getcwd(), 'data_log')
+
+        # create the data_collector
+        self.data_collect = DataLogger(log_dir=log_dir_path, log_header=file_header,
+                                       log_path=latest_log_dir)
 
     def run(self):
 
@@ -184,9 +206,8 @@ class Data_Collector_Node(Node):
                 point_name = var_split[2]
                 data_packets['%s.%s' % (teensy_name, device_name)][point_name] = copy(var.val)
 
-
             for packet_name, data_packet in data_packets.items():
-                data_packet['time'] = datetime.now()
+                data_packet['packet_time'] = perf_counter()
                 data_packet['step'] = loop_count
 
                 self.data_collect.append_data_packet(packet_name, data_packet)
@@ -195,7 +216,6 @@ class Data_Collector_Node(Node):
 
         self.data_collect.end_data_collection()
         self.data_collect.join()
-
 
 
 class Pseudo_Differentiation(Node):
