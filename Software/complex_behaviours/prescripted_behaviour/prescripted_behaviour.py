@@ -413,6 +413,8 @@ if __name__ == "__main__":
 
         behaviours.terminate()
 
+        behaviours.join()
+
         for teensy_thread in teensy_manager._get_teensy_thread_list():
             teensy_thread.join()
 

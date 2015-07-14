@@ -3,11 +3,7 @@ import sys
 # # Increase max stack size from 8MB to 512MB
 # resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
 # sys.setrecursionlimit(10**6)
-
 import random
-from time import clock
-from collections import defaultdict
-from collections import OrderedDict
 
 from interactive_system import CommunicationProtocol as CP
 import interactive_system
@@ -25,7 +21,7 @@ except ImportError:
     from custom_gui import *
 
 
-create_new_log = False
+create_new_log = True
 
 if len(sys.argv) > 1:
     create_new_log = bool(sys.argv[1])
@@ -661,7 +657,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None # ('c3', )
+    ACTIVE_TEENSY_NAMES = ('c3', ) # None
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():
@@ -700,12 +696,12 @@ if __name__ == "__main__":
         behaviours.all_nodes_created.wait()
         behaviours.all_nodes_created.release()
 
-        # # initialize the gui
+        # initialize the gui
         hmi = tk_gui.Master_Frame()
         hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
-        #input()
         behaviours.terminate()
+        behaviours.join()
 
         for teensy_thread in teensy_manager._get_teensy_thread_list():
             teensy_thread.join()
