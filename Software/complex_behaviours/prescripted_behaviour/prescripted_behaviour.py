@@ -86,7 +86,7 @@ class Prescripted_Behaviour(interactive_system.InteractiveCmd):
 
         self.data_collector = Data_Collector_Node(self.messenger, file_header='prescripted_mode_data',
                                                   data_collect_period=0.5, create_new_log=True,
-                                                  log_save_freq=2.0, logger_sleep_time=0.05,
+                                                  log_save_freq=5.0, logger_sleep_time=0.05,
                                                   **data_variables)
 
         with self.all_nodes_created:
