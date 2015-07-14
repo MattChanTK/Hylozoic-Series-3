@@ -54,33 +54,33 @@ class DataLogger(threading.Thread):
             os.makedirs(log_dir_path)
 
         # check if the log file exist
-        log_path = os.path.join(log_dir_path, self.log_name)
-        self.log_index_file = shelve.open(log_path, protocol=3, writeback=False)
+        self.log_path = os.path.join(log_dir_path, self.log_name)
+        log_index_file = shelve.open(self.log_path, protocol=3, writeback=False)
 
         # if from previous session
-        if self.log_index_file:
+        if log_index_file:
 
             try:
-                self.log_index_file[DataLogger.idx_num_session_key] += 1
+                log_index_file[DataLogger.idx_num_session_key] += 1
             except KeyError:
                 raise KeyError('log file is corrupted!')
 
-            curr_session = self.log_index_file[DataLogger.idx_num_session_key]
+            curr_session = log_index_file[DataLogger.idx_num_session_key]
         else:
             curr_session = 1
-            self.log_index_file[DataLogger.idx_time_created_key] = now
-            self.log_index_file[DataLogger.idx_num_session_key] = curr_session
+            log_index_file[DataLogger.idx_time_created_key] = now
+            log_index_file[DataLogger.idx_num_session_key] = curr_session
 
-        self.log_index_file[str(curr_session)] = 'session_%03d' % curr_session
+        log_index_file[str(curr_session)] = 'session_%03d' % curr_session
 
         # create the session's directory
-        session_dir_path = os.path.join(log_dir_path, self.log_index_file[str(curr_session)])
-        os.mkdir(session_dir_path)
+        self.session_dir_path = os.path.join(log_dir_path, log_index_file[str(curr_session)])
+        os.mkdir(self.session_dir_path)
 
-        session_path = os.path.join(session_dir_path, self.log_index_file[str(curr_session)])
+        session_path = os.path.join(self.session_dir_path, log_index_file[str(curr_session)])
 
         # close the index file's shelf
-        self.log_index_file.close()
+        log_index_file.close()
 
         # open the shelve for the session
         self.session_shelf = shelve.open(session_path, protocol=3, writeback=False)
@@ -156,7 +156,10 @@ class DataLogger(threading.Thread):
 
         # save all remaining data in buffer to disk
         self.__save_to_shelf()
+
+        # close the session's shelf
         self.session_shelf.close()
+
         print("Data Logger saved all data to disk.")
 
     def append_data_packet(self, node_name, data_packet):
@@ -164,6 +167,38 @@ class DataLogger(threading.Thread):
 
     def end_data_collection(self):
         self.__program_terminating = True
+
+    def get_packet(self, session_id: int=0, *struct_labels):
+
+        # type checking
+        if not isinstance(session_id, int):
+            raise TypeError("session_id must be an int and not %s" % str(session_id))
+        if len(struct_labels) < 1:
+            raise ValueError("struct_labels must specify the path to a leaf.")
+
+        # open log_index_file as read-only
+        log_index_file = shelve.open(self.log_path, flag='r', protocol=3, writeback=False)
+
+       # find the desired session dir
+        if session_id > 0:
+            if session_id > log_index_file[DataLogger.idx_num_session_key]:
+                raise ValueError('session_id must be <= %d' % log_index_file[DataLogger.idx_num_session_key])
+
+            session_dir = log_index_file[str(session_id)]
+        else:
+            curr_session = int(log_index_file[DataLogger.idx_num_session_key])
+            if curr_session + session_id < 1:
+                raise ValueError('Current session is only %d' % curr_session)
+
+            session_dir = log_index_file[str(curr_session + session_id)]
+
+        session_path = os.path.join(os.path.dirname(self.log_path), session_dir, session_dir)
+        session_shelf = shelve.open(session_path, flag='r', protocol=3, writeback=False)
+
+        try:
+            return session_shelf[DataLogger.encode_struct(*struct_labels)]
+        except KeyError:
+            raise ValueError("struct_labels must specify the path to a leaf.")
 
     def __save_to_shelf(self):
         for data_block_key, data_block in self.__data_buffer.items():
