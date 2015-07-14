@@ -15,7 +15,6 @@ from data_logger import DataLogger
 
 class DataPlotter(object):
 
-    colour_map = 'Set1'
     saved_figures_dir = os.path.join(os.getcwd(), 'saved_figures')
 
     def __init__(self, log_dir, log_header=None, log_timestamp=None, log_name=None,
@@ -148,6 +147,8 @@ class DataPlotter(object):
 
 class PlotObject(object):
 
+    colour_map = 'Set1'
+
     def __init__(self, fig_num=None, fig_title=None):
         self.fig = plt.figure(num=fig_num, dpi=100, facecolor='w', edgecolor='k')
         if isinstance(fig_title, str):
@@ -211,7 +212,7 @@ class PlotObject(object):
             line, = ax.plot(x, y)
             lines.append(line)
 
-        PlotObject.apply_plot_config(ax, config)
+        cls.apply_plot_config(ax, config)
 
         return lines
 

@@ -39,7 +39,7 @@ class DataLogger(threading.Thread):
                  log_timestamp=None, log_path=None,
                  **kwarg):
 
-        now = datetime.now().strftime(DataLogger.datetime_str_fmt)
+        now = datetime.now().strftime(self.datetime_str_fmt)
 
         # if a specific path is specified
         if isinstance(log_path, str) and os.path.isdir(log_path):
@@ -65,15 +65,15 @@ class DataLogger(threading.Thread):
         if log_index_file:
 
             try:
-                log_index_file[DataLogger.idx_num_session_key] += 1
+                log_index_file[self.idx_num_session_key] += 1
             except KeyError:
                 raise KeyError('log file is corrupted!')
 
-            curr_session = log_index_file[DataLogger.idx_num_session_key]
+            curr_session = log_index_file[self.idx_num_session_key]
         else:
             curr_session = 1
-            log_index_file[DataLogger.idx_time_created_key] = now
-            log_index_file[DataLogger.idx_num_session_key] = curr_session
+            log_index_file[self.idx_time_created_key] = now
+            log_index_file[self.idx_num_session_key] = curr_session
 
         log_index_file[str(curr_session)] = 'session_%03d' % curr_session
 
@@ -88,13 +88,13 @@ class DataLogger(threading.Thread):
 
         # open the shelve for the session
         self.session_shelf = shelve.open(session_path, protocol=3, writeback=False)
-        self.session_shelf[DataLogger.session_id_key] = curr_session
+        self.session_shelf[self.session_id_key] = curr_session
 
         # register the start time of the session
         self.clock0 = perf_counter()
         self.datetime0 = datetime.now()
-        self.session_shelf[DataLogger.session_datetime0_key] = self.datetime0
-        self.session_shelf[DataLogger.session_clock0_key] = self.clock0
+        self.session_shelf[self.session_datetime0_key] = self.datetime0
+        self.session_shelf[self.session_clock0_key] = self.clock0
 
         # queue for packet to come in
         self.__packet_queue = Queue()
@@ -133,38 +133,38 @@ class DataLogger(threading.Thread):
 
                 # check if the packet has timestamp
                 try:
-                    packet_time = packet_data[DataLogger.packet_time_key]
+                    packet_time = packet_data[self.packet_time_key]
                     if not isinstance(packet_time, float):
                         raise TypeError()
                 except (KeyError, TypeError):
                     packet_time = perf_counter()
-                    packet_data[DataLogger.packet_time_key] = packet_time
+                    packet_data[self.packet_time_key] = packet_time
 
                 # check if the packet has type
                 try:
-                    packet_type = packet_data[DataLogger.packet_type_key]
+                    packet_type = packet_data[self.packet_type_key]
                     if not isinstance(packet_type, str):
                         raise TypeError()
                 except (KeyError, TypeError):
-                    packet_type = DataLogger.packet_default_type
-                    packet_data[DataLogger.packet_type_key] = packet_type
+                    packet_type = self.packet_default_type
+                    packet_data[self.packet_type_key] = packet_type
 
                 # save the packet data in the buffer
-                self.__data_buffer[DataLogger.encode_struct(node_name, packet_type)].append(packet_data)
+                self.__data_buffer[self.encode_struct(node_name, packet_type)].append(packet_data)
 
             # overwriting persistence info to disk
             if not self.__info_queue.empty():
 
                 node_name, info_data = self.__info_queue.get_nowait()
                 try:
-                    info_type = info_data[DataLogger.info_type_key]
+                    info_type = info_data[self.info_type_key]
                     if not isinstance(info_type, str):
                         raise TypeError()
                 except (KeyError, TypeError):
-                    info_type = DataLogger.info_default_type
+                    info_type = self.info_default_type
 
                 # save the info to disk
-                self.session_shelf[DataLogger.encode_struct(node_name, info_type)] = info_data
+                self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
 
             # save data blocks to disk periodically
             if perf_counter() - last_saved_time > self.save_freq and not self.__program_terminating:
@@ -205,12 +205,12 @@ class DataLogger(threading.Thread):
 
        # find the desired session dir
         if session_id > 0:
-            if session_id > log_index_file[DataLogger.idx_num_session_key]:
-                raise ValueError('session_id must be <= %d' % log_index_file[DataLogger.idx_num_session_key])
+            if session_id > log_index_file[self.idx_num_session_key]:
+                raise ValueError('session_id must be <= %d' % log_index_file[self.idx_num_session_key])
 
             session_dir = log_index_file[str(session_id)]
         else:
-            curr_session = int(log_index_file[DataLogger.idx_num_session_key])
+            curr_session = int(log_index_file[self.idx_num_session_key])
             if curr_session + session_id < 1:
                 raise ValueError('Current session is only %d' % curr_session)
 
@@ -219,18 +219,18 @@ class DataLogger(threading.Thread):
         session_path = os.path.join(os.path.dirname(self.log_path), session_dir, session_dir)
         session_shelf = shelve.open(session_path, flag='r', protocol=3, writeback=False)
 
-        return session_shelf[DataLogger.encode_struct(*struct_labels)]
+        return session_shelf[self.encode_struct(*struct_labels)]
 
     def __save_to_shelf(self):
         for data_block_key, data_block in self.__data_buffer.items():
 
             if data_block and len(data_block) > 0:
                 # use the fist packet's time as timestamp for the block
-                block_timestamp = data_block[0][DataLogger.packet_time_key]
+                block_timestamp = data_block[0][self.packet_time_key]
                 # convert CPU time to datetime then to a string
-                block_time_str = self.__clock2datetime(block_timestamp).strftime(DataLogger.datetime_str_fmt_us)
+                block_time_str = self.__clock2datetime(block_timestamp).strftime(self.datetime_str_fmt_us)
                 # save to the shelf
-                self.session_shelf[DataLogger.encode_struct(data_block_key, block_time_str)] = data_block
+                self.session_shelf[self.encode_struct(data_block_key, block_time_str)] = data_block
 
         # clear data_buffer
         self.__data_buffer = defaultdict(list)
@@ -285,7 +285,7 @@ class DataLogger(threading.Thread):
         log_index_file = shelve.open(log_index_path, flag='r', protocol=3, writeback=False)
 
         # create an array of dictionary for each session
-        num_session = int(log_index_file[DataLogger.idx_num_session_key])
+        num_session = int(log_index_file[cls.idx_num_session_key])
         log_sessions = []
         for session_id in range(1, num_session+1):
             session_shelf_key = log_index_file[str(session_id)]
@@ -294,8 +294,8 @@ class DataLogger(threading.Thread):
 
             data_dict = dict()
             for data_key, packet_blocks in session_shelf.items():
-                data_struct = DataLogger.decode_struct(data_key)
-                DataLogger.__insert_to_struct(data_dict, data_struct, packet_blocks)
+                data_struct = cls.decode_struct(data_key)
+                cls.__insert_to_struct(data_dict, data_struct, packet_blocks)
 
             log_sessions.append(data_dict)
             session_shelf.close()
@@ -327,7 +327,7 @@ class DataLogger(threading.Thread):
             if not top_level in data_dict:
                 data_dict[top_level] = dict()
 
-            DataLogger.__insert_to_struct(data_dict[top_level], structure[1:], value)
+            cls.__insert_to_struct(data_dict[top_level], structure[1:], value)
 
     @classmethod
     def encode_struct(cls, *struct_labels, separator='//'):

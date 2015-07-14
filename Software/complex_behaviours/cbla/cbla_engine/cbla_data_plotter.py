@@ -220,8 +220,6 @@ class CBLA_DataPlotter(DataPlotter):
             if '_plot_dim' in config_key and isinstance(config_val, tuple):
                 exemplars_plot_dim[config_key.replace('_plot_dim', '')] = config_val
 
-
-
         for node_name, node_states in self.state_info.items():
 
             if (node_name, 'model') not in self.plot_objects:
@@ -231,7 +229,6 @@ class CBLA_DataPlotter(DataPlotter):
                 continue
 
             expert = node_states['learner_expert']
-
 
             # extract the exemplars
             info = defaultdict(dict)
@@ -352,7 +349,7 @@ class CBLA_PlotObject(PlotObject):
             line.set_color(colours[region_ids.index(i)])
             lines.append(line)
 
-        CBLA_PlotObject.apply_plot_config(ax, config)
+        cls.apply_plot_config(ax, config)
 
         return lines, region_ids
 
@@ -361,7 +358,7 @@ class CBLA_PlotObject(PlotObject):
 
         # default config
         config = defaultdict(lambda: None)
-        config['colourmap'] = CBLA_DataPlotter.colour_map
+        config['colourmap'] = cls.colour_map
         config['marker'] = 'o'
         config['linestyle'] = ''
         config['markersize'] = 3
@@ -380,7 +377,7 @@ class CBLA_PlotObject(PlotObject):
             dots.set_color(colours[region_ids.index(i)])
             all_dots.append(dots)
 
-        CBLA_PlotObject.apply_plot_config(ax, config)
+        cls.apply_plot_config(ax, config)
 
     @classmethod
     def plot_expert_model(cls, ax: axes.Axes, region_data, region_model_func=None, **plot_config):
