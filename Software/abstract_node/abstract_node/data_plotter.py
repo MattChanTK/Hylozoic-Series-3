@@ -18,19 +18,22 @@ class DataPlotter(object):
     saved_figures_dir = os.path.join(os.getcwd(), 'saved_figures')
 
     def __init__(self, log_dir, log_header=None, log_timestamp=None, log_name=None,
-                 packet_types=(DataLogger.packet_default_type, )):
+                 packet_types=(DataLogger.packet_default_type, ),
+                 info_types=(DataLogger.info_default_type,)):
 
         self.log_dict, self.log_name = DataLogger.retrieve_data(log_dir=log_dir, log_header=log_header,
                                                                 log_timestamp=log_timestamp, log_name=log_name)
 
         self.plotting_packet_types = packet_types
+        self.plotting_info_types = info_types
+
         # all data
         self.data = defaultdict(lambda: defaultdict(lambda: {'x': [], 'y': []}))
         # state info
         self.state_info = defaultdict(dict)
 
         # extracting data and state info
-        self._extract_data_files(self.plotting_packet_types)
+        self._extract_data_files(self.plotting_packet_types, self.plotting_info_types)
 
         # plot objects
         self.plot_objects = dict()
@@ -42,16 +45,13 @@ class DataPlotter(object):
 
             self.plot_objects[(node_name, 'history')] = PlotObject(fig_title='History Plot - %s' % node_name)
 
-    def _extract_data_files(self, packet_types):
+    def _extract_data_files(self, packet_types, info_types):
 
         for session_data in self.log_dict:
 
             session_clock0 = session_data[DataLogger.session_clock0_key]
 
             for node_name, node_data in session_data.items():
-
-                if node_name == 'session_id':
-                    print(node_name)
 
                 for packet_type in packet_types:
 
@@ -78,6 +78,16 @@ class DataPlotter(object):
                         for data_type, data_element in self.data[node_name].items():
                             print('Extracted %s --- %s' % (node_name, data_type))
                             # print(self.data[node_name][data_type]['y'][100])
+
+                for info_type in info_types:
+
+                    # if the node_data hs the desired 'info_type'
+                    if isinstance(node_data, dict) and info_type in node_data:
+
+                        info_dict = node_data[info_type]
+                        self.state_info[node_name].update(info_dict)
+                        print(info_dict)
+
 
     def plot(self):
         self.plot_histories()

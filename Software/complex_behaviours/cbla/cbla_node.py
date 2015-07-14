@@ -12,6 +12,7 @@ import cbla_engine
 class CBLA_Base_Node(Node):
 
     cbla_state_type_key = 'cbla_states'
+    cbla_label_name_key = 'label_names'
     cbla_data_type_key = 'data'
 
     def __init__(self, messenger: Messenger, cluster_name: str, data_logger: DataLogger,

@@ -34,7 +34,6 @@ class DataLogger(threading.Thread):
     session_datetime0_key = "session_datetime0"
     session_clock0_key = "session_clock0"
 
-
     def __init__(self, log_dir='log_data', log_header='generic_data',
                  log_timestamp=None, log_path=None,
                  **kwarg):
@@ -304,8 +303,8 @@ class DataLogger(threading.Thread):
 
         return log_sessions, log_index_name
 
-    @staticmethod
-    def __insert_to_struct(data_dict, structure, value):
+    @classmethod
+    def __insert_to_struct(cls, data_dict, structure, value):
 
         # type checking
         if not isinstance(structure, (tuple, list)) and len(structure) < 1:

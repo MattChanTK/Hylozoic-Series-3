@@ -324,7 +324,7 @@ class CBLA_PlotObject(PlotObject):
         # default config
         config = defaultdict(lambda: None)
         config['xlabel'] = 'time'
-        config['colourmap'] = CBLA_DataPlotter.colour_map
+        config['colourmap'] = cls.colour_map
         for key, value in plot_config.items():
             config[key] = value
 
