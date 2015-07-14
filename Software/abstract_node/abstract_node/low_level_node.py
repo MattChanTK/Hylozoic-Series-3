@@ -156,7 +156,7 @@ class LED_Driver(Simple_Node):
 class Data_Collector_Node(Node):
 
     def __init__(self, messenger: Messenger, node_name='data_collector', file_header='sys_id_data',
-                 data_collect_period=1.0, create_new_log=True,
+                 data_collect_period=1.0, create_new_log=True, log_save_freq=2.0, logger_sleep_time=0.01,
                  **variables):
         super(Data_Collector_Node, self).__init__(messenger, node_name=node_name)
 
@@ -190,8 +190,8 @@ class Data_Collector_Node(Node):
                 latest_log_dir = None
 
         # create the data_collector
-        self.data_collect = DataLogger(log_dir=log_dir_path, log_header=file_header,
-                                       log_path=latest_log_dir)
+        self.data_collect = DataLogger(log_dir=log_dir_path, log_header=file_header, log_path=latest_log_dir,
+                                       sleep_time=logger_sleep_time, save_freq=log_save_freq)
 
     def run(self):
 
