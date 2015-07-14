@@ -141,7 +141,7 @@ class DataPlotter(object):
 
 
     def save_all_plots(self, sub_folder_name):
-        directory = os.path.join(DataPlotter.saved_figures_dir, sub_folder_name)
+        directory = os.path.join(self.saved_figures_dir, sub_folder_name)
         for plot_obj in self.plot_objects.values():
             plot_obj.save_to_file(directory=directory, filename=plot_obj.fig_title)
 
