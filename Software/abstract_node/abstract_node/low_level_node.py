@@ -183,7 +183,11 @@ class Data_Collector_Node(Node):
                 dir_path = os.path.join(log_dir_path, dir)
                 if os.path.isdir(dir_path):
                     all_log_dir.append(dir_path)
-            latest_log_dir = max(all_log_dir, key=os.path.getmtime)
+
+            if len(all_log_dir) > 0:
+                latest_log_dir = max(all_log_dir, key=os.path.getmtime)
+            else:
+                latest_log_dir = None
 
         # create the data_collector
         self.data_collect = DataLogger(log_dir=log_dir_path, log_header=file_header,

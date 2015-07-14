@@ -3,7 +3,7 @@ __author__ = 'Matthew'
 import threading
 from queue import Queue
 from collections import defaultdict
-from copy import copy
+from copy import copy, deepcopy
 import os
 
 from datetime import datetime, timedelta
@@ -20,6 +20,10 @@ class DataLogger(threading.Thread):
     packet_time_key = "packet_time"
     packet_type_key = "packet_type"
     packet_default_type = "data"
+
+    # info keys
+    info_type_key = 'info_type'
+    info_default_type = 'info'
 
     # index keys
     idx_time_created_key = "time_created"
@@ -95,6 +99,9 @@ class DataLogger(threading.Thread):
         # queue for packet to come in
         self.__packet_queue = Queue()
 
+        # queue for static info to come in
+        self.__info_queue = Queue()
+
         # data buffer in memory
         self.__data_buffer = defaultdict(list)
 
@@ -145,6 +152,20 @@ class DataLogger(threading.Thread):
                 # save the packet data in the buffer
                 self.__data_buffer[DataLogger.encode_struct(node_name, packet_type)].append(packet_data)
 
+            # overwriting persistence info to disk
+            if not self.__info_queue.empty():
+
+                node_name, info_data = self.__info_queue.get_nowait()
+                try:
+                    info_type = info_data[DataLogger.info_type_key]
+                    if not isinstance(info_type, str):
+                        raise TypeError()
+                except (KeyError, TypeError):
+                    info_type = DataLogger.info_default_type
+
+                # save the info to disk
+                self.session_shelf[DataLogger.encode_struct(node_name, info_type)] = info_data
+
             # save data blocks to disk periodically
             if perf_counter() - last_saved_time > self.save_freq and not self.__program_terminating:
                 self.__save_to_shelf()
@@ -164,6 +185,9 @@ class DataLogger(threading.Thread):
 
     def append_data_packet(self, node_name, data_packet):
         self.__packet_queue.put((node_name, copy(data_packet)))
+
+    def write_info(self, node_name, info_data):
+        self.__info_queue.put((node_name, deepcopy(info_data)))
 
     def end_data_collection(self):
         self.__program_terminating = True
@@ -195,10 +219,7 @@ class DataLogger(threading.Thread):
         session_path = os.path.join(os.path.dirname(self.log_path), session_dir, session_dir)
         session_shelf = shelve.open(session_path, flag='r', protocol=3, writeback=False)
 
-        try:
-            return session_shelf[DataLogger.encode_struct(*struct_labels)]
-        except KeyError:
-            raise ValueError("struct_labels must specify the path to a leaf.")
+        return session_shelf[DataLogger.encode_struct(*struct_labels)]
 
     def __save_to_shelf(self):
         for data_block_key, data_block in self.__data_buffer.items():
