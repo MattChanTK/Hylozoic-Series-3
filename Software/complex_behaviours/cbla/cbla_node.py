@@ -3,6 +3,7 @@ __author__ = 'Matthew'
 from time import clock
 
 from abstract_node.node import *
+from abstract_node import DataLogger
 from interactive_system import Messenger
 
 import cbla_engine
@@ -10,7 +11,10 @@ import cbla_engine
 
 class CBLA_Base_Node(Node):
 
-    def __init__(self, messenger: Messenger, cluster_name: str, data_collector: cbla_engine.DataCollector,
+    cbla_state_type_key = 'cbla_states'
+    cbla_data_type_key = 'data'
+
+    def __init__(self, messenger: Messenger, cluster_name: str, data_logger: DataLogger,
                  node_name='cbla_node'):
 
         if not isinstance(cluster_name, str):
@@ -20,14 +24,15 @@ class CBLA_Base_Node(Node):
             raise TypeError('node_name must be a string!')
 
         # reference to the data collector
-        self.data_collector = data_collector
+        self.data_logger = data_logger
 
         super(CBLA_Base_Node, self).__init__(messenger, node_name="%s.%s" % (cluster_name, node_name))
 
-        self.state_save_period = 20  # seconds
-
         self.cbla_robot = None
         self.cbla_learner = None
+
+        # parameters
+        self.state_save_period = 20.0 # seconds
 
     def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
 
@@ -41,10 +46,14 @@ class CBLA_Base_Node(Node):
         S0 = self.cbla_robot.read()
 
         # load previous learner expert
-        try:
-            past_state = self.data_collector.data_file['state'][self.node_name]
-        except KeyError:
-            past_state = None
+        past_state = None
+        current_session = self.data_logger.session_shelf[DataLogger.session_id_key]
+        if current_session > 1:
+            try:
+                past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)
+                print(past_state)
+            except KeyError:
+                print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
 
         if not isinstance(learner_config, dict):
             learner_config = dict()
@@ -53,10 +62,11 @@ class CBLA_Base_Node(Node):
 
         # load previous learner steps
         config = dict()
-        try:
-            config['update_count_start'] = past_state['learner_step']
-        except KeyError:
-            pass
+        if past_state:
+            try:
+                config['update_count_start'] = past_state['learner_step']
+            except KeyError:
+                pass
 
         # create CBLA engine
         self.cbla_engine = cbla_engine.CBLA_Engine(self.cbla_robot, self.cbla_learner, **config)
@@ -66,18 +76,20 @@ class CBLA_Base_Node(Node):
         self.out_var['M'] = self.cbla_robot.M0
 
         self.cbla_states = dict()
+        self.cbla_states[DataLogger.info_type_key] = CBLA_Base_Node.cbla_state_type_key
 
     def run(self):
 
         # add information about the robot's label to data_collector
         label_info = dict()
+        label_info[DataLogger.info_type_key] = 'label_names'
         if 's_name' in self.cbla_robot.config:
             label_info['input_label_name'] = self.cbla_robot.config['s_names']
         if 'm_name' in self.cbla_robot.config:
             label_info['output_label_name'] = self.cbla_robot.config['m_names']
 
         if label_info:
-            self.data_collector.update_state(node_name=self.node_name, states_update=label_info)
+            self.data_logger.write_info(node_name=self.node_name, info_data=label_info)
 
         last_save_states_time = clock()
         while self.alive:
@@ -86,9 +98,10 @@ class CBLA_Base_Node(Node):
 
             # update CBLA Engine
             data_packet = self.cbla_engine.update()
+            data_packet[DataLogger.packet_type_key] = CBLA_Base_Node.cbla_data_type_key
 
             # save the data
-            self.data_collector.append_data_packet(self.node_name, data_packet)
+            self.data_logger.append_data_packet(self.node_name, data_packet)
 
             # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
 
@@ -107,12 +120,12 @@ class CBLA_Base_Node(Node):
             self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
             self.cbla_states['learner_step'] = self.cbla_engine.update_count
 
-        self.data_collector.update_state(self.node_name, self.cbla_states)
+        self.data_logger.write_info(self.node_name, self.cbla_states)
 
 
 class CBLA_Node(CBLA_Base_Node):
 
-    def __init__(self, messenger: Messenger, data_collector: cbla_engine.DataCollector,
+    def __init__(self, messenger: Messenger, data_logger: DataLogger,
                  cluster_name: str, node_type: str, node_id: int,
                  in_vars: OrderedDict, out_vars: OrderedDict,
                  s_keys: tuple=(), s_ranges: tuple=(), s_names: tuple=(),
@@ -131,7 +144,7 @@ class CBLA_Node(CBLA_Base_Node):
             node_name += '-%s' % self.node_version
 
         # initializing the cbla_node
-        super(CBLA_Node, self).__init__(messenger=messenger, data_collector=data_collector,
+        super(CBLA_Node, self).__init__(messenger=messenger, data_logger=data_logger,
                                         cluster_name=cluster_name, node_name=node_name)
 
         # defining the input variables

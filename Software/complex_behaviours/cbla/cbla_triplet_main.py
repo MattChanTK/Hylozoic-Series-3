@@ -14,7 +14,7 @@ import interactive_system
 from abstract_node import *
 
 from cbla_spatial_node import *
-from cbla_engine import cbla_data_collect, cbla_robot
+from cbla_engine import cbla_robot
 
 try:
     from custom_gui import *
@@ -25,26 +25,50 @@ except ImportError:
     from custom_gui import *
 
 
-USE_SAVED_DATA = False
+create_new_log = False
 
 if len(sys.argv) > 1:
-    USE_SAVED_DATA = bool(sys.argv[1])
+    create_new_log = bool(sys.argv[1])
 
 class CBLA(interactive_system.InteractiveCmd):
 
+    log_dir = 'cbla_log'
+    log_header = 'cbla_mode'
+
+
     def __init__(self, Teensy_manager, auto_start=True, mode='spatial'):
 
-        data_file = None
-        if USE_SAVED_DATA:
-            data_file, _ = cbla_data_collect.retrieve_data()
+        # setting up the data collector
+        log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
 
-        self.data_collector = cbla_data_collect.DataCollector(data_file=data_file)
+        # create new entry folder if creating new log
+        if create_new_log or not os.path.exists(log_dir_path):
+            latest_log_dir = None
+        # add a new session folder if continuing from old log
+        else:
+            # use the latest data log
+            all_log_dir = []
+            for dir in os.listdir(log_dir_path):
+                dir_path = os.path.join(log_dir_path, dir)
+                if os.path.isdir(dir_path):
+                    all_log_dir.append(dir_path)
+
+            if len(all_log_dir) > 0:
+                latest_log_dir = max(all_log_dir, key=os.path.getmtime)
+            else:
+                latest_log_dir = None
+        # create the data_logger
+        self.data_logger = DataLogger(log_dir=CBLA.log_dir, log_header=CBLA.log_header, log_path=latest_log_dir,
+                                      save_freq=5.0, sleep_time=0.25)
+
+        # instantiate the node_list
         self.node_list = OrderedDict()
 
+        # Condition variable indicating that all nodes are created
         self.all_nodes_created = threading.Condition()
 
+        # parameters
         self.mode = mode
-
         self.num_fin = 3
         self.num_light = 3
 
@@ -244,7 +268,7 @@ class CBLA(interactive_system.InteractiveCmd):
             # out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
             out_vars['led'] = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
             light_node = CBLA_Light_Node(RobotClass=cbla_robot.Robot_Light,
-                                         messenger=self.messenger, data_collector=self.data_collector,
+                                         messenger=self.messenger, data_logger=self.data_logger,
                                          cluster_name=teensy_name, node_type='light', node_id=j,
                                          in_vars=in_vars, out_vars=out_vars,
                                          s_keys=('als', 'sma-l', 'sma-r'), s_ranges=((0, 4095), (0, 255), (0, 255)),
@@ -279,7 +303,7 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_left['hf-l'] = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
 
             half_fin_left = CBLA_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
-                                              messenger=self.messenger, data_collector=self.data_collector,
+                                              messenger=self.messenger, data_logger=self.data_logger,
                                               cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='l',
                                               in_vars=in_vars_left, out_vars=out_vars_left,
                                               s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
@@ -299,7 +323,7 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_right['hf-r'] = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
 
             half_fin_right = CBLA_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
-                                               messenger=self.messenger, data_collector=self.data_collector,
+                                               messenger=self.messenger, data_logger=self.data_logger,
                                                cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='r',
                                                in_vars=in_vars_right, out_vars=out_vars_right,
                                                s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
@@ -325,7 +349,7 @@ class CBLA(interactive_system.InteractiveCmd):
             # out_vars_motor['rfx-m'] = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
             out_vars_motor['rfx-m'] = components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref']
             reflex_motor = CBLA_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
-                                            messenger=self.messenger, data_collector=self.data_collector,
+                                            messenger=self.messenger, data_logger=self.data_logger,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='m',
                                             in_vars=in_vars, out_vars=out_vars_motor,
                                             s_keys=('ir-s', 'sma-l', 'sma-r'),
@@ -340,7 +364,7 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_led = OrderedDict()
             out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
             out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
-            reflex_led = CBLA_Reflex_Node(messenger=self.messenger, data_collector=self.data_collector,
+            reflex_led = CBLA_Reflex_Node(messenger=self.messenger, data_logger=self.data_logger,
                                             cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='l',
                                             in_vars=in_vars, out_vars=out_vars_led,
                                             s_keys=('ir-s', 'sma-l', 'sma-r'),
@@ -447,7 +471,7 @@ class CBLA(interactive_system.InteractiveCmd):
                 s_names.append(s_name)
 
 
-            cbla_node = CBLA_Node(messenger=self.messenger, data_collector=self.data_collector,
+            cbla_node = CBLA_Node(messenger=self.messenger, data_logger=self.data_logger,
                                   cluster_name=teensy_name, node_type='random', node_id=node_counter,
                                   in_vars=in_vars, out_vars=out_vars,
                                   s_keys=tuple(s_keys), s_ranges=tuple(s_ranges), s_names=tuple(s_names),
@@ -461,7 +485,7 @@ class CBLA(interactive_system.InteractiveCmd):
     def start_nodes(self):
 
         if not isinstance(self.node_list, dict) or \
-           not isinstance(self.data_collector, cbla_data_collect.DataCollector) or \
+           not isinstance(self.data_logger, DataLogger) or \
            not isinstance(self.messenger, interactive_system.Messenger):
             raise AttributeError("Nodes have not been created properly!")
 
@@ -471,14 +495,14 @@ class CBLA(interactive_system.InteractiveCmd):
         print('System Initialized with %d nodes' % len(self.node_list))
 
         # start the Data Collector
-        self.data_collector.start()
+        self.data_logger.start()
         print('Data Collector initialized.')
 
     # loop that poll user's input from the console
     def termination_input_thread(self):
 
         if not isinstance(self.node_list, dict) or \
-           not isinstance(self.data_collector, cbla_data_collect.DataCollector):
+           not isinstance(self.data_logger, DataLogger):
             raise AttributeError("Nodes have not been created properly!")
 
         input_str = ''
@@ -504,9 +528,9 @@ class CBLA(interactive_system.InteractiveCmd):
             print('%s is terminated.' % node.node_name)
 
         # terminating the data_collection thread
-        self.data_collector.end_data_collection()
-        self.data_collector.join()
-        print("Data Collector is terminated.")
+        self.data_logger.end_data_collection()
+        self.data_logger.join()
+        print("Data Logger is terminated.")
 
         # killing each of the Teensy threads
         for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
@@ -637,7 +661,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = ('c3', ) # None
+    ACTIVE_TEENSY_NAMES = None # ('c3', )
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():

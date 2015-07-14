@@ -1,5 +1,5 @@
 from copy import copy
-from datetime import datetime
+from time import perf_counter
 import threading
 
 from .cbla_robot import *
@@ -79,7 +79,7 @@ class CBLA_Engine(object):
         # save to data packet
 
         data_packet = dict()
-        data_packet['time'] = datetime.now()
+        data_packet[DataLogger.packet_time_key] = perf_counter()
         data_packet['step'] = self.update_count
         data_packet['loop_period'] = clock() - t0
         data_packet['S'] = S2

@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 
-from abstract_node import Var
+from abstract_node import Var, DataLogger
 
 from time import sleep
 import numpy as np
