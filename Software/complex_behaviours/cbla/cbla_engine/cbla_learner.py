@@ -66,7 +66,7 @@ class Learner(object):
         # if action-value is too low, enter idle mode
         is_doing_idle_action = False
         if self.config['idle_mode_enable']:
-            if robot.enter_idle_mode(reward=val_best):
+            if robot.enter_idle_mode(action_value=val_best):
                 if robot.is_doing_idle_action():
                     M1 = robot.get_idle_action()
                     is_doing_idle_action = True

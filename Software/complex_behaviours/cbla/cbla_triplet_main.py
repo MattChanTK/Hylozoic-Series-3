@@ -81,14 +81,6 @@ class CBLA(interactive_system.InteractiveCmd):
             cmd_obj.add_param_change('operation_mode', CP.CBLATestBed_Triplet_FAST.MODE_CBLA2_PRESCRIPTED)
             self.enter_command(cmd_obj)
 
-            # ------ configuration ------
-            # set the Fin on/off periods
-            cmd_obj = interactive_system.command_object(teensy_name, 'fin_high_level')
-            for j in range(self.num_fin):
-                device_header = 'fin_%d_' % j
-                cmd_obj.add_param_change(device_header + 'arm_cycle_on_period', 15)
-                cmd_obj.add_param_change(device_header + 'arm_cycle_off_period', 55)
-            self.enter_command(cmd_obj)
         self.send_commands()
 
         # initially update the Teensys with all the output parameters here
@@ -156,33 +148,6 @@ class CBLA(interactive_system.InteractiveCmd):
                          y='fin_%d_acc_y_state' % fin_id,
                          z='fin_%d_acc_z_state' % fin_id)
 
-        # acc diff
-        acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-x_diff' % (teensy_name, fin_id),
-                                            input_var=acc.out_var['x'], diff_gap=5, smoothing=10,
-                                            step_period=0.1)
-        acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-y_diff' % (teensy_name, fin_id),
-                                            input_var=acc.out_var['y'], diff_gap=5, smoothing=10,
-                                            step_period=0.1)
-        acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.f%d.acc-z_diff' % (teensy_name, fin_id),
-                                            input_var=acc.out_var['z'], diff_gap=5, smoothing=10,
-                                            step_period=0.1)
-
-        # acc running average
-        acc_x_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-x_avg' % (teensy_name, fin_id),
-                                    input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-        acc_y_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-y_avg' % (teensy_name, fin_id),
-                                    input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-        acc_z_avg = Running_Average(self.messenger, node_name='%s.f%d.acc-z_avg' % (teensy_name, fin_id),
-                                    input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
-
-        fin_comps[acc_x_avg.node_name] = acc_x_avg
-        fin_comps[acc_y_avg.node_name] = acc_y_avg
-        fin_comps[acc_z_avg.node_name] = acc_z_avg
-
-        fin_comps[acc_x_diff.node_name] = acc_x_diff
-        fin_comps[acc_y_diff.node_name] = acc_y_diff
-        fin_comps[acc_z_diff.node_name] = acc_z_diff
-
         # 2 SMA wires each
         sma_l = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % fin_id, output='fin_%d_sma_0_level' % fin_id)
         sma_r = Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % fin_id, output='fin_%d_sma_1_level' % fin_id)
@@ -203,12 +168,12 @@ class CBLA(interactive_system.InteractiveCmd):
         reflex_l_driver_ref_temp = Var(0)
         reflex_l_driver = LED_Driver(self.messenger, node_name="%s.f%d.rfx_driver-l" % (teensy_name, fin_id),
                                     led_ref=reflex_l_driver_ref_temp,
-                                    led_out=reflex_l.in_var['output'], step_period=0.001)
+                                    led_out=reflex_l.in_var['output'], step_period=0.0005)
         fin_comps[reflex_l_driver.node_name] = reflex_l_driver
         reflex_m_driver_ref_temp = Var(0)
         reflex_m_driver = LED_Driver(self.messenger, node_name="%s.f%d.rfx_driver-m" % (teensy_name, fin_id),
                                     led_ref=reflex_m_driver_ref_temp,
-                                    led_out=reflex_m.in_var['output'], step_period=0.001)
+                                    led_out=reflex_m.in_var['output'], step_period=0.0005)
         fin_comps[reflex_m_driver.node_name] = reflex_m_driver
 
         # 2 half-fin modules
@@ -284,12 +249,6 @@ class CBLA(interactive_system.InteractiveCmd):
             in_vars['acc-x'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['x']
             in_vars['acc-y'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['y']
             in_vars['acc-z'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['z']
-            in_vars['acc-x_diff'] = components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-y_diff'] = components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-z_diff'] = components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output']
-            in_vars['acc-x_avg'] = components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output']
-            in_vars['acc-y_avg'] = components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output']
-            in_vars['acc-z_avg'] = components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output']
 
             # ===== constructing the left Half-Fin Nodes ====
             in_vars_left = in_vars.copy()
@@ -302,10 +261,10 @@ class CBLA(interactive_system.InteractiveCmd):
                                               messenger=self.messenger, data_logger=self.data_logger,
                                               cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='l',
                                               in_vars=in_vars_left, out_vars=out_vars_left,
-                                              s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
-                                              s_ranges=((0, 4095), (0, 4095), (-6, 6), (-6, 6), (-6, 6)),
+                                              s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y', 'acc-z'),
+                                              s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255), (-255, 255)),
                                               s_names=('fin IR sensor', 'scout IR sensor',
-                                                       'accelerometer (x-diff)', 'accelerometer (y-diff)', 'accelerometer (z-diff)',),
+                                                       'accelerometer (x)', 'accelerometer (y)', 'accelerometer (z)',),
                                               m_keys=('hf-l', ), m_ranges=((0, 300), ), m_names=('Half Fin Input',)
                                               )
 
@@ -322,10 +281,10 @@ class CBLA(interactive_system.InteractiveCmd):
                                                messenger=self.messenger, data_logger=self.data_logger,
                                                cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='r',
                                                in_vars=in_vars_right, out_vars=out_vars_right,
-                                               s_keys=('ir-f', 'ir-s', 'acc-x_diff', 'acc-y_diff', 'acc-z_diff'),
-                                               s_ranges=((0, 4095), (0, 4095), (-6, 6), (-6, 6), (-6, 6)),
+                                               s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y', 'acc-z'),
+                                               s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255), (-255, 255)),
                                                s_names=('fin IR sensor', 'scout IR sensor',
-                                                        'accelerometer (x-diff)', 'accelerometer (y-diff)', 'accelerometer (z-diff)',),
+                                                        'accelerometer (x)', 'accelerometer (y)', 'accelerometer (z)',),
                                                m_keys=('hf-r', ), m_ranges=((0, 300), ), m_names=('half-fin input',)
                                               )
 
@@ -360,15 +319,16 @@ class CBLA(interactive_system.InteractiveCmd):
             out_vars_led = OrderedDict()
             out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
             out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
-            reflex_led = CBLA_Reflex_Node(messenger=self.messenger, data_logger=self.data_logger,
-                                            cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='l',
-                                            in_vars=in_vars, out_vars=out_vars_led,
-                                            s_keys=('ir-s', 'sma-l', 'sma-r'),
-                                            s_ranges=((0, 4095), (0, 255), (0, 255)),
-                                            s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
-                                            m_keys=('rfx-l', ), m_ranges=((0, 255), ), m_names=('reflex led',),
-                                            #robot_config=sample_size
-                                           )
+            reflex_led = CBLA_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
+                                          messenger=self.messenger, data_logger=self.data_logger,
+                                          cluster_name=teensy_name, node_type='reflex', node_id=j, node_version='l',
+                                          in_vars=in_vars, out_vars=out_vars_led,
+                                          s_keys=('ir-s', 'sma-l', 'sma-r'),
+                                          s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                          s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
+                                          m_keys=('rfx-l',), m_ranges=((0, 255),), m_names=('reflex led',),
+                                          # robot_config=sample_size
+                                          )
 
             cbla_nodes[reflex_led.node_name] = reflex_led
 

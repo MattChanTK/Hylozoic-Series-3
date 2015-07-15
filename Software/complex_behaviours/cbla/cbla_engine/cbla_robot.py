@@ -5,7 +5,6 @@ from abstract_node import Var, DataLogger
 from time import sleep
 import numpy as np
 import random
-from collections import deque
 from time import clock
 from collections import deque
 
@@ -39,7 +38,7 @@ class Robot(object):
         self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
 
         # idle mode related variables
-        self.prev_rewards = deque(maxlen=self.config['prev_rewards_deque_size'])
+        self.prev_action_value = deque(maxlen=self.config['prev_values_deque_size'])
         self.in_idle_mode = False
         self.step_in_active_mode = 0
 
@@ -52,10 +51,10 @@ class Robot(object):
         self.config['sample_number'] = 10
         self.config['sample_period'] = 0.1
 
-        self.config['prev_rewards_deque_size'] = 10
-        self.config['activation_reward_delta'] = 0.5
-        self.config['activation_reward'] = 0.05
-        self.config['idling_reward'] = -0.01
+        self.config['prev_values_deque_size'] = 10
+        self.config['activation_value_delta'] = 0.5
+        self.config['activation_value'] = 0.05
+        self.config['idling_value'] = -0.01
         self.config['min_step_before_idling'] = 200
         self.config['idling_prob'] = 0.98
 
@@ -208,24 +207,23 @@ class Robot(object):
 
         return tuple(sample_max)
 
-    def enter_idle_mode(self, reward) -> bool:
+    def enter_idle_mode(self, action_value) -> bool:
 
-        # if it is in idle mode and reward is high enough to exit idle mode
-        if len(self.prev_rewards) > 2:
-            rewards_delta = np.fabs(reward - np.mean(list(self.prev_rewards)))
+        # calculate the change in value from average
+        if len(self.prev_action_value) > 2:
+            values_delta = np.fabs(action_value - np.mean(list(self.prev_action_value)))
         else:
-            rewards_delta = 0
+            values_delta = 0
 
-        # if isinstance(self, Robot_Frond):
-        #     print('Reward: %f;   activation: %f' % (reward, self.config['activation_reward'] ))
-        if self.in_idle_mode and (reward > self.config['activation_reward']
-                                  or rewards_delta > self.config['activation_reward_delta']
+        # if it is in idle mode and action value is high enough to exit idle mode
+        if self.in_idle_mode and (action_value > self.config['activation_value']
+                                  or values_delta > self.config['activation_value_delta']
                                   ):
             self.in_idle_mode = False
             self.step_in_active_mode = 0
 
         # if it is in active more and condition for entering idle mode is reached
-        elif not self.in_idle_mode and reward < self.config['idling_reward'] and self.step_in_active_mode > self.config['min_step_before_idling']:
+        elif not self.in_idle_mode and action_value < self.config['idling_value'] and self.step_in_active_mode > self.config['min_step_before_idling']:
             self.in_idle_mode = True
             self.step_in_active_mode = 0
 
@@ -233,8 +231,8 @@ class Robot(object):
         elif not self.in_idle_mode:
             self.step_in_active_mode += 1
 
-        # save the reward value to memory
-        self.prev_rewards.append(reward)
+        # save the action value to memory
+        self.prev_action_value.append(action_value)
 
         return self.in_idle_mode
 
@@ -257,15 +255,15 @@ class Robot_HalfFin(Robot):
     def _set_default_config(self):
         super(Robot_HalfFin, self)._set_default_config()
 
-        self.config['sample_number'] = 10
-        self.config['sample_period'] = 4.0
+        self.config['sample_number'] = 30
+        self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0 #4.0
 
-        self.config['activation_reward_delta'] = 0.006
-        self.config['activation_reward'] = 0.003
-        self.config['idling_reward'] = 0.00001
-        self.config['min_step_before_idling'] = 15
-        self.config['idling_prob'] = 0.999
+        self.config['activation_value_delta'] = 0.4
+        self.config['activation_value'] = 0.4
+        self.config['idling_value'] = 0.2
+        self.config['min_step_before_idling'] = 3
+        self.config['idling_prob'] = 0.99
 
     def read(self, sample_method=None):
         return super(Robot_HalfFin, self).read(sample_method='average')
@@ -276,15 +274,15 @@ class Robot_Light(Robot):
     def _set_default_config(self):
         super(Robot_Light, self)._set_default_config()
 
-        self.config['sample_number'] = 30
+        self.config['sample_number'] = 15
         self.config['sample_period'] = 1.0
-        self.config['wait_time'] = 0.0 #4.0
+        self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['activation_reward_delta'] = 0.2
-        self.config['activation_reward'] = 0.06
-        self.config['idling_reward'] = 0.01
-        self.config['min_step_before_idling'] = 20
-        self.config['idling_prob'] = 0.999
+        self.config['activation_value_delta'] = 0.8
+        self.config['activation_value'] = 0.8
+        self.config['idling_value'] = 0.25
+        self.config['min_step_before_idling'] = 10
+        self.config['idling_prob'] = 0.99
 
     def read(self, sample_method=None):
 
@@ -296,16 +294,15 @@ class Robot_Reflex(Robot):
     def _set_default_config(self):
         super(Robot_Reflex, self)._set_default_config()
 
-        self.config['sample_number'] = 30
-        self.config['sample_period'] = 1.0
-        self.config['wait_time'] = 0.0 #2.0
+        self.config['sample_number'] = 5
+        self.config['sample_period'] = 0.5
+        self.config['wait_time'] = 0.0  # 2.0
 
-        self.config['prev_rewards_deque_size'] = 10
-        self.config['activation_reward_delta'] = 0.5
-        self.config['activation_reward'] = 0.05
-        self.config['idling_reward'] = -0.01
-        self.config['min_step_before_idling'] = 200
-        self.config['idling_prob'] = 0.98
+        self.config['activation_value_delta'] = 0.4
+        self.config['activation_value'] = 0.4
+        self.config['idling_value'] = 0.2
+        self.config['min_step_before_idling'] = 18
+        self.config['idling_prob'] = 0.995
 
     def read(self, sample_method=None):
         return super(Robot_Reflex, self).read(sample_method='average')
@@ -327,6 +324,7 @@ def normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
         raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
 
     return (orig_val - low_bound)/(hi_bound - low_bound)
+
 
 def unnormalize(norm_val: float, low_bound: float, hi_bound: float) -> float:
     if low_bound >= hi_bound:

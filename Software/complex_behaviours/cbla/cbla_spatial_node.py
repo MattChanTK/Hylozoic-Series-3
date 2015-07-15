@@ -10,13 +10,14 @@ class CBLA_Light_Node(CBLA_Node):
 
         # learner configuration
         learner_config = dict()
-        learner_config['split_thres'] = 120
+        learner_config['split_thres'] = 60
         learner_config['split_thres_growth_rate'] = 1.5
         learner_config['split_lock_count_thres'] = 10
-        learner_config['mean_err_thres'] = 0.025
-        learner_config['reward_smoothing'] = 1
+        learner_config['split_quality_decay'] = 0.0
+        learner_config['mean_err_thres'] = 0.3
+        learner_config['reward_smoothing'] = 3
         learner_config['kga_delta'] = 2
-        learner_config['kga_tau'] = 8
+        learner_config['kga_tau'] = 5
 
         return learner_config
 
@@ -29,11 +30,12 @@ class CBLA_HalfFin_Node(CBLA_Node):
         learner_config['split_thres'] = 10
         learner_config['split_thres_growth_rate'] = 1.2
         learner_config['split_lock_count_thres'] = 5
-        learner_config['mean_err_thres'] = 0.015
+        learner_config['split_quality_decay'] = 0.0
+        learner_config['mean_err_thres'] = 0.6
         learner_config['reward_smoothing'] = 1
         learner_config['kga_delta'] = 1
         learner_config['kga_tau'] = 2
-        learner_config['idle_mode_enable'] = False
+        learner_config['idle_mode_enable'] = True
 
         return learner_config
 
@@ -46,9 +48,10 @@ class CBLA_Reflex_Node(CBLA_Node):
         learner_config['split_thres'] = 120
         learner_config['split_thres_growth_rate'] = 1.5
         learner_config['split_lock_count_thres'] = 10
-        learner_config['mean_err_thres'] = 0.025
-        learner_config['reward_smoothing'] = 1
+        learner_config['split_quality_decay'] = 0.0
+        learner_config['mean_err_thres'] = 0.2
+        learner_config['reward_smoothing'] = 10
         learner_config['kga_delta'] = 2
-        learner_config['kga_tau'] = 8
+        learner_config['kga_tau'] = 6
 
         return learner_config

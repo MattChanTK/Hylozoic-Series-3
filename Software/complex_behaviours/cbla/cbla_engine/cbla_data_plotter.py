@@ -44,7 +44,7 @@ class CBLA_DataPlotter(DataPlotter):
 
                     # configure the plot
                     plot_config = dict()
-                    plot_config['xlabel'] = 'time (minute)'
+                    plot_config['xlabel'] = 'time (second)'
                     plot_config['ylabel'] = 'value'
                     plot_config['title'] = '%s vs. time plot' % data_type
 
@@ -80,7 +80,7 @@ class CBLA_DataPlotter(DataPlotter):
 
                     # configure the plot
                     plot_config = dict()
-                    plot_config['xlabel'] = 'time (minute)'
+                    plot_config['xlabel'] = 'time (second)'
                     plot_config['ylabel'] = 'value'
                     plot_config['title'] = '%s vs. time plot' % data_type
 
