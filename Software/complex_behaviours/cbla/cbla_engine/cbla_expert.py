@@ -6,6 +6,7 @@ from collections import defaultdict
 from collections import deque
 
 from sklearn import linear_model
+import numpy as np
 
 from .cbla_region_splitter import RegionSplitter_oudeyer as RegionSplitter
 
@@ -126,7 +127,9 @@ class Expert():
 
     def train(self):
         try:
+
             self.predict_model.fit(self.training_data, self.training_label)
+            # print(self.predict_model.coef_)
         except ValueError:
             pass
 
@@ -140,9 +143,15 @@ class Expert():
         # this is leaf node
         if self.left is None and self.right is None:
             try:
-                S1 = tuple(self.predict_model.predict(S+M))
+                S1 = self.predict_model.predict(S+M)
             except AttributeError:
                 S1 = S
+
+            if isinstance(S1, np.ndarray):
+                S1 = tuple(S1[0])
+            else:
+                S1 = tuple(S1)
+
             return S1
 
         # Cases when only one of the child is NONE

@@ -259,11 +259,11 @@ class Robot_HalfFin(Robot):
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0 #4.0
 
-        self.config['activation_value_delta'] = 0.4
-        self.config['activation_value'] = 0.4
-        self.config['idling_value'] = 0.2
-        self.config['min_step_before_idling'] = 3
-        self.config['idling_prob'] = 0.99
+        self.config['activation_value_delta'] = 0.1
+        self.config['activation_value'] = 0.05
+        self.config['idling_value'] = 0.01
+        self.config['min_step_before_idling'] = 2
+        self.config['idling_prob'] = 0.90
 
     def read(self, sample_method=None):
         return super(Robot_HalfFin, self).read(sample_method='average')
@@ -278,11 +278,11 @@ class Robot_Light(Robot):
         self.config['sample_period'] = 1.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['activation_value_delta'] = 0.8
-        self.config['activation_value'] = 0.8
-        self.config['idling_value'] = 0.25
-        self.config['min_step_before_idling'] = 10
-        self.config['idling_prob'] = 0.99
+        self.config['activation_value_delta'] = 0.2
+        self.config['activation_value'] = 0.1
+        self.config['idling_value'] = 0.01
+        self.config['min_step_before_idling'] = 5
+        self.config['idling_prob'] = 0.95
 
     def read(self, sample_method=None):
 
@@ -298,11 +298,11 @@ class Robot_Reflex(Robot):
         self.config['sample_period'] = 0.5
         self.config['wait_time'] = 0.0  # 2.0
 
-        self.config['activation_value_delta'] = 0.4
-        self.config['activation_value'] = 0.4
-        self.config['idling_value'] = 0.2
-        self.config['min_step_before_idling'] = 18
-        self.config['idling_prob'] = 0.995
+        self.config['activation_value_delta'] = 0.12
+        self.config['activation_value'] = 0.06
+        self.config['idling_value'] = 0.01
+        self.config['min_step_before_idling'] = 10
+        self.config['idling_prob'] = 0.99
 
     def read(self, sample_method=None):
         return super(Robot_Reflex, self).read(sample_method='average')
