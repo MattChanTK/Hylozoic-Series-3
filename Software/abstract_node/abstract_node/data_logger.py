@@ -123,10 +123,13 @@ class DataLogger(threading.Thread):
     def run(self):
 
         last_saved_time = perf_counter()
+        mass_cleaning = False
         while not self.__program_terminating or not self.__packet_queue.empty():
 
             # saving run-time data to memory
             if not self.__packet_queue.empty():
+
+                # print(self.__packet_queue.qsize())
                 # get packet from queue
                 node_name, packet_data = self.__packet_queue.get_nowait()
 
@@ -153,7 +156,6 @@ class DataLogger(threading.Thread):
 
             # overwriting persistence info to disk
             if not self.__info_queue.empty():
-
                 node_name, info_data = self.__info_queue.get_nowait()
                 try:
                     info_type = info_data[self.info_type_key]
@@ -161,9 +163,17 @@ class DataLogger(threading.Thread):
                         raise TypeError()
                 except (KeyError, TypeError):
                     info_type = self.info_default_type
-
                 # save the info to disk
                 self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
+
+            # periodic mass clean up
+            if not mass_cleaning and (self.__packet_queue.qsize() > 4000 or self.__info_queue.qsize() > 800):
+                mass_cleaning = True
+                # print('mass_cleaning')
+            # end mass cleaning when both queues are clean
+            elif mass_cleaning and self.__info_queue.empty() and self.__packet_queue.empty():
+                # print('mass_cleaning_done')
+                mass_cleaning = False
 
             # save data blocks to disk periodically
             if perf_counter() - last_saved_time > self.save_freq and not self.__program_terminating:
@@ -171,8 +181,13 @@ class DataLogger(threading.Thread):
                 last_saved_time = perf_counter()
 
             # don't sleep if program is terminating
-            if not self.__program_terminating:
+            if self.__program_terminating:
+                pass
+            elif mass_cleaning:
+                sleep(0.00001)
+            else:
                 sleep(self.sleep_time)
+
 
         # save all remaining data in buffer to disk
         self.__save_to_shelf()
