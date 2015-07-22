@@ -17,8 +17,8 @@ class CBLA_DataPlotter(DataPlotter):
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(tentacle_plot_dim=(2, 1, 0), protocell_plot_dim=(2, 0, 0))
-        self.plot_models(tentacle_plot_dim=(2, 1, 0), protocell_plot_dim=(2, 0, 0))
+        self.plot_regions(plot_dim=(3, 0))
+        self.plot_models(_plot_dim=(3, 0))
 
     def plot_histories(self):
 

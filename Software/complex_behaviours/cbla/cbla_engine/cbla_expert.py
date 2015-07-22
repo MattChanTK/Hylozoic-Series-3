@@ -1,14 +1,15 @@
 __author__ = 'Matthew'
 
 import math
-from copy import copy
+from copy import copy, deepcopy
 from collections import defaultdict
 from collections import deque
 
 from sklearn import linear_model
 import numpy as np
-
-from .cbla_region_splitter import RegionSplitter_oudeyer as RegionSplitter
+# import warnings
+# warnings.simplefilter("always")
+from .cbla_region_splitter import RegionSplitter as RegionSplitter
 
 
 class Expert():
@@ -18,12 +19,13 @@ class Expert():
         # default expert configuration
         self.config = defaultdict(int)
         self.config['reward_smoothing'] = 1
-        self.config['split_thres'] = 600
-        self.config['split_thres_growth_rate'] = 1.5
-        self.config['split_lock_count_thres'] = 250
-        self.config['split_quality_decay'] = 0.5
-        self.config['mean_err_thres'] = 0.015
-        self.config['mean_err_0'] = 0.0
+        self.config['split_thres'] = 40
+        self.config['split_thres_growth_rate'] = 1.0
+        self.config['split_lock_count_thres'] = 1
+        self.config['split_quality_thres_0'] = 0.0
+        self.config['split_quality_decay'] = 1.0
+        self.config['mean_err_thres'] = 0.0
+        self.config['mean_err_0'] = 1.0
         self.config['action_value_0'] = 0.0
         self.config['reward_smoothing'] = 1
         self.config['learning_rate'] = 0.25
@@ -77,7 +79,7 @@ class Expert():
         # the splitting thresholds
         self.split_thres = self.config['split_thres']
         self.split_thres_growth_rate = self.config['split_thres_growth_rate']
-        self.split_quality_thres = -float('inf')
+        self.split_quality_thres = self.config['split_quality_thres_0']
         self.split_quality_decay = self.config['split_quality_decay']
         self.mean_error_thres = self.config['mean_err_thres']
         self.split_lock_count = 0
@@ -126,8 +128,19 @@ class Expert():
             return self.left.append(SM, S1, S1_predicted)
 
     def train(self):
-        try:
+        # number of samples needs to be at least the number of features
+        num_sample = len(self.training_data)
 
+        # no data
+        if num_sample < 1:
+            return
+
+        # not enough features
+        num_fea = len(self.training_data[0])
+        if num_sample < num_fea:
+            return
+
+        try:
             self.predict_model.fit(self.training_data, self.training_label)
             # print(self.predict_model.coef_)
         except ValueError:
@@ -165,8 +178,6 @@ class Expert():
             return self.left.predict(S,M)
 
     def is_splitting(self):
-        split_threshold = self.split_thres
-        mean_error_threshold = self.mean_error_thres  # -float('inf')
 
         try:
             if self.split_lock_count > 0:
@@ -174,8 +185,8 @@ class Expert():
                 return False
         except AttributeError:
             pass
-        if len(self.training_data) > split_threshold and \
-            (self.mean_error > mean_error_threshold):# or self.calc_expected_reward() < expected_reward_threshold):
+        if len(self.training_data) > self.split_thres and \
+            (self.mean_error > self.mean_error_thres):
             return True
         return False
 
@@ -188,9 +199,13 @@ class Expert():
                 # print("It's splitting")
                 # instantiate the splitter
                 self.region_splitter = RegionSplitter(self.training_data, self.training_label)
+                # don't split if the split quality is low
+                if self.region_splitter.split_quality < self.split_quality_thres:
+                    self.split_lock_count = self.split_lock_count_thres
+                    return
 
                 # instantiate the left and right expert
-                child_config = copy(self.config)
+                child_config = self.config.copy()
                 child_config['split_thres'] = self.split_thres*self.split_thres_growth_rate
                 child_config['split_quality_decay'] = self.split_quality_decay*(2-self.split_quality_decay)
 
@@ -204,15 +219,12 @@ class Expert():
                     if self.region_splitter.classify(self.training_data[i]):
                         self.right.training_data.append(self.training_data[i])
                         self.right.training_label.append(self.training_label[i])
-                        # self.right.append(self.training_data[i], self.training_label[i])
                     else:
                         self.left.training_data.append(self.training_data[i])
                         self.left.training_label.append(self.training_label[i])
-                        #self.left.append(self.training_data[i], self.training_label[i])
 
-                # if either of them is empty  or if the split doesn't improve prediction error (low quality
-                if len(self.left.training_data) == 0 or len(self.right.training_data) == 0 \
-                        or self.region_splitter.split_quality < self.split_quality_thres:
+                # if either of them is empty (which shouldn't happen)
+                if len(self.left.training_data) <= 1 or len(self.right.training_data) <= 1:
                     # do not split
                     self.right = None
                     self.left = None
@@ -220,7 +232,6 @@ class Expert():
                     # print("split cancelled")
                     self.split_lock_count = self.split_lock_count_thres
                     return
-
 
                 # transferring "knowledge" to child nodes
                 self.right.train()
