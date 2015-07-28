@@ -9,7 +9,7 @@ import os
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
 import shelve
-from data_save_process import DataSaver
+from abstract_node.data_save_process import DataSaver
 
 
 class DataLogger(threading.Thread):
