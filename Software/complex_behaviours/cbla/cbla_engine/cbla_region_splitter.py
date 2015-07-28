@@ -3,6 +3,7 @@ import numpy as np
 import math
 import bisect
 import statistics as stat
+from time import perf_counter
 
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
@@ -21,13 +22,14 @@ class RegionSplitter():
 
     def __init__(self, data, label):
 
+        t0 = perf_counter()
         self.cut_dim = 0
         self.cut_val = 0
 
-        num_candidates = 50
-
         data_dim_num = len(data[0])
         label_dim_num = len(label[0])
+
+        num_candidates = data_dim_num*10
 
         sample = list(zip(data, label))
 
@@ -104,7 +106,9 @@ class RegionSplitter():
             # the best split quality
             self.__split_quality = best_cut_arr[0][0]
         #print(self.__split_quality, ', ')
-
+        split_clock = perf_counter() - t0
+        if split_clock > 1:
+            print(split_clock)
         # just cut in half
         # self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
 
