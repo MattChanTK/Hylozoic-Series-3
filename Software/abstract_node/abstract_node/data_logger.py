@@ -178,8 +178,9 @@ class DataLogger(threading.Thread):
                                                     info_data))
                 # self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
 
+            # print(self.__packet_queue.qsize() )
             # periodic mass clean up
-            if not mass_cleaning and (self.__packet_queue.qsize() > 200 or self.__info_queue.qsize() > 20):
+            if not mass_cleaning and (self.__packet_queue.qsize() > 2000 or self.__info_queue.qsize() > 20):
                 mass_cleaning = True
                 # print('mass_cleaning')
             # end mass cleaning when both queues are clean
@@ -249,8 +250,7 @@ class DataLogger(threading.Thread):
         return session_shelf[self.encode_struct(*struct_labels)]
 
     def __save_to_shelf(self):
-
-        print("Remaining Data: ", len(self.__data_buffer))
+        # print("Remaining Data: ", len(self.__data_buffer))
         for data_block_key, data_block in self.__data_buffer.items():
 
             if data_block and len(data_block) > 0:

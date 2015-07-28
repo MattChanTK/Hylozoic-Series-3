@@ -55,7 +55,7 @@ class CBLA(interactive_system.InteractiveCmd):
                 latest_log_dir = None
         # create the data_logger
         self.data_logger = DataLogger(log_dir=CBLA.log_dir, log_header=CBLA.log_header, log_path=latest_log_dir,
-                                      save_freq=60.0, sleep_time=0.25)
+                                      save_freq=2.0, sleep_time=0.25)
 
         # instantiate the node_list
         self.node_list = OrderedDict()
@@ -617,7 +617,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES =  ('c1', 'c2', 'c3', 'c4')
+    ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4')
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():
@@ -636,7 +636,6 @@ if __name__ == "__main__":
                     teensy_manager.kill_teensy_thread(teensy_name)
 
         # check if all the mandatory ones are still there
-        all_teensy_names = list(teensy_manager.get_teensy_name_list())
         if isinstance(MANDATORY_TEENSY_NAMES, tuple):
             for teensy_name in MANDATORY_TEENSY_NAMES:
                 if teensy_name not in all_teensy_names:
@@ -657,8 +656,8 @@ if __name__ == "__main__":
         behaviours.all_nodes_created.release()
 
         # initialize the gui
-        # hmi = tk_gui.Master_Frame()
-        # hmi_init(hmi, behaviours.messenger, behaviours.node_list)
+        hmi = tk_gui.Master_Frame()
+        hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
         sleep(5.0)
         input("Enter any character to terminate program...")

@@ -2,6 +2,7 @@ __author__ = 'Matthew'
 
 from multiprocessing import Process, Queue, Event
 import multiprocessing
+import queue
 import shelve
 from time import sleep, perf_counter
 import logging
@@ -24,9 +25,15 @@ class DataSaver(Process):
         while (not self.__program_terminating.is_set()) or \
               (self.__program_terminating.is_set() and not self.__data_queue.empty()):
 
-           if not self.__data_queue.empty():
-                block_key, block_data = self.__data_queue.get_nowait()
+            # print('queue_size ', self.__data_queue.qsize())
+            try:
+                block_key, block_data = self.__data_queue.get(block=True, timeout=2)
+            except queue.Empty:
+                pass
+            else:
                 self.shelf[block_key] = block_data
+
+            sleep(0.0001)
 
         self.shelf.close()
 
