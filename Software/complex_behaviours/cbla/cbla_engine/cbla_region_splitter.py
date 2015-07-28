@@ -29,7 +29,7 @@ class RegionSplitter():
         data_dim_num = len(data[0])
         label_dim_num = len(label[0])
 
-        num_candidates = data_dim_num*10
+        num_candidates = 10
 
         sample = list(zip(data, label))
 
@@ -61,7 +61,7 @@ class RegionSplitter():
                     # pick a random value
                     max_val = sorted_dim_data[-1]
                     min_val = sorted_dim_data[0]
-                    cut_val = random.choice(np.linspace(min_val, max_val, num=100))
+                    cut_val = random.uniform(min_val, max_val)
 
                     # calculate the cut index
                     cut_idx = bisect.bisect_left(sorted_dim_data, cut_val)
