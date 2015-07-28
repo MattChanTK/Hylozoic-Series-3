@@ -33,7 +33,7 @@ class CBLA_Base_Node(Node):
         self.cbla_learner = None
 
         # parameters
-        self.state_save_period = 20.0 # seconds
+        self.state_save_period = 30.0 # seconds
 
     def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
 
@@ -48,7 +48,7 @@ class CBLA_Base_Node(Node):
 
         # load previous learner expert
         past_state = None
-        current_session = self.data_logger.session_shelf[DataLogger.session_id_key]
+        current_session = self.data_logger.curr_session
         if current_session > 1:
             try:
                 past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)

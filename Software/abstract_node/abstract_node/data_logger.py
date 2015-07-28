@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
 import shelve
+from data_save_process import DataSaver
 
 
 class DataLogger(threading.Thread):
@@ -86,14 +87,19 @@ class DataLogger(threading.Thread):
         log_index_file.close()
 
         # open the shelve for the session
-        self.session_shelf = shelve.open(session_path, protocol=3, writeback=False)
-        self.session_shelf[self.session_id_key] = curr_session
+        session_shelf = shelve.open(session_path, protocol=3, writeback=False)
+        session_shelf[self.session_id_key] = curr_session
+        self.curr_session = curr_session
+
 
         # register the start time of the session
         self.clock0 = perf_counter()
         self.datetime0 = datetime.now()
-        self.session_shelf[self.session_datetime0_key] = self.datetime0
-        self.session_shelf[self.session_clock0_key] = self.clock0
+        session_shelf[self.session_datetime0_key] = self.datetime0
+        session_shelf[self.session_clock0_key] = self.clock0
+
+        # close the session's shelf
+        session_shelf.close()
 
         # queue for packet to come in
         self.__packet_queue = Queue()
@@ -106,6 +112,10 @@ class DataLogger(threading.Thread):
 
         # variables
         self.__program_terminating = False
+
+        # data saver process
+        self.data_saver = DataSaver(shelve_path=session_path)
+        self.data_saver.start()
 
         # parameters
         if 'sleep_time' in kwarg and isinstance(kwarg['sleep_time'], (float, int)):
@@ -164,10 +174,12 @@ class DataLogger(threading.Thread):
                 except (KeyError, TypeError):
                     info_type = self.info_default_type
                 # save the info to disk
-                self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
+                self.data_saver.enqueue_data_block((self.encode_struct(node_name, info_type),
+                                                    info_data))
+                # self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
 
             # periodic mass clean up
-            if not mass_cleaning and (self.__packet_queue.qsize() > 4000 or self.__info_queue.qsize() > 800):
+            if not mass_cleaning and (self.__packet_queue.qsize() > 200 or self.__info_queue.qsize() > 20):
                 mass_cleaning = True
                 # print('mass_cleaning')
             # end mass cleaning when both queues are clean
@@ -188,12 +200,13 @@ class DataLogger(threading.Thread):
             else:
                 sleep(self.sleep_time)
 
-
         # save all remaining data in buffer to disk
         self.__save_to_shelf()
 
-        # close the session's shelf
-        self.session_shelf.close()
+        # terminate data_saver
+        self.data_saver.terminate_program()
+        # wait for data_saver to finish
+        self.data_saver.join()
 
         print("Data Logger saved all data to disk.")
 
@@ -236,6 +249,8 @@ class DataLogger(threading.Thread):
         return session_shelf[self.encode_struct(*struct_labels)]
 
     def __save_to_shelf(self):
+
+        print("Remaining Data: ", len(self.__data_buffer))
         for data_block_key, data_block in self.__data_buffer.items():
 
             if data_block and len(data_block) > 0:
@@ -244,8 +259,9 @@ class DataLogger(threading.Thread):
                 # convert CPU time to datetime then to a string
                 block_time_str = self.__clock2datetime(block_timestamp).strftime(self.datetime_str_fmt_us)
                 # save to the shelf
-                self.session_shelf[self.encode_struct(data_block_key, block_time_str)] = data_block
-
+                # self.session_shelf[self.encode_struct(data_block_key, block_time_str)] = data_block
+                self.data_saver.enqueue_data_block((self.encode_struct(data_block_key, block_time_str),
+                                                    data_block))
         # clear data_buffer
         self.__data_buffer = defaultdict(list)
 

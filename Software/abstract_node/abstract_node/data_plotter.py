@@ -86,7 +86,6 @@ class DataPlotter(object):
 
                         info_dict = node_data[info_type]
                         self.state_info[node_name].update(info_dict)
-                        print(info_dict)
 
 
     def plot(self):
