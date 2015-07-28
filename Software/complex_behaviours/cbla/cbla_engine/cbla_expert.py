@@ -4,6 +4,7 @@ import math
 from copy import copy, deepcopy
 from collections import defaultdict
 from collections import deque
+from time import perf_counter
 
 from sklearn import linear_model
 import numpy as np
@@ -112,7 +113,7 @@ class Expert():
                 self.rewards_history = self.rewards_history[-self.rewards_smoothing:]
                 self.update_action_value()
 
-            # #split if necessary
+            # split if necessary
             self.split()
 
             return self.expert_id
@@ -199,6 +200,7 @@ class Expert():
                 # print("It's splitting")
                 # instantiate the splitter
                 self.region_splitter = RegionSplitter(self.training_data, self.training_label)
+
                 # don't split if the split quality is low
                 if self.region_splitter.split_quality < self.split_quality_thres:
                     self.split_lock_count = self.split_lock_count_thres

@@ -2,6 +2,7 @@ import random
 import numpy as np
 import math
 import bisect
+import statistics as stat
 
 from sklearn.cluster import KMeans
 from sklearn.cluster import Ward
@@ -33,13 +34,14 @@ class RegionSplitter():
         # storage while calculating the best
         best_score = -float("inf")
         # [group_size_diff, var_reduction, cut_dim, cut_val]
-        best_cut_arr = [(0, 0 , self.cut_dim, self.cut_val)]
+        best_cut_arr = [(-float("inf"), self.cut_dim, self.cut_val)]
 
-        # calculate the magnitude of the overall variance
-        overall_var_mag = np.linalg.norm(np.var(label, axis=0))
+        # calculate the minimum of the overall variance
+        #TODO figure out the best way to compare  multi-D variance
+        overall_var = min(np.var(label, axis=0, ddof=1))
 
         # if all are the same, split quality is -inf (shouldn't be split at all)
-        if overall_var_mag <= 0:
+        if overall_var <= 0:
             self.__split_quality = -float('inf')
 
         else:
@@ -67,31 +69,27 @@ class RegionSplitter():
                     if len(groups[0]) < data_dim_num or len(groups[1]) < data_dim_num:
                         continue
 
-                    # calculate the group size difference
-                    # (want this to be as small as possible)
-                    group_size_diff = ((len(groups[0]) - len(groups[1]))/ (len(groups[0]) + len(groups[1])))**2
-
-                    variance_mags = []
+                    variances = []
                     for group in groups:
-                        # calculate the magnitude of in-group variance
-                        variance_mags.append(np.linalg.norm(np.var(group, axis=0)))
+                        # calculate the in-group variance
+                        variances.append(min(np.var(group, axis=0, ddof=1)))
                     # take the smallest variance
-                    min_variance_mag = min(variance_mags)
+                    avg_var = stat.mean(variances)
 
-                    # calculate the variance_reduction
-                    var_reduction = 1 - min_variance_mag/overall_var_mag
-
-                    # negate the relative variance and plus 1
+                    # negate the variance and plus 1
                     # (we want low relative variance worst should be 1)
-                    score = 0.5*var_reduction + 0.1*(1 - group_size_diff)
+                    score = -avg_var
+
+                    # split quality is relative variance to the original
+                    quality = 1 - avg_var/overall_var
 
                     if score > best_score:
 
                         best_score = score
-                        best_cut_arr = [(group_size_diff, var_reduction, i, cut_val),]
+                        best_cut_arr = [(quality, i, cut_val),]
 
                     elif score == best_score:
-                        best_cut_arr.append((group_size_diff, var_reduction, i, cut_val))
+                        best_cut_arr.append((quality, i, cut_val))
 
                     else:
                         pass
@@ -100,11 +98,13 @@ class RegionSplitter():
             best_cut_arr = sorted(best_cut_arr, key=lambda x: x[0])
 
             # the best cut_dim is the one with the smallest group_size_diff
-            self.cut_dim = best_cut_arr[0][2]
-            self.cut_val = best_cut_arr[0][3]
+            self.cut_dim = best_cut_arr[0][1]
+            self.cut_val = best_cut_arr[0][2]
 
-            # the split quality is the variance reduction
-            self.__split_quality = best_cut_arr[0][1]
+            # the best split quality
+            self.__split_quality = best_cut_arr[0][0]
+        #print(self.__split_quality, ', ')
+
         # just cut in half
         # self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
 
