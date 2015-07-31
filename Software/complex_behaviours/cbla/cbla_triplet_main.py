@@ -55,7 +55,7 @@ class CBLA(interactive_system.InteractiveCmd):
                 latest_log_dir = None
         # create the data_logger
         self.data_logger = DataLogger(log_dir=CBLA.log_dir, log_header=CBLA.log_header, log_path=latest_log_dir,
-                                      save_freq=2.0, sleep_time=0.25)
+                                      save_freq=60.0, sleep_time=0.20)
 
         # instantiate the node_list
         self.node_list = OrderedDict()
@@ -617,7 +617,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4')
+    ACTIVE_TEENSY_NAMES = None #('c1', 'c2', 'c3', 'c4')
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():
