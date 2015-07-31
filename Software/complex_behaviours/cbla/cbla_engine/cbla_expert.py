@@ -32,7 +32,7 @@ class Expert():
         self.config['learning_rate'] = 0.25
         self.config['kga_delta'] = 10
         self.config['kga_tau'] = 30
-        self.config['max_training_data_num'] = 300
+        self.config['max_training_data_num'] = 500
         self.config['prediction_model'] = linear_model.LinearRegression()
 
         # custom configurations
