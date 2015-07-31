@@ -4,19 +4,7 @@ import math
 import bisect
 import statistics as stat
 from time import perf_counter
-
-from sklearn.cluster import KMeans
-from sklearn.cluster import Ward
-#from sklearn.decomposition import PCA
-from sklearn.decomposition import KernelPCA as PCA
-from sklearn.decomposition import FastICA as ICA
-from sklearn.neighbors import KNeighborsClassifier as knn
-from sklearn.svm import SVC
-from sklearn.svm import SVR
-from sklearn.cross_validation import KFold
-from sklearn import metrics
-from sklearn import linear_model
-
+from sklearn.decomposition import PCA
 
 class RegionSplitter():
 
@@ -31,16 +19,18 @@ class RegionSplitter():
 
         num_candidates = 10
 
-        sample = list(zip(data, label))
+        # transform the label using PCA
+        label_tf = PCA(whiten=True).fit_transform(np.array(label))
+
+        sample = list(zip(data, label_tf))
 
         # storage while calculating the best
         best_score = -float("inf")
         # [group_size_diff, var_reduction, cut_dim, cut_val]
         best_cut_arr = [(-float("inf"), self.cut_dim, self.cut_val)]
 
-        # calculate the minimum of the overall variance
-        #TODO figure out the best way to compare  multi-D variance
-        overall_var = min(np.var(label, axis=0, ddof=1))
+        # calculate the norm of the overall variance
+        overall_var = np.linalg.norm(np.var(label_tf, axis=0, ddof=1))
 
         # if all are the same, split quality is -inf (shouldn't be split at all)
         if overall_var <= 0:
@@ -72,11 +62,13 @@ class RegionSplitter():
                         continue
 
                     variances = []
+                    weights = []
                     for group in groups:
                         # calculate the in-group variance
-                        variances.append(min(np.var(group, axis=0, ddof=1)))
-                    # take the smallest variance
-                    avg_var = stat.mean(variances)
+                        variances.append(np.linalg.norm(np.var(group, axis=0, ddof=1)))
+                        weights.append(len(group))
+                    # take the mean variance
+                    avg_var = np.average(variances, weights=weights)
 
                     # negate the variance and plus 1
                     # (we want low relative variance worst should be 1)
