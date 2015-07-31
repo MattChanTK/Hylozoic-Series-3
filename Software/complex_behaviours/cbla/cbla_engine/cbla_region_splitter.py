@@ -18,6 +18,7 @@ class RegionSplitter():
 
         num_candidates = 6
         zoom_range = 1
+        max_zoom_num = 5
 
         data_num = len(data)
         # if too few data (need enough so that the subgroups can still not be under-fit)
@@ -63,8 +64,9 @@ class RegionSplitter():
 
                 # start with the evenly spaced cut_idx_arr
                 cut_idx_arr = cut_idx_arr_0
+                zoom_num = 0
 
-                while len(cut_idx_arr) >= 1:
+                while len(cut_idx_arr) >= 1 or zoom_num < max_zoom_num:
 
                     # storage while calculating the best
                     dim_best_score = -float("inf")
@@ -109,6 +111,7 @@ class RegionSplitter():
                         high_cut_idx = cut_idx_arr[min(len(cut_idx_arr) - 1, dim_best_k + zoom_range)]
 
                         cut_idx_arr = sorted(tuple(set(np.linspace(low_cut_idx, high_cut_idx, num_candidates).astype(int))))
+                        zoom_num += 1
 
                 # check how this dimension stacks up against others
                 if dim_best_score > best_score:
