@@ -16,9 +16,9 @@ class RegionSplitter():
         data_dim_num = len(data[0])
         label_dim_num = len(label[0])
 
-        num_candidates = 6
+        num_candidates = 5
         zoom_range = 1
-        max_zoom_num = 5
+        max_zoom_num = 4
 
         data_num = len(data)
         # if too few data (need enough so that the subgroups can still not be under-fit)
@@ -66,7 +66,7 @@ class RegionSplitter():
                 cut_idx_arr = cut_idx_arr_0
                 zoom_num = 0
 
-                while len(cut_idx_arr) >= 1 or zoom_num < max_zoom_num:
+                while len(cut_idx_arr) >= 1 and zoom_num < max_zoom_num:
 
                     # storage while calculating the best
                     dim_best_score = -float("inf")
