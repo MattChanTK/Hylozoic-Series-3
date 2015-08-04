@@ -107,43 +107,47 @@ class System_Identification(interactive_system.InteractiveCmd):
                 self.node_list[reflex_0.node_name] = reflex_0
                 self.node_list[reflex_1.node_name] = reflex_1
 
-                # acc diff
-                acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_x_diff' % (teensy, j),
-                                                    input_var=acc.out_var['x'], diff_gap=15, smoothing=30,
-                                                    step_period=0.1)
-                acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_y_diff' % (teensy, j),
-                                                    input_var=acc.out_var['y'], diff_gap=15, smoothing=30,
-                                                    step_period=0.1)
-                acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_z_diff' % (teensy, j),
-                                                    input_var=acc.out_var['z'], diff_gap=15, smoothing=30,
-                                                    step_period=0.1)
-
-                self.node_list[acc_x_diff.node_name] = acc_x_diff
-                self.node_list[acc_y_diff.node_name] = acc_y_diff
-                self.node_list[acc_z_diff.node_name] = acc_z_diff
-
-                # acc running average
-                acc_x_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_x_avg' % (teensy, j),
-                                            input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
-                acc_y_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_y_avg' % (teensy, j),
-                                            input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
-                acc_z_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_z_avg' % (teensy, j),
-                                            input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
-
-                self.node_list[acc_x_avg.node_name] = acc_x_avg
-                self.node_list[acc_y_avg.node_name] = acc_y_avg
-                self.node_list[acc_z_avg.node_name] = acc_z_avg
+                # # acc diff
+                # acc_x_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_x_diff' % (teensy, j),
+                #                                     input_var=acc.out_var['x'], diff_gap=15, smoothing=30,
+                #                                     step_period=0.1)
+                # acc_y_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_y_diff' % (teensy, j),
+                #                                     input_var=acc.out_var['y'], diff_gap=15, smoothing=30,
+                #                                     step_period=0.1)
+                # acc_z_diff = Pseudo_Differentiation(self.messenger, node_name='%s.fin_%d.acc_z_diff' % (teensy, j),
+                #                                     input_var=acc.out_var['z'], diff_gap=15, smoothing=30,
+                #                                     step_period=0.1)
+                #
+                # self.node_list[acc_x_diff.node_name] = acc_x_diff
+                # self.node_list[acc_y_diff.node_name] = acc_y_diff
+                # self.node_list[acc_z_diff.node_name] = acc_z_diff
+                #
+                # # acc running average
+                # acc_x_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_x_avg' % (teensy, j),
+                #                             input_var=acc.out_var['x'], avg_window=10, step_period=0.1)
+                # acc_y_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_y_avg' % (teensy, j),
+                #                             input_var=acc.out_var['y'], avg_window=10, step_period=0.1)
+                # acc_z_avg = Running_Average(self.messenger, node_name='%s.fin_%d.acc_z_avg' % (teensy, j),
+                #                             input_var=acc.out_var['z'], avg_window=10, step_period=0.1)
+                #
+                # self.node_list[acc_x_avg.node_name] = acc_x_avg
+                # self.node_list[acc_y_avg.node_name] = acc_y_avg
+                # self.node_list[acc_z_avg.node_name] = acc_z_avg
 
                 # collecting data
+                data_variables['%s.fin_%d.ir_0' % (teensy, j)] = ir_sensor_0.out_var['input']
+                data_variables['%s.fin_%d.ir_1' % (teensy, j)] = ir_sensor_1.out_var['input']
+
                 data_variables['%s.fin_%d.acc_x' % (teensy, j)] = acc.out_var['x']
                 data_variables['%s.fin_%d.acc_y' % (teensy, j)] = acc.out_var['y']
                 data_variables['%s.fin_%d.acc_z' % (teensy, j)] = acc.out_var['z']
-                data_variables['%s.fin_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
-                data_variables['%s.fin_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
-                data_variables['%s.fin_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
-                data_variables['%s.fin_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
-                data_variables['%s.fin_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
-                data_variables['%s.fin_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
+
+                # data_variables['%s.fin_%d.acc_x_diff' % (teensy, j)] = acc_x_diff.out_var['output']
+                # data_variables['%s.fin_%d.acc_y_diff' % (teensy, j)] = acc_y_diff.out_var['output']
+                # data_variables['%s.fin_%d.acc_z_diff' % (teensy, j)] = acc_z_diff.out_var['output']
+                # data_variables['%s.fin_%d.acc_x_avg' % (teensy, j)] = acc_x_avg.out_var['output']
+                # data_variables['%s.fin_%d.acc_y_avg' % (teensy, j)] = acc_y_avg.out_var['output']
+                # data_variables['%s.fin_%d.acc_z_avg' % (teensy, j)] = acc_z_avg.out_var['output']
 
                 data_variables['%s.fin_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.fin_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
