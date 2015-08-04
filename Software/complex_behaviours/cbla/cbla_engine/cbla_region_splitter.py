@@ -133,10 +133,10 @@ class RegionSplitter():
 
             # the best split quality
             self.__split_quality = best_cut_arr[0][0]
-        #print(self.__split_quality, ', ')
+        # print(self.__split_quality, ', ')
         split_clock = perf_counter() - t0
         #if split_clock > 1:
-        print(split_clock, ', ', comp_count, ', ', self.cut_dim, ', ', self.cut_val)
+        #print(split_clock, ', ', comp_count, ', ', self.cut_dim, ', ', self.cut_val)
         # just cut in half
         # self.cut_val = exemplars[int(sample_num/2)][0][self.cut_dim]
 
