@@ -19,14 +19,14 @@ class DataSaver(Process):
 
     def run(self):
 
-        while (not self.__program_terminating.is_set()) or \
-              (self.__program_terminating.is_set() and not self.__data_queue.empty()):
+        exit_process = False
+        while not exit_process:
 
-            # print('queue_size ', self.__data_queue.qsize())
             try:
                 block_key, block_data = self.__data_queue.get(block=True, timeout=2)
             except queues.Empty:
-                pass
+                if self.__program_terminating.is_set():
+                    exit_process = True
             else:
                 self.shelf[block_key] = block_data
 

@@ -1,7 +1,7 @@
 __author__ = 'Matthew'
 
 import threading
-from queue import Queue
+from queue import Queue, Empty
 from collections import defaultdict
 from copy import copy, deepcopy
 import os
@@ -134,15 +134,18 @@ class DataLogger(threading.Thread):
 
         last_saved_time = perf_counter()
         mass_cleaning = False
-        while not self.__program_terminating or not self.__packet_queue.empty():
+        packet_queue_all_clr = False
+        info_queue_all_clr = False
+        while (not packet_queue_all_clr) or (not info_queue_all_clr):
 
             # saving run-time data to memory
-            if not self.__packet_queue.empty():
-
-                # print(self.__packet_queue.qsize())
+            try:
                 # get packet from queue
                 node_name, packet_data = self.__packet_queue.get_nowait()
-
+            except Empty:
+                if self.__program_terminating:
+                    packet_queue_all_clr = True
+            else:
                 # check if the packet has timestamp
                 try:
                     packet_time = packet_data[self.packet_time_key]
@@ -165,8 +168,14 @@ class DataLogger(threading.Thread):
                 self.__data_buffer[self.encode_struct(node_name, packet_type)].append(packet_data)
 
             # overwriting persistence info to disk
-            if not self.__info_queue.empty():
+            try:
                 node_name, info_data = self.__info_queue.get_nowait()
+
+            except Empty:
+                if self.__program_terminating:
+                    info_queue_all_clr = True
+
+            else:
                 try:
                     info_type = info_data[self.info_type_key]
                     if not isinstance(info_type, str):
@@ -178,7 +187,6 @@ class DataLogger(threading.Thread):
                                                     info_data))
                 # self.session_shelf[self.encode_struct(node_name, info_type)] = info_data
 
-            # print(self.__packet_queue.qsize() )
             # periodic mass clean up
             if not mass_cleaning and (self.__packet_queue.qsize() > 2000 or self.__info_queue.qsize() > 20):
                 mass_cleaning = True
@@ -250,7 +258,6 @@ class DataLogger(threading.Thread):
         return session_shelf[self.encode_struct(*struct_labels)]
 
     def __save_to_shelf(self):
-        # print("Remaining Data: ", len(self.__data_buffer))
         for data_block_key, data_block in self.__data_buffer.items():
 
             if data_block and len(data_block) > 0:
