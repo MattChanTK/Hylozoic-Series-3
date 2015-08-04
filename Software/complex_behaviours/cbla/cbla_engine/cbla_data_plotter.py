@@ -12,13 +12,13 @@ class CBLA_DataPlotter(DataPlotter):
 
         for node_name in self.data.keys():
             self.plot_objects[(node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s' % node_name)
-            self.plot_objects[(node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
-            self.plot_objects[(node_name, 'model')] = CBLA_PlotObject(fig_title='Final Expert Model - %s' % node_name)
+            # self.plot_objects[(node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+            # self.plot_objects[(node_name, 'model')] = CBLA_PlotObject(fig_title='Final Expert Model - %s' % node_name)
 
     def plot(self):
         self.plot_histories()
-        self.plot_regions(plot_dim=(3, 0))
-        self.plot_models(_plot_dim=(3, 0))
+        # self.plot_regions(plot_dim=(3, 0))
+        # self.plot_models(_plot_dim=(3, 0))
 
     def plot_histories(self):
 
