@@ -261,10 +261,10 @@ class CBLA(interactive_system.InteractiveCmd):
                                               messenger=self.messenger, data_logger=self.data_logger,
                                               cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='l',
                                               in_vars=in_vars_left, out_vars=out_vars_left,
-                                              s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y', 'acc-z'),
-                                              s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255), (-255, 255)),
+                                              s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y'), #, 'acc-z'),
+                                              s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255)), # (-255, 255)),
                                               s_names=('fin IR sensor', 'scout IR sensor',
-                                                       'accelerometer (x)', 'accelerometer (y)', 'accelerometer (z)',),
+                                                       'accelerometer (x)', 'accelerometer (y)'), # 'accelerometer (z)',),
                                               m_keys=('hf-l', ), m_ranges=((0, 300), ), m_names=('Half Fin Input',)
                                               )
 
@@ -281,10 +281,10 @@ class CBLA(interactive_system.InteractiveCmd):
                                                messenger=self.messenger, data_logger=self.data_logger,
                                                cluster_name=teensy_name, node_type='halfFin', node_id=j, node_version='r',
                                                in_vars=in_vars_right, out_vars=out_vars_right,
-                                               s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y', 'acc-z'),
-                                               s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255), (-255, 255)),
+                                               s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y'),  #'acc-z'),
+                                               s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255)), # (-255, 255)),
                                                s_names=('fin IR sensor', 'scout IR sensor',
-                                                        'accelerometer (x)', 'accelerometer (y)', 'accelerometer (z)',),
+                                                        'accelerometer (x)', 'accelerometer (y)'), #'accelerometer (z)',),
                                                m_keys=('hf-r', ), m_ranges=((0, 300), ), m_names=('half-fin input',)
                                               )
 
@@ -617,7 +617,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None #('c1', 'c2', 'c3', 'c4')
+    ACTIVE_TEENSY_NAMES = ('c1',  'c4', 'c2', 'c3')
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
     def main():
@@ -660,7 +660,7 @@ if __name__ == "__main__":
         hmi_init(hmi, behaviours.messenger, behaviours.node_list)
 
         sleep(5.0)
-        input("Enter any character to terminate program...")
+        #input("Enter any character to terminate program...")
 
         behaviours.terminate()
         behaviours.join()

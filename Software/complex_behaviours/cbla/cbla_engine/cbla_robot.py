@@ -215,6 +215,8 @@ class Robot(object):
 
             # calculate the mean square of action value
             avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
+            # making sure that the average action isn't too small
+            avg_action_val = max(0.0001, avg_action_val)
 
             # no value added if it's less than the avg_action Value
             if action_value**2 <= avg_action_val:
@@ -224,9 +226,9 @@ class Robot(object):
                     value_inc = action_value**2/avg_action_val
                 except ZeroDivisionError:
                     value_inc = 1.0
-
-            # if self.__class__ == Robot_Reflex:
-            #     print("Avg_val = %f; cur_val = %f; val_inc = %f" %
+            #
+            # if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
+            #     print("Reflex: Avg_val = %f; cur_val = %f; val_inc = %f" %
             #           (avg_action_val, action_value**2, value_inc))
 
             # if it is in idle mode and action value is high enough to exit idle mode
@@ -320,7 +322,7 @@ class Robot_Reflex(Robot):
         self.config['sample_period'] = 0.5
         self.config['wait_time'] = 0.0  # 2.0
 
-        self.config['activation_value_inc'] = 15
+        self.config['activation_value_inc'] = 25.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 30
         self.config['idling_prob'] = 1.0
