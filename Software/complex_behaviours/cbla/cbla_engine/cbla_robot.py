@@ -219,13 +219,10 @@ class Robot(object):
             avg_action_val = max(0.0001, avg_action_val)
 
             # no value added if it's less than the avg_action Value
-            if action_value**2 <= avg_action_val:
-                value_inc = 0.0
-            else:
-                try:
-                    value_inc = action_value**2/avg_action_val
-                except ZeroDivisionError:
-                    value_inc = 1.0
+            try:
+                value_inc = action_value**2/avg_action_val
+            except ZeroDivisionError:
+                value_inc = 1.0
             #
             # if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
             #     print("Reflex: Avg_val = %f; cur_val = %f; val_inc = %f" %
