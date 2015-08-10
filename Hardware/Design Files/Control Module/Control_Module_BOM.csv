@@ -1,22 +1,48 @@
-"Qty";"Value";"Device";"Package";"Parts";"Description";"MF";"MPN";"OC_FARNELL";"OC_NEWARK";"PACKAGE";"SUPPLIER";
-"2";"";"JP2E";"JP2";"JP2, JP3";"JUMPER";"";"";"";"";"";"";
-"3";"";"LEDSML1206";"SML1206";"LED1, LED2, LED3";"LED";"";"";"";"";"";"";
-"6";"";"MA08-1";"MA08-1";"SV3, SV4, SV5, SV6, SV7, SV8";"PIN HEADER";"";"";"unknown";"unknown";"";"";
-"1";"";"PINHD-1X2";"1X02";"X1";"PIN HEADER";"";"";"";"";"";"";
-"2";"";"W237-04P";"W237-4P";"X7, X9";"WAGO SREW CLAMP";"";"";"unknown";"unknown";"";"";
-"2";"100nF";"C-USC0603";"C0603";"C4, C5";"CAPACITOR, American symbol";"";"";"";"";"";"";
-"2";"1uF";"C-USC0603";"C0603";"C2, C3";"CAPACITOR, American symbol";"";"";"";"";"";"";
-"2";"2.2k";"R-US_R0603";"R0603";"R7, R8";"RESISTOR, American symbol";"";"";"";"";"";"";
-"3";"470";"R-US_R0603";"R0603";"R1, R4, R5";"RESISTOR, American symbol";"";"";"";"";"";"";
-"1";"470uF";"CPOL-USE5-10.5";"E5-10,5";"C1";"POLARIZED CAPACITOR, American symbol";"";"";"";"";"";"";
-"3";"4k7";"R-US_R0603";"R0603";"R2, R3, R6";"RESISTOR, American symbol";"";"";"";"";"";"";
-"2";"74HC4051PW,118";"74HC4051PW,118";"SOP65P640X110-16N";"U2, U3";"8-channel analog multiplexer/demultiplexer";"";"74HC4051PW,118";"1826843";"78R6260";"TSSOP-16";"NXP";
-"1";"MC7805BDTRKG";"MC7805BDTRKG";"DPACK_3";"IC1";"1A Positive Voltage Regulators";"";"";"";"";"";"";
-"1";"PCA9685PW";"PCA9685PW";"SOP65P640X110-28N";"U1";"16-channel, 12-bit PWM Fm+ I2C-bus LED controller";"";"PCA9685PW";"1854074";"19T6398";"TSSOP-28";"NXP";
-"1";"PROGRAM_FET";"2N7002_SOT23";"SOT-23";"Q1";"2N7000, 2N7002, NDS7002A";"";"";"";"";"";"";
-"1";"PWM_I2C";"MA04-1";"MA04-1";"SV1";"PIN HEADER";"";"";"unknown";"unknown";"";"";
-"1";"SB540E-G";"SB540E-G";"DO201T15";"D1";"SCHOTTKY BARRIER RECTIFIER 3.0 AMPERES 20, 30, 40 VOLT";"";"";"";"";"";"";
-"1";"SPI";"MA04-2";"MA04-2";"SV2";"PIN HEADER";"";"";"unknown";"unknown";"";"";
-"1";"TEENSY_3.1_ALL_PINS_AND_PADS";"TEENSY_3.1_ALL_PINS_AND_PADS";"TEENSY_3.1_ALLPINS";"U$2";"Footprint for Teensy 3.1 board using all pads and all through-holes. Pads need a 2x7 0.1" SMD header.";"";"";"";"";"";"";
-"1";"UA78M33CKVU";"UA78M33CKVU";"DPACK";"IC2";"Linear Voltage Reg";"";"";"";"";"";"";
-"1";"UART";"PINHD-1X2";"1X02";"X8";"PIN HEADER";"";"";"";"";"";"";
+Partlist
+
+Exported from Control_Module.brd at 2015-08-10 3:16 PM
+
+EAGLE Version 7.3.0 Copyright (c) 1988-2015 CadSoft
+
+Assembly variant: 
+
+Part     Value                        Package            Library                    Position (inch)       Orientation
+
+C1       470uF                        E5-10,5            rcl                        (0.99 0.24)           MR90
+C2       1uF                          C0603              rcl                        (0.3 0.64)            R90
+C3       1uF                          C0603              rcl                        (0.3 0.14)            R270
+C4       100nF                        C0603              rcl                        (0.3 0.49)            R270
+C5       100nF                        C0603              rcl                        (0.3 0.29)            R90
+D1       SB540E-G                     DO201T15           CBLA_Test_bed_Library      (2.48 0.61)           R0
+IC1      MC7805BDTRKG                 DPACK_3            CBLA_Test_bed_Library      (0.63 0.54)           R90
+IC2      UA78M33CKVU                  DPACK              CBLA_Test_bed_Library      (0.63 0.19)           R90
+JP2                                   JP2                jumper                     (0.98 0.64)           R90
+JP3                                   JP2                jumper                     (1.93 0.59)           R0
+LED1                                  SML1206            led                        (2.77 0.43)           MR180
+LED2                                  SML1206            led                        (0.46 0.54)           MR0
+LED3                                  SML1206            led                        (0.46 0.25)           MR0
+Q1       PROGRAM_FET                  SOT-23             transistors                (0.96 2.04)           R180
+R1       470                          R0603              CBLA_Test_bed_Library      (2.59 0.43)           MR180
+R2       4k7                          R0603              CBLA_Test_bed_Library      (1.16 0.61)           R270
+R3       4k7                          R0603              CBLA_Test_bed_Library      (1.71 0.72)           R0
+R4       470                          R0603              CBLA_Test_bed_Library      (0.47 0.13)           MR180
+R5       470                          R0603              CBLA_Test_bed_Library      (0.46 0.44)           MR180
+R6       4k7                          R0603              CBLA_Test_bed_Library      (0.97 2.21)           R0
+R7       2.2k                         R0603              CBLA_Test_bed_Library      (1.08 1.32)           R270
+R8       2.2k                         R0603              CBLA_Test_bed_Library      (1.85 1.69)           R270
+SV1      PWM_I2C                      MA04-1             con-lstb                   (1.43 0.64)           R0
+SV2      SPI                          MA04-2             con-lstb                   (0.71 2.99)           R0
+SV3                                   MA08-1             con-lstb                   (0.18 2.69)           R270
+SV4                                   MA08-1             con-lstb                   (0.18 1.89)           R270
+SV5                                   MA08-1             con-lstb                   (0.18 1.09)           R270
+SV6                                   MA08-1             con-lstb                   (2.78 2.69)           R90
+SV7                                   MA08-1             con-lstb                   (2.78 1.89)           R90
+SV8                                   MA08-1             con-lstb                   (2.78 1.09)           R90
+U$2      TEENSY_3.1_ALL_PINS_AND_PADS TEENSY_3.1_ALLPINS Teensy_3_Series_Board_v1.0 (1.43 2.34)           R0
+U1       PCA9685PW                    SOP65P640X110-28N  NXP_By_element14_Batch_1   (1.43 0.94)           R0
+U2       74HC4051PW,118               SOP65P640X110-16N  NXP_By_element14_Batch_1   (1.43 1.29)           R0
+U3       74HC4051PW,118               SOP65P640X110-16N  NXP_By_element14_Batch_1   (1.43 1.54)           R0
+X1                                    1X02               CBLA_Test_bed_Library      (1.85 3.04)           R90
+X7                                    W237-4P            con-wago-508               (2.47 0.2)            R0
+X8       UART                         1X02               CBLA_Test_bed_Library      (1 2.99)              R90
+X9                                    W237-4P            con-wago-508               (1.61 0.2)            R0
