@@ -5,7 +5,7 @@ import types
 from sklearn import linear_model
 
 
-class CBLA_Light_Node(CBLA_Node):
+class Local_Light_Node(CBLA_Node):
 
     def _get_learner_config(self):
 
@@ -30,7 +30,7 @@ class CBLA_Light_Node(CBLA_Node):
 
         return learner_config
 
-class CBLA_HalfFin_Node(CBLA_Node):
+class Local_HalfFin_Node(CBLA_Node):
 
     def _get_learner_config(self):
 
@@ -54,7 +54,7 @@ class CBLA_HalfFin_Node(CBLA_Node):
 
         return learner_config
 
-class CBLA_Reflex_Node(CBLA_Node):
+class Local_Reflex_Node(CBLA_Node):
 
     def _get_learner_config(self):
 
