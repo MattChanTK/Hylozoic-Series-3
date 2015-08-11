@@ -144,7 +144,7 @@ class CyclingHalfFin(Half_Fin):
     def run(self):
 
         t0 = clock()
-        step_size = 0.1 # seconds
+        step_size = 4.0 # seconds
 
         temp_ref = 0
         while self.alive:
