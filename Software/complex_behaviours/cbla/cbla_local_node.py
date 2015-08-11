@@ -1,6 +1,6 @@
 __author__ = 'Matthew'
 
-from cbla_node import *
+from cbla_node import CBLA_Node
 import types
 from sklearn import linear_model
 
