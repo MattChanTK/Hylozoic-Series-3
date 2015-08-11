@@ -139,6 +139,31 @@ class Cycling_Fin(Fin):
 
             sleep(self.messenger.estimated_msg_period * 2)
 
+class CyclingHalfFin(Half_Fin):
+
+    def run(self):
+
+        t0 = clock()
+        step_size = 0.1 # seconds
+
+        temp_ref = 0
+        while self.alive:
+
+            delta_t = clock() - t0
+
+            if delta_t > step_size:
+                temp_ref += 1
+                t0 = clock()
+
+            # end when temp_ref reaches 300
+            if temp_ref > 300:
+                self.alive = False
+                temp_ref = 0
+
+            self.in_var['temp_ref'].val = temp_ref
+            self.controller.update(self.in_var['temp_ref'].val)
+            sleep(self.messenger.estimated_msg_period*2)
+
 class Interactive_Light(Simple_Node):
 
     def __init__(self, messenger: Messenger, node_name='interactive_light',

@@ -90,13 +90,26 @@ class System_Identification(interactive_system.InteractiveCmd):
                 self.node_list[sma_1.node_name] = sma_1
 
                 # 1 frond
-                motion_type = Var(0)
-                # sma_param = {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
-                fin = Cycling_Fin(self.messenger, teensy, node_name='fin_%d.fin' % j,
-                                    left_sma=sma_0.in_var['output'],
-                                    right_sma=sma_1.in_var['output'], motion_type=motion_type)
-                # left_config=sma_param, right_config=sma_param)
-                self.node_list[fin.node_name] = fin
+                # motion_type = Var(0)
+                sma_param = None# {'KP': 15, 'K_heating': 0.00, 'K_dissipate': 0.05}
+                # fin = Cycling_Fin(self.messenger, teensy, node_name='fin_%d.fin' % j,
+                #                     left_sma=sma_0.in_var['output'],
+                #                     right_sma=sma_1.in_var['output'], motion_type=motion_type)
+                # # left_config=sma_param, right_config=sma_param)
+                # self.node_list[fin.node_name] = fin
+
+                # 2 half fins
+                temp_ref_0 = Var(0)
+                halfFin_0 = CyclingHalfFin(self.messenger, node_name='%s.fin_%d.halfFin-0' % (teensy, j),
+                                           sma=sma_0.in_var['output'], temp_ref=temp_ref_0,
+                                           config=sma_param)
+                temp_ref_1 = Var(0)
+                halfFin_1 = CyclingHalfFin(self.messenger, node_name='%s.fin_%d.halfFin-1' % (teensy, j),
+                                           sma=sma_1.in_var['output'], temp_ref=temp_ref_1,
+                                           config=sma_param)
+
+                self.node_list[halfFin_0.node_name] = halfFin_0
+                self.node_list[halfFin_1.node_name] = halfFin_1
 
                 # 2 reflex each
                 reflex_0 = Output_Node(self.messenger, teensy, node_name='fin_%d.reflex_0' % j,
@@ -151,7 +164,11 @@ class System_Identification(interactive_system.InteractiveCmd):
 
                 data_variables['%s.fin_%d.sma_0' % (teensy, j)] = sma_0.in_var['output']
                 data_variables['%s.fin_%d.sma_1' % (teensy, j)] = sma_1.in_var['output']
-                data_variables['%s.fin_%d.fin' % (teensy, j)] = fin.in_var['motion_type']
+                # data_variables['%s.fin_%d.fin' % (teensy, j)] = fin.in_var['motion_type']
+                data_variables['%s.fin_%d.halfFin_0' % (teensy, j)] = halfFin_0.in_var['temp_ref']
+                data_variables['%s.fin_%d.halfFin_1' % (teensy, j)] = halfFin_1.in_var['temp_ref']
+
+
 
             # for Interactive_Light
             for j in range(self.num_light):
