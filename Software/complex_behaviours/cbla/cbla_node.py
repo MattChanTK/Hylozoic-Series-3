@@ -5,6 +5,7 @@ from time import clock
 from abstract_node.node import *
 from abstract_node import DataLogger
 from interactive_system import Messenger
+from sklearn import linear_model
 
 import cbla_engine
 
@@ -213,4 +214,22 @@ class CBLA_Node(CBLA_Base_Node):
 
     def _get_learner_config(self) -> dict:
 
-        return None
+       # learner configuration
+        learner_config = dict()
+        learner_config['split_thres'] = 25
+        learner_config['split_thres_growth_rate'] = 1.5
+        learner_config['split_lock_count_thres'] = 17
+        learner_config['split_quality_thres_0'] = 0.3
+        learner_config['split_quality_decay'] = 0.9
+        learner_config['mean_err_thres'] = 0.02
+        learner_config['reward_smoothing'] = 1
+        learner_config['kga_delta'] = 1
+        learner_config['kga_tau'] = 2
+        learner_config['idle_mode_enable'] = True
+        learner_config['prediction_model'] = linear_model.Lasso(alpha=0.02,
+                                                                normalize=False,
+                                                                warm_start=True,
+                                                                selection='random'
+                                                                )
+
+        return learner_config
