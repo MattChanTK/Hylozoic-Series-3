@@ -48,16 +48,17 @@ class Robot(object):
         self.S0 = Var(None)
 
     def _set_default_config(self):
-        self.config['wait_time'] = 0.00005
-        self.config['sample_number'] = 10
-        self.config['sample_period'] = 0.1
 
-        self.config['prev_values_deque_size'] = 1000
-        self.config['activation_value_inc'] = 5.0
-        self.config['idling_value_inc'] = 1.0
-        self.config['min_step_before_idling'] = 200
-        self.config['idling_prob'] = 0.98
-        self.config['init_learning_steps'] = 10
+        self.config['sample_number'] = 30
+        self.config['sample_period'] = 5.0
+        self.config['wait_time'] = 0.0  #4.0
+
+        self.config['activation_value_inc'] = 10.0
+        self.config['idling_value_inc'] = 1.5
+        self.config['min_step_before_idling'] = 5
+        self.config['idling_prob'] = 1.0
+        self.config['init_learning_steps'] = 8
+        self.config['prev_values_deque_size'] = 15
 
 
     def compute_initial_motor(self) -> tuple:
@@ -103,7 +104,7 @@ class Robot(object):
         self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
         sleep(max(0, self.curr_wait_time))
 
-    def read(self, sample_method='default') -> tuple:
+    def read(self, sample_method='average') -> tuple:
 
         S = []
 
@@ -124,7 +125,6 @@ class Robot(object):
                 s = in_vals[i]
 
             S.append(s)
-
         self.S0.val = tuple(S)
         return tuple(S)
 
@@ -223,8 +223,8 @@ class Robot(object):
                 value_inc = action_value**2/avg_action_val
             except ZeroDivisionError:
                 value_inc = 1.0
-            #
-            # if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
+
+            # if value_inc >= 1.0 and self.__class__ == Robot_Light:
             #     print("Reflex: Avg_val = %f; cur_val = %f; val_inc = %f" %
             #           (avg_action_val, action_value**2, value_inc))
 
@@ -288,17 +288,41 @@ class Robot_HalfFin(Robot):
 
         return super(Robot_HalfFin, self).read(sample_method='average')
 
+    def act(self, M: tuple):
+
+        # copy the selected action to the memory
+        if not isinstance(M, (list, tuple)):
+            raise TypeError("M must be a tuple or list!")
+        if len(M) != len(self.out_vars):
+            raise ValueError("M and out_var must be the same length!")
+
+        # compute the actual output variable
+        for i in range(len(self.out_vars)):
+            # un-normalize if the range is specified
+            if 'm_ranges' in self.config and len(self.config['m_ranges']) > 0:
+                val_range = self.config['m_ranges'][i]
+
+            out_val = int(unnormalize(M[i], val_range[0], val_range[1]))
+
+            # make it 0 if it's at the lower bound
+            if out_val == val_range[0]:
+                out_val = 0
+            self.out_vars[i].val = out_val
+
+        self.M0.val = tuple(M)
+        return self.out_vars
+
 
 class Robot_Light(Robot):
 
     def _set_default_config(self):
         super(Robot_Light, self)._set_default_config()
 
-        self.config['sample_number'] = 15
+        self.config['sample_number'] = 20
         self.config['sample_period'] = 1.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['activation_value_inc'] = 20.0
+        self.config['activation_value_inc'] = 10.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 20
         self.config['idling_prob'] = 1.0
