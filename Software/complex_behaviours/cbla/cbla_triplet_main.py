@@ -11,6 +11,7 @@ from abstract_node import *
 
 import cbla_node as cbla_base
 from cbla_local_node import *
+from cbla_spatial_node import *
 
 from cbla_engine import cbla_robot
 
@@ -116,11 +117,15 @@ class CBLA(interactive_system.InteractiveCmd):
         if self.mode == 'local':
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_local_nodes(teensy, self.node_list))
+        elif self.mode == 'spatial':
+            cbla_nodes, neighbour_nodes = self.build_spatial_nodes(teensy_in_use, self.node_list)
+            self.node_list.update(cbla_nodes)
+            self.node_list.update(neighbour_nodes)
         elif self.mode == 'random':
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_random_nodes(teensy, self.node_list))
         else:
-            self.mode = 'spatial'
+            self.mode = 'local'
             for teensy in teensy_in_use:
                 self.node_list.update(self.build_local_nodes(teensy, self.node_list))
 
@@ -241,7 +246,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                           in_vars=in_vars, out_vars=out_vars,
                                           s_keys=('als', 'sma-l', 'sma-r'),
                                           s_ranges=((0, 4095), (0, 255), (0, 255)),
-                                          s_names=('ambient light sensor', 'left sma, right sma'),
+                                          s_names=('ambient light sensor', 'left sma', 'right sma'),
                                           m_keys=('led',), m_ranges=((0, 50),),
                                           m_names=('High-power LED',),
                                           )
@@ -275,7 +280,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                                s_names=('fin IR sensor', 'scout IR sensor',
                                                         'accelerometer (x)', 'accelerometer (y)'),
                                                # 'accelerometer (z)',),
-                                               m_keys=('hf-l',), m_ranges=((0, 300),),
+                                               m_keys=('hf-l',), m_ranges=((130, 300),),
                                                m_names=('Half Fin Input',)
                                                )
 
@@ -334,7 +339,7 @@ class CBLA(interactive_system.InteractiveCmd):
 
             # ===== constructing the Reflex LED Node ====
             out_vars_led = OrderedDict()
-            out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
+            # out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
             out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
             reflex_led = Local_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
                                            messenger=self.messenger, data_logger=self.data_logger,
@@ -352,7 +357,194 @@ class CBLA(interactive_system.InteractiveCmd):
 
         return cbla_nodes
 
-    def build_random_nodes(self, teensy_name, components, s_per_node=3):
+    def build_spatial_nodes(self, teensy_names, components):
+
+        cbla_nodes = OrderedDict()
+        neighbour_nodes = OrderedDict()
+
+        # === spatial sum neighbourhoods====
+        vh_out_var = Var(0)
+        vh_in_vars = OrderedDict()
+        vh_in_vars['led-1'] = components['c1.l2.led_driver'].in_var['led_ref']
+        vh_in_vars['led-2'] = components['c2.l1.led_driver'].in_var['led_ref']
+        vh_in_vars['led-3'] = components['c3.l0.led_driver'].in_var['led_ref']
+
+        vh1 = Spatial_Sum(messenger=self.messenger,
+                          node_name='vh1.sumer',
+                          output = vh_out_var,
+                          **vh_in_vars
+                          )
+
+        neighbour_nodes[vh1.node_name] = vh1
+
+        vh_out_var = Var(0)
+        vh_in_vars = OrderedDict()
+        vh_in_vars['led-1'] = components['c2.l2.led_driver'].in_var['led_ref']
+        vh_in_vars['led-2'] = components['c4.l0.led_driver'].in_var['led_ref']
+
+        vh2 = Spatial_Sum(messenger=self.messenger,
+                          node_name='vh2.sumer',
+                          output = vh_out_var,
+                          **vh_in_vars
+                          )
+
+        neighbour_nodes[vh2.node_name] = vh2
+
+        vh_out_var = Var(0)
+        vh_in_vars = OrderedDict()
+        vh_in_vars['led-1'] = components['c3.l2.led_driver'].in_var['led_ref']
+        vh_in_vars['led-2'] = components['c4.l1.led_driver'].in_var['led_ref']
+
+        vh3 = Spatial_Sum(messenger=self.messenger,
+                          node_name='vh3.sumer',
+                          output = vh_out_var,
+                          **vh_in_vars
+                          )
+        neighbour_nodes[vh3.node_name] = vh3
+
+
+        for teensy_name in teensy_names:
+            # ===== constructing the Light Node =====
+            for j in range(self.num_light):
+                in_vars = OrderedDict()
+                in_vars['als'] = components['%s.l%d.als' % (teensy_name, j)].out_var['input']
+                in_vars['sma-l'] = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
+                in_vars['sma-r'] = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
+
+                # connecting points
+                if (teensy_name == 'c1' and j == 2) or \
+                    (teensy_name == 'c2' and j == 1) or \
+                    (teensy_name == 'c3' and j == 0):
+                    in_vars['vh1'] = vh1.out_var['output']
+                elif (teensy_name == 'c2' and j == 2) or \
+                     (teensy_name == 'c4' and j == 0):
+                    in_vars['vh2'] = vh2.out_var['output']
+                elif (teensy_name == 'c3' and j == 2) or \
+                     (teensy_name == 'c4' and j == 1):
+                    in_vars['vh3'] = vh3.out_var['output']
+
+                out_vars = OrderedDict()
+                # out_vars['led'] = components['%s.l%d.led' % (teensy_name, j)].in_var['output']
+                out_vars['led'] = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
+                light_node = Local_Light_Node(RobotClass=cbla_robot.Robot_Light,
+                                              messenger=self.messenger, data_logger=self.data_logger,
+                                              cluster_name=teensy_name, node_type='light', node_id=j,
+                                              in_vars=in_vars, out_vars=out_vars,
+                                              s_keys=tuple(in_vars.keys()),
+                                              s_ranges=((0, 4095), (0, 255), (0, 255), (0, 100)),
+                                              s_names=('ambient light sensor', 'left sma', 'right sma',
+                                                       'high-intensity neighbourhood'),
+                                              m_keys=tuple(out_vars.keys()), m_ranges=((0, 50),),
+                                              m_names=('High-power LED',),
+                                              )
+
+                cbla_nodes[light_node.node_name] = light_node
+
+            # ===== constructing the Half-Fin Nodes =====
+            for j in range(self.num_fin):
+                # ===== constructing the shared part of the Half-Fin Nodes ====
+                in_vars = OrderedDict()
+                in_vars['ir-f'] = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+                in_vars['acc-x'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['x']
+                in_vars['acc-y'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['y']
+                in_vars['acc-z'] = components['%s.f%d.acc' % (teensy_name, j)].out_var['z']
+
+                # ===== constructing the left Half-Fin Nodes ====
+                in_vars_left = in_vars.copy()
+                in_vars_left['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+
+                out_vars_left = OrderedDict()
+                out_vars_left['hf-l'] = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
+
+                half_fin_left = Local_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
+                                                   messenger=self.messenger, data_logger=self.data_logger,
+                                                   cluster_name=teensy_name, node_type='halfFin', node_id=j,
+                                                   node_version='l',
+                                                   in_vars=in_vars_left, out_vars=out_vars_left,
+                                                   s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y'),  # , 'acc-z'),
+                                                   s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255)),
+                                                   # (-255, 255)),
+                                                   s_names=('fin IR sensor', 'scout IR sensor',
+                                                            'accelerometer (x)', 'accelerometer (y)'),
+                                                   # 'accelerometer (z)',),
+                                                   m_keys=('hf-l',), m_ranges=((130, 300),),
+                                                   m_names=('Half Fin Input',)
+                                                   )
+
+                cbla_nodes[half_fin_left.node_name] = half_fin_left
+
+                # ===== constructing the right Half-Fin Nodes ====
+                in_vars_right = in_vars.copy()
+                in_vars_right['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+
+                out_vars_right = OrderedDict()
+                out_vars_right['hf-r'] = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
+
+                half_fin_right = Local_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
+                                                    messenger=self.messenger, data_logger=self.data_logger,
+                                                    cluster_name=teensy_name, node_type='halfFin', node_id=j,
+                                                    node_version='r',
+                                                    in_vars=in_vars_right, out_vars=out_vars_right,
+                                                    s_keys=('ir-f', 'ir-s', 'acc-x', 'acc-y'),  # 'acc-z'),
+                                                    s_ranges=((0, 4095), (0, 4095), (-255, 255), (-255, 255)),
+                                                    # (-255, 255)),
+                                                    s_names=('fin IR sensor', 'scout IR sensor',
+                                                             'accelerometer (x)', 'accelerometer (y)'),
+                                                    # 'accelerometer (z)',),
+                                                    m_keys=('hf-r',), m_ranges=((0, 300),),
+                                                    m_names=('half-fin input',)
+                                                    )
+
+                cbla_nodes[half_fin_right.node_name] = half_fin_right
+
+            # ===== constructing the Reflex Nodes =====
+            for j in range(self.num_fin):
+                # ===== constructing the shared part of the Reflex Nodes ====
+                in_vars = OrderedDict()
+                in_vars['ir-s'] = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+                in_vars['sma-l'] = components['%s.f%d.sma-l' % (teensy_name, j)].in_var['output']
+                in_vars['sma-r'] = components['%s.f%d.sma-r' % (teensy_name, j)].in_var['output']
+
+                # ===== constructing the Reflex Motor Node ====
+                out_vars_motor = OrderedDict()
+                # out_vars_motor['rfx-m'] = components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output']
+                out_vars_motor['rfx-m'] = components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref']
+                reflex_motor = Local_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
+                                                 messenger=self.messenger, data_logger=self.data_logger,
+                                                 cluster_name=teensy_name, node_type='reflex', node_id=j,
+                                                 node_version='m',
+                                                 in_vars=in_vars, out_vars=out_vars_motor,
+                                                 s_keys=('ir-s', 'sma-l', 'sma-r'),
+                                                 s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                                 s_names=(
+                                                     'scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
+                                                 m_keys=('rfx-m',), m_ranges=((0, 100),),
+                                                 m_names=('reflex motor',)
+                                                 )
+
+                cbla_nodes[reflex_motor.node_name] = reflex_motor
+
+                # ===== constructing the Reflex LED Node ====
+                out_vars_led = OrderedDict()
+                # out_vars_led['rfx-l'] = components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output']
+                out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
+                reflex_led = Local_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
+                                               messenger=self.messenger, data_logger=self.data_logger,
+                                               cluster_name=teensy_name, node_type='reflex', node_id=j,
+                                               node_version='l',
+                                               in_vars=in_vars, out_vars=out_vars_led,
+                                               s_keys=('ir-s', 'sma-l', 'sma-r'),
+                                               s_ranges=((0, 4095), (0, 255), (0, 255)),
+                                               s_names=('scout IR sensor', 'SMA output (left)', 'SMA output (right)'),
+                                               m_keys=('rfx-l',), m_ranges=((0, 255),), m_names=('reflex led',),
+                                               # robot_config=sample_size
+                                               )
+
+                cbla_nodes[reflex_led.node_name] = reflex_led
+
+        return cbla_nodes, neighbour_nodes
+
+    def build_random_nodes(self, teensy_name, components, inputs_per_node=3):
 
         cbla_nodes = OrderedDict()
 
@@ -363,9 +555,9 @@ class CBLA(interactive_system.InteractiveCmd):
             cbla_s_vars.append(('%s.l%d.als' % (teensy_name, j),
                                 components['%s.l%d.als' % (teensy_name, j)].out_var['input'],
                                 (0, 4095), 'Ambient Light Sensor'))
-            cbla_m_vars.append(('%s.l%d.leddriver' % (teensy_name, j),
+            cbla_m_vars.append(('%s.l%d.led_driver' % (teensy_name, j),
                                 components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref'],
-                                (0, 255), 'LED input'))
+                                (0, 50), 'High-Power LED'))
         for j in range(self.num_fin):
             cbla_s_vars.append(('%s.f%d.ir-f' % (teensy_name, j),
                                 components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input'],
@@ -383,39 +575,21 @@ class CBLA(interactive_system.InteractiveCmd):
                                 components['%s.f%d.acc' % (teensy_name, j)].out_var['z'],
                                 (-255, 255), 'SMA (z-axis)'))
 
-            cbla_s_vars.append(('%s.f%d.acc-xdiff' % (teensy_name, j),
-                                components['%s.f%d.acc-x_diff' % (teensy_name, j)].out_var['output'],
-                                (-6, 6), 'SMA (x-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-ydiff' % (teensy_name, j),
-                                components['%s.f%d.acc-y_diff' % (teensy_name, j)].out_var['output'],
-                                (-6, 6), 'SMA (y-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-zdiff' % (teensy_name, j),
-                                components['%s.f%d.acc-z_diff' % (teensy_name, j)].out_var['output'],
-                                (-6, 6), 'SMA (z-diff)'))
-            cbla_s_vars.append(('%s.f%d.acc-xavg' % (teensy_name, j),
-                                components['%s.f%d.acc-x_avg' % (teensy_name, j)].out_var['output'],
-                                (-255, 255), 'SMA (x-avg)'))
-            cbla_s_vars.append(('%s.f%d.acc-yavg' % (teensy_name, j),
-                                components['%s.f%d.acc-y_avg' % (teensy_name, j)].out_var['output'],
-                                (-255, 255), 'SMA (y-avg)'))
-            cbla_s_vars.append(('%s.f%d.acc-zavg' % (teensy_name, j),
-                                components['%s.f%d.acc-z_avg' % (teensy_name, j)].out_var['output'],
-                                (-255, 255), 'SMA (z-avg)'))
-
-            cbla_m_vars.append(('%s.f%d.rfx-l' % (teensy_name, j),
-                                components['%s.f%d.rfx-l' % (teensy_name, j)].in_var['output'],
+            cbla_m_vars.append(('%s.f%d.rfx_driver-l' % (teensy_name, j),
+                                components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref'],
                                 (0, 255), 'reflex led'))
-            cbla_m_vars.append(('%s.f%d.rfx-m' % (teensy_name, j),
-                                components['%s.f%d.rfx-m' % (teensy_name, j)].in_var['output'],
+            cbla_m_vars.append(('%s.f%d.rfx_driver-m' % (teensy_name, j),
+                                components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref'],
                                 (0, 255), 'reflex motor'))
             cbla_m_vars.append(('%s.f%d.hf-l' % (teensy_name, j),
                                 components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref'],
-                                (0, 300), 'half-input (left)'))
+                                (130, 300), 'half-input (left)'))
             cbla_m_vars.append(('%s.f%d.hf-r' % (teensy_name, j),
                                 components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref'],
-                                (0, 300), 'half-input (right)'))
+                                (130, 300), 'half-input (right)'))
 
-        num_s_vars = len(cbla_s_vars)
+        cbla_in_vars = cbla_s_vars + cbla_m_vars
+        num_in_vars = len(cbla_in_vars)
         node_counter = 0
         for m_key, m_var, m_range, m_name in cbla_m_vars:
             out_vars = OrderedDict()
@@ -424,19 +598,19 @@ class CBLA(interactive_system.InteractiveCmd):
             m_ranges = (m_range,)
             m_names = (m_name,)
 
-            s_idx = random.sample(range(num_s_vars), s_per_node)
+            s_idx = random.sample(range(num_in_vars), inputs_per_node)
             in_vars = OrderedDict()
             s_keys = []
             s_ranges = []
             s_names = []
             for idx in s_idx:
                 try:
-                    s_key = cbla_s_vars[idx][0]
-                    s_var = cbla_s_vars[idx][1]
-                    s_range = cbla_s_vars[idx][2]
-                    s_name = cbla_s_vars[idx][3]
+                    s_key = cbla_in_vars[idx][0]
+                    s_var = cbla_in_vars[idx][1]
+                    s_range = cbla_in_vars[idx][2]
+                    s_name = cbla_in_vars[idx][3]
                 except IndexError:
-                    raise IndexError('%s out of range' % str(cbla_s_vars[idx]))
+                    raise IndexError('%s out of range' % str(cbla_in_vars[idx]))
                 in_vars[s_key] = s_var
                 s_keys.append(s_key)
                 s_ranges.append(s_range)
@@ -623,13 +797,14 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    mode_config = 'spatial'
+    mode_config = 'random'
 
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])
+        mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = ('c1', 'c4', 'c2', 'c3')
+    ACTIVE_TEENSY_NAMES = ('c1', )#'c4', 'c2', 'c3')
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 
@@ -659,7 +834,7 @@ if __name__ == "__main__":
 
         # interactive code
         # -- this create all the abstract nodes
-        behaviours = CBLA(teensy_manager, auto_start=True, mode='spatial')
+        behaviours = CBLA(teensy_manager, auto_start=True, mode=mode_config)
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
