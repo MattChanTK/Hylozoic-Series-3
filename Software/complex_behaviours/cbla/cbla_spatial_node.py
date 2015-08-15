@@ -42,7 +42,7 @@ class Spatial_Sum(Simple_Node):
             for var in self.in_var.values():
                 val_arr.append(var.val)
 
-            self.out_var['output'].val = sum(val_arr)
+            self.out_var['output'].val = max(val_arr)
 
             sleep(self.messenger.estimated_msg_period * 2)
 

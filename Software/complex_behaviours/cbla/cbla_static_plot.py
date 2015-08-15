@@ -1,6 +1,6 @@
 import os
 from cbla_engine.cbla_data_plotter import CBLA_DataPlotter
-from cbla_node import *
+from cbla_generic_node import *
 
 if __name__ == '__main__':
     log_dir = os.path.join(os.getcwd(), 'cbla_log')

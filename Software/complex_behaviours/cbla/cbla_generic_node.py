@@ -125,7 +125,7 @@ class CBLA_Base_Node(Node):
         self.data_logger.write_info(self.node_name, self.cbla_states)
 
 
-class CBLA_Node(CBLA_Base_Node):
+class CBLA_Generic_Node(CBLA_Base_Node):
 
     def __init__(self, messenger: Messenger, data_logger: DataLogger,
                  cluster_name: str, node_type: str, node_id: int,
@@ -146,7 +146,7 @@ class CBLA_Node(CBLA_Base_Node):
             node_name += '-%s' % self.node_version
 
         # initializing the cbla_node
-        super(CBLA_Node, self).__init__(messenger=messenger, data_logger=data_logger,
+        super(CBLA_Generic_Node, self).__init__(messenger=messenger, data_logger=data_logger,
                                         cluster_name=cluster_name, node_name=node_name)
 
         # defining the input variables
@@ -182,15 +182,47 @@ class CBLA_Node(CBLA_Base_Node):
         self.m_names = tuple(m_names)
 
         if isinstance(RobotClass, type) and issubclass(RobotClass, cbla_engine.Robot):
-            robot_class = RobotClass
+            self.robot_class = RobotClass
         else:
-            robot_class = cbla_engine.Robot
+            self.robot_class = cbla_engine.Robot
 
         # instantiate
         if not isinstance(robot_config, dict):
-            robot_config = dict()
-        self.instantiate(cbla_robot=self._build_robot(RobotClass=robot_class, **robot_config),
-                         learner_config=self._get_learner_config())
+            self.robot_config = dict()
+        else:
+            self.robot_config = robot_config
+
+    def instantiate(self, cbla_robot: cbla_engine.Robot=None, learner_config=None):
+        if cbla_robot == None:
+            cbla_robot = self._build_robot(RobotClass=self.robot_class, **self.robot_config)
+        else:
+            self.robot_class = cbla_robot.__class__
+            self.robot_config = cbla_robot.config
+
+        if learner_config == None:
+            learner_config = self._get_learner_config()
+
+        super(CBLA_Generic_Node, self).instantiate(cbla_robot=cbla_robot, learner_config=learner_config)
+
+    def add_in_var(self, var: Var, var_key: str, var_range=None, var_name=None):
+
+        if not isinstance(var, Var):
+            raise TypeError("in_var must be of type Var!")
+
+        if not isinstance(var_key, str):
+            raise TypeError("var_key must be of type str!")
+
+        self.in_var[var_key] = var
+
+        self.s_keys += var_key
+
+        if isinstance(var_range, (tuple, list)) and len(var_range) == 2:
+
+            self.s_ranges += var_range
+
+        if isinstance(var_name, str):
+
+            self.s_names += var_name
 
     def _build_robot(self, RobotClass=cbla_engine.Robot, **robot_config) -> cbla_engine.Robot:
 
@@ -214,22 +246,4 @@ class CBLA_Node(CBLA_Base_Node):
 
     def _get_learner_config(self) -> dict:
 
-       # learner configuration
-        learner_config = dict()
-        learner_config['split_thres'] = 25
-        learner_config['split_thres_growth_rate'] = 1.5
-        learner_config['split_lock_count_thres'] = 17
-        learner_config['split_quality_thres_0'] = 0.3
-        learner_config['split_quality_decay'] = 0.9
-        learner_config['mean_err_thres'] = 0.02
-        learner_config['reward_smoothing'] = 1
-        learner_config['kga_delta'] = 1
-        learner_config['kga_tau'] = 2
-        learner_config['idle_mode_enable'] = True
-        learner_config['prediction_model'] = linear_model.Lasso(alpha=0.02,
-                                                                normalize=False,
-                                                                warm_start=True,
-                                                                selection='random'
-                                                                )
-
-        return learner_config
+        return None
