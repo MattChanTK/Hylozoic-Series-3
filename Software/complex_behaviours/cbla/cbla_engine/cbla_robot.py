@@ -59,6 +59,7 @@ class Robot(object):
         self.config['idling_prob'] = 1.0
         self.config['init_learning_steps'] = 8
         self.config['prev_values_deque_size'] = 15
+        self.config['min_avg_action_value'] = 0.0001
 
 
     def compute_initial_motor(self) -> tuple:
@@ -216,7 +217,7 @@ class Robot(object):
             # calculate the mean square of action value
             avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
             # making sure that the average action isn't too small
-            avg_action_val = max(0.0001, avg_action_val)
+            avg_action_val = max(self.config['min_avg_action_value'], avg_action_val)
 
             # no value added if it's less than the avg_action Value
             try:
@@ -224,9 +225,15 @@ class Robot(object):
             except ZeroDivisionError:
                 value_inc = 1.0
 
-            # if value_inc >= 1.0 and self.__class__ == Robot_Light:
-            #     print("Reflex: Avg_val = %f; cur_val = %f; val_inc = %f" %
-            #           (avg_action_val, action_value**2, value_inc))
+            if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
+                print("HalfFin: Avg_val = %f; cur_val = %f; val_inc = %f" %
+                      (avg_action_val, action_value**2, value_inc))
+            elif value_inc >= 1.0 and self.__class__ == Robot_Reflex:
+                print("Reflex Avg_val = %f; cur_val = %f; val_inc = %f" %
+                      (avg_action_val, action_value**2, value_inc))
+            elif value_inc >= 1.0 and self.__class__ == Robot_Light:
+                print("Light Avg_val = %f; cur_val = %f; val_inc = %f" %
+                      (avg_action_val, action_value**2, value_inc))
 
             # if it is in idle mode and action value is high enough to exit idle mode
             if self.in_idle_mode and value_inc > self.config['activation_value_inc']:
@@ -268,6 +275,28 @@ class Robot(object):
         return tuple([0] * len(self.M0.val))
 
 
+class Robot_Light(Robot):
+
+    def _set_default_config(self):
+        super(Robot_Light, self)._set_default_config()
+
+        self.config['sample_number'] = 15
+        self.config['sample_period'] = 1.0
+        self.config['wait_time'] = 0.0  # 4.0
+
+        self.config['activation_value_inc'] = 10.0
+        self.config['idling_value_inc'] = 1.5
+        self.config['min_step_before_idling'] = 20
+        self.config['idling_prob'] = 1.0
+        self.config['init_learning_steps'] = 30
+        self.config['prev_values_deque_size'] = 60
+        self.config['min_avg_action_value'] = 0.00001
+
+    def read(self, sample_method=None):
+
+        return super(Robot_Light, self).read(sample_method='average')
+
+
 class Robot_HalfFin(Robot):
 
     def _set_default_config(self):
@@ -277,7 +306,7 @@ class Robot_HalfFin(Robot):
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0  #4.0
 
-        self.config['activation_value_inc'] = 10.0
+        self.config['activation_value_inc'] = 30.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
@@ -311,27 +340,6 @@ class Robot_HalfFin(Robot):
 
         self.M0.val = tuple(M)
         return self.out_vars
-
-
-class Robot_Light(Robot):
-
-    def _set_default_config(self):
-        super(Robot_Light, self)._set_default_config()
-
-        self.config['sample_number'] = 20
-        self.config['sample_period'] = 1.0
-        self.config['wait_time'] = 0.0  # 4.0
-
-        self.config['activation_value_inc'] = 10.0
-        self.config['idling_value_inc'] = 1.5
-        self.config['min_step_before_idling'] = 20
-        self.config['idling_prob'] = 1.0
-        self.config['init_learning_steps'] = 30
-        self.config['prev_values_deque_size'] = 100
-
-    def read(self, sample_method=None):
-
-        return super(Robot_Light, self).read(sample_method='average')
 
 
 class Robot_Reflex(Robot):
