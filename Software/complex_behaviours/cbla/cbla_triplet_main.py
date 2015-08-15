@@ -35,7 +35,7 @@ class CBLA(interactive_system.InteractiveCmd):
     log_dir = 'cbla_log'
     log_header = 'cbla_mode'
 
-    def __init__(self, Teensy_manager, auto_start=True, mode='spatial'):
+    def __init__(self, Teensy_manager, auto_start=True, mode='isolated'):
 
         # setting up the data collector
         log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
@@ -120,9 +120,9 @@ class CBLA(interactive_system.InteractiveCmd):
         cbla_nodes = self.build_isolated_nodes(teensy_names=teensy_in_use, components=self.node_list)
 
         # linking the nodes
-        if self.mode == 'local':
-            self.link_locally(cbla_nodes)
-        elif self.mode == 'spatial':
+        if self.mode == 'spatial_local':
+            self.link_spatial_locally(cbla_nodes)
+        elif self.mode == 'spatial_global':
             self.link_spatially(cbla_nodes)
         elif self.mode == 'random':
             self.link_randomly(cbla_nodes)
@@ -348,23 +348,71 @@ class CBLA(interactive_system.InteractiveCmd):
 
         return cbla_nodes
 
-    def link_locally(self, cbla_nodes, cluster_suffix='c'):
+    def link_spatial_locally(self, cbla_nodes, cluster_suffix='c'):
 
-        for node_name, cbla_node in cbla_nodes.items():
+        for node_key, cbla_node in cbla_nodes.items():
             if not isinstance(cbla_node, CBLA_Generic_Node):
                 continue
 
-            if isinstance(cbla_node, Isolated_Light_Node):
+            if isinstance(cbla_node, (Isolated_Light_Node, Isolated_HalfFin_Node, Isolated_Reflex_Node)):
+                # find the identity of this node
+                identity = node_key.split('.')
+                cluster_name = identity[0]
+                node_type = identity[1].split('-')
+                node_id =  int(node_type[0].split('_')[-1])
+                if len(node_type) > 1:
+                    node_version = node_type[-1]
+                else:
+                    node_version = None
 
-                name = node_name.split('.')
-                cluster_name = name[0]
-                node_type = name[1]
+                # Linking for the Light node
+                if isinstance(cbla_node, Isolated_Light_Node):
 
-                node_id = int(node_type.split('_')[0][-1])
+                    # define the vars to be added
+                    linked_vars = OrderedDict()
+                    linked_vars['rfx-m'] = cbla_nodes['%s.cbla_reflex_%d-m' % (cluster_name, node_id)].out_var['rfx-m']
+                    linked_vars['rfx-l'] = cbla_nodes['%s.cbla_reflex_%d-l' % (cluster_name, node_id)].out_var['rfx-l']
 
+                    for linked_var_name, linked_var in linked_vars.items():
+                        if linked_var_name == 'rfx-m':
+                            var_name = 'reflex motor'
+                        elif linked_var_name == 'rfx-l':
+                            var_name = 'reflex light'
+                        else:
+                            var_name = 'reflex actuator'
 
+                        cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                             var_range=(0, 255), var_name=var_name,
+                                             )
+                # Linking for the Half-Fin Node
+                elif isinstance(cbla_node, Isolated_HalfFin_Node):
 
+                    if node_version == 'l':
+                        linked_var_id = node_id
+                        linked_var_version = 'l'
+                    elif node_version == 'r':
+                        linked_var_id = (node_id + 1) % self.num_fin
+                        linked_var_version = 'm'
+                    else:
+                        raise ValueError('Half-Fin nodes must have either "l" or "r" version!')
 
+                    # define the vars to be added
+                    linked_vars = OrderedDict()
+                    linked_node_key = 'rfx-%s' % linked_var_version
+                    linked_node_name ='%s.cbla_reflex_%d-%s' % (cluster_name, linked_var_id, linked_var_version)
+                    linked_vars[linked_node_key] = cbla_nodes[linked_node_name].out_var[linked_node_key]
+
+                    for linked_var_name, linked_var in linked_vars.items():
+                        if linked_var_name == 'rfx-m':
+                            var_name = 'reflex motor'
+                        elif linked_var_name == 'rfx-l':
+                            var_name = 'reflex light'
+                        else:
+                            var_name = 'reflex actuator'
+
+                        cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                             var_range=(0, 255), var_name=var_name,
+                                             )
 
     def link_spatially(self, cbla_nodes):
         pass
@@ -954,7 +1002,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    mode_config = 'isolated'
+    mode_config = 'spatial_local'
 
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])

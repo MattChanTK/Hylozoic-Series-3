@@ -204,7 +204,7 @@ class CBLA_Generic_Node(CBLA_Base_Node):
 
         super(CBLA_Generic_Node, self).instantiate(cbla_robot=cbla_robot, learner_config=learner_config)
 
-    def add_in_var(self, var: Var, var_key: str, var_range=None, var_name=None):
+    def add_in_var(self, var: Var, var_key: str, var_range:tuple=None, var_name:str=None):
 
         if not isinstance(var, Var):
             raise TypeError("in_var must be of type Var!")
@@ -214,15 +214,15 @@ class CBLA_Generic_Node(CBLA_Base_Node):
 
         self.in_var[var_key] = var
 
-        self.s_keys += var_key
+        self.s_keys += (var_key,)
 
         if isinstance(var_range, (tuple, list)) and len(var_range) == 2:
 
-            self.s_ranges += var_range
+            self.s_ranges += (var_range,)
 
         if isinstance(var_name, str):
 
-            self.s_names += var_name
+            self.s_names += (var_name,)
 
     def _build_robot(self, RobotClass=cbla_engine.Robot, **robot_config) -> cbla_engine.Robot:
 
