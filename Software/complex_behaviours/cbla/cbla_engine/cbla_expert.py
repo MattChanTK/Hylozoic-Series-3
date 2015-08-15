@@ -161,7 +161,7 @@ class Expert():
             except AttributeError:
                 S1 = S
 
-            if isinstance(S1, np.ndarray):
+            if isinstance(S1, np.ndarray) and (len(S1) != len(S)):
                 S1 = tuple(S1[0])
             else:
                 S1 = tuple(S1)
