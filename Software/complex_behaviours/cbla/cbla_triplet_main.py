@@ -414,6 +414,47 @@ class CBLA(interactive_system.InteractiveCmd):
                                              var_range=(0, 255), var_name=var_name,
                                              )
 
+                # Linking for the Reflex Node
+                elif isinstance(cbla_node, Isolated_Reflex_Node):
+
+                    if node_version == 'l':
+                        linked_led_id = node_id
+                        linked_sma_id = node_id
+                        linked_sma_version = 'l'
+                    elif node_version == 'm':
+                        linked_led_id = node_id
+                        linked_sma_id = (node_id + 1) % self.num_fin
+                        linked_sma_version = 'r'
+                    else:
+                        raise ValueError('Reflex nodes must have either "l" or "m" version!')
+
+                    # define the vars to be added
+                    linked_vars = OrderedDict()
+
+                    linked_sma_key = 'hf-%s' % linked_sma_version
+                    linked_sma_name ='%s.cbla_halfFin_%d-%s' % (cluster_name, linked_sma_id, linked_sma_version)
+                    linked_vars[linked_sma_key] = cbla_nodes[linked_sma_name].out_var[linked_sma_key]
+
+                    linked_led_key = 'led'
+                    linked_led_name ='%s.cbla_light_%d' % (cluster_name, linked_led_id)
+                    linked_vars[linked_led_key] = cbla_nodes[linked_led_name].out_var[linked_led_key]
+
+                    for linked_var_name, linked_var in linked_vars.items():
+                        if linked_var_name == 'hf-l' or linked_var_name == 'hf-r':
+                            var_name = 'SMA'
+                            cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                                 var_range=(130, 300), var_name=var_name,
+                                                )
+                        elif linked_var_name == 'led':
+                            var_name = 'LED'
+                            cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                                 var_range=(0, 50), var_name=var_name,
+                                                )
+                        else:
+                            raise ValueError('%s: Unknown linked variable!' % linked_var_name)
+
+
+
     def link_spatially(self, cbla_nodes):
         pass
 
