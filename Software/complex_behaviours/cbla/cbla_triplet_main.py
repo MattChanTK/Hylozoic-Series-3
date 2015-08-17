@@ -348,7 +348,7 @@ class CBLA(interactive_system.InteractiveCmd):
 
         return cbla_nodes
 
-    def link_spatial_locally(self, cbla_nodes, cluster_suffix='c'):
+    def link_spatial_locally(self, cbla_nodes):
 
         for node_key, cbla_node in cbla_nodes.items():
             if not isinstance(cbla_node, CBLA_Generic_Node):
@@ -441,7 +441,7 @@ class CBLA(interactive_system.InteractiveCmd):
 
                     for linked_var_name, linked_var in linked_vars.items():
                         if linked_var_name == 'hf-l' or linked_var_name == 'hf-r':
-                            var_name = 'SMA'
+                            var_name = 'Half Fin'
                             cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
                                                  var_range=(130, 300), var_name=var_name,
                                                 )
@@ -453,10 +453,73 @@ class CBLA(interactive_system.InteractiveCmd):
                         else:
                             raise ValueError('%s: Unknown linked variable!' % linked_var_name)
 
+    def link_spatially(self, cbla_nodes, cluster_suffix='c'):
+        self.link_spatial_locally(cbla_nodes)
 
+        # linking the Light nodes spatially
+        rfx_range = (0, 255)
+        rfx_l_name = 'Reflex LED'
+        rfx_m_name = 'Reflex Motor'
+        c2_f1_rfx_m = cbla_nodes['%s2.cbla_reflex_1-m' % cluster_suffix].out_var['rfx-m']
+        c2_f1_rfx_l = cbla_nodes['%s2.cbla_reflex_1-l' % cluster_suffix].out_var['rfx-l']
+        c1_f2_rfx_m = cbla_nodes['%s1.cbla_reflex_2-m' % cluster_suffix].out_var['rfx-m']
+        c1_f2_rfx_l = cbla_nodes['%s1.cbla_reflex_2-l' % cluster_suffix].out_var['rfx-l']
+        c3_f0_rfx_m = cbla_nodes['%s3.cbla_reflex_0-m' % cluster_suffix].out_var['rfx-m']
+        c3_f0_rfx_l = cbla_nodes['%s3.cbla_reflex_0-l' % cluster_suffix].out_var['rfx-l']
+        c3_f2_rfx_l = cbla_nodes['%s3.cbla_reflex_2-l' % cluster_suffix].out_var['rfx-l']
+        c4_f1_rfx_m = cbla_nodes['%s4.cbla_reflex_1-m' % cluster_suffix].out_var['rfx-m']
+        c4_f0_rfx_l = cbla_nodes['%s4.cbla_reflex_0-l' % cluster_suffix].out_var['rfx-l']
+        c2_f2_rfx_m = cbla_nodes['%s2.cbla_reflex_2-m' % cluster_suffix].out_var['rfx-m']
 
-    def link_spatially(self, cbla_nodes):
-        pass
+        cbla_nodes['%s1.cbla_light_2' % cluster_suffix].add_in_var(var=c2_f1_rfx_m, var_key='c2f1_rfx-m',
+                                                                   var_range=rfx_range, var_name=rfx_m_name)
+
+        cbla_nodes['%s1.cbla_light_2' % cluster_suffix].add_in_var(var=c3_f0_rfx_l, var_key='c3f0_rfx-l',
+                                                                   var_range=rfx_range, var_name=rfx_l_name)
+
+        cbla_nodes['%s2.cbla_light_1' % cluster_suffix].add_in_var(var=c3_f0_rfx_m, var_key='c3f0_rfx-m',
+                                                                   var_range=rfx_range, var_name=rfx_m_name)
+
+        cbla_nodes['%s2.cbla_light_1' % cluster_suffix].add_in_var(var=c1_f2_rfx_l, var_key='c1f2_rfx-l',
+                                                                   var_range=rfx_range, var_name=rfx_l_name)
+
+        cbla_nodes['%s3.cbla_light_0' % cluster_suffix].add_in_var(var=c1_f2_rfx_m, var_key='c1f2_rfx-m',
+                                                                   var_range=rfx_range, var_name=rfx_m_name)
+
+        cbla_nodes['%s3.cbla_light_0' % cluster_suffix].add_in_var(var=c2_f1_rfx_l, var_key='c2f1_rfx-l',
+                                                                   var_range=rfx_range, var_name=rfx_l_name)
+
+        cbla_nodes['%s2.cbla_light_2' % cluster_suffix].add_in_var(var=c4_f0_rfx_l, var_key='c4f0_rfx-l',
+                                                                   var_range=rfx_range, var_name=rfx_l_name)
+
+        cbla_nodes['%s4.cbla_light_0' % cluster_suffix].add_in_var(var=c2_f2_rfx_m, var_key='c2f2_rfx-m',
+                                                                   var_range=rfx_range, var_name=rfx_m_name)
+
+        cbla_nodes['%s3.cbla_light_2' % cluster_suffix].add_in_var(var=c4_f1_rfx_m, var_key='c4f1_rfx-m',
+                                                                   var_range=rfx_range, var_name=rfx_m_name)
+
+        cbla_nodes['%s4.cbla_light_1' % cluster_suffix].add_in_var(var=c3_f2_rfx_l, var_key='c3f2_rfx-l',
+                                                                   var_range=rfx_range, var_name=rfx_l_name)
+
+         # linking the Half-Fin nodes spatially
+        hf_range = (130, 300)
+        hf_l_name = 'Half Fin (left)'
+        c1_f2_hf_l = cbla_nodes['%s1.cbla_halfFin_2-l' % cluster_suffix].out_var['hf-l']
+        c3_f0_hf_l = cbla_nodes['%s3.cbla_halfFin_0-l' % cluster_suffix].out_var['hf-l']
+        c3_f2_hf_l = cbla_nodes['%s3.cbla_halfFin_2-l' % cluster_suffix].out_var['hf-l']
+        c4_f0_hf_l = cbla_nodes['%s4.cbla_halfFin_0-l' % cluster_suffix].out_var['hf-l']
+        c2_f1_hf_l = cbla_nodes['%s2.cbla_halfFin_1-l' % cluster_suffix].out_var['hf-l']
+
+        cbla_nodes['%s1.cbla_halfFin_1-r' % cluster_suffix].add_in_var(var=c3_f0_hf_l, var_key='c3f0_hf-l',
+                                                                       var_range=hf_range, var_name=hf_l_name)
+        cbla_nodes['%s2.cbla_halfFin_0-r' % cluster_suffix].add_in_var(var=c1_f2_hf_l, var_key='c1f2_hf-l',
+                                                                       var_range=hf_range, var_name=hf_l_name)
+        cbla_nodes['%s2.cbla_halfFin_1-r' % cluster_suffix].add_in_var(var=c4_f0_hf_l, var_key='c4f0_hf-l',
+                                                                       var_range=hf_range, var_name=hf_l_name)
+        cbla_nodes['%s3.cbla_halfFin_2-r' % cluster_suffix].add_in_var(var=c2_f1_hf_l, var_key='c2f1_hf-l',
+                                                                       var_range=hf_range, var_name=hf_l_name)
+        cbla_nodes['%s4.cbla_halfFin_0-r' % cluster_suffix].add_in_var(var=c3_f2_hf_l, var_key='c3f2_hf-l',
+                                                                       var_range=hf_range, var_name=hf_l_name)
 
     def link_randomly(self, cbla_nodes):
         pass
@@ -1043,7 +1106,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    mode_config = 'spatial_local'
+    mode_config = 'spatial_global'
 
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])

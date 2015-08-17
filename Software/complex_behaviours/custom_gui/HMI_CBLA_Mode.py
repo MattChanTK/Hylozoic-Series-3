@@ -18,7 +18,7 @@ class HMI_CBLA_Mode(tk_gui.Page_Frame):
 
     def _build_page(self):
 
-        max_col_per_row = 3
+        max_col_per_row = 4
         col = 0
         row = 0
 
