@@ -47,14 +47,19 @@ class Robot(object):
         self.M0 = Var(self.compute_initial_motor())
         self.S0 = Var(None)
 
-        # a FIFO queue of previous sensory measurements
+        # the range of each sensory measurement
         self.s_ranges = [None] * len(self.in_vars)
+
+        # the variables monitoring the state of the system
+        self.internal_state = dict()
+        self.internal_state['in_idle_mode'] = Var(self.in_idle_mode)
+        self.internal_state['value_added'] = Var(0.0)
 
     def _set_default_config(self):
 
         self.config['sample_number'] = 30
         self.config['sample_period'] = 5.0
-        self.config['wait_time'] = 0.0  #4.0
+        self.config['wait_time'] = 0.0  # 4.0
 
         self.config['activation_value_inc'] = 10.0
         self.config['idling_value_inc'] = 1.5
@@ -63,7 +68,6 @@ class Robot(object):
         self.config['init_learning_steps'] = 8
         self.config['prev_values_deque_size'] = 15
         self.config['min_avg_action_value'] = 0.0001
-
 
     def compute_initial_motor(self) -> tuple:
         # compute the motor variables
@@ -132,7 +136,6 @@ class Robot(object):
 
             else:
                 self.s_ranges[i] = None
-
 
             if self.s_ranges[i]:
                 s = normalize(in_vals[i], self.s_ranges[i][0], self.s_ranges[i][1])
@@ -240,15 +243,15 @@ class Robot(object):
             except ZeroDivisionError:
                 value_inc = 1.0
 
-            if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
-                print("HalfFin: Avg_val = %f; cur_val = %f; val_inc = %f" %
-                      (avg_action_val, action_value**2, value_inc))
-            elif value_inc >= 1.0 and self.__class__ == Robot_Reflex:
-                print("Reflex Avg_val = %f; cur_val = %f; val_inc = %f" %
-                      (avg_action_val, action_value**2, value_inc))
-            elif value_inc >= 1.0 and self.__class__ == Robot_Light:
-                print("Light Avg_val = %f; cur_val = %f; val_inc = %f" %
-                      (avg_action_val, action_value**2, value_inc))
+            # if value_inc >= 1.0 and self.__class__ == Robot_HalfFin:
+            #     print("HalfFin: Avg_val = %f; cur_val = %f; val_inc = %f" %
+            #           (avg_action_val, action_value**2, value_inc))
+            # elif value_inc >= 1.0 and self.__class__ == Robot_Reflex:
+            #     print("Reflex Avg_val = %f; cur_val = %f; val_inc = %f" %
+            #           (avg_action_val, action_value**2, value_inc))
+            # elif value_inc >= 1.0 and self.__class__ == Robot_Light:
+            #     print("Light Avg_val = %f; cur_val = %f; val_inc = %f" %
+            #           (avg_action_val, action_value**2, value_inc))
 
             # if it is in idle mode and action value is high enough to exit idle mode
             if self.in_idle_mode and value_inc > self.config['activation_value_inc']:
@@ -273,6 +276,9 @@ class Robot(object):
 
         # save the action value to memory
         self.prev_action_value.append(action_value)
+
+        self.internal_state['in_idle_mode'].val = self.in_idle_mode
+        self.internal_state['value_added'].val = action_value
 
         return self.in_idle_mode
 

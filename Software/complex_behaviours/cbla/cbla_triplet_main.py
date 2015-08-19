@@ -791,6 +791,8 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             page_name = teensy_name + footer
 
             if isinstance(node, cbla_base.CBLA_Base_Node):
+
+
                 for var_name, var in node.in_var.items():
 
                     if page_name not in cbla_display_vars:
@@ -809,6 +811,14 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                         cbla_display_vars[page_name][device_name] = OrderedDict()
 
                     cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'output_node')
+
+                for var_name, var in node.cbla_robot.internal_state.items():
+
+                    # specifying the displayable variables
+                    if device_name not in cbla_display_vars[page_name]:
+                        cbla_display_vars[page_name][device_name] = OrderedDict()
+
+                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'robot_internal')
 
             else:
                 try:
@@ -865,7 +875,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES =  ('c1', )#'c2', )#('c1','c4', 'c2', 'c3')
+    ACTIVE_TEENSY_NAMES =  ('c1', 'c2', 'c3', 'c4',)
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 
