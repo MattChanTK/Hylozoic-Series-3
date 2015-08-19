@@ -606,74 +606,88 @@ class CBLA(interactive_system.InteractiveCmd):
 
                 out_var_keys = tuple(cbla_node.out_var.keys())
 
-                # Linking for the Light node and Reflex node
-                if isinstance(cbla_node, (Isolated_Light_Node, Isolated_Reflex_Node) ):
+                if isinstance(cbla_node, Isolated_Light_Node):
+                    var_name = 'LED'
+                    var_range = (0, 50)
+                elif isinstance(cbla_node, Isolated_Reflex_Node):
+                    var_name = 'Reflex Actuator'
+                    var_range = (0, 255)
+                elif isinstance(cbla_node, Isolated_HalfFin_Node):
+                    var_name = 'Half-Fin'
+                    var_range = (130, 300)
+                else:
+                    raise ValueError('Unknown Node Type!')
 
-                    if isinstance(cbla_node, Isolated_Light_Node):
-                        var_name = 'LED'
-                        var_range = (0, 50)
-                    else:
-                        var_name = 'Reflex Actuator'
-                        var_range = (0, 255)
+                # define the vars to be added
+                linked_vars = OrderedDict()
 
-                    # define the vars to be added
-                    linked_vars = OrderedDict()
+                # the doubly linked pairs
+                if cluster_id in (1, 4):
+                    linked_cluster_ids = (2, 3)
+                elif cluster_id in (2, 3):
+                    linked_cluster_ids = (1, 4)
+                else: # non-supported cluster id
+                    linked_cluster_ids = ()
 
-                    # the doubly linked pairs
-                    if cluster_id in (1, 4):
-                        linked_cluster_ids = (2, 3)
-                    elif cluster_id in (2, 3):
-                        linked_cluster_ids = (1, 4)
-                    else: # non-supported cluster id
-                        linked_cluster_ids = ()
+                for cid in linked_cluster_ids:
+                    if isinstance(cbla_node, (Isolated_Light_Node, Isolated_Reflex_Node)):
 
-                    for cid in linked_cluster_ids:
                         for out_var_key in out_var_keys:
                             linked_var_key = '%s%d_f%s_%s' % (cluster_suffix, cid, node_id, out_var_key)
                             linked_var_node_name = '%s%d.%s' % (cluster_suffix, cid, node_type_name)
                             linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
 
-                    # light Node specific connections
-                    if isinstance(cbla_node, Isolated_Light_Node):
-                        # the singly linked pairs within cluster
-                        if cluster_id in (1, 2, 3):
-                            for out_var_key in out_var_keys:
-                                linked_node_id = (node_id - 1) % self.num_light
-                                linked_var_key = '%s_f%s_%s' % (cluster_name, linked_node_id, out_var_key)
-                                if node_version:
-                                    version_suf = '-%s' % node_version
-                                else:
-                                    version_suf = ''
-                                linked_var_node_name = '%s.%s_%d%s' % (cluster_name, node_type_suf, linked_node_id, version_suf)
-                                linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
+                    elif isinstance(cbla_node, Isolated_HalfFin_Node):
 
-                        # additional inter-node links
-                        if (cluster_id, node_id) in ((1, 2), (3, 0), (2, 1)):
-
-                            if cluster_id == 1:
-                                linked_var_name = 'c2_l1_led'
-                                linked_var = cbla_nodes['%s2.cbla_light_1' % cluster_suffix].out_var['led']
-                            elif cluster_id == 2:
-                                linked_var_name = 'c3_l0_led'
-                                linked_var = cbla_nodes['%s3.cbla_light_0' % cluster_suffix].out_var['led']
-                            elif cluster_id == 3:
-                                linked_var_name = 'c1_l2_led'
-                                linked_var = cbla_nodes['%s1.cbla_light_2' % cluster_suffix].out_var['led']
+                        for out_var_key in out_var_keys:
+                            if node_version == 'l':
+                                linked_out_var_key = out_var_key.replace('l', 'r')
+                                linked_node_type_name = '%s_%d-%s' % (node_type_suf, node_id, node_version.replace('l', 'r'))
+                            elif node_version == 'r':
+                                linked_out_var_key = out_var_key.replace('r', 'l')
+                                linked_node_type_name = '%s_%d-%s' % (node_type_suf, node_id, node_version.replace('r', 'l'))
                             else:
-                                raise ValueError('Unknown cluster_id')
+                                raise ValueError('Unknown node version: %s' % node_version)
 
-                            linked_vars[linked_var_name] = linked_var
+                            linked_var_key = '%s%d_f%s_%s' % (cluster_suffix, cid, node_id, linked_out_var_key)
+                            linked_var_node_name = '%s%d.%s' % (cluster_suffix, cid, linked_node_type_name)
+                            linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[linked_out_var_key]
 
-                    for linked_var_name, linked_var in linked_vars.items():
+                # light Node specific connections
+                if isinstance(cbla_node, Isolated_Light_Node):
+                    # the singly linked pairs within cluster
+                    if cluster_id in (1, 2, 3):
+                        for out_var_key in out_var_keys:
+                            linked_node_id = (node_id - 1) % self.num_light
+                            linked_var_key = '%s_f%s_%s' % (cluster_name, linked_node_id, out_var_key)
+                            if node_version:
+                                version_suf = '-%s' % node_version
+                            else:
+                                version_suf = ''
+                            linked_var_node_name = '%s.%s_%d%s' % (cluster_name, node_type_suf, linked_node_id, version_suf)
+                            linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
 
-                            cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
-                                                 var_range=var_range, var_name=var_name)
+                    # additional inter-node links
+                    if (cluster_id, node_id) in ((1, 2), (3, 0), (2, 1)):
 
-                elif isinstance(cbla_node, Isolated_HalfFin_Node):
+                        if cluster_id == 1:
+                            linked_var_name = 'c2_l1_led'
+                            linked_var = cbla_nodes['%s2.cbla_light_1' % cluster_suffix].out_var['led']
+                        elif cluster_id == 2:
+                            linked_var_name = 'c3_l0_led'
+                            linked_var = cbla_nodes['%s3.cbla_light_0' % cluster_suffix].out_var['led']
+                        elif cluster_id == 3:
+                            linked_var_name = 'c1_l2_led'
+                            linked_var = cbla_nodes['%s1.cbla_light_2' % cluster_suffix].out_var['led']
+                        else:
+                            raise ValueError('Unknown cluster_id')
 
-                    pas
-                else:
-                    raise ValueError('Invalid node type!')
+                        linked_vars[linked_var_name] = linked_var
+
+                for linked_var_name, linked_var in linked_vars.items():
+
+                        cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                             var_range=var_range, var_name=var_name)
 
 
     def start_nodes(self):
@@ -761,16 +775,16 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             device_name = node_name[1]
 
             footer = '\nMisc.'
-            if isinstance(node, Local_HalfFin_Node):
+            if isinstance(node, Isolated_HalfFin_Node):
                 footer = '\nHalf Fin'
                 if device_name[-1] == 'l':
                     footer += ' Left'
                 elif device_name[-1] == 'r':
                     footer += ' right'
 
-            elif isinstance(node, Local_Reflex_Node):
+            elif isinstance(node, Isolated_Reflex_Node):
                 footer = '\nReflex'
-            elif isinstance(node, Local_Light_Node):
+            elif isinstance(node, Isolated_Light_Node):
                 footer = '\nLight'
             elif isinstance(node, cbla_base.CBLA_Generic_Node):
                 footer = '\nCBLA'
