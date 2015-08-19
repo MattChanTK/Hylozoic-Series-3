@@ -11,8 +11,6 @@ from abstract_node import *
 
 import cbla_generic_node as cbla_base
 from cbla_isolated_node import *
-from cbla_local_node import *
-from cbla_spatial_node import *
 
 from cbla_engine import cbla_robot
 
@@ -649,8 +647,6 @@ class CBLA(interactive_system.InteractiveCmd):
                                 linked_var_node_name = '%s.%s_%d%s' % (cluster_name, node_type_suf, linked_node_id, version_suf)
                                 linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
 
-
-
                         # additional inter-node links
                         if (cluster_id, node_id) in ((1, 2), (3, 0), (2, 1)):
 
@@ -672,6 +668,12 @@ class CBLA(interactive_system.InteractiveCmd):
 
                             cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
                                                  var_range=var_range, var_name=var_name)
+
+                elif isinstance(cbla_node, Isolated_HalfFin_Node):
+
+                    pas
+                else:
+                    raise ValueError('Invalid node type!')
 
 
     def start_nodes(self):
