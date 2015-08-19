@@ -30,6 +30,7 @@ class Isolated_Light_Node(CBLA_Generic_Node):
 
         return learner_config
 
+
 class Isolated_HalfFin_Node(CBLA_Generic_Node):
 
     def _get_learner_config(self):
@@ -53,6 +54,7 @@ class Isolated_HalfFin_Node(CBLA_Generic_Node):
                                                                 )
 
         return learner_config
+
 
 class Isolated_Reflex_Node(CBLA_Generic_Node):
 

@@ -689,7 +689,6 @@ class CBLA(interactive_system.InteractiveCmd):
                         cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
                                              var_range=var_range, var_name=var_name)
 
-
     def start_nodes(self):
 
         if not isinstance(self.node_list, dict) or \
@@ -860,13 +859,13 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    mode_config = 'functional' #'random' #'spatial_global'
+    mode_config = 'isolated'
 
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None# ('c1','c4', 'c2', 'c3')
+    ACTIVE_TEENSY_NAMES =  ('c1', )#'c2', )#('c1','c4', 'c2', 'c3')
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 
