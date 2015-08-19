@@ -65,7 +65,6 @@ class Robot(object):
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
-        self.config['init_learning_steps'] = 8
         self.config['prev_values_deque_size'] = 15
         self.config['min_avg_action_value'] = 0.0001
 
@@ -273,7 +272,7 @@ class Robot(object):
             self.internal_state['value_added'].val = value_inc
 
         else:
-            if self.step_in_active_mode > self.config['init_learning_steps']:
+            if self.step_in_active_mode > (len(self.in_vars) + len(self.out_vars))*2:
                 self.init_learning_done = True
             else:
                 self.step_in_active_mode += 1
@@ -312,7 +311,6 @@ class Robot_Light(Robot):
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 20
         self.config['idling_prob'] = 1.0
-        self.config['init_learning_steps'] = 30
         self.config['prev_values_deque_size'] = 60
         self.config['min_avg_action_value'] = 0.0001
 
@@ -334,7 +332,6 @@ class Robot_HalfFin(Robot):
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
-        self.config['init_learning_steps'] = 8
         self.config['prev_values_deque_size'] = 15
 
     def read(self, sample_method=None):
@@ -379,7 +376,6 @@ class Robot_Reflex(Robot):
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 30
         self.config['idling_prob'] = 1.0
-        self.config['init_learning_steps'] = 60
         self.config['prev_values_deque_size'] = 100
 
     def read(self, sample_method=None):
