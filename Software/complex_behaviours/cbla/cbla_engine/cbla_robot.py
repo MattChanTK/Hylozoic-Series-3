@@ -268,6 +268,10 @@ class Robot(object):
             # if it's in active mode
             elif not self.in_idle_mode:
                 self.step_in_active_mode += 1
+
+            self.internal_state['in_idle_mode'].val = self.in_idle_mode
+            self.internal_state['value_added'].val = value_inc
+
         else:
             if self.step_in_active_mode > self.config['init_learning_steps']:
                 self.init_learning_done = True
@@ -277,8 +281,7 @@ class Robot(object):
         # save the action value to memory
         self.prev_action_value.append(action_value)
 
-        self.internal_state['in_idle_mode'].val = self.in_idle_mode
-        self.internal_state['value_added'].val = action_value
+
 
         return self.in_idle_mode
 
