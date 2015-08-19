@@ -583,8 +583,96 @@ class CBLA(interactive_system.InteractiveCmd):
             num_linked +=1
             print('%s -> %s' % (rand_source_key, cbla_nodes[rand_dest_key].node_name))
 
-    def link_functionally(self, cbla_nodes):
-        pass
+    def link_functionally(self, cbla_nodes, cluster_suffix='c'):
+        for node_key, cbla_node in cbla_nodes.items():
+            if not isinstance(cbla_node, CBLA_Generic_Node):
+                continue
+
+            if isinstance(cbla_node, (Isolated_Light_Node, Isolated_HalfFin_Node, Isolated_Reflex_Node)):
+                # find the identity of this node
+                identity = node_key.split('.')
+                cluster_name = identity[0]
+                try:
+                    cluster_id = int(cluster_name.replace(cluster_suffix, ''))
+                except ValueError:
+                    continue
+
+                node_type_name = identity[1]
+                node_type = identity[1].split('-')
+                node_id =  int(node_type[0].split('_')[-1])
+                node_type_suf = node_type[0].replace('_%d' % node_id, '')
+                if len(node_type) > 1:
+                    node_version = node_type[-1]
+                else:
+                    node_version = None
+
+                out_var_keys = tuple(cbla_node.out_var.keys())
+
+                # Linking for the Light node and Reflex node
+                if isinstance(cbla_node, (Isolated_Light_Node, Isolated_Reflex_Node) ):
+
+                    if isinstance(cbla_node, Isolated_Light_Node):
+                        var_name = 'LED'
+                        var_range = (0, 50)
+                    else:
+                        var_name = 'Reflex Actuator'
+                        var_range = (0, 255)
+
+                    # define the vars to be added
+                    linked_vars = OrderedDict()
+
+                    # the doubly linked pairs
+                    if cluster_id in (1, 4):
+                        linked_cluster_ids = (2, 3)
+                    elif cluster_id in (2, 3):
+                        linked_cluster_ids = (1, 4)
+                    else: # non-supported cluster id
+                        linked_cluster_ids = ()
+
+                    for cid in linked_cluster_ids:
+                        for out_var_key in out_var_keys:
+                            linked_var_key = '%s%d_f%s_%s' % (cluster_suffix, cid, node_id, out_var_key)
+                            linked_var_node_name = '%s%d.%s' % (cluster_suffix, cid, node_type_name)
+                            linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
+
+                    # light Node specific connections
+                    if isinstance(cbla_node, Isolated_Light_Node):
+                        # the singly linked pairs within cluster
+                        if cluster_id in (1, 2, 3):
+                            for out_var_key in out_var_keys:
+                                linked_node_id = (node_id - 1) % self.num_light
+                                linked_var_key = '%s_f%s_%s' % (cluster_name, linked_node_id, out_var_key)
+                                if node_version:
+                                    version_suf = '-%s' % node_version
+                                else:
+                                    version_suf = ''
+                                linked_var_node_name = '%s.%s_%d%s' % (cluster_name, node_type_suf, linked_node_id, version_suf)
+                                linked_vars[linked_var_key] = cbla_nodes[linked_var_node_name].out_var[out_var_key]
+
+
+
+                        # additional inter-node links
+                        if (cluster_id, node_id) in ((1, 2), (3, 0), (2, 1)):
+
+                            if cluster_id == 1:
+                                linked_var_name = 'c2_l1_led'
+                                linked_var = cbla_nodes['%s2.cbla_light_1' % cluster_suffix].out_var['led']
+                            elif cluster_id == 2:
+                                linked_var_name = 'c3_l0_led'
+                                linked_var = cbla_nodes['%s3.cbla_light_0' % cluster_suffix].out_var['led']
+                            elif cluster_id == 3:
+                                linked_var_name = 'c1_l2_led'
+                                linked_var = cbla_nodes['%s1.cbla_light_2' % cluster_suffix].out_var['led']
+                            else:
+                                raise ValueError('Unknown cluster_id')
+
+                            linked_vars[linked_var_name] = linked_var
+
+                    for linked_var_name, linked_var in linked_vars.items():
+
+                            cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
+                                                 var_range=var_range, var_name=var_name)
+
 
     def start_nodes(self):
 
@@ -756,10 +844,9 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    mode_config = 'random' #'spatial_global'
+    mode_config = 'functional' #'random' #'spatial_global'
 
     if len(sys.argv) > 1:
-        mode_config = str(sys.argv[1])
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
