@@ -374,13 +374,16 @@ class CBLA(interactive_system.InteractiveCmd):
                     for linked_var_name, linked_var in linked_vars.items():
                         if linked_var_name == 'rfx-m':
                             var_name = 'reflex motor'
+                            var_range = (0, 100)
                         elif linked_var_name == 'rfx-l':
                             var_name = 'reflex light'
+                            var_range = (0, 255)
                         else:
                             var_name = 'reflex actuator'
+                            var_range = (0, 255)
 
                         cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
-                                             var_range=(0, 255), var_name=var_name,
+                                             var_range=var_range, var_name=var_name,
                                              )
                 # Linking for the Half-Fin Node
                 elif isinstance(cbla_node, Isolated_HalfFin_Node):
@@ -535,6 +538,10 @@ class CBLA(interactive_system.InteractiveCmd):
                 cluster_name = identity[0]
                 node_type = identity[1].split('-')
                 node_id =  int(node_type[0].split('_')[-1])
+                if len(node_type) > 1:
+                    node_version = node_type[-1]
+                else:
+                    node_version = None
 
                 for out_var_key, out_var in cbla_node.out_var.items():
 
@@ -544,8 +551,15 @@ class CBLA(interactive_system.InteractiveCmd):
                         var_name = 'LED'
                     elif isinstance(cbla_node, Isolated_HalfFin_Node):
                         var_key = '%s_f%s_%s' % (cluster_name, node_id, out_var_key)
-                        var_range = (0, 255)
-                        var_name = 'Reflex Actuator'
+                        if node_version == 'm':
+                            var_range = (0, 100)
+                            var_name = 'Reflex Motor'
+                        elif node_version == 'l':
+                            var_range = (0, 255)
+                            var_name = 'Reflex LED'
+                        else:
+                            raise ValueError('node_version %s does not exist!' % node_version)
+
                     elif isinstance(cbla_node, Isolated_Reflex_Node):
                         var_key = '%s_f%s_%s' % (cluster_name, node_id, out_var_key)
                         var_range = (130, 300)

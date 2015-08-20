@@ -124,22 +124,32 @@ class Robot(object):
         # normalize if the range is specified
         for i in range(len(in_vals)):
 
-            if self.s_ranges[i]:
-                if in_vals[i] < self.s_ranges[i][0]:
-                    self.s_ranges[i][0] = in_vals[i]
-                if in_vals[i] > self.s_ranges[i][1]:
-                    self.s_ranges[i][1] = in_vals[i] + 1
+            # preset s_range mode
+            s = None
+            if 's_ranges' in self.config and len(self.config['s_ranges']) > 0:
+                val_range = self.config['s_ranges'][i]
+                if isinstance(val_range, tuple) and len(val_range) == 2:
+                    s = normalize(in_vals[i], val_range[0], val_range[1])
+            if s is None:
+                s = in_vals[i]
 
-            elif in_vals[i] != 0:
-                self.s_ranges[i] = [in_vals[i], in_vals[i] + 1]
-
-            else:
-                self.s_ranges[i] = None
-
-            if self.s_ranges[i]:
-                s = normalize(in_vals[i], self.s_ranges[i][0], self.s_ranges[i][1])
-            else:
-                s = 0.5
+            # adaptive s_range mode
+            # if self.s_ranges[i]:
+            #     if in_vals[i] < self.s_ranges[i][0]:
+            #         self.s_ranges[i][0] = in_vals[i]
+            #     if in_vals[i] > self.s_ranges[i][1]:
+            #         self.s_ranges[i][1] = in_vals[i] + 1
+            #
+            # elif in_vals[i] != 0:
+            #     self.s_ranges[i] = [in_vals[i], in_vals[i] + 1]
+            #
+            # else:
+            #     self.s_ranges[i] = None
+            #
+            # if self.s_ranges[i]:
+            #     s = normalize(in_vals[i], self.s_ranges[i][0], self.s_ranges[i][1])
+            # else:
+            #     s = 0.5
 
             S.append(s)
         self.S0.val = tuple(S)
@@ -307,7 +317,7 @@ class Robot_Light(Robot):
         self.config['sample_period'] = 1.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['activation_value_inc'] = 15.0
+        self.config['activation_value_inc'] = 20.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 20
         self.config['idling_prob'] = 1.0
@@ -324,11 +334,11 @@ class Robot_HalfFin(Robot):
     def _set_default_config(self):
         super(Robot_HalfFin, self)._set_default_config()
 
-        self.config['sample_number'] = 10
+        self.config['sample_number'] = 20
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0  #4.0
 
-        self.config['activation_value_inc'] = 15.0
+        self.config['activation_value_inc'] = 30.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
@@ -372,7 +382,7 @@ class Robot_Reflex(Robot):
         self.config['sample_period'] = 0.5
         self.config['wait_time'] = 0.0  # 2.0
 
-        self.config['activation_value_inc'] = 15.0
+        self.config['activation_value_inc'] = 25.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 30
         self.config['idling_prob'] = 1.0
