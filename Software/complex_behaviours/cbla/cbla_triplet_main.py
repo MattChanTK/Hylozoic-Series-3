@@ -134,6 +134,11 @@ class CBLA(interactive_system.InteractiveCmd):
         # add cbla nodes in to the node_list
         self.node_list.update(cbla_nodes)
 
+        # add user study panel to the node_list
+        user_study_panel = UserStudyPanel(self.messenger)
+
+        self.node_list[user_study_panel.node_name] = user_study_panel
+
         # notify other threads that all nodes are created
         with self.all_nodes_created:
             self.all_nodes_created.notify_all()
@@ -777,85 +782,110 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     content_frame = tk_gui.Content_Frame(hmi)
     nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
 
+    # constructing the list of cbla and device display variables
+    panel_display_vars = OrderedDict()
     cbla_display_vars = OrderedDict()
     device_display_vars = OrderedDict()
 
     if len(node_list) > 0:
 
         for name, node in node_list.items():
+
             node_name = name.split('.')
-            teensy_name = node_name[0]
-            device_name = node_name[1]
+            try:
+                teensy_name = node_name[0]
+                device_name = node_name[1]
 
-            footer = '\nMisc.'
-            if isinstance(node, Isolated_HalfFin_Node):
-                footer = '\nHalf Fin'
-                if device_name[-1] == 'l':
-                    footer += ' Left'
-                elif device_name[-1] == 'r':
-                    footer += ' right'
+            # non-device based node
+            except IndexError:
+                if isinstance(node, UserStudyPanel):
+                    page_name = 'User Study'
+                    for var_name, var in node.out_var.items():
+                        if page_name not in panel_display_vars:
+                            panel_display_vars[page_name] = OrderedDict()
 
-            elif isinstance(node, Isolated_Reflex_Node):
-                footer = '\nReflex'
-            elif isinstance(node, Isolated_Light_Node):
-                footer = '\nLight'
-            elif isinstance(node, cbla_base.CBLA_Generic_Node):
-                footer = '\nCBLA'
+                        panel_display_vars[page_name][var_name] = ({var_name: var}, 'panel')
 
-            page_name = teensy_name + footer
-
-            if isinstance(node, cbla_base.CBLA_Base_Node):
-
-
-                for var_name, var in node.in_var.items():
-
-                    if page_name not in cbla_display_vars:
-                        cbla_display_vars[page_name] = OrderedDict()
-
-                    # specifying the displayable variables
-                    if device_name not in cbla_display_vars[page_name]:
-                        cbla_display_vars[page_name][device_name] = OrderedDict()
-
-                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'input_node')
-
-                for var_name, var in node.out_var.items():
-
-                    # specifying the displayable variables
-                    if device_name not in cbla_display_vars[page_name]:
-                        cbla_display_vars[page_name][device_name] = OrderedDict()
-
-                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'output_node')
-
-                for var_name, var in node.cbla_robot.internal_state.items():
-
-                    # specifying the displayable variables
-                    if device_name not in cbla_display_vars[page_name]:
-                        cbla_display_vars[page_name][device_name] = OrderedDict()
-
-                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'robot_internal')
-
+            # device based node
             else:
-                try:
-                    output_name = node_name[2]
-                except IndexError:
-                    output_name = "variables"
 
-                # specifying the displayable variables
-                if page_name not in device_display_vars:
-                    device_display_vars[page_name] = OrderedDict()
+                footer = '\nMisc.'
+                if isinstance(node, Isolated_HalfFin_Node):
+                    footer = '\nHalf Fin'
+                    if device_name[-1] == 'l':
+                        footer += ' Left'
+                    elif device_name[-1] == 'r':
+                        footer += ' right'
 
-                if device_name not in device_display_vars[page_name]:
-                    device_display_vars[page_name][device_name] = OrderedDict()
+                elif isinstance(node, Isolated_Reflex_Node):
+                    footer = '\nReflex'
+                elif isinstance(node, Isolated_Light_Node):
+                    footer = '\nLight'
+                elif isinstance(node, cbla_base.CBLA_Generic_Node):
+                    footer = '\nCBLA'
 
-                if isinstance(node, Input_Node):
-                    device_display_vars[page_name][device_name][output_name] = (node.out_var, 'input_node')
-                elif isinstance(node, Output_Node):
-                    device_display_vars[page_name][device_name][output_name] = (node.in_var, 'output_node')
+                page_name = teensy_name + footer
+
+                if isinstance(node, cbla_base.CBLA_Base_Node):
+
+                    for var_name, var in node.in_var.items():
+
+                        if page_name not in cbla_display_vars:
+                            cbla_display_vars[page_name] = OrderedDict()
+
+                        # specifying the displayable variables
+                        if device_name not in cbla_display_vars[page_name]:
+                            cbla_display_vars[page_name][device_name] = OrderedDict()
+
+                        cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'input_node')
+
+                    for var_name, var in node.out_var.items():
+
+                        # specifying the displayable variables
+                        if device_name not in cbla_display_vars[page_name]:
+                            cbla_display_vars[page_name][device_name] = OrderedDict()
+
+                        cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'output_node')
+
+                    for var_name, var in node.cbla_robot.internal_state.items():
+
+                        # specifying the displayable variables
+                        if device_name not in cbla_display_vars[page_name]:
+                            cbla_display_vars[page_name][device_name] = OrderedDict()
+
+                        cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'robot_internal')
+
                 else:
-                    device_display_vars[page_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
-                    device_display_vars[page_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+                    try:
+                        output_name = node_name[2]
+                    except IndexError:
+                        output_name = "variables"
 
+                    # specifying the displayable variables
+                    if page_name not in device_display_vars:
+                        device_display_vars[page_name] = OrderedDict()
+
+                    if device_name not in device_display_vars[page_name]:
+                        device_display_vars[page_name][device_name] = OrderedDict()
+
+                    if isinstance(node, Input_Node):
+                        device_display_vars[page_name][device_name][output_name] = (node.out_var, 'input_node')
+                    elif isinstance(node, Output_Node):
+                        device_display_vars[page_name][device_name][output_name] = (node.in_var, 'output_node')
+                    else:
+                        device_display_vars[page_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                        device_display_vars[page_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+
+    # Putting the variables into the pages
     page_frames = OrderedDict()
+
+    # page for the User study control panel
+    page_name = 'User Study'
+    user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
+                                      display_var=panel_display_vars)
+    page_frames[page_name] = user_study_frame
+
+    # page for the cbla and device variables
     for page_name, page_vars in tuple(cbla_display_vars.items()) + tuple(device_display_vars.items()):
 
         teensy_display_vars = OrderedDict()
@@ -889,7 +919,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES =  ('c1', 'c2', 'c3', 'c4',)
+    ACTIVE_TEENSY_NAMES =  None#('c1', 'c2', 'c3', 'c4',)
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 

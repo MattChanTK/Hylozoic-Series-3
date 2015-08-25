@@ -175,13 +175,15 @@ class HMI_Standard_Control_Frame(ttk.Frame):
 
 def to_tuple_string(output_var):
 
-    if not isinstance(output_var, (float, int, list, tuple, dict)):
+    if not isinstance(output_var, (float, int, list, tuple, dict, str)):
         raise TypeError("output_var must be a int, float, list, a tuple or a dict")
 
     if isinstance(output_var, dict):
         var_list = tuple(output_var.values())
     elif isinstance(output_var, (int, float)):
         var_list = tuple([output_var])
+    elif isinstance(output_var, str):
+        var_list = (output_var, )
     else:
         var_list = tuple(output_var)
 
