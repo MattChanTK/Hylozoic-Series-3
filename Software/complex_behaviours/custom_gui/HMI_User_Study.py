@@ -1,14 +1,32 @@
 __author__ = 'Matthew'
 from hmi_gui.tk_gui import *
-from abstract_node import UserStudyPanel
 from .HMI_Standard import *
-from datetime import datetime
+from abstract_node import CSV_Snapshot
+from tkinter import CENTER
+
 
 class HMI_User_Study(Page_Frame):
 
-    def __init__(self, parent_frame: Content_Frame, page_name: str, page_key, display_var: OrderedDict):
+    def __init__(self, parent_frame: Content_Frame, page_name: str, page_key, display_var: OrderedDict,
+                 snapshot_taker: CSV_Snapshot):
 
+        # type checking
+        if not isinstance(display_var, dict):
+            raise TypeError("display_var must be a dictionary!")
         self.display_var = display_var
+
+        if not isinstance(snapshot_taker, CSV_Snapshot):
+            raise TypeError("Snapshot Taker not found!")
+        self.snapshot_taker = snapshot_taker
+
+        # set up the display window for the participant facing window
+        self.public_window = Tk()
+        self.public_window.title('Current Number')
+        self.public_sample_num_label = ttk.Label(self.public_window, text='0', anchor=CENTER)
+        self.public_sample_num_label.config(foreground="black", background="white", font=('Helvetica', 500))
+        self.public_sample_num_label.grid(row=0, column=0,  sticky='nsew')
+        self.public_window.columnconfigure(0, weight=1)
+        self.public_window.rowconfigure(0, weight=1)
 
         # label style
         var_label_style = ttk.Style()
@@ -40,3 +58,19 @@ class HMI_User_Study(Page_Frame):
             if col == max_col_per_row:
                 col = 0
                 row += 2
+
+
+        # === control panel ===
+        row += 1
+        # control frame
+        control_frame = ttk.Frame(self)
+        control_frame.grid(row=row, column=0)
+
+        # sample button
+        sample_button = ttk.Button(control_frame, text='Sample Now', command=self.__sample_action)
+        sample_button.grid(row=0, column=0, sticky='NW')
+
+    def __sample_action(self):
+
+        self.snapshot_taker.take_snapshot()
+        self.public_sample_num_label.configure(text=self.snapshot_taker.row_info['sample_number'].val)
