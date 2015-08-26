@@ -7,6 +7,7 @@ from abstract_node.node import *
 from interactive_system import Messenger
 import csv
 import os
+import winsound
 
 class UserStudyPanel(Node):
 
@@ -79,6 +80,11 @@ class CSV_Snapshot(object):
         file_path = os.path.join(self.folder, self.filename)
         try:
             with open(file_path, 'a', newline='') as csv_file:
+
+                # make a beep sound
+                freq = 1000 # Set Frequency To 2500 Hertz
+                dur = 1000 # Set Duration To 1000 ms == 1 second
+                winsound.Beep(freq,dur)
 
                 self.row_info['sample_number'].val += 1
 
