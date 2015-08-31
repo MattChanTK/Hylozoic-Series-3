@@ -82,7 +82,7 @@ class CSV_Snapshot(object):
             with open(file_path, 'a', newline='') as csv_file:
 
                 # make a beep sound
-                freq = 1000 # Set Frequency To 2500 Hertz
+                freq = 1000 # Set Frequency To 1000 Hertz
                 dur = 1000 # Set Duration To 1000 ms == 1 second
                 winsound.Beep(freq,dur)
 
