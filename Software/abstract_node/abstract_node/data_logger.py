@@ -9,7 +9,7 @@ import os
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
 import shelve
-from abstract_node.data_save_process import DataSaver
+from .data_save_process import DataSaver
 
 
 class DataLogger(threading.Thread):
@@ -64,16 +64,33 @@ class DataLogger(threading.Thread):
         # if from previous session
         if log_index_file:
 
-            try:
-                log_index_file[self.idx_num_session_key] += 1
-            except KeyError:
-                raise KeyError('log file is corrupted!')
+            # find the latest session actually exist
+            prev_session = log_index_file[self.idx_num_session_key]
+            while prev_session > 0:
+                prev_session_dir_path = os.path.join(log_dir_path, log_index_file[str(prev_session)])
+                if os.path.exists(prev_session_dir_path) and os.path.isdir(prev_session_dir_path):
 
-            curr_session = log_index_file[self.idx_num_session_key]
+                    try:
+                        log_index_file[self.idx_num_session_key] = prev_session + 1
+                    except KeyError:
+                        raise KeyError('log file is corrupted!')
+
+                    break
+                else:
+                    prev_session -= 1
+
         else:
+            prev_session = 0
+
+        if prev_session <= 0:
+
             curr_session = 1
             log_index_file[self.idx_time_created_key] = now
             log_index_file[self.idx_num_session_key] = curr_session
+
+        else:
+            curr_session = log_index_file[self.idx_num_session_key]
+
 
         log_index_file[str(curr_session)] = 'session_%03d' % curr_session
 
@@ -127,6 +144,11 @@ class DataLogger(threading.Thread):
             self.save_freq = float(max(0.0, kwarg['save_freq']))
         else:
             self.save_freq = 2.0
+
+        if 'mode' in kwarg and isinstance(kwarg['mode'], (float, int)):
+            self.mode = str(kwarg['mode'])
+        else:
+            self.mode = 'general'
 
         super(DataLogger, self).__init__(name='DataLogger', daemon=False)
 

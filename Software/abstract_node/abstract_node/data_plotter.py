@@ -9,8 +9,8 @@ import matplotlib.axes as axes
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from save_figure import save
-from data_logger import DataLogger
+from .save_figure import save
+from .data_logger import DataLogger
 
 
 class DataPlotter(object):
@@ -28,7 +28,7 @@ class DataPlotter(object):
         self.plotting_info_types = info_types
 
         # all data
-        self.data = defaultdict(lambda: defaultdict(lambda: {'x': [], 'y': []}))
+        self.data = []
         # state info
         self.state_info = defaultdict(dict)
 
@@ -41,17 +41,26 @@ class DataPlotter(object):
 
     def _construct_plot_objects(self):
 
-        for node_name, node_data in self.data.items():
+        session_num = 1
+        for session_data in self.data:
+            for node_name, node_data in session_data.items():
 
-            self.plot_objects[(node_name, 'history')] = PlotObject(fig_title='History Plot - %s' % node_name)
+                self.plot_objects[(session_num, node_name, 'history')] = PlotObject(fig_title='History Plot - %s (S%d)' % (node_name, session_num))
+            session_num += 1
+
+    @staticmethod
+    def _get_data_template():
+        return defaultdict(lambda: defaultdict(lambda: {'x': [], 'y': []}))
 
     def _extract_data_files(self, packet_types, info_types):
 
-        for session_data in self.log_dict:
+        session_num = 1
+        for session_log in self.log_dict:
 
-            session_clock0 = session_data[DataLogger.session_clock0_key]
+            session_clock0 = session_log[DataLogger.session_clock0_key]
+            session_data = self._get_data_template()
 
-            for node_name, node_data in session_data.items():
+            for node_name, node_data in session_log.items():
 
                 for packet_type in packet_types:
 
@@ -72,12 +81,12 @@ class DataPlotter(object):
                             packet_time = packet[DataLogger.packet_time_key]
 
                             for data_type, data_val in packet.items():
-                                self.data[node_name][data_type]['y'].append(data_val)
-                                self.data[node_name][data_type]['x'].append(packet_time - session_clock0)
+                                session_data[node_name][data_type]['y'].append(data_val)
+                                session_data[node_name][data_type]['x'].append(packet_time - session_clock0)
 
-                        for data_type, data_element in self.data[node_name].items():
-                            print('Extracted %s --- %s' % (node_name, data_type))
-                            # print(self.data[node_name][data_type]['y'][100])
+                        for data_type, data_element in session_data[node_name].items():
+                            print('Session %d: Extracted %s --- %s' % (session_num, node_name, data_type))
+                            # print(session_data[node_name][data_type]['y'][100])
 
                 for info_type in info_types:
 
@@ -87,6 +96,8 @@ class DataPlotter(object):
                         info_dict = node_data[info_type]
                         self.state_info[node_name].update(info_dict)
 
+            self.data.append(session_data)
+            session_num += 1
 
     def plot(self):
         self.plot_histories()
@@ -96,43 +107,47 @@ class DataPlotter(object):
         grid_num_row = 2
 
         exclusion_list = ('packet_time', 'step', 'packet_type')
+        session_num = 1
+        for session_data in self.data:
 
-        for node_name, node_data in self.data.items():
+            for node_name, node_data in session_data.items():
 
-            plot_order_list = sorted(node_data.keys())
-            for exclude_type in exclusion_list:
-                try:
-                    plot_order_list.remove(exclude_type)
-                except (AttributeError, ValueError):
-                    pass
+                plot_order_list = sorted(node_data.keys())
+                for exclude_type in exclusion_list:
+                    try:
+                        plot_order_list.remove(exclude_type)
+                    except (AttributeError, ValueError):
+                        pass
 
-            grid_dim = (grid_num_row, math.ceil(len(plot_order_list)/grid_num_row))
+                grid_dim = (grid_num_row, math.ceil(len(plot_order_list)/grid_num_row))
 
-            for data_type, data_val in node_data.items():
+                for data_type, data_val in node_data.items():
 
-                if not data_type in plot_order_list:
-                    continue
+                    if not data_type in plot_order_list:
+                        continue
 
-                # instantiate axis
-                ax_name = '%s' % data_type
-                ax_num = plot_order_list.index(data_type) + 1
+                    # instantiate axis
+                    ax_name = '%s' % data_type
+                    ax_num = plot_order_list.index(data_type) + 1
 
-                self.plot_objects[(node_name, 'history')].add_ax(ax_name=ax_name,
-                                                                 location=(grid_dim[0], grid_dim[1], ax_num))
+                    self.plot_objects[(session_num, node_name, 'history')].add_ax(ax_name=ax_name,
+                                                                                  location=(grid_dim[0], grid_dim[1], ax_num))
 
-                # configure the plot
-                plot_config = dict()
-                plot_config['xlabel'] = 'time (minute)'
-                plot_config['ylabel'] = 'value'
-                plot_config['title'] = '%s vs. time plot' % data_type
+                    # configure the plot
+                    plot_config = dict()
+                    plot_config['xlabel'] = 'time (minute)'
+                    plot_config['ylabel'] = 'value'
+                    plot_config['title'] = '%s vs. time plot' % data_type
 
-                # plot the evolution plot
-                try:
-                    PlotObject.plot_evolution(self.plot_objects[(node_name, 'history')].ax[ax_name], data_val['y'], data_val['x'], **plot_config)
-                except Exception:
-                    pass
-                else:
-                    print('%s: plotted evolution of %s' % (node_name, data_type))
+                    # plot the evolution plot
+                    try:
+                        PlotObject.plot_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name], data_val['y'], data_val['x'], **plot_config)
+                    except Exception:
+                        pass
+                    else:
+                        print('%s: plotted evolution of %s (S%d)' % (node_name, data_type, session_num))
+
+            session_num += 1
 
     def show_plots(self, plot_names=None, plot_stay=True):
 

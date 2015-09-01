@@ -53,7 +53,7 @@ class CBLA_Base_Node(Node):
         if current_session > 1:
             try:
                 past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)
-                print(past_state)
+                # print(past_state)
             except KeyError:
                 print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
 

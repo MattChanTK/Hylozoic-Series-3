@@ -23,15 +23,10 @@ except ImportError:
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
     from custom_gui import *
 
-create_new_log = True
-
-if len(sys.argv) > 1:
-    create_new_log = bool(sys.argv[1])
-
 
 class CBLA(interactive_system.InteractiveCmd):
     log_dir = 'cbla_log'
-    log_header = 'cbla_mode'
+    log_header = 'cbla'
 
     def __init__(self, Teensy_manager, auto_start=True, mode='isolated'):
 
@@ -47,7 +42,7 @@ class CBLA(interactive_system.InteractiveCmd):
             all_log_dir = []
             for dir in os.listdir(log_dir_path):
                 dir_path = os.path.join(log_dir_path, dir)
-                if os.path.isdir(dir_path):
+                if os.path.isdir(dir_path) and mode in dir:
                     all_log_dir.append(dir_path)
 
             if len(all_log_dir) > 0:
@@ -55,8 +50,9 @@ class CBLA(interactive_system.InteractiveCmd):
             else:
                 latest_log_dir = None
         # create the data_logger
-        self.data_logger = DataLogger(log_dir=CBLA.log_dir, log_header=CBLA.log_header, log_path=latest_log_dir,
-                                      save_freq=60.0, sleep_time=0.20)
+        self.data_logger = DataLogger(log_dir=CBLA.log_dir, log_header='%s_%s' % (CBLA.log_header, mode),
+                                      log_path=latest_log_dir,
+                                      save_freq=60.0, sleep_time=0.20, mode=mode)
 
         # instantiate the node_list
         self.node_list = OrderedDict()
@@ -935,13 +931,20 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
+    # mode setting
     mode_config = 'isolated'
 
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])
 
+    # creating new logs or not
+    create_new_log = False
+
+    if len(sys.argv) > 2:
+        create_new_log = bool(sys.argv[2])
+
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES =  None#('c1', 'c2', 'c3', 'c4',)
+    ACTIVE_TEENSY_NAMES = None #('c1', 'c2', 'c3', 'c4',)
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 

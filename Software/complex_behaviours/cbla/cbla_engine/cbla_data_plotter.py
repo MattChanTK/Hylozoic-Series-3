@@ -10,9 +10,15 @@ class CBLA_DataPlotter(DataPlotter):
 
     def _construct_plot_objects(self):
 
-        for node_name in self.data.keys():
-            self.plot_objects[(node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s' % node_name)
-            # self.plot_objects[(node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+        session_num = 1
+        for session_data in self.data:
+            for node_name, node_data in session_data.items():
+
+                self.plot_objects[(session_num, node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s (S%d)' % (node_name, session_num))
+                # self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+            session_num += 1
+
+        # for node_name, node_data in self.data[-1]:
             # self.plot_objects[(node_name, 'model')] = CBLA_PlotObject(fig_title='Final Expert Model - %s' % node_name)
 
     def plot(self):
@@ -26,69 +32,73 @@ class CBLA_DataPlotter(DataPlotter):
         engine_based_type = ('S', 'M', 'best_action', 'in_idle_mode',) #, 'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
-        for node_name, node_data in self.data.items():
+        session_num = 1
+        for session_data in self.data:
+            for node_name, node_data in session_data.items():
 
-            if (node_name, 'history') not in self.plot_objects:
-                continue
+                if (session_num, node_name, 'history') not in self.plot_objects:
+                    continue
 
-            for data_type, data_val in node_data.items():
+                for data_type, data_val in node_data.items():
 
-                # cbla_engine-based data
-                if data_type in engine_based_type:
+                    # cbla_engine-based data
+                    if data_type in engine_based_type:
 
-                    # instantiate axis
-                    ax_name = '%s' % data_type
-                    ax_num = engine_based_type.index(data_type) + 1
-                    self.plot_objects[(node_name, 'history')].add_ax(ax_name=ax_name,
-                                                                     location=(grid_dim[0], grid_dim[1], ax_num))
+                        # instantiate axis
+                        ax_name = '%s' % data_type
+                        ax_num = engine_based_type.index(data_type) + 1
+                        self.plot_objects[(session_num, node_name, 'history')].add_ax(ax_name=ax_name,
+                                                                                      location=(grid_dim[0], grid_dim[1], ax_num))
 
-                    # configure the plot
-                    plot_config = dict()
-                    plot_config['xlabel'] = 'time (second)'
-                    plot_config['ylabel'] = 'value'
-                    plot_config['title'] = '%s vs. time plot' % data_type
+                        # configure the plot
+                        plot_config = dict()
+                        plot_config['xlabel'] = 'time (second)'
+                        plot_config['ylabel'] = 'value'
+                        plot_config['title'] = '%s vs. time plot' % data_type
 
-                    # special configurations
-                    if data_type in ('in_idle_mode', 'is_exploring'):
-                        plot_config['int_yaxis'] = True
-                        plot_config['ylim'] = (-0.5, 1.5)
-                        plot_config['linestyle'] = ' '
-                        plot_config['marker'] = '.'
-                    elif data_type in ('M', 'best_action') :
-                        plot_config['int_yaxis'] = True
-                        plot_config['linestyle'] = ' '
-                        plot_config['marker'] = '.'
-                        if 'tentacle' in node_name:
-                            plot_config['ylim'] = (-0.5, 3.5)
-                    elif data_type in ('S', 'S1'):
-                        plot_config['linestyle'] = ' '
-                        plot_config['marker'] = '.'
+                        # special configurations
+                        if data_type in ('in_idle_mode', 'is_exploring'):
+                            plot_config['int_yaxis'] = True
+                            plot_config['ylim'] = (-0.5, 1.5)
+                            plot_config['linestyle'] = ' '
+                            plot_config['marker'] = '.'
+                        elif data_type in ('M', 'best_action') :
+                            plot_config['int_yaxis'] = True
+                            plot_config['linestyle'] = ' '
+                            plot_config['marker'] = '.'
+                            if 'tentacle' in node_name:
+                                plot_config['ylim'] = (-0.5, 3.5)
+                        elif data_type in ('S', 'S1'):
+                            plot_config['linestyle'] = ' '
+                            plot_config['marker'] = '.'
 
-                    # plot the evolution plot
-                    CBLA_PlotObject.plot_evolution(self.plot_objects[(node_name, 'history')].ax[ax_name], data_val['y'], data_val['x'], **plot_config)
+                        # plot the evolution plot
+                        CBLA_PlotObject.plot_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name], data_val['y'], data_val['x'], **plot_config)
 
-                    print('%s: plotted evolution of %s' % (node_name, data_type))
+                        print('%s: plotted evolution of %s (S%d)' % (node_name, data_type, session_num))
 
-                # expert-based data
-                elif data_type in expert_based_type:
+                    # expert-based data
+                    elif data_type in expert_based_type:
 
-                    # instantiate axis
-                    ax_name = '%s' % data_type
-                    ax_num = len(engine_based_type) + expert_based_type.index(data_type) + 1
-                    self.plot_objects[(node_name, 'history')].add_ax(ax_name=ax_name,
-                                                                     location=(grid_dim[0], grid_dim[1], ax_num))
+                        # instantiate axis
+                        ax_name = '%s' % data_type
+                        ax_num = len(engine_based_type) + expert_based_type.index(data_type) + 1
+                        self.plot_objects[(session_num, node_name, 'history')].add_ax(ax_name=ax_name,
+                                                                                      location=(grid_dim[0], grid_dim[1], ax_num))
 
-                    # configure the plot
-                    plot_config = dict()
-                    plot_config['xlabel'] = 'time (second)'
-                    plot_config['ylabel'] = 'value'
-                    plot_config['title'] = '%s vs. time plot' % data_type
+                        # configure the plot
+                        plot_config = dict()
+                        plot_config['xlabel'] = 'time (second)'
+                        plot_config['ylabel'] = 'value'
+                        plot_config['title'] = '%s vs. time plot' % data_type
 
-                    # plot the evolution plot
-                    CBLA_PlotObject.plot_regional_evolution(self.plot_objects[(node_name, 'history')].ax[ax_name],
-                                                       data_val['y'], data_val['x'], **plot_config)
+                        # plot the evolution plot
+                        CBLA_PlotObject.plot_regional_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name],
+                                                                data_val['y'], data_val['x'], **plot_config)
 
-                    print('%s: plotted regional evolution of %s' % (node_name, data_type))
+                        print('%s: plotted regional evolution of %s (S%d)' % (node_name, data_type, session_num))
+
+            session_num += 1
 
     def plot_regions(self, **config):
 
@@ -102,113 +112,117 @@ class CBLA_DataPlotter(DataPlotter):
             if 'plot_dim' in config_key and isinstance(config_val, tuple):
                 exemplars_plot_dim[config_key.replace('_plot_dim', '')] = config_val
 
-        for node_name, node_data in self.data.items():
+        session_num = 1
+        for session_data in self.data:
+            for node_name, node_data in session_data.items():
 
-            if (node_name, 'regions_snapshot') not in self.plot_objects:
-                continue
+                if (session_num, node_name, 'regions_snapshot') not in self.plot_objects:
+                    continue
 
-            # plotting the exemplars in the region
-            if 'exemplars' not in node_data.keys():
-                continue
+                # plotting the exemplars in the region
+                if 'exemplars' not in node_data.keys():
+                    continue
 
-            # specify the dimensions to plot
-            plot_dims = exemplars_plot_dim['default']
-            for node_type in exemplars_plot_dim.keys():
-                if node_type in node_name:
-                    plot_dims = exemplars_plot_dim[node_type]
+                # specify the dimensions to plot
+                plot_dims = exemplars_plot_dim['default']
+                for node_type in exemplars_plot_dim.keys():
+                    if node_type in node_name:
+                        plot_dims = exemplars_plot_dim[node_type]
 
-            exemplars_snapshots = node_data['exemplars']
-            selected_snapshot_ids = [0]
+                exemplars_snapshots = node_data['exemplars']
+                selected_snapshot_ids = [0]
 
-            # select only certain number of snapshots
-            try:
-                total_snapshot_num = len(exemplars_snapshots['x'])
-            except KeyError:
-                continue
-            num_middle = snapshot_num - 2
-            if num_middle > 0:
-                for i in range(num_middle):
-                    selected_snapshot_ids.append(int((i+1)*total_snapshot_num/snapshot_num))
-            selected_snapshot_ids.append(total_snapshot_num-1)
-            selected_snapshot_ids = tuple(sorted(set(selected_snapshot_ids)))
+                # select only certain number of snapshots
+                try:
+                    total_snapshot_num = len(exemplars_snapshots['x'])
+                except KeyError:
+                    continue
+                num_middle = snapshot_num - 2
+                if num_middle > 0:
+                    for i in range(num_middle):
+                        selected_snapshot_ids.append(int((i+1)*total_snapshot_num/snapshot_num))
+                selected_snapshot_ids.append(total_snapshot_num-1)
+                selected_snapshot_ids = tuple(sorted(set(selected_snapshot_ids)))
 
-            # instantiate axis
-            ax_num = 1
-            in_3d = False
-            if len(plot_dims) > 2:
-                in_3d = True
+                # instantiate axis
+                ax_num = 1
+                in_3d = False
+                if len(plot_dims) > 2:
+                    in_3d = True
 
-            for i in selected_snapshot_ids:
+                for i in selected_snapshot_ids:
 
-                # add axis to the plot object
-                ax_name = 'Exemplars at t = %f' % exemplars_snapshots['x'][i]
-                self.plot_objects[(node_name, 'regions_snapshot')].add_ax(ax_name=ax_name,
-                                                                          location=(grid_dim[0], grid_dim[1], ax_num),
-                                                                          in_3d=in_3d)
+                    # add axis to the plot object
+                    ax_name = 'Exemplars at t = %f' % exemplars_snapshots['x'][i]
+                    self.plot_objects[(session_num, node_name, 'regions_snapshot')].add_ax(ax_name=ax_name,
+                                                                                           location=(grid_dim[0], grid_dim[1], ax_num),
+                                                                                           in_3d=in_3d)
 
-                # construct the data set for scatter plotting
-                scatter_plot_data = defaultdict(list)
-                for region_id, region_exemplars in exemplars_snapshots['y'][i].items():
+                    # construct the data set for scatter plotting
+                    scatter_plot_data = defaultdict(list)
+                    for region_id, region_exemplars in exemplars_snapshots['y'][i].items():
 
-                    data_pts = list(zip(*region_exemplars[0]))
-                    label_pts = list(zip(*region_exemplars[1]))
+                        data_pts = list(zip(*region_exemplars[0]))
+                        label_pts = list(zip(*region_exemplars[1]))
 
-                    # x-axis
-                    try:
-                        SM_data = tuple(data_pts[plot_dims[0]])
-                    except IndexError:
-                        print('SM(t) does not have dimension %d' % plot_dims[0])
-                        break
-
-                    # y-axis
-                    try:
-                        S1_data = tuple(label_pts[plot_dims[-1]])
-                    except IndexError:
-                        print('S(t+1) does not have dimension %d' % plot_dims[-1])
-                        break
-
-                    # x2-axis if 3d
-                    if len(plot_dims) > 2:
+                        # x-axis
                         try:
-                            SM_data_2 = tuple(data_pts[plot_dims[1]])
+                            SM_data = tuple(data_pts[plot_dims[0]])
                         except IndexError:
-                            print('SM(t) does not have dimension %d' % plot_dims[1])
+                            print('SM(t) does not have dimension %d' % plot_dims[0])
                             break
-                        scatter_plot_data[region_id] = (SM_data, SM_data_2, S1_data)
+
+                        # y-axis
+                        try:
+                            S1_data = tuple(label_pts[plot_dims[-1]])
+                        except IndexError:
+                            print('S(t+1) does not have dimension %d' % plot_dims[-1])
+                            break
+
+                        # x2-axis if 3d
+                        if len(plot_dims) > 2:
+                            try:
+                                SM_data_2 = tuple(data_pts[plot_dims[1]])
+                            except IndexError:
+                                print('SM(t) does not have dimension %d' % plot_dims[1])
+                                break
+                            scatter_plot_data[region_id] = (SM_data, SM_data_2, S1_data)
+                        else:
+                            scatter_plot_data[region_id] = (SM_data, S1_data)
+
+                    # configure the plot
+                    plot_config = dict()
+                    if 'input_label_name' in self.state_info[node_name] and 'output_label_name' in self.state_info[node_name]:
+                        labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name]['output_label_name']
+                        plot_config['xlabel'] = labels[plot_dims[0]]
+                        plot_config['x2label'] = labels[plot_dims[1]]
                     else:
-                        scatter_plot_data[region_id] = (SM_data, S1_data)
+                        plot_config['xlabel'] = 'SM(t) [%d]' % plot_dims[0]
+                        plot_config['x2label'] = 'SM(t) [%d]' % plot_dims[1]
 
-                # configure the plot
-                plot_config = dict()
-                if 'input_label_name' in self.state_info[node_name] and 'output_label_name' in self.state_info[node_name]:
-                    labels = self.state_info[node_name]['input_label_name'] + self.state_info[node_name]['output_label_name']
-                    plot_config['xlabel'] = labels[plot_dims[0]]
-                    plot_config['x2label'] = labels[plot_dims[1]]
-                else:
-                    plot_config['xlabel'] = 'SM(t) [%d]' % plot_dims[0]
-                    plot_config['x2label'] = 'SM(t) [%d]' % plot_dims[1]
+                    if 'output_label_name' in self.state_info[node_name]:
+                        plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[-1]]
+                    else:
+                        plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[-1]
+                    plot_config['title'] = 'Exemplars plot at t = %.2f' % exemplars_snapshots['x'][i]
 
-                if 'output_label_name' in self.state_info[node_name]:
-                    plot_config['ylabel'] = self.state_info[node_name]['input_label_name'][plot_dims[-1]]
-                else:
-                    plot_config['ylabel'] = 'S(t+1) [%d]' % plot_dims[-1]
-                plot_config['title'] = 'Exemplars plot at t = %.2f' % exemplars_snapshots['x'][i]
+                    plot_config['int_xaxis'] = True
+                    plot_config['linestyle'] = ''
+                    plot_config['marker'] = 'o'
 
-                plot_config['int_xaxis'] = True
-                plot_config['linestyle'] = ''
-                plot_config['marker'] = 'o'
+                    # special configuration for tentacle nodes only
+                    if 'tentacle' in node_name:
+                        plot_config['xlim'] = (-0.5, 3.5)
 
-                # special configuration for tentacle nodes only
-                if 'tentacle' in node_name:
-                    plot_config['xlim'] = (-0.5, 3.5)
+                    # plot the exemplars
+                    CBLA_PlotObject.plot_regional_points(self.plot_objects[(session_num, node_name, 'regions_snapshot')].ax[ax_name],
+                                                         region_data=scatter_plot_data, **plot_config)
 
-                # plot the exemplars
-                CBLA_PlotObject.plot_regional_points(self.plot_objects[(node_name, 'regions_snapshot')].ax[ax_name],
-                                     region_data=scatter_plot_data, **plot_config)
+                    print('%s: plotted exemplars at t = %.2f (S%d)' % (node_name, exemplars_snapshots['x'][i], session_num))
 
-                print('%s: plotted exemplars at t = %.2f' % (node_name, exemplars_snapshots['x'][i]))
+                    ax_num += 1
 
-                ax_num += 1
+            session_num += 1
 
     def plot_models(self, **config):
 
