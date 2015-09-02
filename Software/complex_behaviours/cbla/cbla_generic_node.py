@@ -36,6 +36,17 @@ class CBLA_Base_Node(Node):
         # parameters
         self.state_save_period = 30.0 # seconds
 
+        # load previous learner expert
+        self.past_state = None
+        current_session = self.data_logger.curr_session
+        if current_session > 1:
+            try:
+                self.past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)
+                print('%s: Resuming from Session %d.' % (self.node_name, current_session))
+            except KeyError:
+                print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
+
+
     def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
 
         if isinstance(cbla_robot, cbla_engine.Robot):
@@ -47,26 +58,17 @@ class CBLA_Base_Node(Node):
         M0 = self.cbla_robot.compute_initial_motor()
         S0 = self.cbla_robot.read()
 
-        # load previous learner expert
-        past_state = None
-        current_session = self.data_logger.curr_session
-        if current_session > 1:
-            try:
-                past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)
-                # print(past_state)
-            except KeyError:
-                print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
 
         if not isinstance(learner_config, dict):
             learner_config = dict()
-        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=past_state,
+        self.cbla_learner = cbla_engine.Learner(S0, M0, past_state=self.past_state,
                                                 **learner_config)
 
         # load previous learner steps
         config = dict()
-        if past_state:
+        if self.past_state:
             try:
-                config['update_count_start'] = past_state['learner_step']
+                config['update_count_start'] = self.past_state['learner_step']
             except KeyError:
                 pass
 
@@ -121,6 +123,9 @@ class CBLA_Base_Node(Node):
             # save state when terminated
             self.cbla_states['learner_expert'] = self.cbla_engine.learner.expert
             self.cbla_states['learner_step'] = self.cbla_engine.update_count
+
+        with self.cbla_engine.robot_lock:
+            self.cbla_states['robot_object'] = self.cbla_robot
 
         self.data_logger.write_info(self.node_name, self.cbla_states)
 
@@ -194,7 +199,23 @@ class CBLA_Generic_Node(CBLA_Base_Node):
 
     def instantiate(self, cbla_robot: cbla_engine.Robot=None, learner_config=None):
         if cbla_robot == None:
-            cbla_robot = self._build_robot(RobotClass=self.robot_class, **self.robot_config)
+            if self.past_state:
+                try:
+                    cbla_robot = self.past_state['robot_object']
+
+                    # check if it's a robot object
+                    if not isinstance(cbla_robot, cbla_engine.Robot):
+                        raise TypeError
+
+                    # replacing with new addresses
+                    self._renew_robot(cbla_robot)
+
+                except(KeyError, TypeError, ValueError):
+                    print("%s: Cannot not find saved robot_object. Creating new robot instead." % self.node_name)
+
+                    cbla_robot = self._build_robot(RobotClass=self.robot_class, **self.robot_config)
+            else:
+                cbla_robot = self._build_robot(RobotClass=self.robot_class, **self.robot_config)
         else:
             self.robot_class = cbla_robot.__class__
             self.robot_config = cbla_robot.config
@@ -243,6 +264,20 @@ class CBLA_Generic_Node(CBLA_Base_Node):
                                 **robot_config
                                )
         return cbla_robot
+
+    def _renew_robot(self, old_robot: cbla_engine.Robot):
+
+        s_vars = []
+        # defining the input variables
+        for s_key in self.s_keys:
+            s_vars.append(self.in_var[s_key])
+
+        m_vars = []
+        # defining the output variables
+        for m_key in self.m_keys:
+            m_vars.append(self.out_var[m_key])
+
+        old_robot.renew_robot(s_vars, m_vars)
 
     def _get_learner_config(self) -> dict:
 

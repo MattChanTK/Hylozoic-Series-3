@@ -146,7 +146,6 @@ class CBLA(interactive_system.InteractiveCmd):
                     var_key = '%s.%s' % (node_name, var_name)
                     self.user_study_vars[var_key] = var
 
-
         user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
                                           **self.user_study_vars)
 

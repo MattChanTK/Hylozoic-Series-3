@@ -68,6 +68,24 @@ class Robot(object):
         self.config['prev_values_deque_size'] = 15
         self.config['min_avg_action_value'] = 0.0001
 
+    def renew_robot(self, new_s_vars, new_m_vars):
+
+        # check if they have the same length
+        if len(new_s_vars) != len(self.in_vars):
+            raise ValueError
+        if len(new_m_vars) != len(self.out_vars):
+            raise ValueError
+
+        # replace old var with new var address
+        for i in range(len(new_s_vars)):
+            self.in_vars[i] = new_s_vars[i]
+        for i in range(len(new_m_vars)):
+            self.out_vars[i] = new_m_vars[i]
+
+        # compute initial action
+        self.M0 = Var(self.compute_initial_motor())
+        self.S0 = Var(None)
+
     def compute_initial_motor(self) -> tuple:
         # compute the motor variables
         M0 = []
@@ -239,6 +257,7 @@ class Robot(object):
     def enter_idle_mode(self, action_value) -> bool:
 
         # check if it finished the initial learning phase
+        print(self.init_learning_done)
         if self.init_learning_done:
 
             # calculate the mean square of action value
@@ -289,8 +308,6 @@ class Robot(object):
 
         # save the action value to memory
         self.prev_action_value.append(action_value)
-
-
 
         return self.in_idle_mode
 
