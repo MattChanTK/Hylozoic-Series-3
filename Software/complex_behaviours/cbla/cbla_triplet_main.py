@@ -13,6 +13,7 @@ import cbla_generic_node as cbla_base
 from cbla_isolated_node import *
 
 from cbla_engine import cbla_robot
+import prescripted_engine as ps_engine
 
 try:
     from custom_gui import *
@@ -257,21 +258,31 @@ class CBLA(interactive_system.InteractiveCmd):
             # ===== constructing the Light Node =====
             # Light node is composed of an ambient light sensors and a LED
             for j in range(self.num_light):
+
+                # variables for the cbla engine
                 in_vars = OrderedDict()
                 in_vars['als'] = components['%s.l%d.als' % (teensy_name, j)].out_var['input']
 
                 out_vars = OrderedDict()
                 out_vars['led'] = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
+
+                # constructing prescripted engine
+                fin_ir= components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+                led = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
+                interactive_light_engine = ps_engine.Interactive_Light_Engine(fin_ir=fin_ir, led=led)
+
+                # Constructing the CBLA Node
                 light_node = Isolated_Light_Node(RobotClass=cbla_robot.Robot_Light,
-                                              messenger=self.messenger, data_logger=self.data_logger,
-                                              cluster_name=teensy_name, node_type='light', node_id=j,
-                                              in_vars=in_vars, out_vars=out_vars,
-                                              s_keys=('als', ),
-                                              s_ranges=((0, 4095), ),
-                                              s_names=('ambient light sensor', ),
-                                              m_keys=('led',), m_ranges=((0, 50),),
-                                              m_names=('High-power LED',),
-                                              )
+                                                messenger=self.messenger, data_logger=self.data_logger,
+                                                cluster_name=teensy_name, node_type='light', node_id=j,
+                                                in_vars=in_vars, out_vars=out_vars,
+                                                s_keys=('als', ),
+                                                s_ranges=((0, 4095), ),
+                                                s_names=('ambient light sensor', ),
+                                                m_keys=('led',), m_ranges=((0, 50),),
+                                                m_names=('High-power LED',),
+                                                prescripted_engine=interactive_light_engine
+                                                )
 
                 cbla_nodes[light_node.node_name] = light_node
 

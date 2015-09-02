@@ -6,6 +6,7 @@ from abstract_node.node import *
 from abstract_node import DataLogger
 from interactive_system import Messenger
 from sklearn import linear_model
+import prescripted_engine as ps_engine
 
 import cbla_engine
 
@@ -17,7 +18,7 @@ class CBLA_Base_Node(Node):
     cbla_data_type_key = 'data'
 
     def __init__(self, messenger: Messenger, cluster_name: str, data_logger: DataLogger,
-                 node_name='cbla_node'):
+                 node_name='cbla_node', prescripted_engine=None):
 
         if not isinstance(cluster_name, str):
             raise TypeError('cluster_name must be a string!')
@@ -30,6 +31,7 @@ class CBLA_Base_Node(Node):
 
         super(CBLA_Base_Node, self).__init__(messenger, node_name="%s.%s" % (cluster_name, node_name))
 
+        # cbla robots and learner
         self.cbla_robot = None
         self.cbla_learner = None
 
@@ -46,6 +48,9 @@ class CBLA_Base_Node(Node):
             except KeyError:
                 print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
 
+        # the prescripted version of this node
+        self.prescripted_mode_active = True
+        self.prescripted_engine = prescripted_engine
 
     def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
 
@@ -57,7 +62,6 @@ class CBLA_Base_Node(Node):
         # create learner
         M0 = self.cbla_robot.compute_initial_motor()
         S0 = self.cbla_robot.read()
-
 
         if not isinstance(learner_config, dict):
             learner_config = dict()
@@ -98,22 +102,30 @@ class CBLA_Base_Node(Node):
         last_save_states_time = clock()
         while self.alive:
             # adjust the robot's wait time between act() and read()
-            self.cbla_robot.sample_speed_limit = self.messenger.estimated_msg_period * 2
+            speed_limit = self.messenger.estimated_msg_period * 2
 
             # update CBLA Engine
-            data_packet = self.cbla_engine.update()
-            data_packet[DataLogger.packet_type_key] = CBLA_Base_Node.cbla_data_type_key
+            if isinstance(self.prescripted_engine, ps_engine.Prescripted_Base_Engine) and\
+               self.prescripted_mode_active:
 
-            # save the data
-            self.data_logger.append_data_packet(self.node_name, data_packet)
+                self.prescripted_engine.update()
+                sleep(speed_limit)
+            else:
+                self.cbla_robot.sample_speed_limit = speed_limit
 
-            # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
+                data_packet = self.cbla_engine.update()
+                data_packet[DataLogger.packet_type_key] = CBLA_Base_Node.cbla_data_type_key
 
-            # save state periodically
-            curr_time = clock()
-            if curr_time - last_save_states_time > self.state_save_period:
-                self.save_states()
-                last_save_states_time = curr_time
+                # save the data
+                self.data_logger.append_data_packet(self.node_name, data_packet)
+
+                # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
+
+                # save state periodically
+                curr_time = clock()
+                if curr_time - last_save_states_time > self.state_save_period:
+                    self.save_states()
+                    last_save_states_time = curr_time
 
         self.save_states()
 
@@ -137,7 +149,8 @@ class CBLA_Generic_Node(CBLA_Base_Node):
                  in_vars: OrderedDict, out_vars: OrderedDict,
                  s_keys: tuple=(), s_ranges: tuple=(), s_names: tuple=(),
                  m_keys: tuple=(), m_ranges: tuple=(), m_names: tuple=(),
-                 node_version: str='', RobotClass=None, robot_config=None):
+                 node_version: str='', RobotClass=None, robot_config=None,
+                 prescripted_engine=None):
 
         # defining the name of the node
         self.cluster_name = str(cluster_name)
@@ -152,7 +165,8 @@ class CBLA_Generic_Node(CBLA_Base_Node):
 
         # initializing the cbla_node
         super(CBLA_Generic_Node, self).__init__(messenger=messenger, data_logger=data_logger,
-                                        cluster_name=cluster_name, node_name=node_name)
+                                                cluster_name=cluster_name, node_name=node_name,
+                                                prescripted_engine=prescripted_engine)
 
         # defining the input variables
         for in_var_name, in_var in in_vars.items():
@@ -191,7 +205,6 @@ class CBLA_Generic_Node(CBLA_Base_Node):
         else:
             self.robot_class = cbla_engine.Robot
 
-        # instantiate
         if not isinstance(robot_config, dict):
             self.robot_config = dict()
         else:
