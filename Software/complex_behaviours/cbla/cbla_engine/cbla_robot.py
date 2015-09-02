@@ -257,7 +257,6 @@ class Robot(object):
     def enter_idle_mode(self, action_value) -> bool:
 
         # check if it finished the initial learning phase
-        print(self.init_learning_done)
         if self.init_learning_done:
 
             # calculate the mean square of action value
