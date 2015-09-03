@@ -18,7 +18,7 @@ class CBLA_Base_Node(Node):
     cbla_data_type_key = 'data'
 
     def __init__(self, messenger: Messenger, cluster_name: str, data_logger: DataLogger,
-                 node_name='cbla_node', prescripted_engine=None):
+                 node_name='cbla_node', prescripted_engine=None, prescripted_mode_active_var=Var(0)):
 
         if not isinstance(cluster_name, str):
             raise TypeError('cluster_name must be a string!')
@@ -44,12 +44,16 @@ class CBLA_Base_Node(Node):
         if current_session > 1:
             try:
                 self.past_state = self.data_logger.get_packet(-1, self.node_name, CBLA_Base_Node.cbla_state_type_key)
-                print('%s: Resuming from Session %d.' % (self.node_name, current_session))
+                print('%s: Resuming as Session %d.' % (self.node_name, current_session))
             except KeyError:
                 print('%s: Cannot find past state. The program will start fresh instead.' % self.node_name)
 
         # the prescripted version of this node
-        self.prescripted_mode_active = True
+        if isinstance(prescripted_mode_active_var, Var):
+            self.prescripted_mode_active = prescripted_mode_active_var
+        else:
+            self.prescripted_mode_active = Var(0)
+
         self.prescripted_engine = prescripted_engine
 
     def instantiate(self, cbla_robot: cbla_engine.Robot, learner_config=None):
@@ -60,8 +64,15 @@ class CBLA_Base_Node(Node):
             raise AttributeError("CBLA_Robot must be implemented in the child class")
 
         # create learner
-        M0 = self.cbla_robot.compute_initial_motor()
-        S0 = self.cbla_robot.read()
+        if isinstance(self.cbla_robot.S0, Var) and isinstance(self.cbla_robot.S0.val, tuple):
+            S0 = self.cbla_robot.S0.val
+        else:
+            S0 = self.cbla_robot.read()
+
+        if isinstance(self.cbla_robot.M0, Var) and isinstance(self.cbla_robot.M0.val, tuple):
+            M0 = self.cbla_robot.M0.val
+        else:
+            M0 = self.cbla_robot.compute_initial_motor()
 
         if not isinstance(learner_config, dict):
             learner_config = dict()
@@ -106,7 +117,7 @@ class CBLA_Base_Node(Node):
 
             # update CBLA Engine
             if isinstance(self.prescripted_engine, ps_engine.Prescripted_Base_Engine) and\
-               self.prescripted_mode_active:
+               self.prescripted_mode_active.val:
 
                 self.prescripted_engine.update()
                 sleep(speed_limit)
@@ -150,7 +161,7 @@ class CBLA_Generic_Node(CBLA_Base_Node):
                  s_keys: tuple=(), s_ranges: tuple=(), s_names: tuple=(),
                  m_keys: tuple=(), m_ranges: tuple=(), m_names: tuple=(),
                  node_version: str='', RobotClass=None, robot_config=None,
-                 prescripted_engine=None):
+                 prescripted_engine=None, prescripted_mode_active=Var(0)):
 
         # defining the name of the node
         self.cluster_name = str(cluster_name)
@@ -166,7 +177,9 @@ class CBLA_Generic_Node(CBLA_Base_Node):
         # initializing the cbla_node
         super(CBLA_Generic_Node, self).__init__(messenger=messenger, data_logger=data_logger,
                                                 cluster_name=cluster_name, node_name=node_name,
-                                                prescripted_engine=prescripted_engine)
+                                                prescripted_engine=prescripted_engine,
+                                                prescripted_mode_active_var=prescripted_mode_active
+                                                )
 
         # defining the input variables
         for in_var_name, in_var in in_vars.items():

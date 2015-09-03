@@ -114,6 +114,9 @@ class CBLA(interactive_system.InteractiveCmd):
 
         # ===== creating the CBLA Nodes ====
 
+        # prescripted_engine active-or-not var
+        self.prescripted_mode_active_var = Var(0)
+
         # creating the isolated nodes
         cbla_nodes = self.build_isolated_nodes(teensy_names=teensy_in_use, components=self.node_list)
 
@@ -148,6 +151,7 @@ class CBLA(interactive_system.InteractiveCmd):
                     self.user_study_vars[var_key] = var
 
         user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
+                                          prescripted_active_var=self.prescripted_mode_active_var,
                                           **self.user_study_vars)
 
         self.node_list[user_study_panel.node_name] = user_study_panel
@@ -285,7 +289,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                                 s_names=('ambient light sensor', ),
                                                 m_keys=('led',), m_ranges=((0, 50),),
                                                 m_names=('High-power LED',),
-                                                prescripted_engine=interactive_light_engine
+                                                prescripted_engine=interactive_light_engine,
+                                                prescripted_mode_active=self.prescripted_mode_active_var
                                                 )
 
                 cbla_nodes[light_node.node_name] = light_node
@@ -322,7 +327,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                                       s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'), # 'accelerometer (z)',),
                                                       m_keys=('hf-l',), m_ranges=((130, 300),),
                                                       m_names=('Half Fin Input',),
-                                                      prescripted_engine=interactive_halffin_engine
+                                                      prescripted_engine=interactive_halffin_engine,
+                                                      prescripted_mode_active=self.prescripted_mode_active_var
                                                       )
 
                 cbla_nodes[half_fin_left.node_name] = half_fin_left
@@ -351,7 +357,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                                        s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'),  # 'accelerometer (z)',),
                                                        m_keys=('hf-r',), m_ranges=((130, 300),),
                                                        m_names=('half-fin input',),
-                                                       prescripted_engine=interactive_halffin_engine
+                                                       prescripted_engine=interactive_halffin_engine,
+                                                       prescripted_mode_active=self.prescripted_mode_active_var
                                                        )
 
                 cbla_nodes[half_fin_right.node_name] = half_fin_right
@@ -382,7 +389,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                                     s_names=('scout IR sensor', ),
                                                     m_keys=('rfx-m',), m_ranges=((0, 100),),
                                                     m_names=('reflex motor',),
-                                                    prescripted_engine=interactive_reflex_engine
+                                                    prescripted_engine=interactive_reflex_engine,
+                                                    prescripted_mode_active=self.prescripted_mode_active_var
                                                     )
 
                 cbla_nodes[reflex_motor.node_name] = reflex_motor
@@ -405,7 +413,8 @@ class CBLA(interactive_system.InteractiveCmd):
                                                   s_ranges=((0, 4095), ),
                                                   s_names=('scout IR sensor', ),
                                                   m_keys=('rfx-l',), m_ranges=((0, 255),), m_names=('reflex led',),
-                                                  prescripted_engine=interactive_reflex_engine
+                                                  prescripted_engine=interactive_reflex_engine,
+                                                  prescripted_mode_active=self.prescripted_mode_active_var
                                                  )
 
                 cbla_nodes[reflex_led.node_name] = reflex_led
@@ -849,6 +858,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     device_display_vars = OrderedDict()
 
     snapshot_taker = None
+    switch_mode_var = None
 
     if len(node_list) > 0:
 
@@ -870,6 +880,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                         panel_display_vars[page_name][var_name] = ({var_name: var}, 'panel')
 
                     snapshot_taker = node.snapshot_taker
+                    switch_mode_var = node.out_var['prescripted_mode_active']
 
             # device based node
             else:
@@ -920,6 +931,10 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
                         cbla_display_vars[page_name][device_name][var_name] = ({var_name: var}, 'robot_internal')
 
+                    # for the special "in_prescripted_mode" variables
+                    var_name = 'in_prescripted_mode'
+                    cbla_display_vars[page_name][device_name][var_name] = ({var_name: node.prescripted_mode_active}, 'robot_internal')
+
                 else:
                     try:
                         output_name = node_name[2]
@@ -948,7 +963,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     page_name = 'User Study'
     user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
                                       display_var=panel_display_vars,
-                                      snapshot_taker=snapshot_taker)
+                                      snapshot_taker=snapshot_taker, switch_mode_var=switch_mode_var)
     page_frames[page_name] = user_study_frame
 
     # page for the cbla and device variables

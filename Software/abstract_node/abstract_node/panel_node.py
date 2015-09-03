@@ -13,7 +13,8 @@ class UserStudyPanel(Node):
 
     log_folder_name = 'user_study_log'
 
-    def __init__(self, messenger: Messenger, node_name="user_study_panel", log_file_name=None, **in_vars):
+    def __init__(self, messenger: Messenger, node_name="user_study_panel", log_file_name=None,
+                 prescripted_active_var=Var(0), **in_vars):
 
         super(UserStudyPanel, self).__init__(messenger, node_name=node_name)
 
@@ -22,6 +23,10 @@ class UserStudyPanel(Node):
         # output variables
         self.out_var['sample_number'] = Var(0)
         self.out_var['curr_time'] = Var(datetime.now().strftime(self.datetime_str_fmt_us))
+        if isinstance(prescripted_active_var, Var):
+            self.out_var['prescripted_mode_active'] = prescripted_active_var
+        else:
+            self.out_var['prescripted_mode_active'] = Var(0)
 
         # input variables
         in_vars_list = []

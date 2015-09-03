@@ -8,7 +8,7 @@ from tkinter import CENTER
 class HMI_User_Study(Page_Frame):
 
     def __init__(self, parent_frame: Content_Frame, page_name: str, page_key, display_var: OrderedDict,
-                 snapshot_taker: CSV_Snapshot):
+                 snapshot_taker: CSV_Snapshot, switch_mode_var: Var):
 
         # type checking
         if not isinstance(display_var, dict):
@@ -18,6 +18,10 @@ class HMI_User_Study(Page_Frame):
         if not isinstance(snapshot_taker, CSV_Snapshot):
             raise TypeError("Snapshot Taker not found!")
         self.snapshot_taker = snapshot_taker
+
+        if not isinstance(switch_mode_var, Var):
+            raise TypeError("switch_mode variable not found!")
+        self.switch_mode_var = switch_mode_var
 
         # set up the display window for the participant facing window
         self.public_window = Tk()
@@ -70,7 +74,17 @@ class HMI_User_Study(Page_Frame):
         sample_button = ttk.Button(control_frame, text='Sample Now', command=self.__sample_action)
         sample_button.grid(row=0, column=0, sticky='NW')
 
+        switch_mode_button = ttk.Button(control_frame, text='Switch Mode', command=self.__switch_mode_action)
+        switch_mode_button.grid(row=1, column=0, sticky='NW')
+
     def __sample_action(self):
 
         self.snapshot_taker.take_snapshot()
         self.public_sample_num_label.configure(text=self.snapshot_taker.row_info['sample_number'].val)
+
+    def __switch_mode_action(self):
+
+        if self.switch_mode_var.val:
+            self.switch_mode_var.val = False
+        else:
+            self.switch_mode_var.val = True
