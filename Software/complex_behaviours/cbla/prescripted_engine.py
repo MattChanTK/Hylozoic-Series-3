@@ -1,17 +1,13 @@
 __author__ = 'Matthew'
 from collections import OrderedDict
+import random
+from time import perf_counter
 from abstract_node import Var
 
 
 class Prescripted_Base_Engine(object):
 
-    def __init__(self, in_vars: dict, out_vars: dict, **config):
-
-        # setting the configurations
-        self.config = dict()
-        if isinstance(config, dict):
-            for name, arg in config.items():
-                self.config[name] = arg
+    def __init__(self, in_vars: dict, out_vars: dict):
 
         # setting input and output variables
         self.in_vars = OrderedDict()
@@ -58,16 +54,45 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
         else:
             raise TypeError("led is not a Var type!")
 
+        # setting the configurations
+        self.config = dict()
+
+        # default configuration
+        self.config['ir_on_thres'] = 1000
+        self.config['ir_off_thres'] = 1200
+        self.config['led_max_output'] = 100
+        self.config['random_check_period'] = 1.0
+        self.config['activation_period'] = 3.0
+
+        # custom configuration
+        if isinstance(config, dict):
+            for name, arg in config.items():
+                self.config[name] = arg
 
         # initialize
-        super(Interactive_Light_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars, **config)
+        super(Interactive_Light_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+
+        # variables
+        self.random_check_time = perf_counter()
+        self.activation_time = perf_counter()
 
     def update(self):
 
-        if self.in_vars['fin_ir'].val > 1000:
-            self.out_vars['led'].val = 100
-        else:
-            self.out_vars['led'].val = 0
+        # activate for a fixed period
+        if perf_counter() - self.activation_time > self.config['activation_period']:
+            # might activate based on random check
+            if perf_counter() - self.random_check_time > self.config['random_check_period']:
+                do_local_action = random.random() < self.in_vars['local_action_prob'].val
+                self.random_check_time = perf_counter()
+            else:
+                do_local_action = False
+
+            if do_local_action or self.in_vars['fin_ir'].val > self.config['ir_on_thres']:
+                self.out_vars['led'].val = self.config['led_max_output']
+                self.activation_time = perf_counter()
+
+            else:
+                self.out_vars['led'].val = 0
 
 
 class Interactive_Reflex_Engine(Prescripted_Base_Engine):
