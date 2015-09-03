@@ -24,9 +24,14 @@ class UserStudyPanel(Node):
         self.out_var['curr_time'] = Var(datetime.now().strftime(self.datetime_str_fmt_us))
 
         # input variables
+        in_vars_list = []
         for in_var_name, in_var in in_vars.items():
             if isinstance(in_var, Var):
-                self.in_var[in_var_name] = in_var
+                in_vars_list.append([in_var_name, in_var])
+        # sort them
+        in_vars_list = sorted(in_vars_list, key=lambda x: x[0])
+        for in_var_name, in_var in in_vars_list:
+            self.in_var[in_var_name] = in_var
 
         # compose the log file path
         log_path = os.path.join(os.getcwd(), self.log_folder_name)
@@ -34,7 +39,7 @@ class UserStudyPanel(Node):
             log_file_name = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
         # instantiate the snapshot taker
-        self.snapshot_taker = CSV_Snapshot(log_path, log_file_name, row_info=self.out_var, **self.in_var)
+        self.snapshot_taker = CSV_Snapshot(log_path, log_file_name, row_info=self.out_var, variables=self.in_var)
 
     def run(self):
 
@@ -47,7 +52,7 @@ class UserStudyPanel(Node):
 
 class CSV_Snapshot(object):
 
-    def __init__(self, csv_folder_path, csv_filename, row_info: OrderedDict, **variables):
+    def __init__(self, csv_folder_path, csv_filename, row_info: OrderedDict, variables: OrderedDict):
 
         self.folder = csv_folder_path
         self.filename = csv_filename
