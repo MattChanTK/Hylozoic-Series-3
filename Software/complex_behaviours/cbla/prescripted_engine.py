@@ -59,7 +59,7 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
 
         # default configuration
         self.config['ir_on_thres'] = 1000
-        self.config['ir_off_thres'] = 1200
+        self.config['ir_off_thres'] = 800
         self.config['led_max_output'] = 100
         self.config['random_check_period'] = 1.0
         self.config['activation_period'] = 3.0
@@ -91,13 +91,13 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
                 self.out_vars['led'].val = self.config['led_max_output']
                 self.activation_time = perf_counter()
 
-            else:
+            elif self.in_vars['fin_ir'].val < self.config['ir_off_thres']:
                 self.out_vars['led'].val = 0
 
 
 class Interactive_Reflex_Engine(Prescripted_Base_Engine):
 
-     def __init__(self, scout_ir: Var=Var(0), actuator: Var=Var(0), **config):
+    def __init__(self, scout_ir: Var=Var(0), actuator: Var=Var(0), **config):
 
         in_vars = OrderedDict()
         if isinstance(scout_ir, Var):
@@ -111,10 +111,48 @@ class Interactive_Reflex_Engine(Prescripted_Base_Engine):
         else:
             raise TypeError("actuator is not a Var type!")
 
-        super(Interactive_Reflex_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars, **config)
+        # setting the configurations
+        self.config = dict()
+
+        # default configuration
+        self.config['ir_on_thres'] = 1000
+        self.config['ir_off_thres'] = 800
+        self.config['max_output'] = 100
+        self.config['pulsing_period'] = 2.0
+
+        # custom configuration
+        if isinstance(config, dict):
+            for name, arg in config.items():
+                self.config[name] = arg
+
+        # initialize
+        super(Interactive_Reflex_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+
+        # variables
+        self.on_time = perf_counter()
+        self.off_time = perf_counter()
+        self.activating = False
+
+    def update(self):
+
+        if self.in_vars['scout_ir'].val > self.config['ir_on_thres']:
+
+            if not self.activating and perf_counter() - self.off_time > self.config['pulsing_period']/2:
+                self.activating = True
+                self.on_time = perf_counter()
+            elif self.activating and perf_counter() - self.on_time > self.config['pulsing_period']/2:
+                self.activating = False
+                self.off_time = perf_counter()
+
+            if self.activating:
+                self.out_vars['actuator'].val = self.config['max_output']
+            else:
+                self.out_vars['actuator'].val = 0
+        elif self.in_vars['scout_ir'].val < self.config['ir_off_thres']:
+            self.out_vars['actuator'].val = 0
 
 
-class Interactive_Fin_Engine(Prescripted_Base_Engine):
+class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
 
     def __init__(self, fin_ir: Var=Var(0), scout_ir: Var=Var(0), side_ir: Var=Var(0),
                  local_action_prob: Var=Var(0), actuator=Var(0), **config):
@@ -146,5 +184,59 @@ class Interactive_Fin_Engine(Prescripted_Base_Engine):
         else:
             raise TypeError("actuator is not a Var type!")
 
-        super(Interactive_Fin_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars, **config)
+        # setting the configurations
+        self.config = dict()
 
+         # default configuration
+        self.config['ir_on_thres'] = 1000
+        self.config['ir_off_thres'] = 1200
+        self.config['on_output'] = 300
+        self.config['off_output'] = 0
+        self.config['random_check_period'] = 1.0
+        self.config['activation_period'] = 2.0
+
+
+        # custom configuration
+        if isinstance(config, dict):
+            for name, arg in config.items():
+                self.config[name] = arg
+
+        super(Interactive_HalfFin_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+
+        # variables
+        self.random_check_time = perf_counter()
+        self.activation_time = perf_counter()
+
+    def update(self):
+
+        # activate for a fixed period
+        if perf_counter() - self.activation_time > self.config['activation_period']:
+
+            # might activate based on random check
+            if perf_counter() - self.random_check_time > self.config['random_check_period']:
+                do_local_action = random.random() < self.in_vars['local_action_prob'].val
+                self.random_check_time = perf_counter()
+            else:
+                do_local_action = False
+
+
+            if self.in_vars['fin_ir'].val > self.config['ir_on_thres']:
+
+                # turn on unless scout ir doesn't detect anything and side ir does
+                if self.in_vars['scout_ir'].val < self.config['ir_off_thres'] and \
+                   self.in_vars['side_ir'].val > self.config['ir_on_thres']:
+
+                    self.out_vars['actuator'].val = self.config['off_output']
+                else:
+                    self.out_vars['actuator'].val = self.config['on_output']
+
+            elif self.in_vars['fin_ir'].val < self.config['ir_off_thres'] and \
+                self.out_vars['actuator'].val > self.config['off_output'] and not do_local_action:
+
+                self.out_vars['actuator'].val = self.config['off_output']
+
+            else:
+
+                if do_local_action:
+                    self.out_vars['actuator'].val = self.config['on_output']
+                    self.activation_time = perf_counter()

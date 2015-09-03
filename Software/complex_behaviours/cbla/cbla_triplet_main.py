@@ -255,6 +255,10 @@ class CBLA(interactive_system.InteractiveCmd):
         cbla_nodes = OrderedDict()
 
         for teensy_name in teensy_names:
+
+            # local action variables
+            # local_action_prob = Var(0)
+
             # ===== constructing the Light Node =====
             # Light node is composed of an ambient light sensors and a LED
             for j in range(self.num_light):
@@ -300,17 +304,26 @@ class CBLA(interactive_system.InteractiveCmd):
                 out_vars_left = OrderedDict()
                 out_vars_left['hf-l'] = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
 
+                # constructing prescripted engine
+                fin_ir_l = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+                side_ir_l = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+                scout_ir_l = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+                hf_l = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
+                interactive_halffin_engine = ps_engine.Interactive_HalfFin_Engine(fin_ir=fin_ir_l, scout_ir=scout_ir_l,
+                                                                                  side_ir=side_ir_l, actuator=hf_l)
+
                 half_fin_left = Isolated_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
-                                                   messenger=self.messenger, data_logger=self.data_logger,
-                                                   cluster_name=teensy_name, node_type='halfFin', node_id=j,
-                                                   node_version='l',
-                                                   in_vars=in_vars, out_vars=out_vars_left,
-                                                   s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
-                                                   s_ranges=((0, 4095),  (-255, 255), (-255, 255),), # (-255, 255)),
-                                                   s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'), # 'accelerometer (z)',),
-                                                   m_keys=('hf-l',), m_ranges=((130, 300),),
-                                                   m_names=('Half Fin Input',)
-                                                   )
+                                                      messenger=self.messenger, data_logger=self.data_logger,
+                                                      cluster_name=teensy_name, node_type='halfFin', node_id=j,
+                                                      node_version='l',
+                                                      in_vars=in_vars, out_vars=out_vars_left,
+                                                      s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
+                                                      s_ranges=((0, 4095),  (-255, 255), (-255, 255),), # (-255, 255)),
+                                                      s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'), # 'accelerometer (z)',),
+                                                      m_keys=('hf-l',), m_ranges=((130, 300),),
+                                                      m_names=('Half Fin Input',),
+                                                      prescripted_engine=interactive_halffin_engine
+                                                      )
 
                 cbla_nodes[half_fin_left.node_name] = half_fin_left
 
@@ -318,17 +331,28 @@ class CBLA(interactive_system.InteractiveCmd):
                 out_vars_right = OrderedDict()
                 out_vars_right['hf-r'] = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
 
+
+                # constructing prescripted engine
+                fin_ir_r = components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
+                side_ir_r = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
+                scout_ir_r = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+                hf_r = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
+
+                interactive_halffin_engine = ps_engine.Interactive_HalfFin_Engine(fin_ir=fin_ir_r, scout_ir=scout_ir_r,
+                                                                                  side_ir=side_ir_r, actuator=hf_r)
+
                 half_fin_right = Isolated_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
-                                                    messenger=self.messenger, data_logger=self.data_logger,
-                                                    cluster_name=teensy_name, node_type='halfFin', node_id=j,
-                                                    node_version='r',
-                                                    in_vars=in_vars, out_vars=out_vars_right,
-                                                    s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
-                                                    s_ranges=((0, 4095),(-255, 255), (-255, 255)), # (-255, 255)),
-                                                    s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'),  # 'accelerometer (z)',),
-                                                    m_keys=('hf-r',), m_ranges=((130, 300),),
-                                                    m_names=('half-fin input',)
-                                                    )
+                                                       messenger=self.messenger, data_logger=self.data_logger,
+                                                       cluster_name=teensy_name, node_type='halfFin', node_id=j,
+                                                       node_version='r',
+                                                       in_vars=in_vars, out_vars=out_vars_right,
+                                                       s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
+                                                       s_ranges=((0, 4095),(-255, 255), (-255, 255)), # (-255, 255)),
+                                                       s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'),  # 'accelerometer (z)',),
+                                                       m_keys=('hf-r',), m_ranges=((130, 300),),
+                                                       m_names=('half-fin input',),
+                                                       prescripted_engine=interactive_halffin_engine
+                                                       )
 
                 cbla_nodes[half_fin_right.node_name] = half_fin_right
 
@@ -342,33 +366,47 @@ class CBLA(interactive_system.InteractiveCmd):
                 # ===== constructing the Reflex Motor Node ====
                 out_vars_motor = OrderedDict()
                 out_vars_motor['rfx-m'] = components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref']
+
+                # constructing prescripted engine
+                scout_ir = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+                motor = components['%s.f%d.rfx_driver-m' % (teensy_name, j)].in_var['led_ref']
+                interactive_reflex_engine = ps_engine.Interactive_Reflex_Engine(scout_ir=scout_ir, actuator=motor)
+
                 reflex_motor = Isolated_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
-                                                 messenger=self.messenger, data_logger=self.data_logger,
-                                                 cluster_name=teensy_name, node_type='reflex', node_id=j,
-                                                 node_version='m',
-                                                 in_vars=in_vars, out_vars=out_vars_motor,
-                                                 s_keys=('ir-s', ),
-                                                 s_ranges=((0, 4095), ),
-                                                 s_names=('scout IR sensor', ),
-                                                 m_keys=('rfx-m',), m_ranges=((0, 100),),
-                                                 m_names=('reflex motor',)
-                                                 )
+                                                    messenger=self.messenger, data_logger=self.data_logger,
+                                                    cluster_name=teensy_name, node_type='reflex', node_id=j,
+                                                    node_version='m',
+                                                    in_vars=in_vars, out_vars=out_vars_motor,
+                                                    s_keys=('ir-s', ),
+                                                    s_ranges=((0, 4095), ),
+                                                    s_names=('scout IR sensor', ),
+                                                    m_keys=('rfx-m',), m_ranges=((0, 100),),
+                                                    m_names=('reflex motor',),
+                                                    prescripted_engine=interactive_reflex_engine
+                                                    )
 
                 cbla_nodes[reflex_motor.node_name] = reflex_motor
 
                 # ===== constructing the Reflex LED Node ====
                 out_vars_led = OrderedDict()
                 out_vars_led['rfx-l'] = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
+
+                 # constructing prescripted engine
+                scout_ir = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
+                led = components['%s.f%d.rfx_driver-l' % (teensy_name, j)].in_var['led_ref']
+                interactive_reflex_engine = ps_engine.Interactive_Reflex_Engine(scout_ir=scout_ir, actuator=led)
+
                 reflex_led = Isolated_Reflex_Node(RobotClass=cbla_robot.Robot_Reflex,
-                                               messenger=self.messenger, data_logger=self.data_logger,
-                                               cluster_name=teensy_name, node_type='reflex', node_id=j,
-                                               node_version='l',
-                                               in_vars=in_vars, out_vars=out_vars_led,
-                                               s_keys=('ir-s', ),
-                                               s_ranges=((0, 4095), ),
-                                               s_names=('scout IR sensor', ),
-                                               m_keys=('rfx-l',), m_ranges=((0, 255),), m_names=('reflex led',),
-                                               )
+                                                  messenger=self.messenger, data_logger=self.data_logger,
+                                                  cluster_name=teensy_name, node_type='reflex', node_id=j,
+                                                  node_version='l',
+                                                  in_vars=in_vars, out_vars=out_vars_led,
+                                                  s_keys=('ir-s', ),
+                                                  s_ranges=((0, 4095), ),
+                                                  s_names=('scout IR sensor', ),
+                                                  m_keys=('rfx-l',), m_ranges=((0, 255),), m_names=('reflex led',),
+                                                  prescripted_engine=interactive_reflex_engine
+                                                 )
 
                 cbla_nodes[reflex_led.node_name] = reflex_led
 
