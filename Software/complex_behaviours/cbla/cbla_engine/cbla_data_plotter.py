@@ -8,6 +8,16 @@ class CBLA_DataPlotter(DataPlotter):
 
     saved_figures_dir = 'cbla_saved_figures'
 
+    def __init__(self, log_dir, log_header=None, log_timestamp=None, log_name=None,
+                 packet_types=(DataLogger.packet_default_type, ),
+                 info_types=(DataLogger.info_default_type,)):
+
+        self.metrics = [] # session (list) -> node (dict) -> metrics (dict)
+
+        super(CBLA_DataPlotter, self).__init__(log_dir=log_dir, log_header=log_header,
+                                               log_timestamp=log_timestamp, log_name=log_name,
+                                               packet_types=packet_types, info_types=info_types)
+
     def _construct_plot_objects(self):
 
         session_num = 1
@@ -22,9 +32,59 @@ class CBLA_DataPlotter(DataPlotter):
             # self.plot_objects[(node_name, 'model')] = CBLA_PlotObject(fig_title='Final Expert Model - %s' % node_name)
 
     def plot(self):
-        self.plot_histories()
+        self.compute_metrics()
+
+        # self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
+
+        session_num = 1
+        for session_metrics in self.metrics:
+
+            print('Session %d' % (session_num))
+            for metric_type, metric in session_metrics.items():
+                print('\t%s: %f' % (metric_type, metric))
+
+            session_num += 1
+
+    def compute_metrics(self):
+
+        session_num = 1
+        for session_data in self.data:
+
+            session_metric = dict()
+            session_variables = defaultdict(lambda: defaultdict(None))
+
+            for node_name, node_data in session_data.items():
+
+                if (session_num, node_name, 'history') not in self.plot_objects:
+                    continue
+
+                for data_type, data_val in node_data.items():
+
+                    # M value for each node
+                    if data_type == 'M':
+
+                        normed_data_val = []
+                        for data_point in data_val['y']:
+                            normed_data_val.append(np.linalg.norm(data_point))
+
+                        node_activation = np.mean(normed_data_val)
+                        session_variables[node_name]['node_activation'] = node_activation
+
+            # total activation - average activation among all nodes
+            total_activation = []
+            for node_variables in session_variables.values():
+                total_activation.append(node_variables['node_activation'])
+            total_activation = np.mean(total_activation)
+
+            session_metric['total_activation'] = total_activation
+
+            # proximal activation - average distance-weighted activation among all nodes
+
+
+            self.metrics.append(session_metric)
+            session_num += 1
 
     def plot_histories(self):
 
