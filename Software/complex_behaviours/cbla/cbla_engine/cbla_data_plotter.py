@@ -2,6 +2,7 @@ __author__ = 'Matthew'
 
 from abstract_node.data_plotter import *
 import matplotlib.axes as axes
+from collections import OrderedDict
 
 
 class CBLA_DataPlotter(DataPlotter):
@@ -43,7 +44,7 @@ class CBLA_DataPlotter(DataPlotter):
 
             print('Session %d' % (session_num))
             for metric_type, metric in session_metrics.items():
-                print('\t%s: %f' % (metric_type, metric))
+                print('\t%s: %s' % (metric_type, metric))
 
             session_num += 1
 
@@ -66,8 +67,10 @@ class CBLA_DataPlotter(DataPlotter):
                     if data_type == 'M':
 
                         normed_data_val = []
-                        for data_point in data_val['y']:
-                            normed_data_val.append(np.linalg.norm(data_point))
+
+                        for k in range(len(data_val['x'])):
+                            if data_val['x'][k] > 250: # after 5 minutes
+                                normed_data_val.append(np.linalg.norm(data_val['y'][k]))
 
                         node_activation = np.mean(normed_data_val)
                         session_variables[node_name]['node_activation'] = node_activation
@@ -81,7 +84,35 @@ class CBLA_DataPlotter(DataPlotter):
             session_metric['total_activation'] = total_activation
 
             # proximal activation - average distance-weighted activation among all nodes
+            prox_activation_10 = []
+            cluster_activation = defaultdict(list)
+            for node_key, node_variables in session_variables.items():
+                node_identification  = node_key.split('.')
+                cluster_id = node_identification[0]
+                cluster_activation[cluster_id].append(node_variables['node_activation'])
+            cluster_activation_list = []
+            for key, value in cluster_activation.items():
+                cluster_activation_list.append((key, value))
+            cluster_activation_list = sorted(cluster_activation_list, key=lambda x: x[0])
+            cluster_activation = OrderedDict()
+            for key, value in cluster_activation_list:
+                cluster_activation[key] = value
 
+            for cluster_id, cluster_activate_val in cluster_activation.items():
+                cluster_activation[cluster_id] = np.mean(cluster_activate_val)
+
+            for cluster_id, cluster_activate_val in cluster_activation.items():
+                local_activation_10 = cluster_activate_val*10
+
+                neighbour_activation = 0
+                for neighbour_cluster_id in cluster_activation.keys():
+                    if neighbour_cluster_id != cluster_id:
+                        neighbour_activation += cluster_activation[neighbour_cluster_id]
+                prox_activation_10.append(local_activation_10 - neighbour_activation)
+
+
+            session_metric['proximal_activation_10'] = np.mean(prox_activation_10)
+            session_metric['proximal_activation_list'] = prox_activation_10
 
             self.metrics.append(session_metric)
             session_num += 1
