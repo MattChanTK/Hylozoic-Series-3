@@ -126,24 +126,25 @@ class Half_Fin(Simple_Node):
 class LED_Driver(Simple_Node):
 
     def __init__(self, messenger: Messenger, node_name='LED_Driver',
-                 led_ref: Var=Var(0), led_out: Var=Var(0), step_period=0):
+                 led_ref: Var=Var(0), led_out: Var=Var(0), step_period=0, incre_k=0.1):
 
         super(LED_Driver, self).__init__(messenger, node_name='%s' % node_name, output=led_out,
                                          led_ref=led_ref)
 
         self.step_period = step_period
+        self.incre_k = incre_k
 
     def run(self):
 
         while self.alive:
 
             if self.out_var['output'].val < self.in_var['led_ref'].val:
-                led_out = self.out_var['output'].val + max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val + max(1, int(self.out_var['output'].val * self.incre_k))
                 self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
 
             elif self.out_var['output'].val > self.in_var['led_ref'].val:
-                led_out = self.out_var['output'].val - max(1, int(self.out_var['output'].val * 0.1))
+                led_out = self.out_var['output'].val - max(1, int(self.out_var['output'].val * self.incre_k))
                 self.out_var['output'].val = max(0, min(255, led_out))
                 sleeping_time = max(0, max(self.messenger.estimated_msg_period * 2, self.step_period))
             else:
