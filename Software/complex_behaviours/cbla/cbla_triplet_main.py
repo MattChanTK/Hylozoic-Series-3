@@ -17,12 +17,15 @@ import prescripted_engine as ps_engine
 
 try:
     from custom_gui import *
+
 except ImportError:
     import sys
     import os
 
     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
     from custom_gui import *
+
+from neighbourhood_node import *
 
 
 class CBLA(interactive_system.InteractiveCmd):
@@ -112,6 +115,11 @@ class CBLA(interactive_system.InteractiveCmd):
                 fin_components.update(self.build_fin_components(teensy_name=teensy, fin_id=j))
             self.node_list.update(fin_components)
 
+        # ===== creating components for neighbourhood communication ====
+        network_components = OrderedDict()
+        network_components.update(self.build_network_components(teensy_names=teensy_in_use))
+        self.node_list.update(network_components)
+
         # ===== creating the CBLA Nodes ====
 
         # prescripted_engine active-or-not var
@@ -132,7 +140,8 @@ class CBLA(interactive_system.InteractiveCmd):
 
         # instantiate the node after the linking process
         for cbla_node in cbla_nodes.values():
-            cbla_node.instantiate()
+            if isinstance(cbla_node, CBLA_Generic_Node):
+                cbla_node.instantiate()
 
         # add cbla nodes in to the node_list
         self.node_list.update(cbla_nodes)
@@ -250,9 +259,25 @@ class CBLA(interactive_system.InteractiveCmd):
         led_ref_temp = Var(0)
         led_driver = LED_Driver(self.messenger, node_name="%s.l%d.led_driver" % (teensy_name, light_id),
                                 led_ref=led_ref_temp,
-                                led_out=led.in_var['output'], step_period=0.001)
+                                led_out=led.in_var['output'], step_period=0.0005, incre_k=0.05)
         light_comps[led_driver.node_name] = led_driver
         return light_comps
+
+    def build_network_components(self, teensy_names):
+
+        network_components = OrderedDict()
+        for teensy_name in teensy_names:
+
+            # local action variables
+            local_action_prob = Var(0)
+
+            local_cluster = Cluster_Activity(self.messenger, node_name='%s.local_cluster' % teensy_name,
+                                             output=local_action_prob)
+
+            network_components[local_cluster.node_name] = local_cluster
+
+        return network_components
+
 
     def build_isolated_nodes(self, teensy_names, components):
 
@@ -261,7 +286,8 @@ class CBLA(interactive_system.InteractiveCmd):
         for teensy_name in teensy_names:
 
             # local action variables
-            # local_action_prob = Var(0)
+            local_cluster = components['%s.local_cluster' % teensy_name]
+            local_action_prob = local_cluster.out_var['local_prob']
 
             # ===== constructing the Light Node =====
             # Light node is composed of an ambient light sensors and a LED
@@ -277,7 +303,10 @@ class CBLA(interactive_system.InteractiveCmd):
                 # constructing prescripted engine
                 fin_ir= components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
                 led = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
-                interactive_light_engine = ps_engine.Interactive_Light_Engine(fin_ir=fin_ir, led=led)
+                local_cluster.add_in_var(led, '%s.l%d.led_driver.led_ref' % (teensy_name, j))
+
+                interactive_light_engine = ps_engine.Interactive_Light_Engine(fin_ir=fin_ir, led=led,
+                                                                              local_action_prob=local_action_prob)
 
                 # Constructing the CBLA Node
                 light_node = Isolated_Light_Node(RobotClass=cbla_robot.Robot_Light,
@@ -314,8 +343,11 @@ class CBLA(interactive_system.InteractiveCmd):
                 side_ir_l = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
                 scout_ir_l = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
                 hf_l = components['%s.f%d.hf-l' % (teensy_name, j)].in_var['temp_ref']
+                local_cluster.add_in_var(hf_l, '%s.f%d.hf-l.temp_ref' % (teensy_name, j))
+
                 interactive_halffin_engine = ps_engine.Interactive_HalfFin_Engine(fin_ir=fin_ir_l, scout_ir=scout_ir_l,
-                                                                                  side_ir=side_ir_l, actuator=hf_l)
+                                                                                  side_ir=side_ir_l, actuator=hf_l,
+                                                                                  local_action_prob=local_action_prob)
 
                 half_fin_left = Isolated_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
                                                       messenger=self.messenger, data_logger=self.data_logger,
@@ -343,9 +375,11 @@ class CBLA(interactive_system.InteractiveCmd):
                 side_ir_r = components['%s.f%d.ir-s' % (teensy_name, (j + 1) % self.num_fin)].out_var['input']
                 scout_ir_r = components['%s.f%d.ir-s' % (teensy_name, j)].out_var['input']
                 hf_r = components['%s.f%d.hf-r' % (teensy_name, j)].in_var['temp_ref']
+                local_cluster.add_in_var(hf_r, '%s.f%d.hf-r.temp_ref' % (teensy_name, j))
 
                 interactive_halffin_engine = ps_engine.Interactive_HalfFin_Engine(fin_ir=fin_ir_r, scout_ir=scout_ir_r,
-                                                                                  side_ir=side_ir_r, actuator=hf_r)
+                                                                                  side_ir=side_ir_r, actuator=hf_r,
+                                                                                  local_action_prob=local_action_prob)
 
                 half_fin_right = Isolated_HalfFin_Node(RobotClass=cbla_robot.Robot_HalfFin,
                                                        messenger=self.messenger, data_logger=self.data_logger,

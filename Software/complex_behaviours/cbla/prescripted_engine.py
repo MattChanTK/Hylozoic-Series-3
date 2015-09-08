@@ -33,7 +33,7 @@ class Prescripted_Base_Engine(object):
 class Interactive_Light_Engine(Prescripted_Base_Engine):
 
     def __init__(self, fin_ir: Var=Var(0), led: Var=Var(0),
-                 local_action_prob: Var=Var(0),
+                 local_action_prob: Var=Var(0), global_action_prob: Var=Var(0),
                  **config):
 
         # setting the input and output variables
@@ -97,7 +97,8 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
 
 class Interactive_Reflex_Engine(Prescripted_Base_Engine):
 
-    def __init__(self, scout_ir: Var=Var(0), actuator: Var=Var(0), **config):
+    def __init__(self, scout_ir: Var=Var(0), actuator: Var=Var(0),
+                 **config):
 
         in_vars = OrderedDict()
         if isinstance(scout_ir, Var):
@@ -155,7 +156,8 @@ class Interactive_Reflex_Engine(Prescripted_Base_Engine):
 class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
 
     def __init__(self, fin_ir: Var=Var(0), scout_ir: Var=Var(0), side_ir: Var=Var(0),
-                 local_action_prob: Var=Var(0), actuator=Var(0), **config):
+                 actuator=Var(0), local_action_prob: Var=Var(0), global_action_prob: Var=Var(0),
+                 **config):
 
         in_vars = OrderedDict()
         if isinstance(fin_ir, Var):
