@@ -325,7 +325,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                                       s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
                                                       s_ranges=((0, 4095),  (-255, 255), (-255, 255),), # (-255, 255)),
                                                       s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'), # 'accelerometer (z)',),
-                                                      m_keys=('hf-l',), m_ranges=((130, 300),),
+                                                      m_keys=('hf-l',), m_ranges=((0, 300),),
                                                       m_names=('Half Fin Input',),
                                                       prescripted_engine=interactive_halffin_engine,
                                                       prescripted_mode_active=self.prescripted_mode_active_var
@@ -355,7 +355,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                                        s_keys=('ir-f', 'acc-x', 'acc-y'),  # 'acc-z'),
                                                        s_ranges=((0, 4095),(-255, 255), (-255, 255)), # (-255, 255)),
                                                        s_names=('fin IR sensor', 'accelerometer (x)', 'accelerometer (y)'),  # 'accelerometer (z)',),
-                                                       m_keys=('hf-r',), m_ranges=((130, 300),),
+                                                       m_keys=('hf-r',), m_ranges=((0, 300),),
                                                        m_names=('half-fin input',),
                                                        prescripted_engine=interactive_halffin_engine,
                                                        prescripted_mode_active=self.prescripted_mode_active_var
@@ -519,7 +519,7 @@ class CBLA(interactive_system.InteractiveCmd):
                         if linked_var_name == 'hf-l' or linked_var_name == 'hf-r':
                             var_name = 'Half Fin'
                             cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
-                                                 var_range=(130, 300), var_name=var_name,
+                                                 var_range=(0, 300), var_name=var_name,
                                                 )
                         elif linked_var_name == 'led':
                             var_name = 'LED'
@@ -580,7 +580,7 @@ class CBLA(interactive_system.InteractiveCmd):
                                                                    var_range=rfx_range, var_name=rfx_l_name)
 
          # linking the Half-Fin nodes spatially
-        hf_range = (130, 300)
+        hf_range = (0, 300)
         hf_l_name = 'Half Fin (left)'
         c1_f2_hf_l = cbla_nodes['%s1.cbla_halfFin_2-l' % cluster_suffix].out_var['hf-l']
         c3_f0_hf_l = cbla_nodes['%s3.cbla_halfFin_0-l' % cluster_suffix].out_var['hf-l']
@@ -624,7 +624,7 @@ class CBLA(interactive_system.InteractiveCmd):
                         var_key = '%s_l%s_%s' % (cluster_name, node_id, out_var_key)
                         var_range = (0, 50)
                         var_name = 'LED'
-                    elif isinstance(cbla_node, Isolated_HalfFin_Node):
+                    elif isinstance(cbla_node, Isolated_Reflex_Node):
                         var_key = '%s_f%s_%s' % (cluster_name, node_id, out_var_key)
                         if node_version == 'm':
                             var_range = (0, 100)
@@ -635,9 +635,9 @@ class CBLA(interactive_system.InteractiveCmd):
                         else:
                             raise ValueError('node_version %s does not exist!' % node_version)
 
-                    elif isinstance(cbla_node, Isolated_Reflex_Node):
+                    elif isinstance(cbla_node, Isolated_HalfFin_Node):
                         var_key = '%s_f%s_%s' % (cluster_name, node_id, out_var_key)
-                        var_range = (130, 300)
+                        var_range = (0, 300)
                         var_name = 'Half Fin'
                     else:
                         raise ValueError('cbla_node is not part of any of possible types of nodes.')
@@ -649,26 +649,31 @@ class CBLA(interactive_system.InteractiveCmd):
 
         m_vars_keys = tuple(m_vars.keys())
         cbla_nodes_keys = tuple(cbla_nodes.keys())
-        for cbla_node in cbla_nodes.values():
+        num_assignment_round = int(num_links/len(cbla_nodes))
+        for r in range(num_assignment_round):
+            for cbla_node in cbla_nodes.values():
 
-            rand_key = random.choice(m_vars_keys)
-            m_var = m_vars[rand_key]
-            cbla_node.add_in_var(var=m_var[0], var_key=rand_key, var_range=m_var[1], var_name=m_var[2])
+                rand_key = random.choice(m_vars_keys)
+                m_var = m_vars[rand_key]
+                cbla_node.add_in_var(var=m_var[0], var_key=rand_key, var_range=m_var[1], var_name=m_var[2])
 
-            num_linked += 1
-            print('%s -> %s' % (rand_key, cbla_node.node_name))
+                num_linked += 1
+                print('%s -> %s' % (rand_key, cbla_node.node_name))
 
         # not enough links
-        while num_linked < num_links:
-            # choose one of the cbla node at random
-            rand_source_key = random.choice(m_vars_keys)
-            rand_dest_key = random.choice(cbla_nodes_keys)
-            m_var = m_vars[rand_source_key]
-            cbla_nodes[rand_dest_key].add_in_var(var=m_var[0], var_key=rand_source_key,
-                                                 var_range=m_var[1], var_name=m_var[2])
 
-            num_linked +=1
-            print('%s -> %s' % (rand_source_key, cbla_nodes[rand_dest_key].node_name))
+        if num_linked < num_links:
+            # choose one of the cbla node at random
+            rand_source_key = random.sample(m_vars_keys, num_links - num_linked)
+            rand_dest_key = random.sample(cbla_nodes_keys, num_links - num_linked)
+
+            for i in range(len(rand_source_key)):
+                m_var = m_vars[rand_source_key[i]]
+                cbla_nodes[rand_dest_key[i]].add_in_var(var=m_var[0], var_key=rand_source_key[i],
+                                                     var_range=m_var[1], var_name=m_var[2])
+
+                num_linked +=1
+                print('%s -> %s' % (rand_source_key[i], cbla_nodes[rand_dest_key[i]].node_name))
 
     def link_functionally(self, cbla_nodes, cluster_suffix='c'):
         for node_key, cbla_node in cbla_nodes.items():
@@ -703,7 +708,7 @@ class CBLA(interactive_system.InteractiveCmd):
                     var_range = (0, 255)
                 elif isinstance(cbla_node, Isolated_HalfFin_Node):
                     var_name = 'Half-Fin'
-                    var_range = (130, 300)
+                    var_range = (0, 300)
                 else:
                     raise ValueError('Unknown Node Type!')
 
@@ -1001,13 +1006,13 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # creating new logs or not
-    create_new_log = False
+    create_new_log = True
 
     if len(sys.argv) > 2:
         create_new_log = bool(sys.argv[2])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None #('c1', 'c2', 'c3', 'c4',)
+    ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4',)
     MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
 
 
