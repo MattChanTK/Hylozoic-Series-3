@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        # self.plot_histories()
+        #self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -61,7 +61,6 @@ class CBLA_DataPlotter(DataPlotter):
         for session_data in self.data:
 
             session_metric = dict()
-            session_variables = defaultdict(lambda: defaultdict(None))
 
             windowed_data = OrderedDict()
             for node_name, node_data in session_data.items():
@@ -97,19 +96,39 @@ class CBLA_DataPlotter(DataPlotter):
             # total activation array
             total_activation_array = []
             for t, data_t in windowed_data.items():
-                total_activation_array.append((t, np.sum(tuple(data_t.values()))))
+                total_activation_array.append((t, np.mean(tuple(data_t.values()))))
             total_activation_array = np.array(total_activation_array)
 
             session_metric['total_activation_array'] = total_activation_array
+
+            # proximal activation array (cluster)
+            prox_activation_cluster_array = defaultdict(list)
+            for t, data_t in windowed_data.items():
+                cluster_values = defaultdict(list)
+                for node_name, node_data_t in data_t.items():
+                    node_identification = node_name.split('.')
+                    cluster_id = node_identification[0]
+                    cluster_values[cluster_id].append(node_data_t)
+                for cluster_id, cluster_value in cluster_values.items():
+                    cluster_activation = [np.mean(cluster_value)]
+                    for other_cluster_id, other_cluster_value in cluster_values.items():
+                        if other_cluster_id != cluster_id:
+                            cluster_activation.append(np.mean(other_cluster_value)*0.2)
+                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)))
+
+            for cluster_id, cluster_array in prox_activation_cluster_array.items():
+                prox_activation_cluster_array[cluster_id] = np.array(prox_activation_cluster_array[cluster_id])
+
+            session_metric['prox_activation_cluster_array'] = prox_activation_cluster_array
 
             self.metrics.append(session_metric)
             session_num += 1
 
     def plot_metrics(self):
 
-        grid_dim = (1,1)
+        grid_dim = (1, 2)
 
-        metrics_keys = ('total_activation_array',)
+        metrics_keys = ('total_activation_array', 'prox_activation_cluster_array')
 
         session_num = 1
         for session_metrics in self.metrics:
@@ -144,10 +163,27 @@ class CBLA_DataPlotter(DataPlotter):
 
                     print('Plotted the total activation array (S%d)' % session_num)
 
+                elif metrics_key == 'prox_activation_cluster_array':
+                    # configure the plot
+                    plot_config = dict()
+                    plot_config['xlabel'] = 'time (second)'
+                    plot_config['ylabel'] = 'activation'
+                    plot_config['title'] = 'Proximal Cluster Activation (S%d)' % session_num
+
+                    # plot the evolution plot
+                    metrics_dict = session_metrics[metrics_key]
+                    metrics_vals = []
+                    for cluster_id, cluster_vals in metrics_dict.items():
+                        metrics_vals.append((cluster_id, cluster_vals.transpose()))
+                    metrics_vals = sorted(metrics_vals, key=lambda x: x[0])
+
+                    for cluster_id, metrics_val in metrics_vals:
+                        self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
+                                                                      metrics_val[1], metrics_val[0], **plot_config)
+
+                    print('Plotted the total activation array (S%d)' % session_num)
+
             session_num += 1
-
-
-
 
     def plot_histories(self):
 
