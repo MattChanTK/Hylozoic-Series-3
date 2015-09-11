@@ -27,6 +27,9 @@ class CBLA_DataPlotter(DataPlotter):
 
                 self.plot_objects[(session_num, node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s (S%d)' % (node_name, session_num))
                 # self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+
+            self.plot_objects[(session_num, 'metrics')]  = PlotObject(fig_num=len(self.plot_objects)+1,
+                                                                      fig_title='S%d - Metrics' % session_num)
             session_num += 1
 
         # for node_name, node_data in self.data[-1]:
@@ -34,28 +37,33 @@ class CBLA_DataPlotter(DataPlotter):
 
     def plot(self):
         self.compute_metrics()
+        self.plot_metrics()
 
         # self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
+        #
+        # session_num = 1
+        # for session_metrics in self.metrics:
+        #
+        #     print('Session %d' % (session_num))
+        #     for metric_type, metric in session_metrics.items():
+        #         print('\t%s: %s' % (metric_type, metric))
+        #
+        #
+        #     session_num += 1
 
-        session_num = 1
-        for session_metrics in self.metrics:
-
-            print('Session %d' % (session_num))
-            for metric_type, metric in session_metrics.items():
-                print('\t%s: %s' % (metric_type, metric))
-
-            session_num += 1
 
     def compute_metrics(self):
 
+        WIN_PERIOD = 1.0
         session_num = 1
         for session_data in self.data:
 
             session_metric = dict()
             session_variables = defaultdict(lambda: defaultdict(None))
 
+            windowed_data = OrderedDict()
             for node_name, node_data in session_data.items():
 
                 if (session_num, node_name, 'history') not in self.plot_objects:
@@ -66,56 +74,80 @@ class CBLA_DataPlotter(DataPlotter):
                     # M value for each node
                     if data_type == 'M':
 
-                        normed_data_val = []
+                        # slots sets of data points in windows
+                        k = 0
+                        window_t = -WIN_PERIOD
 
-                        for k in range(len(data_val['x'])):
-                            if data_val['x'][k] > 250: # after 5 minutes
-                                normed_data_val.append(np.linalg.norm(data_val['y'][k]))
+                        num_data_pt = len(data_val['x'])
+                        while k < num_data_pt:
 
-                        node_activation = np.mean(normed_data_val)
-                        session_variables[node_name]['node_activation'] = node_activation
+                            if data_val['x'][k] >= window_t + WIN_PERIOD:
+                                window_t += WIN_PERIOD
+                                if window_t not in windowed_data:
+                                    windowed_data[window_t] = defaultdict(list)
 
-            # total activation - average activation among all nodes
-            total_activation = []
-            for node_variables in session_variables.values():
-                total_activation.append(node_variables['node_activation'])
-            total_activation = np.mean(total_activation)
+                            windowed_data[window_t][node_name].append(data_val['y'][k])
+                            k += 1
 
-            session_metric['total_activation'] = total_activation
+            # average every window of values
+            for t, vals_t in windowed_data.items():
+                for node_name, node_data in vals_t.items():
+                    windowed_data[t][node_name] = np.mean(node_data)
 
-            # proximal activation - average distance-weighted activation among all nodes
-            prox_activation_10 = []
-            cluster_activation = defaultdict(list)
-            for node_key, node_variables in session_variables.items():
-                node_identification  = node_key.split('.')
-                cluster_id = node_identification[0]
-                cluster_activation[cluster_id].append(node_variables['node_activation'])
-            cluster_activation_list = []
-            for key, value in cluster_activation.items():
-                cluster_activation_list.append((key, value))
-            cluster_activation_list = sorted(cluster_activation_list, key=lambda x: x[0])
-            cluster_activation = OrderedDict()
-            for key, value in cluster_activation_list:
-                cluster_activation[key] = value
+            # total activation array
+            total_activation_array = []
+            for t, data_t in windowed_data.items():
+                total_activation_array.append((t, np.sum(tuple(data_t.values()))))
+            total_activation_array = np.array(total_activation_array)
 
-            for cluster_id, cluster_activate_val in cluster_activation.items():
-                cluster_activation[cluster_id] = np.mean(cluster_activate_val)
-
-            for cluster_id, cluster_activate_val in cluster_activation.items():
-                local_activation_10 = cluster_activate_val*10
-
-                neighbour_activation = 0
-                for neighbour_cluster_id in cluster_activation.keys():
-                    if neighbour_cluster_id != cluster_id:
-                        neighbour_activation += cluster_activation[neighbour_cluster_id]
-                prox_activation_10.append(local_activation_10 - neighbour_activation)
-
-
-            session_metric['proximal_activation_10'] = np.mean(prox_activation_10)
-            session_metric['proximal_activation_list'] = prox_activation_10
+            session_metric['total_activation_array'] = total_activation_array
 
             self.metrics.append(session_metric)
             session_num += 1
+
+    def plot_metrics(self):
+
+        grid_dim = (1,1)
+
+        metrics_keys = ('total_activation_array',)
+
+        session_num = 1
+        for session_metrics in self.metrics:
+
+            session_key = (session_num, 'metrics')
+
+            if session_key not in self.plot_objects:
+                    continue
+
+            for metrics_key in metrics_keys:
+
+                if metrics_key not in session_metrics:
+                    continue
+
+                # instantiate axis
+                ax_name = '%s' % metrics_key
+                ax_num = metrics_keys.index(metrics_key) + 1
+                self.plot_objects[session_key].add_ax(ax_name=ax_name,
+                                                      location=(grid_dim[0], grid_dim[1], ax_num))
+
+                if metrics_key == 'total_activation_array':
+                    # configure the plot
+                    plot_config = dict()
+                    plot_config['xlabel'] = 'time (second)'
+                    plot_config['ylabel'] = 'activation'
+                    plot_config['title'] = 'Total Activation (S%d)' % session_num
+
+                    # plot the evolution plot
+                    metrics_vals = session_metrics[metrics_key].transpose()
+                    self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
+                                                                  metrics_vals[1], metrics_vals[0], **plot_config)
+
+                    print('Plotted the total activation array (S%d)' % session_num)
+
+            session_num += 1
+
+
+
 
     def plot_histories(self):
 
