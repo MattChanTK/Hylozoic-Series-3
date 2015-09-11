@@ -6,6 +6,20 @@ from time import sleep
 from collections import OrderedDict
 
 
+class Var(object):
+
+    def __init__(self, val=0):
+        self.__val = val
+
+    @property
+    def val(self):
+        return self.__val
+
+    @val.setter
+    def val(self, new_val):
+        self.__val = new_val
+
+
 class Node(threading.Thread):
 
     def __init__(self, messenger: Messenger, node_name=None):
@@ -37,6 +51,16 @@ class Node(threading.Thread):
 
     def run(self):
         raise SystemError('Run must be defined in the child class')
+
+    def add_in_var(self, var: Var, var_key: str):
+
+        if not isinstance(var, Var):
+            raise TypeError("in_var must be of type Var!")
+
+        if not isinstance(var_key, str):
+            raise TypeError("var_key must be of type str!")
+
+        self.in_var[var_key] = var
 
     def read_sample(self, print_warning=False):
 
@@ -71,20 +95,6 @@ class Node(threading.Thread):
 
         self.messenger.load_message(cmd_obj)
 
-
-
-class Var(object):
-
-    def __init__(self, val=0):
-        self.__val = val
-
-    @property
-    def val(self):
-        return self.__val
-
-    @val.setter
-    def val(self, new_val):
-        self.__val = new_val
 
 class Input_Node(Node):
 

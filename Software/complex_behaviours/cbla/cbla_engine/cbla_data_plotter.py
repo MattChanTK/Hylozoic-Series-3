@@ -57,6 +57,7 @@ class CBLA_DataPlotter(DataPlotter):
     def compute_metrics(self):
 
         WIN_PERIOD = 1.0
+
         session_num = 1
         for session_data in self.data:
 

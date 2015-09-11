@@ -123,7 +123,7 @@ class CBLA(interactive_system.InteractiveCmd):
         # ===== creating the CBLA Nodes ====
 
         # prescripted_engine active-or-not var
-        self.prescripted_mode_active_var = Var(0)
+        self.prescripted_mode_active_var = Var(1)
 
         # creating the isolated nodes
         cbla_nodes = self.build_isolated_nodes(teensy_names=teensy_in_use, components=self.node_list)
@@ -276,12 +276,27 @@ class CBLA(interactive_system.InteractiveCmd):
 
             network_components[local_cluster.node_name] = local_cluster
 
+        # neighbourhood manager (all nodes are in the same neighbourhood)
+        # neighbour_active = Var(False)
+        # neighbourhood_name = 'n_'
+        # for teensy_name in teensy_names:
+        #     neighbourhood_name += teensy_name
+        # neighbourhood_manager = Neighbourhood_Manager(self.messenger, node_name='%s' % neighbourhood_name,
+        #                                               output=neighbour_active)
+        # network_components[neighbourhood_manager.node_name] = neighbourhood_manager
+
         return network_components
 
 
     def build_isolated_nodes(self, teensy_names, components):
 
         cbla_nodes = OrderedDict()
+
+        # neighbourhood_name = 'n_'
+        # for teensy_name in teensy_names:
+        #     neighbourhood_name += teensy_name
+        # neighbourhood_manager = components[neighbourhood_name]
+        # neighbour_active = neighbourhood_manager.out_var['neighbour_active']
 
         for teensy_name in teensy_names:
 
@@ -304,9 +319,12 @@ class CBLA(interactive_system.InteractiveCmd):
                 fin_ir= components['%s.f%d.ir-f' % (teensy_name, j)].out_var['input']
                 led = components['%s.l%d.led_driver' % (teensy_name, j)].in_var['led_ref']
                 local_cluster.add_in_var(led, '%s.l%d.led_driver.led_ref' % (teensy_name, j))
+                #neighbourhood_manager.add_in_var(led, '%s.l%d.led_driver.led_ref' % (teensy_name, j))
 
                 interactive_light_engine = ps_engine.Interactive_Light_Engine(fin_ir=fin_ir, led=led,
-                                                                              local_action_prob=local_action_prob)
+                                                                              local_action_prob=local_action_prob,
+                                                                              #neighbour_active=neighbour_active
+                                                                              )
 
                 # Constructing the CBLA Node
                 light_node = Isolated_Light_Node(RobotClass=cbla_robot.Robot_Light,
@@ -1040,7 +1058,7 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # creating new logs or not
-    create_new_log = True
+    create_new_log = False
 
     if len(sys.argv) > 2:
         create_new_log = bool(sys.argv[2])

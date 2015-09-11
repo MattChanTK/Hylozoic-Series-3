@@ -1,4 +1,5 @@
 __author__ = 'Matthew'
+from time import perf_counter
 
 from abstract_node.node import *
 from interactive_system import Messenger
@@ -23,16 +24,6 @@ class Cluster_Activity(Node):
             for name, arg in config.items():
                 self.config[name] = arg
 
-    def add_in_var(self, var: Var, var_key: str):
-
-        if not isinstance(var, Var):
-            raise TypeError("in_var must be of type Var!")
-
-        if not isinstance(var_key, str):
-            raise TypeError("var_key must be of type str!")
-
-        self.in_var[var_key] = var
-
     def run(self):
 
         activity_denom = len(self.in_var)
@@ -49,4 +40,59 @@ class Cluster_Activity(Node):
             self.out_var['local_prob'].val = max(self.config['min_prob'], min(self.config['max_prob'], prob ))
 
             sleep(max(0, self.messenger.estimated_msg_period * 2))
-           #print(self.out_var['output'].val)
+
+
+class Neighbourhood_Manager(Node):
+
+     def __init__(self, messenger: Messenger, node_name='neighbourhood_manager',
+                 output: Var=Var(False), **config):
+
+        super(Neighbourhood_Manager, self).__init__(messenger, node_name='%s' % node_name)
+
+        # default parameters
+        self.config = dict()
+        self.config['active_thres'] = 0.5
+        self.config['deactive_thres'] = 0.3
+        self.config['active_period'] = 5.0
+        self.config['activation_lock_period'] = 5.0
+
+        self.out_var['neighbour_active'] = output
+
+        # custom parameters
+        if isinstance(config, dict):
+            for name, arg in config.items():
+                self.config[name] = arg
+
+     def run(self):
+
+         activation_time = perf_counter()
+         activation_locked = False
+
+         while self.alive:
+
+            # determine if any of the neighbours are active
+            activity_level = 0
+            num_active = 0
+
+            for var in self.in_var.values():
+                if var.val > activity_level:
+                    activity_level = var.val
+                if var.val > self.config['active_thres']:
+                    num_active += 1
+
+            if self.out_var['neighbour_active'].val:
+                if perf_counter() - activation_time > self.config['active_period'] or\
+                   activity_level < self.config['deactive_thres']:
+                    self.out_var['neighbour_active'].val = False
+                    activation_locked = True
+
+            elif not activation_locked and activity_level >= self.config['active_thres']:
+                sleep(2.0)
+                self.out_var['neighbour_active'].val = True
+                activation_time = perf_counter()
+
+            if activation_locked:
+                if activity_level < self.config['deactive_thres']:
+                    activation_locked = False
+
+            sleep(max(0, self.messenger.estimated_msg_period * 10))

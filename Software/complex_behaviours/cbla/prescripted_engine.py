@@ -33,7 +33,7 @@ class Prescripted_Base_Engine(object):
 class Interactive_Light_Engine(Prescripted_Base_Engine):
 
     def __init__(self, fin_ir: Var=Var(0), led: Var=Var(0),
-                 local_action_prob: Var=Var(0), global_action_prob: Var=Var(0),
+                 local_action_prob: Var=Var(0), neighbour_active: Var=Var(0),
                  **config):
 
         # setting the input and output variables
@@ -47,6 +47,11 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
             in_vars['local_action_prob'] = local_action_prob
         else:
             raise TypeError("local_action_prob is not a Var type!")
+
+        if isinstance(neighbour_active, Var):
+            in_vars['neighbour_active'] = neighbour_active
+        else:
+            raise TypeError("neighbour_active is not a Var type!")
 
         out_vars = OrderedDict()
         if isinstance(led, Var):
@@ -63,6 +68,7 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
         self.config['led_max_output'] = 100
         self.config['random_check_period'] = 1.0
         self.config['activation_period'] = 3.0
+        self.config['neighbour_action_k'] = 0.05
 
         # custom configuration
         if isinstance(config, dict):
@@ -90,6 +96,9 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
             if do_local_action or self.in_vars['fin_ir'].val > self.config['ir_on_thres']:
                 self.out_vars['led'].val = self.config['led_max_output']
                 self.activation_time = perf_counter()
+
+            elif self.in_vars['neighbour_active'].val:
+                self.out_vars['led'].val = self.config['led_max_output'] * self.config['neighbour_action_k']
 
             elif self.in_vars['fin_ir'].val < self.config['ir_off_thres']:
                 self.out_vars['led'].val = 0
@@ -156,7 +165,7 @@ class Interactive_Reflex_Engine(Prescripted_Base_Engine):
 class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
 
     def __init__(self, fin_ir: Var=Var(0), scout_ir: Var=Var(0), side_ir: Var=Var(0),
-                 actuator=Var(0), local_action_prob: Var=Var(0), global_action_prob: Var=Var(0),
+                 actuator=Var(0), local_action_prob: Var=Var(0), neighbour_active: Var=Var(0),
                  **config):
 
         in_vars = OrderedDict()
@@ -180,6 +189,11 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
         else:
             raise TypeError("local_action_prob is not a Var type!")
 
+        if isinstance(neighbour_active, Var):
+            in_vars['neighbour_active'] = neighbour_active
+        else:
+            raise TypeError("neighbour_active is not a Var type!")
+
         out_vars = OrderedDict()
         if isinstance(actuator, Var):
             out_vars['actuator'] = actuator
@@ -196,7 +210,7 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
         self.config['off_output'] = 0
         self.config['random_check_period'] = 1.0
         self.config['activation_period'] = 2.0
-
+        self.config['neighbour_action_k'] = 0.2
 
         # custom configuration
         if isinstance(config, dict):
@@ -221,7 +235,6 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
             else:
                 do_local_action = False
 
-
             if self.in_vars['fin_ir'].val > self.config['ir_on_thres']:
 
                 # turn on unless scout ir doesn't detect anything and side ir does
@@ -241,4 +254,8 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
 
                 if do_local_action:
                     self.out_vars['actuator'].val = self.config['on_output']
+                    self.activation_time = perf_counter()
+
+                elif self.in_vars['neighbour_active'].val:
+                    self.out_vars['actuator'].val = self.config['on_output'] * self.config['neighbour_action_k']
                     self.activation_time = perf_counter()
