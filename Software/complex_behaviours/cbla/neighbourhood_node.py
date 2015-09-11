@@ -46,7 +46,7 @@ class Cluster_Activity(Node):
             activity = max(0, min(activity_denom**self.config['activity_expon'], activity))
 
             prob = activity/activity_denom**self.config['activity_expon']
-            self.out_var['output'].val = max(self.config['min_prob'], min(self.config['max_prob'], prob ))
+            self.out_var['local_prob'].val = max(self.config['min_prob'], min(self.config['max_prob'], prob ))
 
             sleep(max(0, self.messenger.estimated_msg_period * 2))
            #print(self.out_var['output'].val)
