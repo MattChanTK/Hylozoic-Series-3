@@ -38,6 +38,8 @@ class HMI_User_Study(Page_Frame):
 
         super(HMI_User_Study, self).__init__(parent_frame, page_name, page_key)
 
+        self.updatePublicWindow()
+
     def _build_page(self):
 
         max_col_per_row = 1
@@ -63,7 +65,6 @@ class HMI_User_Study(Page_Frame):
                 col = 0
                 row += 2
 
-
         # === control panel ===
         row += 1
         # control frame
@@ -76,6 +77,11 @@ class HMI_User_Study(Page_Frame):
 
         switch_mode_button = ttk.Button(control_frame, text='Switch Mode', command=self.__switch_mode_action)
         switch_mode_button.grid(row=1, column=0, sticky='NW')
+
+    def updatePublicWindow(self):
+
+        self.public_sample_num_label.configure(text=self.snapshot_taker.row_info['sample_number'].val)
+        self.after(500, self.updatePublicWindow)
 
     def __sample_action(self):
 

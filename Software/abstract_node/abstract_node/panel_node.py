@@ -2,6 +2,7 @@ __author__ = 'Matthew'
 
 from datetime import datetime
 import random
+from time import perf_counter
 
 from abstract_node.node import *
 from interactive_system import Messenger
@@ -14,7 +15,7 @@ class UserStudyPanel(Node):
     log_folder_name = 'user_study_log'
 
     def __init__(self, messenger: Messenger, node_name="user_study_panel", log_file_name=None,
-                 prescripted_active_var=Var(0), **in_vars):
+                 prescripted_active_var=Var(0), auto_snapshot_period=0, **in_vars):
 
         super(UserStudyPanel, self).__init__(messenger, node_name=node_name)
 
@@ -45,12 +46,20 @@ class UserStudyPanel(Node):
 
         # instantiate the snapshot taker
         self.snapshot_taker = CSV_Snapshot(log_path, log_file_name, row_info=self.out_var, variables=self.in_var)
+        self.auto_snapshot_period = auto_snapshot_period
 
     def run(self):
+
+        snapshot_time = perf_counter()
 
         while self.alive:
 
             self.out_var['curr_time'].val = datetime.now().strftime(self.datetime_str_fmt_us)
+
+            # automatically take snapshots
+            if 0 < self.auto_snapshot_period < perf_counter() - snapshot_time:
+                self.snapshot_taker.take_snapshot()
+                snapshot_time = perf_counter()
 
             sleep(self.messenger.estimated_msg_period*10)
 

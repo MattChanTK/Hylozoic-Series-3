@@ -161,6 +161,7 @@ class CBLA(interactive_system.InteractiveCmd):
 
         user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
                                           prescripted_active_var=self.prescripted_mode_active_var,
+                                          auto_snapshot_period = 60.0,
                                           **self.user_study_vars)
 
         self.node_list[user_study_panel.node_name] = user_study_panel
