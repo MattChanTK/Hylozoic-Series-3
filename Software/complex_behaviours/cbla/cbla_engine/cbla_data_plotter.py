@@ -182,7 +182,7 @@ class CBLA_DataPlotter(DataPlotter):
                         self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
                                                                       metrics_val[1], metrics_val[0], **plot_config)
 
-                    print('Plotted the total activation array (S%d)' % session_num)
+                    print('Plotted the proximal activation array (S%d)' % session_num)
 
             session_num += 1
 
