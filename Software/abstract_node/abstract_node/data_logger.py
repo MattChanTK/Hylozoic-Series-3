@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
 import shelve
+from dbm import error as dbm_error
 from .data_save_process import DataSaver
 
 
@@ -349,15 +350,19 @@ class DataLogger(threading.Thread):
         for session_id in range(1, num_session+1):
             session_shelf_key = log_index_file[str(session_id)]
             session_shelf_path = os.path.join(log_path, session_shelf_key, session_shelf_key)
-            session_shelf = shelve.open(session_shelf_path, flag='r', protocol=3, writeback=False)
 
-            data_dict = dict()
-            for data_key, packet_blocks in session_shelf.items():
-                data_struct = cls.decode_struct(data_key)
-                cls.__insert_to_struct(data_dict, data_struct, packet_blocks)
+            try:
+                session_shelf = shelve.open(session_shelf_path, flag='r', protocol=3, writeback=False)
+            except dbm_error:
+                break
+            else:
+                data_dict = dict()
+                for data_key, packet_blocks in session_shelf.items():
+                    data_struct = cls.decode_struct(data_key)
+                    cls.__insert_to_struct(data_dict, data_struct, packet_blocks)
 
-            log_sessions.append(data_dict)
-            session_shelf.close()
+                log_sessions.append(data_dict)
+                session_shelf.close()
 
         log_index_file.close()
 
