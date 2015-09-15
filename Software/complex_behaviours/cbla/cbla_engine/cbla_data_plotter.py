@@ -39,25 +39,28 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        #self.plot_histories()
+        self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
-        # session_num = 1
-        # for session_metrics in self.metrics:
-        #
-        #     print('Session %d' % (session_num))
-        #     for metric_type, metric in session_metrics.items():
-        #         print('\t%s: %s' % (metric_type, metric))
-        #
-        #
-        #     session_num += 1
+        session_num = 1
+
+        print_metrics = ('avg_total_activation', 'avg_prox_activation')
+        for session_metrics in self.metrics:
+
+            print('Session %d' % (session_num))
+            for metric_type, metric in session_metrics.items():
+                if metric_type in print_metrics:
+                    print('\t%s: %s' % (metric_type, metric))
+
+            session_num += 1
 
 
     def compute_metrics(self):
 
         WIN_PERIOD = 1.0
-
+        T_TRIG = 190
+        T_DONE = 260
         session_num = 1
         for session_data in self.data:
 
@@ -102,6 +105,13 @@ class CBLA_DataPlotter(DataPlotter):
 
             session_metric['total_activation_array'] = total_activation_array
 
+            # compute summary metric
+            activated_array = []
+            for t, a_t in total_activation_array:
+                if T_TRIG < t < T_DONE:
+                    activated_array.append(a_t)
+            session_metric['avg_total_activation'] = np.mean(activated_array)
+
             # proximal activation array (cluster)
             prox_activation_cluster_array = defaultdict(list)
             for t, data_t in windowed_data.items():
@@ -121,6 +131,20 @@ class CBLA_DataPlotter(DataPlotter):
                 prox_activation_cluster_array[cluster_id] = np.array(prox_activation_cluster_array[cluster_id])
 
             session_metric['prox_activation_cluster_array'] = prox_activation_cluster_array
+
+            # compute summary metric
+            cluster_ids = sorted(tuple(prox_activation_cluster_array.keys()))
+            activated_arrays = [[]]*len(cluster_ids)
+            for cluster_id, cluster_array in prox_activation_cluster_array.items():
+
+                for t, a_t in cluster_array:
+                    if T_TRIG < t < T_DONE:
+                        if activated_arrays[cluster_ids.index(cluster_id)]:
+                            activated_arrays[cluster_ids.index(cluster_id)].append(a_t)
+                        else:
+                            activated_arrays[cluster_ids.index(cluster_id)] = [a_t]
+            activated_arrays_means = [np.mean(array) for array in activated_arrays]
+            session_metric['avg_prox_activation'] = activated_arrays_means
 
             self.metrics.append(session_metric)
             session_num += 1
