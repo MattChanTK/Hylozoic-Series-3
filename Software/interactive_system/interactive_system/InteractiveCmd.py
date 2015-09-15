@@ -307,17 +307,3 @@ class command_object():
         for type, value in self.change_request.items():
             print('(', type, '-', value, ') ', end="")
         print('')
-
-
-
-if __name__ == '__main__':
-
-    t = InteractiveCmd()
-
-
-    t.join()
-
-    while not t.cmd_q.empty():
-        t.cmd_q.get().print()
-
-
