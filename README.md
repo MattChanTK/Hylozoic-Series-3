@@ -1,5 +1,4 @@
-Hylozoic Series 3 
-Interactive Control System
+Hylozoic Series 3 Interactive Control System
 ======================
 
 ## Topic
