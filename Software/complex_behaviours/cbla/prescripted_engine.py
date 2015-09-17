@@ -2,7 +2,7 @@ __author__ = 'Matthew'
 from collections import OrderedDict
 import random
 from time import perf_counter
-from abstract_node import Var
+from abstract_node import Var, DataLogger
 
 
 class Prescripted_Base_Engine(object):
@@ -27,8 +27,20 @@ class Prescripted_Base_Engine(object):
 
     def update(self):
 
-        pass
+        data_packet = dict()
+        data_packet[DataLogger.packet_time_key] = perf_counter()
 
+        in_var_dict = dict()
+        for name, input_var in self.in_vars.items():
+            in_var_dict[name] = input_var.val
+        data_packet['in_vars'] = in_var_dict
+
+        out_var_dict = dict()
+        for name, output_var in self.out_vars.items():
+            out_var_dict[name] = output_var.val
+        data_packet['out_vars'] = out_var_dict
+
+        return data_packet
 
 class Interactive_Light_Engine(Prescripted_Base_Engine):
 
@@ -103,6 +115,8 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
             elif self.in_vars['fin_ir'].val < self.config['ir_off_thres']:
                 self.out_vars['led'].val = 0
 
+        return super(Interactive_Light_Engine, self).update()
+
 
 class Interactive_Reflex_Engine(Prescripted_Base_Engine):
 
@@ -160,6 +174,8 @@ class Interactive_Reflex_Engine(Prescripted_Base_Engine):
                 self.out_vars['actuator'].val = 0
         elif self.in_vars['scout_ir'].val < self.config['ir_off_thres']:
             self.out_vars['actuator'].val = 0
+
+        return super(Interactive_Reflex_Engine, self).update()
 
 
 class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
@@ -259,3 +275,5 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
                 elif self.in_vars['neighbour_active'].val:
                     self.out_vars['actuator'].val = self.config['on_output'] * self.config['neighbour_action_k']
                     self.activation_time = perf_counter()
+
+        return super(Interactive_HalfFin_Engine, self).update()

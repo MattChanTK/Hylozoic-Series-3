@@ -16,6 +16,7 @@ class CBLA_Base_Node(Node):
     cbla_state_type_key = 'cbla_states'
     cbla_label_name_key = 'label_names'
     cbla_data_type_key = 'data'
+    prescripted_data_type_key = 'prescripted_data'
 
     def __init__(self, messenger: Messenger, cluster_name: str, data_logger: DataLogger,
                  node_name='cbla_node', prescripted_engine=None, prescripted_mode_active_var=Var(0)):
@@ -119,7 +120,9 @@ class CBLA_Base_Node(Node):
             if isinstance(self.prescripted_engine, ps_engine.Prescripted_Base_Engine) and\
                self.prescripted_mode_active.val:
 
-                self.prescripted_engine.update()
+                data_packet = self.prescripted_engine.update()
+                data_packet[DataLogger.packet_type_key] = CBLA_Base_Node.prescripted_data_type_key
+
                 sleep(speed_limit)
             else:
                 self.cbla_robot.sample_speed_limit = speed_limit
@@ -127,16 +130,17 @@ class CBLA_Base_Node(Node):
                 data_packet = self.cbla_engine.update()
                 data_packet[DataLogger.packet_type_key] = CBLA_Base_Node.cbla_data_type_key
 
-                # save the data
-                self.data_logger.append_data_packet(self.node_name, data_packet)
-
-                # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
-
                 # save state periodically
                 curr_time = clock()
                 if curr_time - last_save_states_time > self.state_save_period:
                     self.save_states()
                     last_save_states_time = curr_time
+
+
+            # save the data
+            self.data_logger.append_data_packet(self.node_name, data_packet)
+
+            # cbla_engine.CBLA_Engine.print_data_packet(data_packet, header=self.node_name)
 
         self.save_states()
 
