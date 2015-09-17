@@ -56,7 +56,7 @@ elapsedMillis T2; // timer object
 
 // Vinegar Battery Variables
 int VBdelay = 10000; // Length of time in ms for VB to delay
-uint32_t VBmax = 100000; // Maximum delay length in ms 
+uint32_t VBmax = 50000; // Maximum delay length in ms 
 
 boolean UNBLOCKAUDIO = HIGH; // BLOCK AUDIO PLAYBACK
 int blockT = 2000; // Time to block audio for in milliseconds
@@ -204,19 +204,34 @@ void loop()
 	  trig2 |= digitalRead(DT2);
   }
   // Serial.printf("Trig1=%d, Trig2=%d\n", trig1, trig2);
-  if (!trig1 && !trig2){
-	  playWav1.play("A.wav");
+  if (!trig1 || !trig2){
+	  
+	  int Rnum = random(0,10);
+	  if(Rnum>8){
+		playWav1.play("A.wav");
+	  } else if (Rnum>5) {
+		playWav1.play("B.wav");
+	  } else if (Rnum>3) {
+		playWav1.play("C.wav");
+	  } else {
+		playWav1.play("D.wav");
+	  }      
+
+	  delay(random(500,1000));
+	  Rnum = random(0,10);
+	  if(Rnum>6){
+		playWav1.play("E.wav");
+	  } else if (Rnum>3) {
+		playWav1.play("F.wav");
+	  } else {
+		playWav1.play("G.wav");
+	  }
   }
-  else if(!trig1 && trig2){
-	  playWav1.play("C.wav");
-  }
-  else if(trig1 && !trig2){
-	  playWav1.play("E.wav");
-  }
+  
   else{
 	  //Play a sound every ~5 seconds on each channel with some random delay
 	  if (T1 >= VBdelay) {
-		T1 = T1 - VBdelay+random(0, 50000);
+		T1 = T1 - VBdelay+random(0, 5000);
 		
 		int Rnum = random(0,10);
 		if(Rnum>8){
@@ -232,20 +247,16 @@ void loop()
 		
 		Rnum = random(0,10);
 		if(Rnum>6){
-		playWav5.play("E.wav");
+		playWav1.play("E.wav");
 		} else if (Rnum>3) {
-		playWav5.play("F.wav");
+		playWav1.play("F.wav");
 		} else {
-		playWav5.play("G.wav");
+		playWav1.play("G.wav");
 		}
 		
 		VBdelay = (1-float(readAnalog(A3p))/255)*VBmax;   // Set the delay between triggers as a function of VB Voltage
 		if(VBdelay < 2000){VBdelay = 1000;} // Set a minimum delay length
 	  }  
-  }
-  // delay for trigger drivern activation
-  if (!trig1 || !trig2){
-	delay(random(500,1000));	
   }
 
   if (fft1024_1.available()) {
