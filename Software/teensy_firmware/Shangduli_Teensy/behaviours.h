@@ -196,7 +196,8 @@ class Behaviours : public TeensyUnit{
 		
 		//>>> Network Activities <<<
 		uint8_t sound_spatial_arr[NUM_SOUND] = {0, 1, 2, 3, 4, 5};
-		
+		uint8_t in_reactor_mode = 0;
+
 		//----OUTPUT (internal variables)----
 		uint8_t neighbour_activation_state = 0;	
 

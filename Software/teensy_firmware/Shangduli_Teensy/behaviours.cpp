@@ -288,6 +288,11 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 	const uint16_t N1_DELAY = 500;
 	const uint16_t N2_DELAY = 1000;
 	const bool RANDOM_RIPPLE = false;
+	const bool REACTOR_MODE_ON = false;
+	const uint16_t REACTOR_ACTIVITY_THRES = 4;
+	const uint16_t REACTOR_DELAY_RANGE[2] = {0, 10000};
+	const uint8_t REACTOR_DURATION = 4;
+
 	//##################################
 	
 	//>>>> Sound <<<<<
@@ -300,6 +305,9 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 	const uint16_t DIN_THRES = 2000;
 	const uint16_t DIN_HIGH_THRES = 1500;
 	const uint8_t ACTIVE_TYPE_RANGE[2] = {1, 4};
+	
+	// Sound behaviour
+	uint8_t ir_detected = 0;
 	for (uint8_t j=0; j<NUM_SOUND; j++){
 		
 		uint16_t ir_reading = sound_var[j].din_state[0];
@@ -307,6 +315,7 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 		// increment activity for each loop having high din_reading
 		if (ir_reading > DIN_HIGH_THRES){
 			sound_var[j].play_activity += 1;
+			ir_detected += 1;
 		}
 		else{
 
@@ -318,15 +327,30 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 			}
 		}
 		
+		// if high activity
+		if (REACTOR_MODE_ON && in_reactor_mode > 0 && sound_var[j].play_delay == 0){
+			sound_var[j].play_delay = (uint16_t) random(REACTOR_DELAY_RANGE[0], REACTOR_DELAY_RANGE[1]);
+			sound_var[j].play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);
+			sound_var[j].phase_time = curr_time;
+			sound_playing = true;
+			
+			// reset play activitiy
+			sound_var[j].play_activity = 0;
+		}
 		// play sound if detects motion
-		if (ir_reading - sound_var[j].prev_din > DIN_THRES){
+		else if (ir_reading - sound_var[j].prev_din > DIN_THRES){
 						
 			sound_var[j].play_delay = 0;
 			sound_var[j].play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);
 			sound_var[j].phase_time = curr_time;
 			
+			
 			// trigger neighbours if enough acitivity
 			if (sound_var[j].play_activity > 5){
+				Serial.printf("[%d] triggers neighbours (level = %d)\n", j, sound_var[j].play_activity);
+				// reset play activitiy
+				sound_var[j].play_activity = 0;
+				
 				// find the adjacent sound modules
 				uint8_t self_id = sound_spatial_arr[j];
 				int8_t left_id = self_id - 1;
@@ -357,6 +381,7 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 				}
 			}
 			sound_playing = true;
+
 		}
 		
 		sound_var[j].prev_din = ir_reading;
@@ -366,9 +391,30 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 	if (sound_playing){
 		Serial.printf("%d -- ", curr_time);
 		for (uint8_t j=0; j<NUM_SOUND; j++){
-			Serial.printf("|[%d] (%4d,%5d,%5d) |", j, sound_var[j].play_delay, sound_var[j].play_type, sound_var[j].prev_din);
+			Serial.printf("|[%d] (%d,%d,%d) |", j, sound_var[j].play_delay, sound_var[j].play_type, sound_var[j].prev_din);
 		}
 		Serial.println();
+	}
+	
+	//decrement in_reactor_mode
+	if (REACTOR_MODE_ON){
+		if (in_reactor_mode > 0){
+			in_reactor_mode -= 1;
+			if (in_reactor_mode <= 0){
+				Serial.printf("%d -- Deactivated Reactor Mode\n", curr_time);
+				in_reactor_mode = 0;
+			}
+		}
+		else{
+			//check if entering reactor mode in the next sound
+			if (ir_detected >= REACTOR_ACTIVITY_THRES){
+				in_reactor_mode = REACTOR_DURATION;
+				Serial.printf("%d -- Activated Reactor Mode (level = %d)\n", curr_time, ir_detected);
+			}
+			else{
+			}
+
+		}
 	}
 	
 	// determine the right signal to play
