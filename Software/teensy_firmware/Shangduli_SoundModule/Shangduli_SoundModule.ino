@@ -16,6 +16,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <String.h>
 
 // Establish Input and Output Pin variables for Teensy
 // Analog Inputs
@@ -206,57 +207,43 @@ void loop()
   // Serial.printf("Trig1=%d, Trig2=%d\n", trig1, trig2);
   if (!trig1 || !trig2){
 	  
-	  int Rnum = random(0,10);
-	  if(Rnum>8){
-		playWav1.play("A.wav");
-	  } else if (Rnum>5) {
-		playWav1.play("B.wav");
-	  } else if (Rnum>3) {
-		playWav1.play("C.wav");
-	  } else {
-		playWav1.play("D.wav");
-	  }      
+	  
+	  unsigned int sound_file_id;
+	  bool select_another = false;
+	  do{ 
+	  	  sound_file_id = random(1, 50);
+		  String sound_file_string = String(sound_file_id) + ".wav";
+		  char sound_file_char_arr [sound_file_string.length()];
+		  sound_file_string.toCharArray(sound_file_char_arr, sound_file_string.length()+1);
+		  select_another = !playWav1.play(sound_file_char_arr);
+
+	  }while(select_another);
 
 	  delay(random(500,1000));
-	  Rnum = random(0,10);
-	  if(Rnum>6){
-		playWav1.play("E.wav");
-	  } else if (Rnum>3) {
-		playWav1.play("F.wav");
-	  } else {
-		playWav1.play("G.wav");
-	  }
+	
   }
-  
-  else{
-	  //Play a sound every ~5 seconds on each channel with some random delay
-	  if (T1 >= VBdelay) {
-		T1 = T1 - VBdelay+random(0, 5000);
-		
-		int Rnum = random(0,10);
-		if(Rnum>8){
-		playWav1.play("A.wav");
-		} else if (Rnum>5) {
-		playWav1.play("B.wav");
-		} else if (Rnum>3) {
-		playWav1.play("C.wav");
-		} else {
-		playWav1.play("D.wav");
-		}      
-		delay(random(500,1000));
-		
-		Rnum = random(0,10);
-		if(Rnum>6){
-		playWav1.play("E.wav");
-		} else if (Rnum>3) {
-		playWav1.play("F.wav");
-		} else {
-		playWav1.play("G.wav");
-		}
-		
-		VBdelay = (1-float(readAnalog(A3p))/255)*VBmax;   // Set the delay between triggers as a function of VB Voltage
-		if(VBdelay < 2000){VBdelay = 1000;} // Set a minimum delay length
-	  }  
+  //Play a sound every ~5 seconds on each channel with some random delay
+  else if (T1 >= VBdelay) {
+	  
+	  T1 = T1 - VBdelay+random(0, 5000);
+	  
+	  unsigned int sound_file_id;
+	  bool select_another = false;
+	  do{ 
+	  	  sound_file_id = random(1, 50);
+		  String sound_file_string = String(sound_file_id) + ".wav";
+		  char sound_file_char_arr [sound_file_string.length()];
+		  sound_file_string.toCharArray(sound_file_char_arr, sound_file_string.length()+1);
+		  select_another = !playWav1.play(sound_file_char_arr);
+
+	  }while(select_another);
+
+
+	  delay(random(500,1000));
+			
+	  VBdelay = (1-float(readAnalog(A3p))/255)*VBmax;   // Set the delay between triggers as a function of VB Voltage
+	  if(VBdelay < 2000){VBdelay = 1000;} // Set a minimum delay length
+   
   }
 
   if (fft1024_1.available()) {

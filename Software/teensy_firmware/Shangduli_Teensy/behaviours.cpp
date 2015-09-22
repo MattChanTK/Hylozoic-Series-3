@@ -355,6 +355,10 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 				uint8_t self_id = sound_spatial_arr[j];
 				int8_t left_id = self_id - 1;
 				int8_t right_id = self_id + 1;
+				int8_t left_id_2 = self_id - 2;
+				int8_t right_id_2 = self_id + 2;
+				int8_t left_id_3 = self_id - 3;
+				int8_t right_id_3 = self_id + 3;
 				
 				if (left_id >= 0 && sound_var[left_id].play_delay <= 0){
 								
@@ -378,6 +382,52 @@ void Behaviours::sound_neighbourhood_behaviour(const uint32_t &curr_time){
 					sound_var[right_id].play_delay = N2_DELAY;
 					sound_var[right_id].play_type = play_type;
 					sound_var[right_id].phase_time = curr_time;
+				}
+				if (left_id_2 >= 0 && sound_var[left_id_2].play_delay <= 0){
+								
+					uint8_t play_type;
+					if (RANDOM_RIPPLE)
+						play_type = sound_var[j].play_type;
+					else
+						play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);;
+					
+					sound_var[left_id_2].play_delay = N1_DELAY*2;
+					sound_var[left_id_2].play_type = play_type;
+					sound_var[left_id_2].phase_time = curr_time;
+				}
+				if (right_id_2 <NUM_SOUND&& sound_var[right_id_2].play_delay <= 0){
+					uint8_t play_type;
+					if (RANDOM_RIPPLE)
+						play_type = sound_var[j].play_type;
+					else
+						play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);;
+					
+					sound_var[right_id_2].play_delay = N2_DELAY*2;
+					sound_var[right_id_2].play_type = play_type;
+					sound_var[right_id_2].phase_time = curr_time;
+				}
+				if (left_id_3 >= 0 && sound_var[left_id_3].play_delay <= 0){
+								
+					uint8_t play_type;
+					if (RANDOM_RIPPLE)
+						play_type = sound_var[j].play_type;
+					else
+						play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);;
+					
+					sound_var[left_id_3].play_delay = N1_DELAY*2;
+					sound_var[left_id_3].play_type = play_type;
+					sound_var[left_id_3].phase_time = curr_time;
+				}
+				if (right_id_3 <NUM_SOUND&& sound_var[right_id_3].play_delay <= 0){
+					uint8_t play_type;
+					if (RANDOM_RIPPLE)
+						play_type = sound_var[j].play_type;
+					else
+						play_type = (uint8_t) random(ACTIVE_TYPE_RANGE[0], ACTIVE_TYPE_RANGE[1]);;
+					
+					sound_var[right_id_3].play_delay = N2_DELAY*2;
+					sound_var[right_id_3].play_type = play_type;
+					sound_var[right_id_3].phase_time = curr_time;
 				}
 			}
 			sound_playing = true;
