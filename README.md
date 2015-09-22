@@ -1,4 +1,4 @@
-CBLA Test Bed
+Hylozoic Series 3 Interactive Control System
 ======================
 
 ## Topic
