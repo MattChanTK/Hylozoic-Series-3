@@ -57,6 +57,8 @@ class Robot(object):
         self.internal_state = dict()
         self.internal_state['in_idle_mode'] = Var(self.in_idle_mode)
         self.internal_state['value_added'] = Var(0.0)
+        self.internal_state['rel_act_val'] = Var(0.0)
+        self.internal_state['m_max_val'] = Var(self.m_max_val)
 
     def _set_default_config(self):
 
@@ -264,7 +266,7 @@ class Robot(object):
         return tuple(sample_max)
 
     def adapt_m_max_val(self, action_val=None):
-        if action_val and self.init_learning_done:
+        if action_val:
 
             # calculate the mean square of action value
             avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
@@ -283,6 +285,12 @@ class Robot(object):
                                          self.config['rel_act_val_range_k']*rel_action_val), 1)
             else:
                 self.m_max_val = 1
+
+            self.internal_state['rel_act_val'].val = rel_action_val
+            self.internal_state['m_max_val'].val = self.m_max_val
+        else:
+            self.internal_state['rel_act_val'].val = 0.0
+            self.internal_state['m_max_val'].val = self.m_max_val
 
     def enter_idle_mode(self, action_value) -> bool:
 
