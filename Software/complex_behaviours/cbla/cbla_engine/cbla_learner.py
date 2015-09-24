@@ -42,7 +42,7 @@ class Learner(object):
         self.config['exploring_rate_range'] = (0.4, 0.01)
         self.config['exploring_reward_range'] = (-0.03, 0.004)
         self.config['adapt_exploring_rate'] = True
-        self.config['idle_mode_enable'] = True
+        self.config['idle_mode_enable'] = False
 
     def learn(self, S1, M):
 
@@ -80,6 +80,7 @@ class Learner(object):
         self.info['is_doing_idle_action'] = is_doing_idle_action
 
         self.adapt_exploring_rate(action_value=val_best)
+        robot.adapt_m_max_val(action_val=val_best)
 
         return self.M
 

@@ -50,6 +50,9 @@ class Robot(object):
         # the range of each sensory measurement
         self.s_ranges = [None] * len(self.in_vars)
 
+        # the max range of selectable m
+        self.m_max_val = 1
+
         # the variables monitoring the state of the system
         self.internal_state = dict()
         self.internal_state['in_idle_mode'] = Var(self.in_idle_mode)
@@ -61,12 +64,18 @@ class Robot(object):
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0  # 4.0
 
+        # idle_mode related constants
         self.config['activation_value_inc'] = 10.0
         self.config['idling_value_inc'] = 1.5
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
         self.config['prev_values_deque_size'] = 15
         self.config['min_avg_action_value'] = 0.0001
+
+        # adaptive activity level related constants
+        self.config['min_m_max_val'] = 0.0
+        self.config['low_action_val_thres'] = 10.0
+        self.config['rel_act_val_range_k'] = 0.1
 
     def renew_robot(self, new_s_vars, new_m_vars):
 
@@ -101,7 +110,7 @@ class Robot(object):
 
         for i in range(num_sample):
             for x_dim in range(num_dim):
-                X[i, x_dim - 1] = random.random()
+                X[i, x_dim - 1] = random.uniform(0, self.m_max_val)
 
         M_candidates = tuple(set((map(tuple, X))))
 
@@ -254,6 +263,27 @@ class Robot(object):
 
         return tuple(sample_max)
 
+    def adapt_m_max_val(self, action_val=None):
+        if action_val and self.init_learning_done:
+
+            # calculate the mean square of action value
+            avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
+            # making sure that the average action isn't too small
+            avg_action_val = max(self.config['min_avg_action_value'], avg_action_val)
+
+            # no value added if it's less than the avg_action Value
+            try:
+                rel_action_val = action_val**2/avg_action_val
+            except ZeroDivisionError:
+                rel_action_val = 1.0
+
+            if rel_action_val < self.config['low_action_val_thres']:
+
+                self.m_max_val = min(max(self.config['min_m_max_val'],
+                                         self.config['rel_act_val_range_k']*rel_action_val), 1)
+            else:
+                self.m_max_val = 1
+
     def enter_idle_mode(self, action_value) -> bool:
 
         # check if it finished the initial learning phase
@@ -340,6 +370,10 @@ class Robot_Light(Robot):
         self.config['prev_values_deque_size'] = 60
         self.config['min_avg_action_value'] = 0.0001
 
+        self.config['min_m_max_val'] = 0.1
+        self.config['low_action_val_thres'] = 20.0
+        self.config['rel_act_val_range_k'] = 1.0
+
     def read(self, sample_method=None):
 
         return super(Robot_Light, self).read(sample_method='average')
@@ -359,6 +393,10 @@ class Robot_HalfFin(Robot):
         self.config['min_step_before_idling'] = 5
         self.config['idling_prob'] = 1.0
         self.config['prev_values_deque_size'] = 15
+
+        self.config['min_m_max_val'] = 0.2
+        self.config['low_action_val_thres'] = 30.0
+        self.config['rel_act_val_range_k'] = 1.0
 
     def read(self, sample_method=None):
 
@@ -403,6 +441,10 @@ class Robot_Reflex(Robot):
         self.config['min_step_before_idling'] = 30
         self.config['idling_prob'] = 1.0
         self.config['prev_values_deque_size'] = 100
+
+        self.config['min_m_max_val'] = 0.2
+        self.config['low_action_val_thres'] = 25.0
+        self.config['rel_act_val_range_k'] = 1.0
 
     def read(self, sample_method=None):
         return super(Robot_Reflex, self).read(sample_method='average')
