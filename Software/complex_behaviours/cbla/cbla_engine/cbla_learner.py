@@ -42,7 +42,6 @@ class Learner(object):
         self.config['exploring_rate_range'] = (0.4, 0.01)
         self.config['exploring_reward_range'] = (-0.03, 0.004)
         self.config['adapt_exploring_rate'] = True
-        self.config['idle_mode_enable'] = False
 
     def learn(self, S1, M):
 
@@ -63,21 +62,12 @@ class Learner(object):
         M_candidates = robot.get_possible_action(num_sample=100)
         M1, M_best, val_best, is_exploring = self.action_selection(self.S, M_candidates)
 
-        # if action-value is too low, enter idle mode
-        is_doing_idle_action = False
-        if self.config['idle_mode_enable']:
-            if robot.enter_idle_mode(action_value=val_best):
-                if robot.is_doing_idle_action():
-                    M1 = robot.get_idle_action()
-                    is_doing_idle_action = True
-
         self.M = M1
 
         # save to info
         self.info['best_action'] = M_best
         self.info['best_action_value'] = val_best
         self.info['is_exploring'] = is_exploring
-        self.info['is_doing_idle_action'] = is_doing_idle_action
 
         self.adapt_exploring_rate(action_value=val_best)
         robot.adapt_m_max_val(action_val=val_best)

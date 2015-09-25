@@ -85,7 +85,6 @@ class CBLA_Engine(object):
         data_packet['S'] = S2
         data_packet['M'] = self.M
         data_packet['S1_predicted'] = S_predicted
-        data_packet['in_idle_mode'] = self.robot.is_in_idle_mode()
 
         # save learner info to data_packet
         data_packet.update(self.learner.info)
