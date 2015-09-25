@@ -38,10 +38,10 @@ class Learner(object):
         self.exploring_rate = self.config['exploring_rate']
 
     def _set_default_config(self):
-        self.config['exploring_rate'] = 0.5
+        self.config['exploring_rate'] = 0.3
         self.config['exploring_rate_range'] = (0.4, 0.01)
         self.config['exploring_reward_range'] = (-0.03, 0.004)
-        self.config['adapt_exploring_rate'] = True
+        self.config['adapt_exploring_rate'] = False
 
     def learn(self, S1, M):
 

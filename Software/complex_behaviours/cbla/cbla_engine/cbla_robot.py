@@ -324,7 +324,7 @@ class Robot_Light(Robot):
         self.config['prev_values_deque_size'] = 60
 
         self.config['min_m_max_val'] = 0.00001
-        self.config['low_action_val_thres'] = 10.0
+        self.config['low_action_val_thres'] = 3.0
 
     def read(self, sample_method=None):
 
@@ -343,7 +343,7 @@ class Robot_HalfFin(Robot):
         self.config['prev_values_deque_size'] = 15
 
         self.config['min_m_max_val'] = 0.1
-        self.config['low_action_val_thres'] = 10.0
+        self.config['low_action_val_thres'] = 3.0
 
     def read(self, sample_method=None):
 
@@ -386,7 +386,7 @@ class Robot_Reflex(Robot):
         self.config['prev_values_deque_size'] = 100
 
         self.config['min_m_max_val'] = 0.00001
-        self.config['low_action_val_thres'] = 10.0
+        self.config['low_action_val_thres'] = 3.0
 
     def read(self, sample_method=None):
         return super(Robot_Reflex, self).read(sample_method='average')
