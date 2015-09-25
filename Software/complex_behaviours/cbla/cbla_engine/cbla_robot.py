@@ -38,9 +38,9 @@ class Robot(object):
         self.sample_speed_limit = 0.0
         self.curr_wait_time = max(self.sample_speed_limit, self.config['wait_time'])
 
-        # idle mode related variables
+        # adaptive activity level related variables
         self.prev_action_value = deque(maxlen=self.config['prev_values_deque_size'])
-        self.init_learning_done = False
+        self.prev_rel_action_value = deque(maxlen=self.config['prev_rel_values_deque_size'])
 
         # compute initial action
         self.M0 = Var(self.compute_initial_motor())
@@ -55,6 +55,7 @@ class Robot(object):
         # the variables monitoring the state of the system
         self.internal_state = dict()
         self.internal_state['rel_act_val'] = Var(0.0)
+        self.internal_state['avg_rel_act_val'] = Var(0.0)
         self.internal_state['m_max_val'] = Var(self.m_max_val)
 
     def _set_default_config(self):
@@ -63,14 +64,14 @@ class Robot(object):
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        # idle_mode related constants
+        # adaptive activity level related constants
         self.config['prev_values_deque_size'] = 15
+        self.config['prev_rel_values_deque_size'] = 4
         self.config['min_avg_action_value'] = 0.0001
 
-        # adaptive activity level related constants
         self.config['min_m_max_val'] = 0.00001
-        self.config['low_action_m_max_val'] = 0.99
-        self.config['low_action_val_thres'] = 10.0
+        self.config['low_action_m_max_val'] = 0.90
+        self.config['low_rel_action_val_thres'] = 20.0
 
     def renew_robot(self, new_s_vars, new_m_vars):
 
@@ -260,35 +261,37 @@ class Robot(object):
 
     def adapt_m_max_val(self, action_val=None):
 
-        if action_val and self.init_learning_done:
+        if action_val:
 
             # calculate the mean square of action value
-            avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
-            # making sure that the average action isn't too small
-            avg_action_val = max(self.config['min_avg_action_value'], avg_action_val)
+            if len(self.prev_action_value) > min(self.prev_action_value.maxlen, len(self.out_vars)+len(self.in_vars)):
 
-            # no value added if it's less than the avg_action Value
-            try:
-                rel_action_val = action_val**2/avg_action_val
-            except ZeroDivisionError:
-                rel_action_val = 1.0
+                avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
+                # making sure that the average action isn't too small
+                avg_action_val = max(self.config['min_avg_action_value'], avg_action_val)
 
-            self.m_max_val = self.map_sigmoid(rel_action_val,
-                                              b=self.config['min_m_max_val'],
-                                              d=self.config['low_action_m_max_val'],
-                                              c=self.config['low_action_val_thres'])
+                # no value added if it's less than the avg_action Value
+                try:
+                    rel_action_val = action_val**2/avg_action_val
+                except ZeroDivisionError:
+                    rel_action_val = 1.0
 
-            self.internal_state['rel_act_val'].val = rel_action_val
-            self.internal_state['m_max_val'].val = self.m_max_val
-        else:
+                self.prev_rel_action_value.append(rel_action_val)
+                avg_rel_action_val = float(np.mean(list(self.prev_rel_action_value)))
 
-            if len(self.prev_action_value) > (len(self.in_vars) + len(self.out_vars))*2:
-                self.init_learning_done = True
+                self.m_max_val = self.map_sigmoid(rel_action_val,
+                                                  b=self.config['min_m_max_val'],
+                                                  d=self.config['low_action_m_max_val'],
+                                                  c=self.config['low_rel_action_val_thres'])
+
+                self.internal_state['rel_act_val'].val = rel_action_val
+                self.internal_state['avg_rel_act_val'].val = avg_rel_action_val
+                self.internal_state['m_max_val'].val = self.m_max_val
+
             else:
-                self.init_learning_done = False
-
-            self.internal_state['rel_act_val'].val = 1.0
-            self.internal_state['m_max_val'].val = self.m_max_val
+                self.internal_state['rel_act_val'].val = 0.0
+                self.internal_state['avg_rel_act_val'].val = 0.0
+                self.internal_state['m_max_val'].val = self.m_max_val
 
         # save the action value to memory
         self.prev_action_value.append(action_val)
@@ -321,10 +324,13 @@ class Robot_Light(Robot):
         self.config['sample_period'] = 1.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['prev_values_deque_size'] = 60
+        self.config['prev_values_deque_size'] = 75
+        self.config['prev_rel_values_deque_size'] = 5
 
-        self.config['min_m_max_val'] = 0.00001
-        self.config['low_action_val_thres'] = 3.0
+        self.config['min_m_max_val'] = 0.01
+        self.config['low_action_m_max_val'] = 0.90
+        self.config['low_rel_action_val_thres'] = 20.0
+
 
     def read(self, sample_method=None):
 
@@ -341,9 +347,11 @@ class Robot_HalfFin(Robot):
         self.config['wait_time'] = 0.0  #4.0
 
         self.config['prev_values_deque_size'] = 15
+        self.config['prev_rel_values_deque_size'] = 1
 
         self.config['min_m_max_val'] = 0.1
-        self.config['low_action_val_thres'] = 3.0
+        self.config['low_action_m_max_val'] = 0.90
+        self.config['low_rel_action_val_thres'] = 10.0
 
     def read(self, sample_method=None):
 
@@ -384,9 +392,11 @@ class Robot_Reflex(Robot):
         self.config['wait_time'] = 0.0  # 2.0
 
         self.config['prev_values_deque_size'] = 100
+        self.config['prev_rel_values_deque_size'] = 8
 
-        self.config['min_m_max_val'] = 0.00001
-        self.config['low_action_val_thres'] = 3.0
+        self.config['min_m_max_val'] = 0.005
+        self.config['low_action_m_max_val'] = 0.99
+        self.config['low_rel_action_val_thres'] = 15.0
 
     def read(self, sample_method=None):
         return super(Robot_Reflex, self).read(sample_method='average')

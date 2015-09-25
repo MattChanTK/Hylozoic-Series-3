@@ -62,7 +62,7 @@ class CBLA(interactive_system.InteractiveCmd):
         self.node_list = OrderedDict()
 
         # data variables that will be recorded the user study
-        self.user_study_vars = OrderedDict()
+        #self.user_study_vars = OrderedDict()
 
         # Condition variable indicating that all nodes are created
         self.all_nodes_created = threading.Condition()
@@ -147,24 +147,24 @@ class CBLA(interactive_system.InteractiveCmd):
         self.node_list.update(cbla_nodes)
 
         # add user study panel to the node_list
-        for node_name, node in self.node_list.items():
-            if isinstance(node, cbla_base.CBLA_Base_Node):
-                for var_name, var in node.in_var.items():
-                    var_key = '%s.%s' % (node_name, var_name)
-                    self.user_study_vars[var_key] = var
-                for var_name, var in node.out_var.items():
-                    var_key = '%s.%s' % (node_name, var_name)
-                    self.user_study_vars[var_key] = var
-                for var_name, var in node.cbla_robot.internal_state.items():
-                    var_key = '%s.%s' % (node_name, var_name)
-                    self.user_study_vars[var_key] = var
-
-        user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
-                                          prescripted_active_var=self.prescripted_mode_active_var,
-                                          auto_snapshot_period = 180.0,
-                                          **self.user_study_vars)
-
-        self.node_list[user_study_panel.node_name] = user_study_panel
+        # for node_name, node in self.node_list.items():
+        #     if isinstance(node, cbla_base.CBLA_Base_Node):
+        #         for var_name, var in node.in_var.items():
+        #             var_key = '%s.%s' % (node_name, var_name)
+        #             self.user_study_vars[var_key] = var
+        #         for var_name, var in node.out_var.items():
+        #             var_key = '%s.%s' % (node_name, var_name)
+        #             self.user_study_vars[var_key] = var
+        #         for var_name, var in node.cbla_robot.internal_state.items():
+        #             var_key = '%s.%s' % (node_name, var_name)
+        #             self.user_study_vars[var_key] = var
+        #
+        # user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
+        #                                   prescripted_active_var=self.prescripted_mode_active_var,
+        #                                   auto_snapshot_period = 180.0,
+        #                                   **self.user_study_vars)
+        #
+        # self.node_list[user_study_panel.node_name] = user_study_panel
 
         # notify other threads that all nodes are created
         with self.all_nodes_created:
@@ -1018,11 +1018,11 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     page_frames = OrderedDict()
 
     # page for the User study control panel
-    page_name = 'User Study'
-    user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
-                                      display_var=panel_display_vars,
-                                      snapshot_taker=snapshot_taker, switch_mode_var=switch_mode_var)
-    page_frames[page_name] = user_study_frame
+    # page_name = 'User Study'
+    # user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
+    #                                   display_var=panel_display_vars,
+    #                                   snapshot_taker=snapshot_taker, switch_mode_var=switch_mode_var)
+    # page_frames[page_name] = user_study_frame
 
     # page for the cbla and device variables
     for page_name, page_vars in tuple(cbla_display_vars.items()) + tuple(device_display_vars.items()):

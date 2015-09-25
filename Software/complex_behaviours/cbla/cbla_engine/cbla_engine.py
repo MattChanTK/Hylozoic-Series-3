@@ -85,8 +85,9 @@ class CBLA_Engine(object):
         data_packet['S'] = S2
         data_packet['M'] = self.M
         data_packet['S1_predicted'] = S_predicted
+        data_packet['rel_act_val'] = self.robot.internal_state['rel_act_val'].val
+        data_packet['m_max_val'] = self.robot.internal_state['m_max_val'].val
 
-        # save learner info to data_packet
         data_packet.update(self.learner.info)
 
         # save expert info to data_packet

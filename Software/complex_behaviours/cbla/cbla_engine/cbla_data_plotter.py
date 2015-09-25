@@ -212,8 +212,8 @@ class CBLA_DataPlotter(DataPlotter):
 
     def plot_histories(self):
 
-        grid_dim = (2, 4)
-        engine_based_type = ('S', 'M', 'best_action', 'in_idle_mode',) #, 'is_exploring', 'S1_predicted',)
+        grid_dim = (2, 5)
+        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring',) #,best_action,  'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         session_num = 1
