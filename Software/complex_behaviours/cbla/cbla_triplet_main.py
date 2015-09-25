@@ -32,7 +32,7 @@ class CBLA(interactive_system.InteractiveCmd):
     log_dir = 'cbla_log'
     log_header = 'cbla'
 
-    def __init__(self, Teensy_manager, auto_start=True, mode='isolated'):
+    def __init__(self, Teensy_manager, auto_start=True, mode='isolated', start_prescripted=False):
 
         # setting up the data collector
         log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
@@ -71,6 +71,9 @@ class CBLA(interactive_system.InteractiveCmd):
         self.mode = mode
         self.num_fin = 3
         self.num_light = 3
+
+        # prescripted_engine active-or-not var
+        self.prescripted_mode_active_var = Var(start_prescripted)
 
         super(CBLA, self).__init__(Teensy_manager, auto_start=auto_start)
 
@@ -122,9 +125,6 @@ class CBLA(interactive_system.InteractiveCmd):
 
         # ===== creating the CBLA Nodes ====
 
-        # prescripted_engine active-or-not var
-        self.prescripted_mode_active_var = Var(1)
-
         # creating the isolated nodes
         cbla_nodes = self.build_isolated_nodes(teensy_names=teensy_in_use, components=self.node_list)
 
@@ -161,7 +161,7 @@ class CBLA(interactive_system.InteractiveCmd):
 
         user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
                                           prescripted_active_var=self.prescripted_mode_active_var,
-                                          auto_snapshot_period = 60.0,
+                                          auto_snapshot_period = 180.0,
                                           **self.user_study_vars)
 
         self.node_list[user_study_panel.node_name] = user_study_panel
@@ -1059,10 +1059,16 @@ if __name__ == "__main__":
         mode_config = str(sys.argv[1])
 
     # creating new logs or not
-    create_new_log = False
+    create_new_log = True
 
     if len(sys.argv) > 2:
         create_new_log = bool(sys.argv[2])
+
+    # start with prescripted mode or not
+    start_prescripted = False
+
+    if len(sys.argv) > 3:
+        create_new_log = bool(sys.argv[3])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4',)
@@ -1095,7 +1101,8 @@ if __name__ == "__main__":
 
         # interactive code
         # -- this create all the abstract nodes
-        behaviours = CBLA(teensy_manager, auto_start=True, mode=mode_config)
+        behaviours = CBLA(teensy_manager, auto_start=True,
+                          mode=mode_config, start_prescripted=start_prescripted)
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
