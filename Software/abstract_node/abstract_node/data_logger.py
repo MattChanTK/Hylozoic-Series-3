@@ -5,6 +5,7 @@ from queue import Queue, Empty
 from collections import defaultdict
 from copy import copy, deepcopy
 import os
+import socket
 
 from datetime import datetime, timedelta
 from time import perf_counter, sleep, process_time
@@ -14,6 +15,11 @@ from .data_save_process import DataSaver
 
 
 class DataLogger(threading.Thread):
+
+    # UDP Configurations
+    UDP_IP = "127.0.0.1"
+    UDP_PORT = 5005
+    MESSAGE = "hello"
 
     datetime_str_fmt = "%Y-%m-%d_%H-%M-%S"
     datetime_str_fmt_us = "%Y-%m-%d_%H-%M-%S-%f"
@@ -135,6 +141,9 @@ class DataLogger(threading.Thread):
         self.data_saver = DataSaver(shelve_path=session_path)
         self.data_saver.start()
 
+        # UDP communication
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
         # parameters
         if 'sleep_time' in kwarg and isinstance(kwarg['sleep_time'], (float, int)):
             self.sleep_time = float(max(0.0, kwarg['sleep_time']))
@@ -187,8 +196,12 @@ class DataLogger(threading.Thread):
                     packet_type = self.packet_default_type
                     packet_data[self.packet_type_key] = packet_type
 
+
                 # save the packet data in the buffer
                 self.__data_buffer[self.encode_struct(node_name, packet_type)].append(packet_data)
+                sock_msg = "[%s] <%s>" % (self.encode_struct(node_name, packet_type), str(packet_data))
+                self.sock.sendto(sock_msg.encode(), (self.UDP_IP, self.UDP_PORT))
+                print(sock_msg)
 
             # overwriting persistence info to disk
             try:
