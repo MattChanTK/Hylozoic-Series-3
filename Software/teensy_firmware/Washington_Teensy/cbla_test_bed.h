@@ -1,5 +1,5 @@
-#ifndef _BEHAVIOUR_H
-#define _BEHAVIOUR_H
+#ifndef _CBLA_TEST_BED_H
+#define _CBLA_TEST_BED_H
 
 #include "Arduino.h"
 #include "fins_lights_unit.h"
