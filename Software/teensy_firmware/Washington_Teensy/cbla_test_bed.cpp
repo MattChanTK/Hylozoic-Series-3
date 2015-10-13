@@ -5,7 +5,7 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 
-CBLATestBed::CBLATestBed()	
+CBLATestBed::CBLATestBed():FinsLightsUnit(0, 1, 2, 3, 4, 5)	
 {
 	
 }

@@ -15,7 +15,13 @@ class FinsLightsUnit: public TeensyUnit{
 		//===============================================
 		//==== Constructor and destructor =====
 		//===============================================
-		FinsLightsUnit();
+		FinsLightsUnit(uint8_t fin0_port_id, 
+					   uint8_t fin1_port_id, 
+					   uint8_t fin2_port_id,
+					   uint8_t light0_port_id, 
+					   uint8_t light1_port_id, 
+					   uint8_t light2_port_id
+					   );
 		~FinsLightsUnit();
 		
 		//--- Initialization ---
