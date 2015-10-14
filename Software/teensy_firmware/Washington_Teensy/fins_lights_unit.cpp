@@ -13,7 +13,7 @@ FinsLightsUnit::FinsLightsUnit(uint8_t fin0_port_id=0,
 							   ):
 	fin0(*this, fin0_port_id), 
 	fin1(*this, fin1_port_id), 
-	fin2(*this, fin1_port_id), 
+	fin2(*this, fin2_port_id), 
 	fin{fin0, fin1, fin2},
 	light0(*this, light0_port_id),
 	light1(*this, light1_port_id),

@@ -117,5 +117,8 @@ class TeensyUnit{
 		//--- Light Port ---
 		class LightPort;
 		
+		//--- Generic Device Port ---
+		class DevicePort;
+		
 };
 #endif
