@@ -201,7 +201,6 @@ class DataLogger(threading.Thread):
                 self.__data_buffer[self.encode_struct(node_name, packet_type)].append(packet_data)
                 sock_msg = "[%s] <%s>" % (self.encode_struct(node_name, packet_type), str(packet_data))
                 self.sock.sendto(sock_msg.encode(), (self.UDP_IP, self.UDP_PORT))
-                print(sock_msg)
 
             # overwriting persistence info to disk
             try:
