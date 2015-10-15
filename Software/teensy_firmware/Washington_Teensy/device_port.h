@@ -1,3 +1,6 @@
+#ifndef _DEVICE_PORT
+#define _DEVICE_PORT
+
 #include "teensy_unit.h"
 
 class TeensyUnit::DevicePort{
@@ -61,3 +64,4 @@ class TeensyUnit::DevicePort{
 			
 };
 	
+#endif
