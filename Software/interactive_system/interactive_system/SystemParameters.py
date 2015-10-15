@@ -216,14 +216,14 @@ class SystemParameters():
             if var in vars:
                 return reply_type
 
-        raise(ValueError, "Variable not found!")
+        raise ValueError("Variable not found!")
 
     def get_request_type(self, var) -> dict:
         for request_type, vars in self.request_types.items():
             if var in vars:
                 return request_type
 
-        raise (ValueError, "Variable not found!")
+        raise ValueError("Variable not found!")
 
     def parse_message_content(self, msg):
 
@@ -260,6 +260,9 @@ class SystemParameters():
 
             # byte 1 to 2: blinking frequency of the indicator LED
             content[1:3] = struct.pack('H', self.output_param['indicator_led_period'])
+
+        elif self.request_type == 'prgm':
+            content[0] = self.output_param['program_teensy']
 
 
 # def enum_dict(*sequential, **named):
