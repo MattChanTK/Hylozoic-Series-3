@@ -128,9 +128,12 @@ bool TeensyUnit::receive_msg(){
 		// compose reply message
 		this->compose_reply(front_signature, back_signature, msg_setting);
 		send_msg();
+
+
 		return true;
 	}
 	else{
+
 		return false;
 	}
 }
