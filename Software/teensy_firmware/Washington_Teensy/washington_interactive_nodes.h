@@ -35,6 +35,7 @@ class LightUnitVar{
 	private:
 	
 		friend class WashingtonCricketNode;
+		friend class WashingtonFinNode;
 	
 		//----INPUT----
 		uint16_t ir_state[2] = {0, 0};
@@ -58,6 +59,7 @@ class FinUnitVar{
 	private:
 	
 		friend class WashingtonFinCricketNode;
+		friend class WashingtonFinNode;
 	
 		//----INPUT----
 		
@@ -356,6 +358,8 @@ class WashingtonFinNode : public FinsLightsUnit{
 
 	
 };
+
+
 
 
 #endif
