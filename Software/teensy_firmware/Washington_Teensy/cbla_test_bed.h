@@ -2,7 +2,7 @@
 #define _CBLA_TEST_BED_H
 
 #include "Arduino.h"
-#include "fins_lights_unit.h"
+#include "fins_singlelights_unit.h"
 
 #define NUM_WAVE 10
 
@@ -100,7 +100,7 @@ class LightVar{
 
 };
 
-class CBLATestBed : public FinsLightsUnit{
+class CBLATestBed : public FinsSingleLightsUnit{
 
 	public:
 		

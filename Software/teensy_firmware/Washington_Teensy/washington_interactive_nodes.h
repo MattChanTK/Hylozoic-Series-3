@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "crickets_lights_unit.h"
 #include "fins_crickets_unit.h"
+#include "fins_lights_unit.h"
 
 
 class CricketUnitVar{
@@ -49,6 +50,8 @@ class LightUnitVar{
 		
 
 };
+
+
 
 class FinUnitVar{
 
@@ -173,10 +176,10 @@ class WashingtonCricketNode : public CricketsLightsUnit{
 		uint8_t operation_mode = 0;
 
 		//>>> Cricket <<<
-		CricketUnitVar cricket_var[NUM_CRICKET];
+		CricketUnitVar cricket_var[WashingtonCricketNode::NUM_CRICKET];
 		
 		//>>> Lightt <<<
-		LightUnitVar light_var[NUM_LIGHT];
+		LightUnitVar light_var[WashingtonCricketNode::NUM_LIGHT];
 				
 		
 		//>>> Network Activities <<<
@@ -253,10 +256,92 @@ class WashingtonFinCricketNode : public FinsCricketsUnit{
 		uint8_t operation_mode = 0;
 
 		//>>> Cricket <<<
-		CricketUnitVar cricket_var[NUM_CRICKET];
+		CricketUnitVar cricket_var[WashingtonFinCricketNode::NUM_CRICKET];
 		
 		//>>> Fin <<<
-		FinUnitVar fin_var[NUM_FIN];
+		FinUnitVar fin_var[WashingtonFinCricketNode::NUM_FIN];
+				
+		
+		//>>> Network Activities <<<
+		
+		//----OUTPUT (internal variables)----
+		uint8_t neighbour_activation_state = 0;
+		
+	
+	private:
+
+		
+
+	
+};
+
+class WashingtonFinNode : public FinsLightsUnit{
+
+	public:
+		
+		//===============================================
+		//==== Constructor and destructor =====
+		//===============================================
+		
+		WashingtonFinNode(uint8_t fin0_port_id, 
+						  uint8_t fin1_port_id, 
+						  uint8_t fin2_port_id,
+						  uint8_t light0_port_id, 
+						  uint8_t light1_port_id, 
+						  uint8_t light2_port_id
+					     );
+		~WashingtonFinNode();
+
+		//===============================================
+		//==== Communication functions =====
+		//===============================================
+			
+		void parse_msg();
+		void compose_reply(byte front_signature, byte back_signature, byte msg_setting);
+		
+		//--- Input functions----
+		void sample_inputs();
+		void sample_inputs(const uint8_t setting);
+		
+		//===============================================
+		//==== BEHAVIOUR functions =====
+		//===============================================
+		
+		//---- inactive behaviour ----
+		void inactive_behaviour();
+		
+		//---- test behaviour ----
+		void test_behaviour(const uint32_t &curr_time);
+		
+		//---- indicator LED -----
+		void led_blink_behaviour(const uint32_t &curr_time);
+	
+		//---- low-level control ---
+		void low_level_control_behaviour();
+
+		
+		//===============================================
+		//==== BEHAVIOUR variables =====
+		//===============================================	
+		
+		//>>> Teensy on-board <<<<
+		
+		//----OUTPUT----
+		//~~indicator LED on~~
+		bool indicator_led_on = false; 
+		//~~indicator LED blink~~
+		uint16_t indicator_led_blink_period = 1000; 
+		
+		//~~operation mode~~~
+		uint8_t operation_mode = 0;
+
+	
+		//>>> Fin <<<
+		FinUnitVar fin_var[WashingtonFinNode::NUM_FIN];
+		
+		//>>> Light <<<
+		LightUnitVar light_var[WashingtonFinNode::NUM_LIGHT];
+		
 				
 		
 		//>>> Network Activities <<<

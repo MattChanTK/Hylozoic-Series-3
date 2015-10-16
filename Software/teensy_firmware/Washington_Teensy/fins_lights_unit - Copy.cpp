@@ -1,0 +1,43 @@
+#include "fins_singlelights_unit.h"
+
+//===========================================================================
+//===== CONSTRUCTOR and DECONSTRUCTOR =====
+//===========================================================================
+
+FinsSingleLightsUnit::FinsSingleLightsUnit(uint8_t fin0_port_id, 
+										   uint8_t fin1_port_id, 
+										   uint8_t fin2_port_id,
+										   uint8_t light0_port_id, 
+										   uint8_t light1_port_id, 
+										   uint8_t light2_port_id
+										   ):
+	fin0(*this, fin0_port_id), 
+	fin1(*this, fin1_port_id), 
+	fin2(*this, fin2_port_id), 
+	fin{fin0, fin1, fin2},
+	light0(*this, light0_port_id),
+	light1(*this, light1_port_id),
+	light2(*this, light2_port_id),
+	light{light0, light1, light2}
+{
+	
+}
+
+FinsLightsUnit::~FinsLightsUnit()
+{
+	
+}
+
+//===========================================================================
+//===== INITIALIZATION =====
+//===========================================================================
+void FinsSingleLightsUnit::init(){
+
+	//--- initialization in the base class
+	TeensyUnit::init();
+	
+	//---- initialize I2C accelerometer on Fin module ---
+	fin0.init();
+	fin1.init();
+	fin2.init();
+}

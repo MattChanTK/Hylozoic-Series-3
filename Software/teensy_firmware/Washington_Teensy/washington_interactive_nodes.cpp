@@ -82,7 +82,7 @@ void WashingtonCricketNode::parse_msg(){
 			// >>>>> byte 18 to byte 25: Cricket 2			
 			
 			
-			for (uint8_t j = 0; j < NUM_CRICKET; j++){
+			for (uint8_t j = 0; j < WashingtonCricketNode::NUM_CRICKET; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 						
@@ -103,7 +103,7 @@ void WashingtonCricketNode::parse_msg(){
 			// >>>>> byte 26 to byte 33: Light 0		
 			
 			
-			for (uint8_t j = 0; j < NUM_LIGHT; j++){
+			for (uint8_t j = 0; j < WashingtonCricketNode::NUM_LIGHT; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 						
@@ -167,7 +167,7 @@ void WashingtonCricketNode::compose_reply(byte front_signature, byte back_signat
 			// >>>>> byte 10 to byte 17: Cricket 1
 			// >>>>> byte 18 to byte 25: Cricket 2		
 				
-			for (uint8_t j = 0; j < NUM_CRICKET; j++){
+			for (uint8_t j = 0; j < WashingtonCricketNode::NUM_CRICKET; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 				
@@ -178,12 +178,12 @@ void WashingtonCricketNode::compose_reply(byte front_signature, byte back_signat
 	
 			}
 			
-			device_offset += 8*NUM_CRICKET;
+			device_offset += 8*WashingtonCricketNode::NUM_CRICKET;
 			
 			// (8 bytes each)
 			// >>>>> byte 26 to byte 33: Light 0	
 			
-			for (uint8_t j = 0; j < NUM_LIGHT; j++){
+			for (uint8_t j = 0; j < WashingtonCricketNode::NUM_LIGHT; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 				
@@ -235,7 +235,7 @@ void WashingtonCricketNode::sample_inputs(){
 void WashingtonCricketNode::sample_inputs(const uint8_t setting){
 	
 	//=== Cricket ===
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
 	
 		//~~IR sensors state~~
 		noInterrupts();
@@ -245,7 +245,7 @@ void WashingtonCricketNode::sample_inputs(const uint8_t setting){
 	}
 	
 	//=== Light ===
-	for (uint8_t j=0; j<NUM_LIGHT; j++){
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
 	
 		//~~IR sensors state~~
 		for (uint8_t i=0; i<2; i++){
@@ -267,7 +267,7 @@ void WashingtonCricketNode::sample_inputs(const uint8_t setting){
 void WashingtonCricketNode::inactive_behaviour() {
 	
 	//=== Cricket ===
-	for (uint8_t i=0; i<NUM_CRICKET; i++){
+	for (uint8_t i=0; i<WashingtonCricketNode::NUM_CRICKET; i++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			cricket[i].set_output_level(output_id, 0);
@@ -276,7 +276,7 @@ void WashingtonCricketNode::inactive_behaviour() {
 	}	
 
 	//=== Light ===
-	for (uint8_t i=0; i<NUM_LIGHT; i++){
+	for (uint8_t i=0; i<WashingtonCricketNode::NUM_LIGHT; i++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			light[i].set_output_level(output_id, 0);
@@ -291,8 +291,8 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 	
 	//>>>> Cricket <<<<<
+	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_CRICKET; j++){
 
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
 		if (cricket_var[j].ir_state > 1200){
 			for (uint8_t output_id=0; output_id<4; output_id++){
 				cricket[j].set_output_level(output_id, 255);
@@ -309,7 +309,8 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 	//>>>> Light <<<<<
 
-	for (uint8_t j=0; j<NUM_LIGHT; j++){
+	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_LIGHT; j++){
+		
 		if (light_var[j].ir_state[1] > 1200){
 			for (uint8_t output_id=0; output_id<4; output_id++){
 				light[j].set_output_level(output_id, 255);
@@ -377,7 +378,7 @@ void WashingtonCricketNode::low_level_control_behaviour(){
 	
 	//>>>> Cricket <<<<<
 
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);
@@ -387,7 +388,7 @@ void WashingtonCricketNode::low_level_control_behaviour(){
 
 	//>>>> Light <<<<<
 
-	for (uint8_t j=0; j<NUM_LIGHT; j++){
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			light[j].set_output_level(output_id, light_var[j].led_level[output_id]);
@@ -482,7 +483,7 @@ void WashingtonFinCricketNode::parse_msg(){
 			// >>>>> byte 18 to byte 25: Fin 2			
 			
 			
-			for (uint8_t j = 0; j < NUM_FIN; j++){
+			for (uint8_t j = 0; j < WashingtonFinCricketNode::NUM_FIN; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 						
@@ -497,14 +498,14 @@ void WashingtonFinCricketNode::parse_msg(){
 			
 			}
 			
-			device_offset += 8*NUM_FIN;
+			device_offset += 8*WashingtonFinCricketNode::NUM_FIN;
 
 			// (8 bytes each)
 			// >>>>> byte 26 to byte 33: Cricket 0
 			// >>>>> byte 34 to byte 41: Cricket 1
 			// >>>>> byte 42 to byte 49: Cricket 2				
 			
-			for (uint8_t j = 0; j < NUM_CRICKET; j++){
+			for (uint8_t j = 0; j < WashingtonFinCricketNode::NUM_CRICKET; j++){
 				
 				const uint8_t byte_offset = 8*(j) + device_offset;
 						
@@ -566,7 +567,7 @@ void WashingtonFinCricketNode::compose_reply(byte front_signature, byte back_sig
 			// >>>>> byte 16 to byte 29: FIN 1
 			// >>>>> byte 30 to byte 43: FIN 2
 				
-			for (uint8_t j = 0; j < NUM_FIN; j++){
+			for (uint8_t j = 0; j < WashingtonFinCricketNode::NUM_FIN; j++){
 				
 				const uint8_t byte_offset = 14*(j) + device_offset;
 				
@@ -596,14 +597,14 @@ void WashingtonFinCricketNode::compose_reply(byte front_signature, byte back_sig
 	
 			}
 			
-			device_offset = 14*NUM_FIN + device_offset;
+			device_offset = 14*WashingtonFinCricketNode::NUM_FIN + device_offset;
 			
 			// (4 bytes each)
 			// >>>>> byte 44 to byte 47: Cricket 0
 			// >>>>> byte 48 to byte 51: Cricket 1
 			// >>>>> byte 52 to byte 55: Cricket 2		
 				
-			for (uint8_t j = 0; j < NUM_CRICKET; j++){
+			for (uint8_t j = 0; j < WashingtonFinCricketNode::NUM_CRICKET; j++){
 				
 				const uint8_t byte_offset = 4*(j) + device_offset;
 				
@@ -654,7 +655,7 @@ void WashingtonFinCricketNode::sample_inputs(const uint8_t setting){
 	
 	//=== Fin ===
 			
-	for (uint8_t j=0; j<NUM_FIN; j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN; j++){
 	
 		//~~IR sensors state~~
 		for (uint8_t i=0; i<2; i++){
@@ -676,7 +677,7 @@ void WashingtonFinCricketNode::sample_inputs(const uint8_t setting){
 		
 	}
 	//=== Cricket ===
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_CRICKET; j++){
 	
 		//~~IR sensors state~~
 		noInterrupts();
@@ -698,7 +699,7 @@ void WashingtonFinCricketNode::inactive_behaviour() {
 	
 	
 	//=== Fin ===
-	for (uint8_t i=0; i<NUM_FIN; i++){
+	for (uint8_t i=0; i<WashingtonFinCricketNode::NUM_FIN; i++){
 
 		fin[i].set_led_level(0, 0);
 		fin[i].set_led_level(1, 0);
@@ -709,7 +710,7 @@ void WashingtonFinCricketNode::inactive_behaviour() {
 	}		
 	
 	//=== Cricket ===
-	for (uint8_t i=0; i<NUM_CRICKET; i++){
+	for (uint8_t i=0; i<WashingtonFinCricketNode::NUM_CRICKET; i++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			cricket[i].set_output_level(output_id, 0);
@@ -724,7 +725,7 @@ void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 	//>>>> Fin <<<<<
 
-	for (uint8_t j=0; j<NUM_FIN; j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN; j++){
 		if (fin_var[j].ir_state[1] > 1200){
 			fin[j].set_led_level(0, 250);
 			fin[j].set_led_level(1, 250);
@@ -738,7 +739,7 @@ void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 	//>>>> Cricket <<<<<
 
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_CRICKET; j++){
 		if (cricket_var[j].ir_state > 1200){
 			for (uint8_t output_id=0; output_id<4; output_id++){
 				cricket[j].set_output_level(output_id, 255);
@@ -804,7 +805,7 @@ void WashingtonFinCricketNode::low_level_control_behaviour(){
 
 	
 	//>>>> FIN <<<<<
-	for (uint8_t j=0; j<NUM_FIN;j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN;j++){
 		
 		fin[j].set_sma_level(0, fin_var[j].sma_level[0]);
 		fin[j].set_sma_level(1, fin_var[j].sma_level[1]);
@@ -814,7 +815,7 @@ void WashingtonFinCricketNode::low_level_control_behaviour(){
 
 	//>>>> Cricket <<<<<
 
-	for (uint8_t j=0; j<NUM_CRICKET; j++){
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_CRICKET; j++){
 		
 		for (uint8_t output_id=0; output_id<4; output_id++){
 			cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);

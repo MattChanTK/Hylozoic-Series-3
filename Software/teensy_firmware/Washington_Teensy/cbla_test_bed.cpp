@@ -6,7 +6,7 @@
 //===========================================================================
 
 CBLATestBed::CBLATestBed():
-	FinsLightsUnit(0,1,2,3,4,5)
+	FinsSingleLightsUnit(0,1,2,3,4,5)
 {
 	
 }

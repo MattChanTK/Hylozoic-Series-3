@@ -4,8 +4,8 @@
 //===========================================================================
 
 //===== INITIALIZATION =====
-//WashingtonCricketNode teensy_unit(0, 2, 5, 1);
-WashingtonFinCricketNode teensy_unit(0, 1, 2, 3, 4, 5);
+WashingtonCricketNode teensy_unit(0, 2, 5, 1);
+//WashingtonFinCricketNode teensy_unit(0, 1, 2, 3, 4, 5);
 
 //check for new messages
 void check_msg(){
@@ -33,12 +33,16 @@ void setup() {
 	teensy_unit.init();
 	teensy_unit.operation_mode = 0;
 	randomSeed(analogRead(A0));
-	
+
 
 	
 	//--- check msg timer ---
 	//set timer in microsecond
 	//msg_recv_timer.begin(check_msg, 500); 
+	
+	Serial.begin(9600);
+	Serial.print("Setup Done");
+
 }
 
 

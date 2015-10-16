@@ -1,5 +1,5 @@
-#ifndef _CRICKETS_UNIT_H
-#define _CRICKETS_UNIT_H
+#ifndef _CRICKETS_LIGHTS_UNIT_H
+#define _CRICKETS_LIGHTS_UNIT_H
 
 #include "Arduino.h"
 #include "teensy_unit.h"
@@ -33,9 +33,9 @@ class CricketsLightsUnit: public TeensyUnit{
 		DevicePort cricket0;
 		DevicePort cricket1;
 		DevicePort cricket2;
-		DevicePort cricket[CricketsLightsUnit::NUM_CRICKET];
+		DevicePort cricket[NUM_CRICKET];
 		DevicePort light0;
-		DevicePort light[CricketsLightsUnit::NUM_LIGHT];
+		DevicePort light[NUM_LIGHT];
 		
 		
 	

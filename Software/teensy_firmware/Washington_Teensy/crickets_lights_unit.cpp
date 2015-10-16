@@ -39,6 +39,6 @@ void CricketsLightsUnit::init(){
 	
 	//---- initialize I2C accelerometer on light module ---
 	for (uint8_t i=0; i<CricketsLightsUnit::NUM_LIGHT; i++){
-		cricket[i].init();
+		light[i].init();
 	}
 }

@@ -1,3 +1,5 @@
+#ifndef _FIN_PORT_H
+#define _FIN_PORT_H
 #include "teensy_unit.h"
 
 class TeensyUnit::FinPort{
@@ -62,4 +64,6 @@ class TeensyUnit::FinPort{
 		
 			
 };
+
+#endif
 	
