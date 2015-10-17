@@ -53,6 +53,9 @@ class SoundModule{
 		//--- Play WAV file ----
 		bool playWav(char* wavfile, uint8_t channel=0, uint8_t port=0);
 		
+		//--- Adjust Volume ----
+		void changeVolume(float gain, uint8_t channel=0, uint8_t port=0);
+			
 		
 		
 	protected:
@@ -71,6 +74,10 @@ class SoundModule{
 		const float highF = 6000; // High Frequency cutoff for FFT
 
 		//==== variables ===
+		
+		// file management
+		uint16_t minFileID = 1;
+		uint16_t maxFileID = 100;
 		
 		//Signal processing
 		float SCG; // Spectral Center of Gravity

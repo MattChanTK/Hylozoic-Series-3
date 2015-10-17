@@ -72,10 +72,16 @@ void SoundModule::audio_board_setup(){
 
 	AudioMemory(20); // Establish Audio Memory
 
-
+	// configuration
 	sgtl5000_1.enable(); // Enable LINE-OUT
-	sgtl5000_1.volume(0.5); //Set Iniitial LINE-OUT Gain
-	sgtl5000_1.dacVolume(0.80);
+	sgtl5000_1.volume(0.8); //Set Iniitial LINE-OUT Gain
+	sgtl5000_1.dacVolume(1.0);
+	sgtl5000_1.adcHighPassFilterEnable();
+	// sgtl5000_1.audioPreProcessorEnable();
+	// sgtl5000_1.enhanceBassEnable();
+	sgtl5000_1.lineOutLevel(29);
+	mixer_left.gain(1, 0.8);
+	mixer_right.gain(1, 0.8);
 
 	SPI.setMOSI(SDCARD_MOSI_PIN);
 	SPI.setSCK(SDCARD_SCK_PIN);
@@ -110,17 +116,16 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port){
 	}
 	
 	bool fileFound = true;
-	Serial.print(port);
+
 
 	// Start playing the file.  This sketch continues to
 	// run while the file plays.
 	if (channel != 2){
-		fileFound &= playWav_L[port].play(wavfile);
-
+		fileFound &= playWav_L[port-1].play(wavfile);
 	}
 	
 	if (channel != 1 ){
-		fileFound &= playWav_R[port].play(wavfile);
+		fileFound &= playWav_R[port-1].play(wavfile);
 	}
 	
 	if (!fileFound)
@@ -130,8 +135,40 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port){
 	delay(5);
 
 	// Simply wait for the file to finish playing.
-	while (playWav_L[port].isPlaying() || playWav_R[port].isPlaying()) {
+	while (playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying()) {
 
 	}
 	return true;
+}
+
+//==== Adjust volume ===
+//channel: 1=left; 2=right; else=both
+//port: if not 1 <= port <= 4, port = all
+void SoundModule::changeVolume(float gain, uint8_t channel, uint8_t port){
+	
+	if (gain < 0){
+		gain = 0;
+	}
+	
+	if (port < 1 || port > 4){
+		for (uint8_t i = 0; i < 4; i++){
+			if (channel != 2){
+				mixer_left.gain(i, gain);
+			}
+			
+			if (channel != 1 ){
+				mixer_right.gain(i, gain);
+			}
+		}
+	}
+	else{
+		
+		if (channel != 2){
+			mixer_left.gain(port, gain);
+		}
+		
+		if (channel != 1 ){
+			mixer_right.gain(port, gain);
+		}
+	}
 }
