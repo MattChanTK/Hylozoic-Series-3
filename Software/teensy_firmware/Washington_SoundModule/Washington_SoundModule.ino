@@ -65,18 +65,6 @@ void loop(){
 	}
 
 
-		// sound_module.setVolume(volume);
-		// //sound_module.playWav("test.wav", 1, 1);
-		// sound_module.playWav("1.wav", 2, 1);
-
-		// volume += 0.2;
-		
-		// if (volume > 1.2){
-			// volume = 0.1;
-		// }
-		// delay(1000);
-		//recvMsg = 0;
-
 }
 
 

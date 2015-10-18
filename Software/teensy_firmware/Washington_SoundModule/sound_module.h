@@ -81,19 +81,13 @@ class SoundModule{
 		static const uint8_t CMD_PWM_OUTPUT = 2;
 		
 		//--- WAV Player ----
-		static const uint8_t CMD_PLAY_WAV_L = 3;
-		
-		// byte 1 - File ID 
-		// byte 2 - Volume
-		// byte 3 - Port
-		
-		static const uint8_t CMD_PLAY_WAV_R = 4;
+		static const uint8_t CMD_PLAY_WAV = 3;
 		
 		// byte 1 - File ID 
 		// byte 2 - Volume
 		// byte 3 - Channel
-
-		
+		// byte 4 - Port
+	
 	protected:
 		
 		

@@ -221,9 +221,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 			break;
 		}
 		
-		// Play Wav File Left Channel
-		case SoundModule::CMD_PLAY_WAV_L:{
-		
+		// Play Wav File Rightt Channel
+		case SoundModule::CMD_PLAY_WAV:{
+			
 			// byte 1 - File ID 
 			uint8_t file_id = recvMsg[1];
 			
@@ -235,21 +235,18 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 			// byte 2 - Volume
 			uint8_t volume = (uint8_t) recvMsg[2];
 			
-			// byte 3 - Port
-			uint8_t port = (uint8_t) recvMsg[3];
+			// byte 3 - Channel
+			uint8_t channel = (uint8_t) recvMsg[3];
+			
+			// byte 4 - Port
+			uint8_t port = (uint8_t) recvMsg[4];
 			
 			// set volume
-			setVolume(volume, 1, port);
+			setVolume(volume, channel, port);
 			
 			// play sound
-			playWav(filename, 1, port);
-
-			break;
-		}
-		// Play Wav File Left Channel
-		case SoundModule::CMD_PLAY_WAV_R:{
+			playWav(filename, channel, port);
 	
-		
 			break;
 		}
 		default:{
