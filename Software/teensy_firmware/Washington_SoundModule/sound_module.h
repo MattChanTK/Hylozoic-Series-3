@@ -81,6 +81,9 @@ class SoundModule{
 		//--- PWM Output ---
 		static const uint8_t CMD_PWM_OUTPUT = 2;
 		
+		//byte 1 - PWM ID
+		//byte 2 - PWM Level (0...255)
+		
 		//--- WAV Player ----
 		static const uint8_t CMD_PLAY_WAV = 3;
 		
@@ -88,6 +91,7 @@ class SoundModule{
 		// byte 2 - Volume
 		// byte 3 - Channel
 		// byte 4 - Port
+		// byte 5 - Blocking
 		
 		//==== variables ======
 		uint8_t requested_data_type;

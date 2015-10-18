@@ -38,6 +38,13 @@ void TeensyUnit::SoundPort::init(){
 
 void TeensyUnit::SoundPort::set_output_level(const uint8_t id, const uint8_t level){
 	
+	switchToThis();
+
+	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
+	teensy_unit.Wire.write(CMD_PWM_OUTPUT);
+	teensy_unit.Wire.write(id);
+	teensy_unit.Wire.write(level);
+	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
 	
 }
 void TeensyUnit::SoundPort::set_digital_trigger(const uint8_t id, const bool on){
@@ -54,26 +61,32 @@ void TeensyUnit::SoundPort::set_digital_trigger(const uint8_t id, const bool on)
 	}
 }
 
-//~~inputs~~
-bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &analog_2, uint16_t &analog_3){
-	noInterrupts();
+void TeensyUnit::SoundPort::play_sound(const uint8_t file_id, const uint8_t volume, const uint8_t channel, const uint8_t port, const bool block){
 	switchToThis();
 
 	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
-	// teensy_unit.Wire.write(1);
-	// teensy_unit.Wire.write(1);
-	// teensy_unit.Wire.write(3);
-	// teensy_unit.Wire.write(0);
-	// teensy_unit.Wire.write(0);
-	teensy_unit.Wire.write(SOUND_I2C_ANALOG_READ);
+	teensy_unit.Wire.write(CMD_PLAY_WAV);
+	teensy_unit.Wire.write(file_id);
+	teensy_unit.Wire.write(volume);
+	teensy_unit.Wire.write(channel);
+	teensy_unit.Wire.write(port);
+	teensy_unit.Wire.write(block);
+	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
+}
+
+//~~inputs~~
+bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &analog_2, uint16_t &analog_3){
+	
+	switchToThis();
+
+	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
+	teensy_unit.Wire.write(CMD_READ_ANALOG);
 	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
 	teensy_unit.Wire.requestFrom(SOUND_I2C_ADDR, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
 	
 	uint8_t i = 0;
 	byte buffer[6] = {0};
 	
-	delay(50);
-
 	while(teensy_unit.Wire.available() && i<6)
 	{
 		buffer[i] = teensy_unit.Wire.read();
@@ -86,7 +99,9 @@ bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &anal
 	analog_2 = buffer[3] << 8 | buffer[2];
 	analog_3 = buffer[5] << 8 | buffer[4];
 	
-	Serial.println(analog_1);
+	// Serial.println(analog_1);
+	// Serial.println(analog_2);
+	// Serial.println(analog_3);
 	
 	if (i >= 5)
 		return true;

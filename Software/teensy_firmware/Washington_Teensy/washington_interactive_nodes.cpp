@@ -1452,10 +1452,20 @@ void WashingtonSoundNode::inactive_behaviour() {
 //---- test behaviour ----
 void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
 	
-	//>>>> Sound <<<<<
+	//>>>> IR Sensor <<<<<
+	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
 	
-	//Serial.println(sound_var[1].analog_state[0]);
-	delay(500);
+		if (sound_var[j].analog_state[0] > 1200){
+			sound[j].set_output_level(0, 250);
+			sound[j].set_output_level(1, 250);
+			sound[j].play_sound(1, 50, 0, 0, false);
+		}
+		else{
+			sound[j].set_output_level(0, 0);
+			sound[j].set_output_level(1, 0);
+		}
+		
+	}		
 	
 }
 

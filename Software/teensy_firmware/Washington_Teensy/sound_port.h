@@ -19,6 +19,9 @@ class TeensyUnit::SoundPort{
 		//--- Digital Trigger Input ----
 		void set_digital_trigger(const uint8_t id, const bool on);
 		
+		//--- Play Sound ---
+		void play_sound(const uint8_t file_id, const uint8_t volume, const uint8_t channel, const uint8_t port, const bool block);
+		
 		//~~inputs~~
 	
 		//--- Analogue Input ----
@@ -40,7 +43,23 @@ class TeensyUnit::SoundPort{
 		//~~Sound Module I2C constants~~
 			
 		const uint8_t  SOUND_I2C_ADDR = 13; //I2C Address    
-		const uint8_t  SOUND_I2C_ANALOG_READ = 1; //I2C msg
+		
+		//--- Read Analog ---
+		const uint8_t CMD_READ_ANALOG = 1;
+		
+		//--- PWM Output ---
+		const uint8_t CMD_PWM_OUTPUT = 2;
+		
+		//byte 1 - PWM ID
+		//byte 2 - PWM Level (0...255)
+		
+		//--- WAV Player ----
+		const uint8_t CMD_PLAY_WAV = 3;
+		
+		// byte 1 - File ID 
+		// byte 2 - Volume
+		// byte 3 - Channel
+		// byte 4 - Port
 
 					
 		

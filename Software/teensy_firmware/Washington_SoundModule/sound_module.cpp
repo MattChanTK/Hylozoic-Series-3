@@ -64,7 +64,7 @@ void SoundModule::audio_board_setup(){
 	// Audio connections require memory to work.  For more
 	// detailed information, see the MemoryAndCpuUsage example
 
-	AudioMemory(20); // Establish Audio Memory
+	AudioMemory(200); // Establish Audio Memory
 
 	// configuration
 	sgtl5000_1.enable(); // Enable LINE-OUT
@@ -217,11 +217,19 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 		
 		// PWM Output
 		case SoundModule::CMD_PWM_OUTPUT:{
-						
+			
+			// byte 1 - PWM ID
+			uint8_t pwm_id = recvMsg[1];
+			// byte 2 - PWM Level (0...255)
+			uint8_t pwm_level = recvMsg[2];
+			
+			// output to PWM
+			set_output_level(pwm_id, pwm_level);
+			
 			break;
 		}
 		
-		// Play Wav File Rightt Channel
+		// Play Wav File Right Channel
 		case SoundModule::CMD_PLAY_WAV:{
 			
 			// byte 1 - File ID 
@@ -241,11 +249,14 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 			// byte 4 - Port
 			uint8_t port = (uint8_t) recvMsg[4];
 			
+			// byte 5 - Blocking
+			bool blocking = recvMsg[5] > 0;
+			
 			// set volume
 			setVolume(volume, channel, port);
 			
 			// play sound
-			playWav(filename, channel, port);
+			playWav(filename, channel, port, blocking);
 	
 			break;
 		}

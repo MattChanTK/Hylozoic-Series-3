@@ -99,8 +99,6 @@ void loop() {
 			break;
 	
 	}
-	
-	delay(1500);
 
 }
 

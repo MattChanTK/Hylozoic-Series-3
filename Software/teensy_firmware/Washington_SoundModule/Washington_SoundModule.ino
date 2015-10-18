@@ -71,7 +71,6 @@ void loop(){
 	
 	// If received message
 	// first buffer is always the message type
-	
 	if (recvMsg[0] > 0){
 		
 		Serial.print("Received Message -- ");
