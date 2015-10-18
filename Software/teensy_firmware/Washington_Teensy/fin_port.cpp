@@ -12,8 +12,6 @@ TeensyUnit::FinPort::FinPort(TeensyUnit& teensy_parent, const uint8_t Port_Id):
 {
 	
 	//----- Pin assignment -----
-
-	
 	if (is_all_slow){
 		led_pins[0] = teensy_unit.SPWM_pin[port_id][0];
 		led_pins[1] = teensy_unit.SPWM_pin[port_id][1];
@@ -55,27 +53,32 @@ void TeensyUnit::FinPort::init(){
 }
 //~~outputs~~
 void TeensyUnit::FinPort::set_sma_level(const uint8_t id, const uint8_t level){
-	
-	noInterrupts();
-	teensy_unit.spwm.setPWMFast(sma_pins[id], 16*level);
-	interrupts();
+	if (id >= 0 && id <2){
+		noInterrupts();
+		teensy_unit.spwm.setPWMFast(sma_pins[id], 16*level);
+		interrupts();
+	}
 	
 }
 void TeensyUnit::FinPort::set_led_level(const uint8_t id, const uint8_t level){
 
-	if (is_all_slow){
-		noInterrupts();
-		teensy_unit.spwm.setPWMFast(led_pins[id], 16*level);
-		interrupts();
-	}
-	else{
-		analogWrite(led_pins[id], level);
+	if (id >= 0 && id < 2){
+		if (is_all_slow){
+			noInterrupts();
+			teensy_unit.spwm.setPWMFast(led_pins[id], 16*level);
+			interrupts();
+		}
+		else{
+			analogWrite(led_pins[id], level);
+		}
 	}
 }
 
 //~~inputs~~
 uint16_t TeensyUnit::FinPort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
-	return (uint16_t) analogRead(analog_pins[id]);
+	if (id >= 0 && id < 2){
+		return (uint16_t) analogRead(analog_pins[id]);
+	}
 }
 
 bool TeensyUnit::FinPort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}

@@ -57,26 +57,31 @@ void TeensyUnit::DevicePort::init(){
 //~~outputs~~
 void TeensyUnit::DevicePort::set_output_level(const uint8_t id, const uint8_t level){
 
-	if (is_all_slow){
-		noInterrupts();
-		teensy_unit.spwm.setPWMFast(output_pins[id], 16*level);
-		interrupts();
-	}
-	else{
-		if (id < 2){
-			analogWrite(output_pins[id], level);
-		}
-		else{
+	if (id >= 0 && id < 4){
+
+		if (is_all_slow){
 			noInterrupts();
 			teensy_unit.spwm.setPWMFast(output_pins[id], 16*level);
 			interrupts();
 		}
+		else{
+			if (id < 2){
+				analogWrite(output_pins[id], level);
+			}
+			else{
+				noInterrupts();
+				teensy_unit.spwm.setPWMFast(output_pins[id], 16*level);
+				interrupts();
+			}
+		}
 	}
 }
-
 //~~inputs~~
 uint16_t TeensyUnit::DevicePort::read_analog_state(const uint8_t id){  //{IR 0, IR 1}
-	return (uint16_t) analogRead(analog_pins[id]);
+	if (id >= 0 && id < 2){
+		return (uint16_t) analogRead(analog_pins[id]);
+	}
+	return 0;
 }
 
 bool TeensyUnit::DevicePort::read_acc_state(int16_t &accel_x, int16_t &accel_y, int16_t &accel_z){ // return array:{x, y, z}

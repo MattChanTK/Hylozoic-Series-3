@@ -12,9 +12,9 @@ CricketsLightsUnit::CricketsLightsUnit(uint8_t cricket0_port_id,
 							cricket0(*this, cricket0_port_id),
 							cricket1(*this, cricket1_port_id),
 							cricket2(*this, cricket2_port_id),
-							cricket({cricket0, cricket1, cricket2}),
+							cricket{cricket0, cricket1, cricket2},
 							light0(*this, light0_port_id),
-							light({light0})
+							light{light0}
 {
 	
 }

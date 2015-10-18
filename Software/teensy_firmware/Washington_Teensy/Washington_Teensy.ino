@@ -6,8 +6,8 @@
 //===== INITIALIZATION =====
 //WashingtonCricketNode teensy_unit(0, 2, 5, 1);
 //WashingtonFinCricketNode teensy_unit(0, 1, 2, 3, 4, 5);
-WashingtonFinNode teensy_unit(0, 1, 2, 3, 4, 5);
-
+//WashingtonFinNode teensy_unit(0, 1, 2, 3, 4, 5);
+WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 
 //check for new messages
 void check_msg(){
@@ -100,7 +100,7 @@ void loop() {
 	
 	}
 	
-
+	delay(1500);
 
 }
 

@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+//#include "i2c_t3"
 
 #define I2C_TIMEOUT 1000 //microsecond
 
@@ -33,8 +34,7 @@ class SoundModule{
 		
 		//--- Digital input pins ---
 		const uint8_t Digital_pin[2] = {1, 2};
-
-		
+				
 		
 		//===============================================
 		//==== Functions ====
@@ -48,44 +48,32 @@ class SoundModule{
 		void init();
 		
 		//--- I2C Communication ---
-		//void receiveEvent(int bytes);
 		
 		//--- Play WAV file ----
-		bool playWav(char* wavfile, uint8_t channel=0, uint8_t port=0);
+		bool playWav(char* wavfile, uint8_t channel=0, uint8_t port=0, bool block=false);
 		
 		//--- Adjust Volume ----
-		void changeVolume(float gain, uint8_t channel=0, uint8_t port=0);
-			
+		void setVolume(float gain, uint8_t channel=0, uint8_t port=0);
 		
+		//--- PWM output ----
+		void set_output_level(const uint8_t id, const uint8_t level);
+		
+		//--- Analogue Input ----
+		uint16_t read_analog_state(const uint8_t id);
+			
+		//--- Digital Input ----
+		bool read_digital_state(const uint8_t id);
 		
 	protected:
 		
-		//==== I2C object ====
-		//i2c_t3 Wire;
 		
 		//==== constants ====
 		
-		// Signal processing
-		static const int bins = 512; // Number of bins in FFT
-		const float fs = 44117.647; //Sampling rate
-		const float dF = fs/bins/2.0; // width of FFT bin in Hz
-		const float sf = 3.0; // Scaling Factor of FFT values in DB calculation
-		const float lowF = 200; // Low frequency cutoff for stats calculations
-		const float highF = 6000; // High Frequency cutoff for FFT
-
-		//==== variables ===
 		
-		// file management
-		uint16_t minFileID = 1;
-		uint16_t maxFileID = 100;
+		//==== variables ===
+
 		
 		//Signal processing
-		float SCG; // Spectral Center of Gravity
-		float aV;
-		int mFdata[2];
-		float cf[SoundModule::bins];
-		float valFFT[SoundModule::bins];
-		float dBvalFFT[SoundModule::bins];
 		
 		// the left and right mixers
 		AudioMixer4              mixer_left;         // mixer1 - Left Channel

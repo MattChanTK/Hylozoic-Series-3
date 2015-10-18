@@ -1,0 +1,37 @@
+<NotepadPlus>
+    <Project name="Sound Module">
+        <File name="C:\Research\CBLA-Test-Bed\Software\teensy_firmware\Washington_SoundModule\sound_module.cpp" />
+        <File name="C:\Research\CBLA-Test-Bed\Software\teensy_firmware\Washington_SoundModule\sound_module.h" />
+        <File name="C:\Research\CBLA-Test-Bed\Software\teensy_firmware\Washington_SoundModule\Washington_SoundModule.ino" />
+    </Project>
+    <Project name="Washington">
+        <File name="cbla_test_bed.cpp" />
+        <File name="cbla_test_bed.h" />
+        <File name="crickets_lights_unit.cpp" />
+        <File name="crickets_lights_unit.h" />
+        <File name="device_port.cpp" />
+        <File name="device_port.h" />
+        <File name="fin_port.cpp" />
+        <File name="fin_port.h" />
+        <File name="fins_crickets_unit.cpp" />
+        <File name="fins_crickets_unit.h" />
+        <File name="fins_lights_unit.cpp" />
+        <File name="fins_lights_unit.h" />
+        <File name="fins_singlelights_unit.h" />
+        <File name="i2c_t3.cpp" />
+        <File name="i2c_t3.h" />
+        <File name="light_port.cpp" />
+        <File name="light_port.h" />
+        <File name="PWMDriver.cpp" />
+        <File name="PWMDriver.h" />
+        <File name="sound_port.cpp" />
+        <File name="sound_port.h" />
+        <File name="sounds_unit.cpp" />
+        <File name="sounds_unit.h" />
+        <File name="teensy_unit.cpp" />
+        <File name="teensy_unit.h" />
+        <File name="washington_interactive_nodes.cpp" />
+        <File name="washington_interactive_nodes.h" />
+        <File name="Washington_Teensy.ino" />
+    </Project>
+</NotepadPlus>

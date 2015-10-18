@@ -120,5 +120,8 @@ class TeensyUnit{
 		//--- Generic Device Port ---
 		class DevicePort;
 		
+		//--- Sound Port ---
+		class SoundPort;
+		
 };
 #endif

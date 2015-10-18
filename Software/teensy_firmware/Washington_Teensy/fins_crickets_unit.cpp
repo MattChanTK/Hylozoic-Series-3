@@ -14,11 +14,11 @@ FinsCricketsUnit::FinsCricketsUnit(uint8_t fin0_port_id,
 							fin0(*this, fin0_port_id),
 							fin1(*this, fin1_port_id),
 							fin2(*this, fin2_port_id),
-							fin({fin0, fin1, fin2}),
+							fin{fin0, fin1, fin2},
 							cricket0(*this, cricket0_port_id),
 							cricket1(*this, cricket1_port_id),
 							cricket2(*this, cricket2_port_id),
-							cricket({cricket0, cricket1, cricket2})
+							cricket{cricket0, cricket1, cricket2}
 	
 {
 	

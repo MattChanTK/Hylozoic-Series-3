@@ -954,9 +954,7 @@ void WashingtonFinNode::parse_msg(){
 }
 
 
-//===========================================================================
 //====== COMMUNICATION Protocol ======
-//===========================================================================
 
 void WashingtonFinNode::compose_reply(byte front_signature, byte back_signature, byte msg_setting){
 
@@ -1061,9 +1059,7 @@ void WashingtonFinNode::compose_reply(byte front_signature, byte back_signature,
 
 }
 
-//===========================================================================
 //====== Input functions ======
-//===========================================================================
 
 //--- Sampling function ---
 void WashingtonFinNode::sample_inputs(){
@@ -1115,10 +1111,7 @@ void WashingtonFinNode::sample_inputs(const uint8_t setting){
 }
 
 
-
-//===========================================================================
 //============ BEHAVIOUR CODES =========
-//===========================================================================
 
 //---- inactive behaviour ----
 void WashingtonFinNode::inactive_behaviour() {
@@ -1249,4 +1242,272 @@ void WashingtonFinNode::low_level_control_behaviour(){
 
 	}
 }
+
+
+
+
+//===========================================================================
+//===== Washington Sound Node =====
+//===========================================================================
+
+WashingtonSoundNode::WashingtonSoundNode(uint8_t sound0_port_id, 
+										uint8_t sound1_port_id, 
+										uint8_t sound2_port_id,
+										uint8_t sound3_port_id, 
+										uint8_t sound4_port_id, 
+										uint8_t sound5_port_id
+										):
+			SoundsUnit(sound0_port_id, sound1_port_id, sound2_port_id, 
+					   sound3_port_id, sound4_port_id, sound5_port_id)
+{
+	
+}
+
+WashingtonSoundNode::~WashingtonSoundNode(){
+	
+}
+
+void WashingtonSoundNode::parse_msg(){
+
+	
+	// byte 1 --- type of request
+	request_type = recv_data_buff[1];
+	
+    
+	uint16_t temp_val = 0;
+
+	switch (request_type){
+	
+		// Basic
+		case 0: { 
+		
+			// >>>>>> byte 2 to 9: ON-BOARD <<<<<<<
+			
+			// byte 2 --- indicator led on or off
+			indicator_led_on = recv_data_buff[2];
+
+			// byte 3 and 4 --- indicator led blinking frequency	
+			temp_val = 0;
+			for (uint8_t i = 0; i < 2 ; i++)
+			  temp_val += recv_data_buff[3+i] << (8*i);
+			indicator_led_blink_period = temp_val;
+			
+			// >>>> byte 10: CONFIG VARIABLES <<<<<
+			
+			// byte 10 ---- operation mode
+			operation_mode = recv_data_buff[10];
+			
+			// byte 11 ---- reply message type request
+			reply_type = recv_data_buff[11];
+			
+			// >>>>> byte 30 to byte 39:
+			neighbour_activation_state = recv_data_buff[30];
+			
+			break;
+		}
+		
+		//Teensy programming pin
+		case 1: {
+
+			bool program_teensy = recv_data_buff[2];
+
+			if (program_teensy) {
+				digitalWrite(PGM_DO_pin, 1);
+				digitalWrite(13, 1);
+			}
+
+			break;
+		}
+		
+		//low level requests
+		case 2: {
+		
+			
+		}
+		
+		// read-only
+		case 255:{
+			break;
+		}
+		default: {
+			break;
+		}
+		
+
+	}
+
+}
+
+
+//===========================================================================
+//====== COMMUNICATION Protocol ======
+//===========================================================================
+
+void WashingtonSoundNode::compose_reply(byte front_signature, byte back_signature, byte msg_setting){
+
+
+	// add the signatures to first and last byte
+	send_data_buff[0] = front_signature;
+	send_data_buff[num_outgoing_byte-1] = back_signature;
+		
+	if (msg_setting == 0){
+		// sample the sensors
+		this->sample_inputs();	
+	}
+	
+	// byte 1 --- type of reply
+	send_data_buff[1] =  reply_type;	
+
+
+
+	switch (reply_type){
+	
+		case 0:	{
+			
+			uint8_t  device_offset = 2;
+			
+	
+			
+			break;
+						
+			
+		}
+		
+		// echo
+		case 1: {
+			
+			for (uint8_t i = 2; i<63; i++){
+
+				send_data_buff[i] = recv_data_buff[i];
+			}
+			break;
+
+		}
+		default: {
+			break;
+		}
+
+	}
+
+		
+
+}
+
+//===========================================================================
+//====== Input functions ======
+//===========================================================================
+
+//--- Sampling function ---
+void WashingtonSoundNode::sample_inputs(){
+
+	sample_inputs(0);
+}
+
+void WashingtonSoundNode::sample_inputs(const uint8_t setting){
+	
+	
+	//=== Sound ===
+			
+	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
+	
+
+		//~~Analog inputs~~		
+		//noInterrupts();
+		sound[j].read_analog_state(sound_var[j].analog_state[0], 
+								   sound_var[j].analog_state[1], 
+								   sound_var[j].analog_state[2]);	
+								   
+		//interrupts();
+		
+		
+	}
+
+	
+}
+
+
+
+//===========================================================================
+//============ BEHAVIOUR CODES =========
+//===========================================================================
+
+//---- inactive behaviour ----
+void WashingtonSoundNode::inactive_behaviour() {
+	
+	
+	//=== Sound ===
+	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
+		
+		for (uint8_t i=0; i<2; i++){
+			sound[j].set_output_level(i, 0);
+		}
+		for (uint8_t i=0; i<2; i++){
+			sound[j].set_digital_trigger(i, false);
+		}
+
+	}		
+			
+}
+
+//---- test behaviour ----
+void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
+	
+	//>>>> Sound <<<<<
+	
+	//Serial.println(sound_var[1].analog_state[0]);
+	delay(500);
+	
+}
+
+
+
+//---- indicator LED -----
+
+void WashingtonSoundNode::led_blink_behaviour(const uint32_t &curr_time) {
+
+	//---- indicator LED blinking variables -----
+	//~~indicator LED on~~
+	static bool indicator_led_on_0 = 1;
+	//~~indicator LED blink~~
+	static bool indicator_led_blink_cycling = false;
+	static uint32_t indicator_led_blink_phase_time= 0;
+
+	if (indicator_led_on){
+		
+		// starting a blink cycle
+		if (indicator_led_blink_cycling == false){
+			indicator_led_blink_cycling = true;
+			indicator_led_blink_phase_time = millis();      
+			digitalWrite(indicator_led_pin, 1);
+		}
+		else if (indicator_led_blink_cycling == true){
+			
+			// if reaches the full period, restart cycle
+			if ((curr_time - indicator_led_blink_phase_time) > indicator_led_blink_period){
+				indicator_led_blink_cycling = false;
+			}
+			// if reaches half the period, turn it off
+			else if ((curr_time - indicator_led_blink_phase_time) > indicator_led_blink_period>>1){
+				digitalWrite(indicator_led_pin, 0);
+			}	
+		}
+	}
+	else{
+	
+		// if stopped in the middle of a cycle
+		indicator_led_blink_cycling = false;
+
+		digitalWrite(indicator_led_pin, 0);
+	}
+}
+
+
+
+//----- LOW-LEVEL CONTROL -------
+void WashingtonSoundNode::low_level_control_behaviour(){
+
+	
+
+}
+
 

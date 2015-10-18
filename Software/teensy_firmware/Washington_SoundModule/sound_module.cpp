@@ -47,10 +47,6 @@ SoundModule::SoundModule():
 	analogReadAveraging(32);
 	analogWriteResolution(8);
 	
-
-	//--- I2C initialization ----
-	//Wire.begin(I2C_MASTER,0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
-	
 	
 	//--- Set up the audio board ----
 	audio_board_setup();
@@ -95,6 +91,9 @@ void SoundModule::audio_board_setup(){
 		}
 	}
 	Serial.println("Audio Board setup finished");
+	Wire.begin(13);
+	delay(100);
+
 
 }
 void SoundModule::init(){
@@ -105,7 +104,7 @@ void SoundModule::init(){
 //==== Play Wav file ===
 //channel: 1=left; 2=right; else=both
 //port: if not 1 <= port <= 4, port = 1
-bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port){
+bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool block){
 	
 
 	Serial.print("Playing file: ");
@@ -135,7 +134,7 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port){
 	delay(5);
 
 	// Simply wait for the file to finish playing.
-	while (playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying()) {
+	while (block && (playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying())) {
 
 	}
 	return true;
@@ -144,10 +143,13 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port){
 //==== Adjust volume ===
 //channel: 1=left; 2=right; else=both
 //port: if not 1 <= port <= 4, port = all
-void SoundModule::changeVolume(float gain, uint8_t channel, uint8_t port){
+void SoundModule::setVolume(float gain, uint8_t channel, uint8_t port){
 	
 	if (gain < 0){
 		gain = 0;
+	}
+	else if (gain > 100){
+		gain = 100;
 	}
 	
 	if (port < 1 || port > 4){
@@ -172,3 +174,27 @@ void SoundModule::changeVolume(float gain, uint8_t channel, uint8_t port){
 		}
 	}
 }
+
+//==== Set Output Level ===
+void SoundModule::set_output_level(const uint8_t id, const uint8_t level){
+	if (id >= 0 && id < 2){
+		analogWrite(PWM_pin[id], level);
+	}
+}
+
+//==== Analogue Input ====
+uint16_t SoundModule::read_analog_state(const uint8_t id){
+	if (id >= 0 && id < 3){
+		return analogRead(Analog_pin[id]);
+	}
+	return 0;
+}
+
+//==== Digital Input ====
+bool SoundModule::read_digital_state(const uint8_t id){
+	if (id >= 0 && id < 2){
+		return digitalRead(Digital_pin[id]);
+	}
+	return 0;
+}
+			
