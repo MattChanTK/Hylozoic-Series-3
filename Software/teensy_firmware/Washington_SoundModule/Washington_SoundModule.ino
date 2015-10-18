@@ -38,6 +38,7 @@ void setup(){
 	//--- Set up the audio board ----
 	sound_module.audio_board_setup();
 	Wire.begin(i2c_device_addr);
+	delay(100);
 	Wire.onReceive(receiveEvent);
 	Wire.onRequest(requestEvent);
 
@@ -63,11 +64,18 @@ void requestEvent() {
 			Wire.write(highByte(sound_module.analog_data[i]));
 		}
 	}
+	// else if (sound_module.requested_data_type == SoundModule::CMD_IS_PLAYING){
+		// for (uint8_t i=0; i<4; i++){
+			// Wire.write(sound_module.is_playing_L[i]);
+		// }
+		// for (uint8_t i=0; i<4; i++){
+			// Wire.write(sound_module.is_playing_R[i]);
+		// }
+	// }
 }
 
 void loop(){
 
-	  
 	
 	// If received message
 	// first buffer is always the message type
@@ -81,6 +89,8 @@ void loop(){
 		sound_module.decodeMsg(recvMsg);
 		clearRecvMsg();
 	}
+	
+	//sound_module.playWav("1.wav", 0, 0, 1);
 
 
 }

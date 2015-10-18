@@ -64,7 +64,7 @@ void SoundModule::audio_board_setup(){
 	// Audio connections require memory to work.  For more
 	// detailed information, see the MemoryAndCpuUsage example
 
-	AudioMemory(200); // Establish Audio Memory
+	AudioMemory(30); // Establish Audio Memory
 
 	// configuration
 	sgtl5000_1.enable(); // Enable LINE-OUT
@@ -126,7 +126,7 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 
 	// A brief delay for the library read WAV info
 	delay(5);
-
+	
 	// Simply wait for the file to finish playing.
 	while (block && (playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying())) {
 
@@ -229,7 +229,7 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 			break;
 		}
 		
-		// Play Wav File Right Channel
+		// Play Wav File
 		case SoundModule::CMD_PLAY_WAV:{
 			
 			// byte 1 - File ID 
@@ -260,6 +260,16 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 	
 			break;
 		}
+		// Is Playing or Not
+		// case SoundModule::CMD_IS_PLAYING:{
+			
+			// requested_data_type = CMD_IS_PLAYING;
+			// for (uint8_t i =0; i < 4; i++){
+				// is_playing_L[i] = playWav_L[i].isPlaying();
+				// is_playing_R[i] = playWav_L[i].isPlaying();
+			// }
+			// break;
+		// 
 		default:{
 			break;
 		}

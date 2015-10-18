@@ -57,6 +57,7 @@ void self_running_test(){
 
 	teensy_unit.test_behaviour(curr_time);
 	teensy_unit.led_blink_behaviour(curr_time);
+	delay(100);
 }
 
 void inactive_mode(){

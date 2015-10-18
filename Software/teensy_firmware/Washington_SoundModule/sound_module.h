@@ -93,10 +93,18 @@ class SoundModule{
 		// byte 4 - Port
 		// byte 5 - Blocking
 		
+		// --- Check is playing or not ---
+		//static const uint8_t CMD_IS_PLAYING = 4;
+		// byte 1 - Left Channel
+		// byte 2 - Right Channel
+		
 		//==== variables ======
 		uint8_t requested_data_type;
 		
 		uint16_t analog_data[3];
+		
+		// bool is_playing_L[4] = {false, false, false, false};
+		// bool is_playing_R[4] = {false, false, false, false};
 	
 	protected:
 		

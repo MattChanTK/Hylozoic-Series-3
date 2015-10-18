@@ -63,7 +63,7 @@ void TeensyUnit::SoundPort::set_digital_trigger(const uint8_t id, const bool on)
 
 void TeensyUnit::SoundPort::play_sound(const uint8_t file_id, const uint8_t volume, const uint8_t channel, const uint8_t port, const bool block){
 	switchToThis();
-
+	noInterrupts();
 	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
 	teensy_unit.Wire.write(CMD_PLAY_WAV);
 	teensy_unit.Wire.write(file_id);
@@ -72,18 +72,21 @@ void TeensyUnit::SoundPort::play_sound(const uint8_t file_id, const uint8_t volu
 	teensy_unit.Wire.write(port);
 	teensy_unit.Wire.write(block);
 	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
+	interrupts();
+
 }
 
 //~~inputs~~
 bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &analog_2, uint16_t &analog_3){
 	
 	switchToThis();
-
+	noInterrupts();
 	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
 	teensy_unit.Wire.write(CMD_READ_ANALOG);
 	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
 	teensy_unit.Wire.requestFrom(SOUND_I2C_ADDR, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
-	
+	interrupts();
+
 	uint8_t i = 0;
 	byte buffer[6] = {0};
 	
