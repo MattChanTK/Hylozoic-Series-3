@@ -1322,7 +1322,36 @@ void WashingtonSoundNode::parse_msg(){
 		//low level requests
 		case 2: {
 		
+			uint8_t  device_offset = 2;
+
+			// (8 bytes each)
+			// >>>>> byte 2 to byte 9: Sound 0
+			// >>>>> byte 10 to byte 17: Sound 1
+			// >>>>> byte 18 to byte 25: Sound 2		
+			// >>>>> byte 26 to byte 33: Sound 3
+			// >>>>> byte 34 to byte 41: Sound 4
+			// >>>>> byte 42 to byte 49: Sound 5				
 			
+			
+			for (uint8_t j = 0; j < WashingtonSoundNode::NUM_SOUND; j++){
+				
+				const uint8_t byte_offset = 8*(j) + device_offset;
+						
+				// byte x0 --- sound PWM output 0
+				sound_var[j].output_level[0] = recv_data_buff[byte_offset+0];
+				// byte x1 --- sound PWM output 1
+				sound_var[j].output_level[1] = recv_data_buff[byte_offset+1];
+				
+				// // byte x2 --- sound start 1
+				// sound_var[j].output_level[0] = recv_data_buff[byte_offset+0];
+				// // byte x3 --- sound PWM output 1
+				// sound_var[j].output_level[1] = recv_data_buff[byte_offset+1];
+	
+			}
+			
+			device_offset += 8*WashingtonFinNode::NUM_FIN;
+
+			// (8 bytes each
 		}
 		
 		// read-only
@@ -1456,7 +1485,7 @@ void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
 		if (sound_var[j].analog_state[0] > 1200){
 			sound[j].set_output_level(0, 250);
 			sound[j].set_output_level(1, 250);
-			sound[j].play_sound(1, 50, 0, 0, false);
+			sound[j].play_sound(1, 17, 0, 0, true);
 
 		}
 		else{
@@ -1518,7 +1547,37 @@ void WashingtonSoundNode::led_blink_behaviour(const uint32_t &curr_time) {
 //----- LOW-LEVEL CONTROL -------
 void WashingtonSoundNode::low_level_control_behaviour(){
 
-	
+	//>>>> PWM <<<<<
+	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND;j++){
+		
+		sound[j].set_output_level(0, sound_var[j].output_level[0]);
+		sound[j].set_output_level(1, sound_var[j].output_level[1]);
+	}
+
+	//>>>> Sound <<<<<
+
+	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
+		
+		for (uint8_t port_id=0; port_id<4; port_id++){
+			// Left channel
+			if (sound_var[j].sound_start_left[port_id]){
+				sound[j].play_sound(sound_var[j].sound_type_left[port_id], 
+									sound_var[j].sound_volume_left[port_id],
+									0, port_id, true);
+				
+			}
+			
+			// Right channel
+			if (sound_var[j].sound_start_right[port_id]){
+				sound[j].play_sound(sound_var[j].sound_type_right[port_id], 
+									sound_var[j].sound_volume_right[port_id],
+									1, port_id, true);
+				
+			}
+
+		}
+
+	}
 
 }
 

@@ -133,7 +133,14 @@ class SoundUnitVar{
 		
 		bool digital_trigger[2] = {0, 0};
 		uint8_t output_level[2] = {0, 0};
-
+		
+		bool sound_start_left[4] = {0, 0, 0, 0};
+		uint8_t sound_type_left[4] = {1, 1, 1, 1};
+		uint8_t sound_volume_left[4] = {0, 0, 0, 0};
+		
+		bool sound_start_right[4] = {0, 0, 0, 0};
+		uint8_t sound_type_right[4] = {1, 1, 1, 1};
+		uint8_t sound_volume_right[4] = {0, 0, 0, 0};
 
 };
 
@@ -439,9 +446,10 @@ class WashingtonSoundNode : public SoundsUnit{
 		//~~operation mode~~~
 		uint8_t operation_mode = 0;
 
-		//>>> Cricket <<<
+		//>>> Sound <<<
 		SoundUnitVar sound_var[WashingtonSoundNode::NUM_SOUND];
-				
+		// bool play_started_L[4] = {false, false, false, false};
+		// bool play_started_R[4] = {false, false, false, false};
 		
 		//>>> Network Activities <<<
 		
