@@ -6,6 +6,7 @@ import re
 from time import clock
 from time import sleep
 from collections import OrderedDict
+from .SystemParameters import SystemParameters
 
 import usb.core
 import usb.util
@@ -17,7 +18,7 @@ TEENSY_PRODUCT_ID = 0x0486
 
 class TeensyManager():
 
-    def __init__(self, import_config=True):
+    def __init__(self, import_config=True, protocols_dict=None):
 
         # table that store all the Teensy threads
         self.teensy_thread_table = OrderedDict()
@@ -26,6 +27,7 @@ class TeensyManager():
         self.unit_config_default = 'DEFAULT'
         self.print_to_term_default = False
         self.import_config = import_config
+        self.protocols = protocols_dict
 
         self.create_teensy_threads()
 
@@ -37,6 +39,7 @@ class TeensyManager():
 
         # import config file
         teensy_config_table = dict()
+
 
         try:
             if self.import_config is True:
@@ -75,8 +78,12 @@ class TeensyManager():
             print(Teensy_name + " --- " + str(serial_num))
 
             # create a new thread for communicating with
+            protocol = None
+            if isinstance(self.protocols, dict) and Teensy_unit_config in self.protocols:
+                if isinstance(self.protocols[Teensy_unit_config], SystemParameters):
+                    protocol = self.protocols[Teensy_unit_config]
 
-            Teensy_thread = TeensyInterface(serial_num, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
+            Teensy_thread = TeensyInterface(serial_num, protocol=protocol, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
             teensy_thread_list.append((Teensy_name, Teensy_thread))
 
         # sort threads by name
@@ -111,6 +118,10 @@ class TeensyManager():
 
     def get_teensy_name_list(self):
         return self.teensy_thread_table.keys()
+
+    def get_protocol(self, teensy_name) -> SystemParameters:
+        teensy_thread = self.get_teensy_thread(teensy_name)
+        return teensy_thread.param
 
     def get_param_type(self, teensy_name, var, param_type=0)->dict:
 
@@ -164,7 +175,7 @@ class TeensyInterface(threading.Thread):
     packet_size_in = 64
     packet_size_out = 64
 
-    def __init__(self, serial_num, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID, print_to_term=False, unit_config='default'):
+    def __init__(self, serial_num, vendor_id=TEENSY_VENDOR_ID, product_id=TEENSY_PRODUCT_ID, print_to_term=False, unit_config='default', protocol=None):
 
         if unit_config == 'CBLA_TEST_BED':
             from .CommunicationProtocol import CBLATestBed as SysParam
@@ -177,6 +188,8 @@ class TeensyInterface(threading.Thread):
 
         else:
             from .SystemParameters import SystemParameters as SysParam
+
+
 
         # find our device
         dev = usb.core.find(idVendor=vendor_id, idProduct=product_id, serial_number=serial_num)
@@ -232,7 +245,11 @@ class TeensyInterface(threading.Thread):
         assert self.ep_in is not None
 
         # instantiate the system parameters
-        self.param = SysParam()
+        if isinstance(protocol, SystemParameters):
+            self.param = protocol
+        else:
+
+            self.param = SysParam()
 
         # event is set when parameters are updated by the main thread
         self.param_updated_event = threading.Event()

@@ -4,10 +4,10 @@
 //===========================================================================
 
 //===== INITIALIZATION =====
-//WashingtonCricketNode teensy_unit(0, 2, 5, 1);
+WashingtonCricketNode teensy_unit(0, 2, 5, 3);
 //WashingtonFinCricketNode teensy_unit(0, 1, 2, 3, 4, 5);
 //WashingtonFinNode teensy_unit(0, 1, 2, 3, 4, 5);
-WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+//WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 
 //check for new messages
 void check_msg(){
@@ -88,10 +88,10 @@ void loop() {
 	
 	//teensy_unit.sample_inputs();
 	
-	
+	Serial.println(teensy_unit.operation_mode);
 	switch (teensy_unit.operation_mode){
 	
-		case 0: 
+		case 1: 
 			self_running_test();
 			break;
 		

@@ -75,7 +75,7 @@ void WashingtonCricketNode::parse_msg(){
 		case 2: {
 		
 			uint8_t  device_offset = 2;
-
+			// ==== Crickets ====
 			// (8 bytes each)
 			// >>>>> byte 2 to byte 9: Cricket 0
 			// >>>>> byte 10 to byte 17: Cricket 1
@@ -97,8 +97,9 @@ void WashingtonCricketNode::parse_msg(){
 			
 			}
 			
-			device_offset += 8*NUM_CRICKET;
+			device_offset += 8*WashingtonCricketNode::NUM_CRICKET;
 
+			// ==== Lights ====
 			// (8 bytes each)
 			// >>>>> byte 26 to byte 33: Light 0		
 			
@@ -160,7 +161,8 @@ void WashingtonCricketNode::compose_reply(byte front_signature, byte back_signat
 		case 0:	{
 			
 			uint8_t  device_offset = 2;
-			
+			// ==== Crickets ====
+
 			// (8 bytes each)
 			// >>>>> byte 2 to byte 9: Cricket 0
 			// >>>>> byte 10 to byte 17: Cricket 1
@@ -179,6 +181,8 @@ void WashingtonCricketNode::compose_reply(byte front_signature, byte back_signat
 			
 			device_offset += 8*WashingtonCricketNode::NUM_CRICKET;
 			
+			// ==== Lights ====
+
 			// (8 bytes each)
 			// >>>>> byte 26 to byte 33: Light 0	
 			
@@ -309,7 +313,7 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 
 	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_LIGHT; j++){
 		
-		if (light_var[j].ir_state[1] > 1200){
+		if (light_var[j].ir_state[0] > 1200){
 			for (uint8_t output_id=0; output_id<4; output_id++){
 				light[j].set_output_level(output_id, 255);
 			}

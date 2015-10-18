@@ -63,14 +63,17 @@ class SystemParameters():
     def additional_config_routine(self):
         self._import_param_from_file()
 
-    def _import_param_from_file(self):
-        self.__import_output_param(self.output_param_config_filename)
-        self.__import_input_param(self.input_param_config_filename)
+    def _import_param_from_file(self, directory=None):
+        self.__import_output_param(self.output_param_config_filename, directory=directory)
+        self.__import_input_param(self.input_param_config_filename, directory=directory)
 
-    def __import_output_param(self, filename):
+    def __import_output_param(self, filename, directory=None):
 
         try:
-            file_path = pkg_resources.resource_filename(__name__, os.path.join('protocol_config', filename))
+            if directory:
+                file_path = os.path.join(directory, filename)
+            else:
+                file_path = pkg_resources.resource_filename(__name__, os.path.join('protocol_config', filename))
             with open(file_path, mode='r') as f:
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
@@ -107,10 +110,13 @@ class SystemParameters():
 
         # print("Output parameters: ", list(self.output_param.keys()))
 
-    def __import_input_param(self, filename):
+    def __import_input_param(self, filename, directory=None):
 
         try:
-            file_path = pkg_resources.resource_filename(__name__, os.path.join('protocol_config', filename))
+            if directory:
+                file_path = os.path.join(directory, filename)
+            else:
+                file_path = pkg_resources.resource_filename(__name__, os.path.join('protocol_config', filename))
             with open(file_path, mode='r') as f:
                 param_config = [line.rstrip() for line in f]
         except FileNotFoundError:
