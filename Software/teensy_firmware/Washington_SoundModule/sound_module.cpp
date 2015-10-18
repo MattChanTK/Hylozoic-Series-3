@@ -143,7 +143,8 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 //==== Adjust volume ===
 //channel: 1=left; 2=right; else=both
 //port: if not 1 <= port <= 4, port = all
-void SoundModule::setVolume(float gain, uint8_t channel, uint8_t port){
+//Volume: 0 = min (silent), 25 = 0.5x, 50 = 1x, 100 = 2x
+void SoundModule::setVolume(uint16_t gain, uint8_t channel, uint8_t port){
 	
 	if (gain < 0){
 		gain = 0;
@@ -151,26 +152,27 @@ void SoundModule::setVolume(float gain, uint8_t channel, uint8_t port){
 	else if (gain > 100){
 		gain = 100;
 	}
+	float gain_f = 0.02*gain;
 	
 	if (port < 1 || port > 4){
 		for (uint8_t i = 0; i < 4; i++){
 			if (channel != 2){
-				mixer_left.gain(i, gain);
+				mixer_left.gain(i, gain_f);
 			}
 			
 			if (channel != 1 ){
-				mixer_right.gain(i, gain);
+				mixer_right.gain(i, gain_f);
 			}
 		}
 	}
 	else{
 		
 		if (channel != 2){
-			mixer_left.gain(port, gain);
+			mixer_left.gain(port, gain_f);
 		}
 		
 		if (channel != 1 ){
-			mixer_right.gain(port, gain);
+			mixer_right.gain(port, gain_f);
 		}
 	}
 }
@@ -197,4 +199,63 @@ bool SoundModule::read_digital_state(const uint8_t id){
 	}
 	return 0;
 }
+
+//===============================================
+//==== I2C Communication Protocol ====
+//===============================================
+		
+void SoundModule::decodeMsg(uint8_t* recvMsg){
+	
+	uint8_t cmd_type = recvMsg[0];
+	
+	switch(cmd_type){
+		
+		// Analog read
+		case SoundModule::CMD_READ_ANALOG:{
+		
+			break;
+		}
+		// PWM Output
+		case SoundModule::CMD_PWM_OUTPUT:{
 			
+			break;
+		}
+		
+		// Play Wav File Left Channel
+		case SoundModule::CMD_PLAY_WAV_L:{
+		
+			// byte 1 - File ID 
+			uint8_t file_id = recvMsg[1];
+			
+			//concatenate file id and extension to a string
+			String filename_string = String(file_id) + ".wav";
+			char filename [filename_string.length()]; // allocate memeory the char_arr
+			filename_string.toCharArray(filename, filename_string.length()+1); // convert String to char_arr
+			
+			// byte 2 - Volume
+			uint8_t volume = (uint8_t) recvMsg[2];
+			
+			// byte 3 - Port
+			uint8_t port = (uint8_t) recvMsg[3];
+			
+			// set volume
+			setVolume(volume, 1, port);
+			
+			// play sound
+			playWav(filename, 1, port);
+
+			break;
+		}
+		// Play Wav File Left Channel
+		case SoundModule::CMD_PLAY_WAV_R:{
+	
+		
+			break;
+		}
+		default:{
+			break;
+		}
+	}
+
+			
+}

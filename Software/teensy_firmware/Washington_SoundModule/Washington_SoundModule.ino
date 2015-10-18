@@ -8,8 +8,9 @@
 
 const uint8_t LED_PIN = 13;
 
-const uint8_t NUM_BUFF = 2;
-int recvMsg[NUM_BUFF];
+const uint8_t NUM_BUFF = 6;
+
+uint8_t recvMsg[NUM_BUFF]; // first BUFF is always the message type
 
 void clearRecvMsg(){
 	for (uint8_t i = 0; i < NUM_BUFF; i++){
@@ -50,7 +51,7 @@ void loop(){
 	static SoundModule sound_module;
 	
 	// If received message
-	//first buffer is always the message type
+	// first buffer is always the message type
 	
 	if (recvMsg[0] > 0){
 		
@@ -59,6 +60,7 @@ void loop(){
 		Serial.print(": ");
 		Serial.println(recvMsg[1]);
 		
+		sound_module.decodeMsg(recvMsg);
 		clearRecvMsg();
 	}
 
@@ -75,7 +77,6 @@ void loop(){
 		// delay(1000);
 		//recvMsg = 0;
 
-	
-
 }
+
 
