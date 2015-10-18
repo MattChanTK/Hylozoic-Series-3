@@ -60,28 +60,33 @@ bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &anal
 	switchToThis();
 
 	teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
-	teensy_unit.Wire.write(23);
+	// teensy_unit.Wire.write(1);
+	// teensy_unit.Wire.write(1);
+	// teensy_unit.Wire.write(3);
+	// teensy_unit.Wire.write(0);
+	// teensy_unit.Wire.write(0);
 	teensy_unit.Wire.write(SOUND_I2C_ANALOG_READ);
 	teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
-	Serial.println(i2c_pin);
-	// teensy_unit.Wire.requestFrom(SOUND_I2C_ADDR, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
+	teensy_unit.Wire.requestFrom(SOUND_I2C_ADDR, (size_t) 6, I2C_STOP, I2C_TIMEOUT); // Read 6 bytes      
 	
 	uint8_t i = 0;
-	// byte buffer[6] = {0};
+	byte buffer[6] = {0};
 	
-	// //delay(5);
+	delay(50);
 
-	// while(teensy_unit.Wire.available() && i<6)
-	// {
-		// buffer[i] = teensy_unit.Wire.read();
-		// i++;
-	// }
+	while(teensy_unit.Wire.available() && i<6)
+	{
+		buffer[i] = teensy_unit.Wire.read();
+		i++;
+	}
 			
-	// interrupts();
+	interrupts();
 
-	// analog_1 = buffer[1] << 8 | buffer[0];
-	// analog_2 = buffer[3] << 8 | buffer[2];
-	// analog_3 = buffer[5] << 8 | buffer[4];
+	analog_1 = buffer[1] << 8 | buffer[0];
+	analog_2 = buffer[3] << 8 | buffer[2];
+	analog_3 = buffer[5] << 8 | buffer[4];
+	
+	Serial.println(analog_1);
 	
 	if (i >= 5)
 		return true;

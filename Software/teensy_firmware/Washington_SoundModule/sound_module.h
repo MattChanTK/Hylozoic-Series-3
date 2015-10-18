@@ -47,6 +47,8 @@ class SoundModule{
 
 		//--- Initialization ---
 		void init();
+				
+		void audio_board_setup();
 		
 		//--- I2C Communication ---
 		
@@ -75,7 +77,6 @@ class SoundModule{
 
 		//--- Read Analog ---
 		static const uint8_t CMD_READ_ANALOG = 1;
-
 		
 		//--- PWM Output ---
 		static const uint8_t CMD_PWM_OUTPUT = 2;
@@ -87,6 +88,11 @@ class SoundModule{
 		// byte 2 - Volume
 		// byte 3 - Channel
 		// byte 4 - Port
+		
+		//==== variables ======
+		uint8_t requested_data_type;
+		
+		uint16_t analog_data[3];
 	
 	protected:
 		
@@ -128,8 +134,6 @@ class SoundModule{
 		// instantiate the audio controller 
 		AudioControlSGTL5000     sgtl5000_1;
 
-		
-		//==== functions =====
-		void audio_board_setup();
+
 };
 #endif

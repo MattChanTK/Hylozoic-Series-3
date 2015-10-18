@@ -10,7 +10,13 @@ const uint8_t LED_PIN = 13;
 
 const uint8_t NUM_BUFF = 6;
 
+const uint8_t i2c_device_addr = 13;
+
 uint8_t recvMsg[NUM_BUFF]; // first BUFF is always the message type
+
+
+SoundModule sound_module;
+
 
 void clearRecvMsg(){
 	for (uint8_t i = 0; i < NUM_BUFF; i++){
@@ -29,8 +35,12 @@ void setup(){
 	clearRecvMsg();
 	
 	// initialize the I2C
-	Wire.begin(13);
+	//--- Set up the audio board ----
+	sound_module.audio_board_setup();
+	Wire.begin(i2c_device_addr);
 	Wire.onReceive(receiveEvent);
+	Wire.onRequest(requestEvent);
+
 	delay(1000);
 	
 }
@@ -45,10 +55,19 @@ void receiveEvent(int bytes) {
 	}
 }
 
+void requestEvent() {
+	
+	if (sound_module.requested_data_type == SoundModule::CMD_READ_ANALOG){
+		for (uint8_t i=0; i<3; i++){
+			Wire.write(lowByte(sound_module.analog_data[i]));
+			Wire.write(highByte(sound_module.analog_data[i]));
+		}
+	}
+}
+
 void loop(){
 
 	  
-	static SoundModule sound_module;
 	
 	// If received message
 	// first buffer is always the message type

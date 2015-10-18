@@ -48,8 +48,7 @@ SoundModule::SoundModule():
 	analogWriteResolution(8);
 	
 	
-	//--- Set up the audio board ----
-	audio_board_setup();
+
 }
 
 SoundModule::~SoundModule(){
@@ -61,7 +60,6 @@ SoundModule::~SoundModule(){
 //===========================================================================
 
 void SoundModule::audio_board_setup(){
-	Serial.println("Audio Board setup started");
 
 	// Audio connections require memory to work.  For more
 	// detailed information, see the MemoryAndCpuUsage example
@@ -90,10 +88,6 @@ void SoundModule::audio_board_setup(){
 			delay(500);
 		}
 	}
-	Serial.println("Audio Board setup finished");
-	Wire.begin(13);
-	delay(100);
-
 
 }
 void SoundModule::init(){
@@ -212,12 +206,18 @@ void SoundModule::decodeMsg(uint8_t* recvMsg){
 		
 		// Analog read
 		case SoundModule::CMD_READ_ANALOG:{
-		
+			
+			requested_data_type = CMD_READ_ANALOG;
+			// sample data from analog ports
+			for (uint8_t i=0; i<3; i++){
+				analog_data[i] = read_analog_state(i);
+			}
 			break;
 		}
+		
 		// PWM Output
 		case SoundModule::CMD_PWM_OUTPUT:{
-			
+						
 			break;
 		}
 		
