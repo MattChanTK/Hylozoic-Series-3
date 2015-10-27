@@ -113,7 +113,6 @@ class SoundModule{
 		
 		
 		//==== variables ===
-
 		
 		//Signal processing
 		

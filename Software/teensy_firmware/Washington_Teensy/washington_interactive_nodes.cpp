@@ -290,40 +290,61 @@ void WashingtonCricketNode::inactive_behaviour() {
 
 //---- test behaviour ----
 void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
-	
+
 	
 	//>>>> Cricket <<<<<
 	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_CRICKET; j++){
-
-		if (cricket_var[j].ir_state > 1200){
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				cricket[j].set_output_level(output_id, 255);
-			}
+		Serial.print(j);
+		Serial.print(": ");
+		Serial.println(cricket_var[j].ir_state );
+		for (uint8_t output_id=0; output_id<4; output_id++){
+			cricket[j].set_output_level(output_id, 50);
 		}
-		else{
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				cricket[j].set_output_level(output_id, 0);
-			}
+		
+	
+		// if (cricket_var[j].ir_state > 1200){
 			
-		}
+			// for (uint8_t output_id=0; output_id<4; output_id++){
+				// cricket[j].set_output_level(output_id, 25);
+			// }
+		// }
+		// else{
+			// for (uint8_t output_id=0; output_id<4; output_id++){
+				// cricket[j].set_output_level(output_id, 0);
+			// }
+			
+		// }
 
 	}	
 	
 	//>>>> Light <<<<<
 
 	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_LIGHT; j++){
-		
-		if (light_var[j].ir_state[0] > 1200){
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				light[j].set_output_level(output_id, 255);
-			}
+		for (uint8_t output_id=0; output_id<4; output_id++){
+			light[j].set_output_level(output_id, 50);
 		}
-		else{
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				light[j].set_output_level(output_id, 0);
-			}
+		// if (light_var[j].ir_state[0] > 1200){
+			// for (uint8_t output_id=0; output_id<2; output_id++){
+				// light[j].set_output_level(output_id, 25);
+			// }
+		// }
+		// else{
+			// for (uint8_t output_id=0; output_id<2; output_id++){
+				// light[j].set_output_level(output_id, 0);
+			// }
 			
-		}
+		// }
+		// if (light_var[j].ir_state[1] > 1200){
+			// for (uint8_t output_id=2; output_id<4; output_id++){
+				// light[j].set_output_level(output_id, 25);
+			// }
+		// }
+		// else{
+			// for (uint8_t output_id=2; output_id<4; output_id++){
+				// light[j].set_output_level(output_id, 0);
+			// }
+			
+		// }
 
 	}	
 
@@ -722,13 +743,17 @@ void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 	//>>>> Fin <<<<<
 
 	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN; j++){
-		if (fin_var[j].ir_state[1] > 1200){
+		if (fin_var[j].ir_state[0] > 1200){
 			fin[j].set_led_level(0, 250);
 			fin[j].set_led_level(1, 250);
+			fin[j].set_sma_level(0, 250);
+			fin[j].set_sma_level(1, 250);
 		}
 		else{
 			fin[j].set_led_level(0, 0);
 			fin[j].set_led_level(1, 0);
+			fin[j].set_sma_level(0, 0);
+			fin[j].set_sma_level(1, 0);
 		}
 		
 	}		
@@ -1149,18 +1174,21 @@ void WashingtonFinNode::test_behaviour(const uint32_t &curr_time) {
 	//>>>> Fin <<<<<
 
 	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN; j++){
-		if (fin_var[j].ir_state[1] > 1200){
+		if (fin_var[j].ir_state[0] > 1200){
 			fin[j].set_led_level(0, 250);
 			fin[j].set_led_level(1, 250);
+			fin[j].set_sma_level(0, 250);
+			fin[j].set_sma_level(1, 250);
 		}
 		else{
 			fin[j].set_led_level(0, 0);
 			fin[j].set_led_level(1, 0);
+			fin[j].set_sma_level(0, 0);
+			fin[j].set_sma_level(1, 0);
 		}
-		
 	}		
 	
-	//>>>> Cricket <<<<<
+	//>>>> Lightt <<<<<
 
 	for (uint8_t j=0; j<WashingtonFinNode::NUM_LIGHT; j++){
 		if (light_var[j].ir_state[0] > 1200){
@@ -1483,18 +1511,33 @@ void WashingtonSoundNode::inactive_behaviour() {
 
 //---- test behaviour ----
 void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
-		
+	
+	static int song_id = 1;
+	
 	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
 			
 		if (sound_var[j].analog_state[0] > 1200){
-			sound[j].set_output_level(0, 250);
-			sound[j].set_output_level(1, 250);
-			sound[j].play_sound(1, 17, 0, 0, true);
+			Serial.println(song_id);
+
+			sound[j].set_output_level(0, 100);
+			sound[j].play_sound(song_id,  50, 2, 0, true);
+			song_id += 1;
+			if (song_id > 4){
+				song_id = 1;
+			}
 
 		}
 		else{
-			
 			sound[j].set_output_level(0, 0);
+			
+		}
+		
+		if(sound_var[j].analog_state[1] > 1200){
+			sound[j].set_output_level(1, 100);
+			sound[j].play_sound(2, 50, 1, 0, false);
+		}
+		else{
+			
 			sound[j].set_output_level(1, 0);
 			
 		}

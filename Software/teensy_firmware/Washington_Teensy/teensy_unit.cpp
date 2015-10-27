@@ -80,12 +80,11 @@ void TeensyUnit::init(){
 	spwm_init(1000);
 
 	
-	//===== clear all existing messages ======
 	unsigned long clearing_counter = 0;
 	while (receive_msg()){
 	    // this prevents the Teensy from being stuck in infinite loop
 	    clearing_counter++;
-	    if (clearing_counter>100){
+	    if (clearing_counter>10){
 			break;
         }
 		

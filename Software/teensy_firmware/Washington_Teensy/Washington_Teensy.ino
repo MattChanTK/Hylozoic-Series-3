@@ -4,10 +4,10 @@
 //===========================================================================
 
 //===== INITIALIZATION =====
-WashingtonCricketNode teensy_unit(0, 2, 5, 3);
-//WashingtonFinCricketNode teensy_unit(0, 1, 2, 3, 4, 5);
-//WashingtonFinNode teensy_unit(0, 1, 2, 3, 4, 5);
-//WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+//WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+//WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
+//WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
+WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 
 //check for new messages
 void check_msg(){
@@ -59,7 +59,11 @@ void self_running_test(){
 	teensy_unit.led_blink_behaviour(curr_time);
 	delay(100);
 }
+void manual_mode(){
+	
+	teensy_unit.low_level_control_behaviour();
 
+}
 void inactive_mode(){
 	
 	teensy_unit.inactive_behaviour();
@@ -88,11 +92,20 @@ void loop() {
 	
 	//teensy_unit.sample_inputs();
 	
-	Serial.println(teensy_unit.operation_mode);
+	//Serial.println(teensy_unit.operation_mode);
 	switch (teensy_unit.operation_mode){
 	
-		case 1: 
+		case 0: 
 			self_running_test();
+			break;
+			
+		case 1:
+			if (loop_since_last_msg > keep_alive_thres){
+				inactive_mode();
+			}
+			else{
+				manual_mode();
+			}
 			break;
 		
 		default:

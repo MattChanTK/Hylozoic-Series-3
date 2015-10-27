@@ -90,9 +90,26 @@ void loop(){
 		clearRecvMsg();
 	}
 	
-	//sound_module.playWav("1.wav", 0, 0, 1);
+	//==== Test Code ===
+	// int delay_time = 1000;
+	// int ir0 = sound_module.read_analog_state(0);
+	// if ( ir0 > 1000){
+		// delay_time = 100;
+	// }
+	// Serial.println(ir0);
+	// sound_module.playWav("1.wav", 0, 0, 1);
+	// sound_module.playWav("4.wav", 1, 0, 1);
+	
+	
+	// sound_module.set_output_level(0, 200);
+	// sound_module.set_output_level(1, 0);
 
+	// delay(delay_time);
 
+	// sound_module.set_output_level(1, 200);
+	// sound_module.set_output_level(0, 0);
+	
+	// delay(delay_time);
 }
 
 

@@ -64,7 +64,7 @@ void SoundModule::audio_board_setup(){
 	// Audio connections require memory to work.  For more
 	// detailed information, see the MemoryAndCpuUsage example
 
-	AudioMemory(30); // Establish Audio Memory
+	AudioMemory(50); // Establish Audio Memory
 
 	// configuration
 	sgtl5000_1.enable(); // Enable LINE-OUT
@@ -109,16 +109,36 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 	}
 	
 	bool fileFound = true;
+	static uint8_t curr_port_L = 0;
+	static uint8_t curr_port_R = 0;
 
 
 	// Start playing the file.  This sketch continues to
 	// run while the file plays.
+			Serial.println(block);
+
 	if (channel != 2){
-		fileFound &= playWav_L[port-1].play(wavfile);
+		if (!block && playWav_L[curr_port_L].isPlaying()){
+			//fileFound &= playWav_L[port].play(wavfile);
+			curr_port_L += 1;
+			if (curr_port_L >= 3)
+				curr_port_L = 0;
+		}
+	
+		fileFound &= playWav_L[curr_port_L].play(wavfile);
+		
 	}
 	
 	if (channel != 1 ){
-		fileFound &= playWav_R[port-1].play(wavfile);
+
+		if (!block && playWav_R[curr_port_R].isPlaying()){
+			// fileFound &= playWav_L[curr_port_R].play(wavfile);
+			curr_port_R += 1;
+			if (curr_port_R >= 3)
+				curr_port_R = 0;
+		}
+	
+		fileFound &= playWav_R[curr_port_R].play(wavfile);
 	}
 	
 	if (!fileFound)
@@ -127,10 +147,12 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 	// A brief delay for the library read WAV info
 	delay(5);
 	
-	// Simply wait for the file to finish playing.
-	while (block && (playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying())) {
+	//Simply wait for the file to finish playing.
+	while (block &&((playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying()))) {
 
 	}
+	
+	
 	return true;
 }
 
