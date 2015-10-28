@@ -324,26 +324,20 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 			// light[j].set_output_level(output_id, 50);
 		// }
 		if (light_var[j].ir_state[0] > 1200){
-			for (uint8_t output_id=0; output_id<2; output_id++){
-				light[j].set_output_level(output_id, 100);
-			}
+			light[j].set_output_level(0, 100);
+			light[j].set_output_level(2, 100);
 		}
 		else{
-			for (uint8_t output_id=0; output_id<2; output_id++){
-				light[j].set_output_level(output_id, 0);
-			}
-			
+			light[j].set_output_level(0, 0);
+			light[j].set_output_level(2, 0);
 		}
-		if (light_var[j].ir_state[1] > 1200){
-			for (uint8_t output_id=2; output_id<4; output_id++){
-				light[j].set_output_level(output_id, 100);
-			}
+		if (light_var[j].ir_state[0] > 1200){
+			light[j].set_output_level(1, 100);
+			light[j].set_output_level(3, 100);
 		}
 		else{
-			for (uint8_t output_id=2; output_id<4; output_id++){
-				light[j].set_output_level(output_id, 0);
-			}
-			
+			light[j].set_output_level(1, 0);
+			light[j].set_output_level(3, 0);
 		}
 
 	}	
