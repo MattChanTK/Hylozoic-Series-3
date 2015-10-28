@@ -56,7 +56,7 @@ class WashingtonCricketProtocol(SystemParameters):
                 # byte x0 --- IR 0 sensor state
                 self.input_state[device_header + 'ir_0_state'] = struct.unpack_from('H', msg[byte_offset+0:byte_offset+2])[0]
                 # byte x1 --- IR 1 sensor state
-                self.input_state[device_header + 'ir_1_state'] = struct.unpack_from('H', msg[byte_offset+0:byte_offset+2])[0]
+                self.input_state[device_header + 'ir_1_state'] = struct.unpack_from('H', msg[byte_offset+2:byte_offset+4])[0]
 
 
 

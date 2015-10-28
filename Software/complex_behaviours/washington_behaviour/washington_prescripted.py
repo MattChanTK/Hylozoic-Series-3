@@ -35,7 +35,7 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
             protocol = self.teensy_manager.get_protocol(teensy_name)
-            cmd_obj.add_param_change('operation_mode', protocol.MODE_SELF_RUNNING_TEST)
+            cmd_obj.add_param_change('operation_mode', protocol.MODE_MANUAL_CONTROL)
             self.enter_command(cmd_obj)
         self.send_commands()
 
@@ -283,9 +283,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
             if device_name not in control_vars[teensy_name]:
                 control_vars[teensy_name][device_name] = OrderedDict()
 
-            if isinstance(node, Fin):
-                control_vars[teensy_name][device_name][output_name] = node.in_var['motion_type']
-            elif isinstance(node, Output_Node) and 'sma' not in name:
+            if isinstance(node, Output_Node) and 'sma' not in name:
                 control_vars[teensy_name][device_name][output_name] = node.in_var['output']
 
             # specifying the displayable variables
