@@ -3,6 +3,15 @@ __author__ = 'Matthew'
 import interactive_system
 import washington_protocol as CP
 import abstract_node as Abs
+from abstract_node import *
+
+try:
+    from custom_gui import *
+except ImportError:
+    import sys
+    import os
+    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
+    from custom_gui import *
 
 from collections import OrderedDict
 import  threading
@@ -49,13 +58,58 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             # check the type of node
             protocol = self.teensy_manager.get_protocol(teensy_name)
 
-            # -- Cricket Node
+            # -- Cricket Node ---
             if isinstance(protocol, CP.WashingtonCricketProtocol):
-
                 self.node_list.update(self.build_cricket_node_components(teensy_name, protocol.NUM_CRICKET, protocol.NUM_LIGHT))
+            # -- Fin-Cricket Node ---
+            elif isinstance(protocol, CP.WashingtonFinCricketProtocol):
+                self.node_list.update(self.build_fin_cricket_node_components(teensy_name, protocol.NUM_FIN, protocol.NUM_CRICKET))
+            # -- Fin Node ---
+            elif isinstance(protocol, CP.WashingtonFinProtocol):
+                self.node_list.update(self.build_fin_node_components(teensy_name, protocol.NUM_FIN))
+
+
+        self.start_nodes()
+
+        with self.all_nodes_created:
+            self.all_nodes_created.notify_all()
+
+
+        # wait for the nodes to destroy
+        for node in self.node_list.values():
+            node.join()
+
+        return 0
+
+    def start_nodes(self):
+
+        if not isinstance(self.node_list, dict) or \
+           not isinstance(self.messenger, interactive_system.Messenger):
+            raise AttributeError("Nodes have not been created properly!")
+
+        for name, node in self.node_list.items():
+            node.start()
+            print('%s initialized' % name)
+        print('System Initialized with %d nodes' % len(self.node_list))
+
+    def terminate(self):
+
+        # killing each of the Node
+        for node in self.node_list.values():
+            node.alive = False
+        for node in self.node_list.values():
+            node.join()
+            print('%s is terminated.' % node.node_name)
+
+        print("All nodes are terminated")
+
+        # killing each of the Teensy threads
+        for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
+            self.teensy_manager.kill_teensy_thread(teensy_name)
 
     def build_cricket_node_components(self, teensy_name, num_cricket, num_light):
 
+        components = OrderedDict()
         cricket_comps = OrderedDict()
 
         for j in range(num_cricket):
@@ -64,10 +118,10 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             cricket_comps[ir.node_name] = ir
 
             # 4 motor output each
-            motor_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_0' % j, output='cricket_%d_output_0' % j)
-            motor_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_1' % j, output='cricket_%d_output_1' % j)
-            motor_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_2' % j, output='cricket_%d_output_2' % j)
-            motor_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_3' % j, output='cricket_%d_output_3' % j)
+            motor_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_0' % j, output='cricket_%d_output_0_level' % j)
+            motor_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_1' % j, output='cricket_%d_output_1_level' % j)
+            motor_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_2' % j, output='cricket_%d_output_2_level' % j)
+            motor_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_3' % j, output='cricket_%d_output_3_level' % j)
 
             cricket_comps[motor_0.node_name] = motor_0
             cricket_comps[motor_1.node_name] = motor_1
@@ -86,18 +140,185 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             light_comps[ir_1.node_name] = ir_1
 
             # 4 motor output each
-            led_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_0' % j, output='light_%d_led_0' % j)
-            led_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_1' % j, output='light_%d_led_1' % j)
-            led_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_2' % j, output='light_%d_led_2' % j)
-            led_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_3' % j, output='light_%d_led_3' % j)
+            led_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_0' % j, output='light_%d_led_0_level' % j)
+            led_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_1' % j, output='light_%d_led_1_level' % j)
+            led_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_2' % j, output='light_%d_led_2_level' % j)
+            led_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_3' % j, output='light_%d_led_3_level' % j)
 
             light_comps[led_0.node_name] = led_0
             light_comps[led_1.node_name] = led_1
             light_comps[led_2.node_name] = led_2
             light_comps[led_3.node_name] = led_3
 
-        return cricket_comps.update(light_comps)
+        components.update(cricket_comps)
+        components.update(light_comps)
 
+        return components
+
+    def build_fin_cricket_node_components(self, teensy_name, num_fin, num_cricket):
+
+        components = OrderedDict()
+        fin_comps = OrderedDict()
+
+        for j in range(num_fin):
+
+            # 2 ir sensors each
+            ir_s = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-s' % j, input='fin_%d_ir_0_state' % j)
+            ir_f = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % j, input='fin_%d_ir_1_state' % j)
+
+            # 1 3-axis acceleromter each
+            acc = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.acc' % j,
+                             x='fin_%d_acc_x_state' % j,
+                             y='fin_%d_acc_y_state' % j,
+                             z='fin_%d_acc_z_state' % j)
+
+            # 2 SMA wires each
+            sma_r = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % j, output='fin_%d_sma_0_level' % j)
+            sma_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % j, output='fin_%d_sma_1_level' % j)
+
+            # 2 reflex each
+            reflex_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % j, output='fin_%d_reflex_0_level' % j)
+            reflex_m = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-m' % j, output='fin_%d_reflex_1_level' % j)
+
+            fin_comps[ir_s.node_name] = ir_s
+            fin_comps[ir_f.node_name] = ir_f
+            fin_comps[acc.node_name] = acc
+            fin_comps[sma_l.node_name] = sma_l
+            fin_comps[sma_r.node_name] = sma_r
+            fin_comps[reflex_l.node_name] = reflex_l
+            fin_comps[reflex_m.node_name] = reflex_m
+
+        cricket_comps = OrderedDict()
+
+        for j in range(num_cricket):
+            # 1 ir sensor each
+            ir = Abs.Input_Node(self.messenger, teensy_name, node_name='c%d.ir' % j, input='cricket_%d_ir_state' % j)
+            cricket_comps[ir.node_name] = ir
+
+            # 4 motor output each
+            motor_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_0' % j, output='cricket_%d_output_0_level' % j)
+            motor_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_1' % j, output='cricket_%d_output_1_level' % j)
+            motor_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_2' % j, output='cricket_%d_output_2_level' % j)
+            motor_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_3' % j, output='cricket_%d_output_3_level' % j)
+
+            cricket_comps[motor_0.node_name] = motor_0
+            cricket_comps[motor_1.node_name] = motor_1
+            cricket_comps[motor_2.node_name] = motor_2
+            cricket_comps[motor_3.node_name] = motor_3
+
+            components.update(fin_comps)
+            components.update(cricket_comps)
+        return components
+
+    def build_fin_node_components(self, teensy_name, num_fin):
+
+        components = OrderedDict()
+        fin_comps = OrderedDict()
+
+        for j in range(num_fin):
+
+            # 2 ir sensors each
+            ir_s = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-s' % j, input='fin_%d_ir_0_state' % j)
+            ir_f = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % j, input='fin_%d_ir_1_state' % j)
+
+            # 1 3-axis acceleromter each
+            acc = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.acc' % j,
+                             x='fin_%d_acc_x_state' % j,
+                             y='fin_%d_acc_y_state' % j,
+                             z='fin_%d_acc_z_state' % j)
+
+            # 2 SMA wires each
+            sma_r = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % j, output='fin_%d_sma_0_level' % j)
+            sma_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % j, output='fin_%d_sma_1_level' % j)
+
+            # 2 reflex each
+            reflex_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % j, output='fin_%d_reflex_0_level' % j)
+            reflex_m = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-m' % j, output='fin_%d_reflex_1_level' % j)
+
+            fin_comps[ir_s.node_name] = ir_s
+            fin_comps[ir_f.node_name] = ir_f
+            fin_comps[acc.node_name] = acc
+            fin_comps[sma_l.node_name] = sma_l
+            fin_comps[sma_r.node_name] = sma_r
+            fin_comps[reflex_l.node_name] = reflex_l
+            fin_comps[reflex_m.node_name] = reflex_m
+
+            components.update(fin_comps)
+        return components
+
+def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
+
+    if not isinstance(hmi, tk_gui.Master_Frame):
+        raise TypeError("HMI must be Master_Frame")
+    if not isinstance(node_list, dict):
+        raise TypeError("node_list must be a dictionary")
+
+    hmi.wm_title('Manual Control Mode')
+
+    status_frame = tk_gui.Messenger_Status_Frame(hmi, messenger)
+    content_frame = tk_gui.Content_Frame(hmi)
+    nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
+
+    control_vars = OrderedDict()
+    display_vars = OrderedDict()
+
+    if len(node_list) > 0:
+
+        for name, node in node_list.items():
+            node_name = name.split('.')
+            teensy_name = node_name[0]
+            device_name = node_name[1]
+            try:
+                output_name = node_name[2]
+            except IndexError:
+                output_name = "variables"
+
+            if teensy_name not in control_vars:
+                control_vars[teensy_name] = OrderedDict()
+
+            if teensy_name not in display_vars:
+                display_vars[teensy_name] = OrderedDict()
+
+            # specifying the controlable variables
+            if device_name not in control_vars[teensy_name]:
+                control_vars[teensy_name][device_name] = OrderedDict()
+
+            if isinstance(node, Fin):
+                control_vars[teensy_name][device_name][output_name] = node.in_var['motion_type']
+            elif isinstance(node, Output_Node) and 'sma' not in name:
+                control_vars[teensy_name][device_name][output_name] = node.in_var['output']
+
+            # specifying the displayable variables
+            if device_name not in display_vars[teensy_name]:
+                display_vars[teensy_name][device_name] = OrderedDict()
+
+            if isinstance(node, Input_Node):
+                display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
+            elif isinstance(node, Output_Node):
+                display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
+            else:
+                display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
+                display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
+
+    page_frames = OrderedDict()
+    for teensy_name, teensy_display_vars in display_vars.items():
+
+        teensy_control_vars = OrderedDict()
+        if teensy_name in control_vars.keys():
+            teensy_control_vars = control_vars[teensy_name]
+        frame = HMI_Manual_Mode(content_frame, teensy_name, (teensy_name, 'manual_ctrl_page'),
+                                teensy_control_vars, teensy_display_vars)
+        page_frames[frame.page_key] = frame
+
+        content_frame.build_pages(page_frames)
+
+        nav_frame.build_nav_buttons()
+
+    print('GUI initialized.')
+    hmi.start(status_frame=status_frame,
+              nav_frame=nav_frame,
+              content_frame=content_frame,
+              start_page_key=next(iter(page_frames.keys()), ''))
 
 if __name__ == "__main__":
 
@@ -144,14 +365,14 @@ if __name__ == "__main__":
         if not isinstance(behaviour, WashingtonManual):
             raise TypeError("Behaviour must be WashingtonBehaviour type!")
 
-        # with behaviour.all_nodes_created:
-        #     behaviours.all_nodes_created.wait()
-        #
-        # # initialize the gui
-        # hmi = tk_gui.Master_Frame()
-        # hmi_init(hmi, behaviours.messenger, behaviours.node_list)
+        with behaviour.all_nodes_created:
+            behaviour.all_nodes_created.wait()
 
-        # behaviour.terminate()
+        # initialize the gui
+        hmi = tk_gui.Master_Frame()
+        hmi_init(hmi, behaviour.messenger, behaviour.node_list)
+
+        behaviour.terminate()
 
         behaviour.join()
 
