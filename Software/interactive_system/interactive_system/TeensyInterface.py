@@ -3,6 +3,7 @@ import random
 import struct
 import sys
 import re
+import types
 from time import clock
 from time import sleep
 from collections import OrderedDict
@@ -80,9 +81,8 @@ class TeensyManager():
             # create a new thread for communicating with
             protocol = None
             if isinstance(self.protocols, dict) and Teensy_unit_config in self.protocols:
-                if isinstance(self.protocols[Teensy_unit_config], SystemParameters):
-                    protocol = self.protocols[Teensy_unit_config]
-
+                if issubclass(self.protocols[Teensy_unit_config], SystemParameters):
+                    protocol = self.protocols[Teensy_unit_config]()
             Teensy_thread = TeensyInterface(serial_num, protocol=protocol, unit_config=Teensy_unit_config, print_to_term=self.print_to_term_default)
             teensy_thread_list.append((Teensy_name, Teensy_thread))
 
