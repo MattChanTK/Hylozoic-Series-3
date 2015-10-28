@@ -1,6 +1,6 @@
 indicator_led_on					bool		basic					0	False
 indicator_led_period 				int16 		basic					0	180			
-operation_mode						int8		basic					0	1
+operation_mode						int8		basic					0	0
 reply_type_request					int8		basic					0	0
 neighbour_activation_state			int8		basic 					0	0
 cricket_0_output_0_level 			int8		low_level     			2	0

@@ -110,7 +110,7 @@ class WashingtonCricketProtocol(SystemParameters):
             # >>>>> byte 26 to byte 33: Light 0
 
             for j in range(1):
-                device_header = 'cricket_%d_' % j
+                device_header = 'light_%d_' % j
                 byte_offset = 8*j + 24
 
                 # byte x0 --- Light LED 0 output
@@ -125,3 +125,14 @@ class WashingtonCricketProtocol(SystemParameters):
         elif self.request_type == 'read_only':
             pass
 
+class WashingtonFinCricketProtocol(SystemParameters):
+
+    pass
+
+class WashingtonFinProtocol(SystemParameters):
+
+    pass
+
+class WashingtonSoundProtocol(SystemParameters):
+
+    pass

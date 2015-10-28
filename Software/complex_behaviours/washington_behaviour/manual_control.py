@@ -7,13 +7,13 @@ import interactive_system.CommunicationProtocol as CP
 
 from complex_node import *
 
-try:
-    from custom_gui import *
-except ImportError:
-    import sys
-    import os
-    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from custom_gui import *
+# try:
+#     from custom_gui import *
+# except ImportError:
+#     import sys
+#     import os
+#     sys.path.insert(1, os.path.join(os.getcwd(), '..'))
+#     from custom_gui import *
 
 class Manual_Control(interactive_system.InteractiveCmd):
 

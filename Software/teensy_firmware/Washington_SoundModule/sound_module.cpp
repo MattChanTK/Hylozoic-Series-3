@@ -124,8 +124,8 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 			if (curr_port_L >= 3)
 				curr_port_L = 0;
 		}
-	
-		fileFound &= playWav_L[curr_port_L].play(wavfile);
+		if (!(block && playWav_L[port-1].isPlaying() ))
+			fileFound &= playWav_L[curr_port_L].play(wavfile);
 		
 	}
 	
@@ -137,8 +137,9 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 			if (curr_port_R >= 3)
 				curr_port_R = 0;
 		}
-	
-		fileFound &= playWav_R[curr_port_R].play(wavfile);
+		if (!(block && playWav_R[port-1].isPlaying() ))
+
+			fileFound &= playWav_R[curr_port_R].play(wavfile);
 	}
 	
 	if (!fileFound)
@@ -148,9 +149,9 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 	delay(5);
 	
 	//Simply wait for the file to finish playing.
-	while (block &&((playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying()))) {
+	// while (block &&((playWav_L[port-1].isPlaying() || playWav_R[port-1].isPlaying()))) {
 
-	}
+	// }
 	
 	
 	return true;

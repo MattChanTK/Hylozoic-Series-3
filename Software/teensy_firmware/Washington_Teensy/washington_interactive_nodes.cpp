@@ -294,57 +294,51 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 	//>>>> Cricket <<<<<
 	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_CRICKET; j++){
-		Serial.print(j);
-		Serial.print(": ");
-		Serial.println(cricket_var[j].ir_state );
-		for (uint8_t output_id=0; output_id<4; output_id++){
-			cricket[j].set_output_level(output_id, 50);
-		}
+		// Serial.print(j);
+		// Serial.print(": ");
+		// Serial.println(cricket_var[j].ir_state );
+		// for (uint8_t output_id=0; output_id<4; output_id++){
+			// cricket[j].set_output_level(output_id, 50);
+		// }
 		
 	
-		// if (cricket_var[j].ir_state > 1200){
+		if (cricket_var[j].ir_state > 1200){
 			
-			// for (uint8_t output_id=0; output_id<4; output_id++){
-				// cricket[j].set_output_level(output_id, 25);
-			// }
-		// }
-		// else{
-			// for (uint8_t output_id=0; output_id<4; output_id++){
-				// cricket[j].set_output_level(output_id, 0);
-			// }
+			for (uint8_t output_id=0; output_id<4; output_id++){
+				cricket[j].set_output_level(output_id, 100);
+			}
+		}
+		else{
+			for (uint8_t output_id=0; output_id<4; output_id++){
+				cricket[j].set_output_level(output_id, 0);
+			}
 			
-		// }
+		}
 
 	}	
 	
 	//>>>> Light <<<<<
 
 	for (uint8_t j=0; j<WashingtonCricketNode::WashingtonCricketNode::NUM_LIGHT; j++){
-		for (uint8_t output_id=0; output_id<4; output_id++){
-			light[j].set_output_level(output_id, 50);
+		// for (uint8_t output_id=0; output_id<4; output_id++){
+			// light[j].set_output_level(output_id, 50);
+		// }
+		if (light_var[j].ir_state[0] > 1200){
+			light[j].set_output_level(0, 100);
+			light[j].set_output_level(2, 100);
 		}
-		// if (light_var[j].ir_state[0] > 1200){
-			// for (uint8_t output_id=0; output_id<2; output_id++){
-				// light[j].set_output_level(output_id, 25);
-			// }
-		// }
-		// else{
-			// for (uint8_t output_id=0; output_id<2; output_id++){
-				// light[j].set_output_level(output_id, 0);
-			// }
-			
-		// }
-		// if (light_var[j].ir_state[1] > 1200){
-			// for (uint8_t output_id=2; output_id<4; output_id++){
-				// light[j].set_output_level(output_id, 25);
-			// }
-		// }
-		// else{
-			// for (uint8_t output_id=2; output_id<4; output_id++){
-				// light[j].set_output_level(output_id, 0);
-			// }
-			
-		// }
+		else{
+			light[j].set_output_level(0, 0);
+			light[j].set_output_level(2, 0);
+		}
+		if (light_var[j].ir_state[1] > 1200){
+			light[j].set_output_level(1, 100);
+			light[j].set_output_level(3, 100);
+		}
+		else{
+			light[j].set_output_level(1, 0);
+			light[j].set_output_level(3, 0);
+		}
 
 	}	
 
@@ -1171,24 +1165,99 @@ void WashingtonFinNode::inactive_behaviour() {
 //---- test behaviour ----
 void WashingtonFinNode::test_behaviour(const uint32_t &curr_time) {
 	
-	//>>>> Fin <<<<<
+	//---- Fin cycling variables -----
+	static uint32_t high_level_ctrl_fin_phase_time[WashingtonFinNode::NUM_FIN] = {0, 0, 0};
 
+
+	static uint8_t high_level_ctrl_sma0[WashingtonFinNode::NUM_FIN] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[WashingtonFinNode::NUM_FIN] = {1, 1, 1};
+	
+
+	
+	//~~~ fin cycle~~~~
+	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN; j++){
+	
+
+		
+		if (fin_var[j].motion_on < 1 && fin_var[j].cycling < 1){
+		
+			fin[j].set_sma_level(0, 0);
+			fin[j].set_sma_level(1, 0);
+			fin_var[j].cycling  = 0;
+			fin_var[j].motion_on = 3;
+			continue;
+		}
+		
+			
+		// starting a cycle
+		if (fin_var[j].cycling < 1){
+			
+			// behaviour Type
+			switch (fin_var[j].motion_on){
+				case 1:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 0;
+				break;
+				case 2:
+					high_level_ctrl_sma0[j] = 1;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+				default:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+			}
+			fin_var[j].cycling = 1; //fin_var[j].motion_on;
+			high_level_ctrl_fin_phase_time[j] = millis();  
+			
+			// turn on the first sma
+			fin[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
+			fin[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
+		}
+		else{
+			
+			
+			volatile uint32_t cycle_time = curr_time - high_level_ctrl_fin_phase_time[j];
+			
+			// if reaches the full period, restart cycle
+			if (cycle_time > ((fin_var[j].arm_cycle_period[1] + fin_var[j].arm_cycle_period[0]) *100)){
+				fin_var[j].cycling  = 0;
+				fin_var[j].motion_on = 0;
+			}
+			
+			//if reaches the on period 
+			else if (cycle_time > (fin_var[j].arm_cycle_period[0]*100)){
+				fin[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+				fin[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+
+			}
+				
+		}
+		
+
+	}
+
+	
+
+	
+	//>>>> Fin <<<<<
+	
 	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN; j++){
 		if (fin_var[j].ir_state[0] > 1200){
 			fin[j].set_led_level(0, 250);
 			fin[j].set_led_level(1, 250);
-			fin[j].set_sma_level(0, 250);
-			fin[j].set_sma_level(1, 250);
+			// fin[j].set_sma_level(0, 250);
+			// fin[j].set_sma_level(1, 250);
 		}
 		else{
 			fin[j].set_led_level(0, 0);
 			fin[j].set_led_level(1, 0);
-			fin[j].set_sma_level(0, 0);
-			fin[j].set_sma_level(1, 0);
+			// fin[j].set_sma_level(0, 0);
+			// fin[j].set_sma_level(1, 0);
 		}
 	}		
 	
-	//>>>> Lightt <<<<<
+	//>>>> Light <<<<<
 
 	for (uint8_t j=0; j<WashingtonFinNode::NUM_LIGHT; j++){
 		if (light_var[j].ir_state[0] > 1200){

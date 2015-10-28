@@ -18,14 +18,14 @@ TEENSY_PRODUCT_ID = 0x0486
 
 class TeensyManager():
 
-    def __init__(self, import_config=True, protocols_dict=None):
+    def __init__(self, import_config=True, protocols_dict=None, print_to_term=False):
 
         # table that store all the Teensy threads
         self.teensy_thread_table = OrderedDict()
 
         # configuration of the Teensy threads
         self.unit_config_default = 'DEFAULT'
-        self.print_to_term_default = False
+        self.print_to_term_default = print_to_term
         self.import_config = import_config
         self.protocols = protocols_dict
 
@@ -342,7 +342,8 @@ class TeensyInterface(threading.Thread):
 
                             if no_reply_counter >= 5:
                                 print("Teensy (" + str(self.serial_number) + ") has probably been disconnected.")
-                                return
+                                self.killed = True
+                                break
                             else:
                                 print("Teensy (" + str(self.serial_number) + ") ---- Didn't receive any reply. Packet lost......." + str(no_reply_counter))
 
