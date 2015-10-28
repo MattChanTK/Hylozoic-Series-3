@@ -134,14 +134,9 @@ class SoundUnitVar{
 		bool digital_trigger[2] = {0, 0};
 		uint8_t output_level[2] = {0, 0};
 		
-		bool sound_start_left[4] = {0, 0, 0, 0};
-		uint8_t sound_type_left[4] = {1, 1, 1, 1};
-		uint8_t sound_volume_left[4] = {0, 0, 0, 0};
-		
-		bool sound_start_right[4] = {0, 0, 0, 0};
-		uint8_t sound_type_right[4] = {1, 1, 1, 1};
-		uint8_t sound_volume_right[4] = {0, 0, 0, 0};
-
+		uint8_t sound_type[2] = {0, 0}; // 0 = off
+		uint8_t sound_volume[2] = {0, 0}; // 0 = 0%, 50 = 100%, 100 = 200%
+		uint8_t sound_block[2] = {0, 0};
 };
 
 

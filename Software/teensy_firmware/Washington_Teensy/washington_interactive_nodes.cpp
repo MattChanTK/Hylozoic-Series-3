@@ -1443,16 +1443,22 @@ void WashingtonSoundNode::parse_msg(){
 				// byte x1 --- sound PWM output 1
 				sound_var[j].output_level[1] = recv_data_buff[byte_offset+1];
 				
-				// // byte x2 --- sound start 1
-				// sound_var[j].output_level[0] = recv_data_buff[byte_offset+0];
-				// // byte x3 --- sound PWM output 1
-				// sound_var[j].output_level[1] = recv_data_buff[byte_offset+1];
-	
+				// byte x2 --- sound type left
+				sound_var[j].sound_type[0] = recv_data_buff[byte_offset+2];
+				// byte x3 --- sound type right
+				sound_var[j].sound_type[1] = recv_data_buff[byte_offset+3];
+				
+				// byte x4 --- sound volume left
+				sound_var[j].sound_volume[0] = recv_data_buff[byte_offset+4];
+				// byte x5 --- sound volume right
+				sound_var[j].sound_volume[1] = recv_data_buff[byte_offset+5];
+				
+				// byte x6 --- sound block left
+				sound_var[j].sound_block[0] = recv_data_buff[byte_offset+6];
+				// byte x7 --- sound block right
+				sound_var[j].sound_block[1] = recv_data_buff[byte_offset+7];
 			}
-			
-			device_offset += 8*WashingtonFinNode::NUM_FIN;
-
-			// (8 bytes each
+	
 		}
 		
 		// read-only
@@ -1485,9 +1491,17 @@ void WashingtonSoundNode::compose_reply(byte front_signature, byte back_signatur
 		this->sample_inputs();	
 	}
 	
+	// add the signatures to first and last byte
+	send_data_buff[0] = front_signature;
+	send_data_buff[num_outgoing_byte-1] = back_signature;
+		
+	if (msg_setting == 0){
+		// sample the sensors
+		this->sample_inputs();	
+	}
+	
 	// byte 1 --- type of reply
 	send_data_buff[1] =  reply_type;	
-
 
 
 	switch (reply_type){
@@ -1496,8 +1510,30 @@ void WashingtonSoundNode::compose_reply(byte front_signature, byte back_signatur
 			
 			uint8_t  device_offset = 2;
 			
-	
-			
+			// >>>>> byte 2 to byte 9: Sound 0
+			// >>>>> byte 10 to byte 17: Sound 1
+			// >>>>> byte 18 to byte 25: Sound 2
+			// >>>>> byte 26 to byte 33: Sound 3	
+			// >>>>> byte 34 to byte 41: Sound 4
+			// >>>>> byte 42 to byte 49: Sound 5				
+			for (uint8_t j = 0; j < WashingtonSoundNode::NUM_SOUND; j++){
+				
+				const uint8_t byte_offset = 8*(j) + device_offset;
+				
+				// byte x0 --- IR 0 sensor state
+				for (uint8_t i = 0; i < 2; i++)
+					send_data_buff[byte_offset+0+i] = sound_var[j].analog_state[0] >> (8*i); 
+				
+				// byte x2 --- IR 1 sensor state
+				for (uint8_t i = 0; i < 2; i++)
+					send_data_buff[byte_offset+2+i] = sound_var[j].analog_state[1] >> (8*i); 
+				
+				// byte x4 --- IR 2 sensor state
+				for (uint8_t i = 0; i < 2; i++)
+					send_data_buff[byte_offset+4+i] = sound_var[j].analog_state[2] >> (8*i); 
+		
+			}
+						
 			break;
 						
 			
@@ -1519,6 +1555,7 @@ void WashingtonSoundNode::compose_reply(byte front_signature, byte back_signatur
 
 	}
 
+		
 		
 
 }
@@ -1671,26 +1708,16 @@ void WashingtonSoundNode::low_level_control_behaviour(){
 	}
 
 	//>>>> Sound <<<<<
-
 	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND; j++){
 		
-		for (uint8_t port_id=0; port_id<4; port_id++){
-			// Left channel
-			if (sound_var[j].sound_start_left[port_id]){
-				sound[j].play_sound(sound_var[j].sound_type_left[port_id], 
-									sound_var[j].sound_volume_left[port_id],
-									0, port_id, true);
-				
+		for (uint8_t channel=0; channel<2; channel++){
+			if (sound_var[j].sound_type[channel]){
+				sound[j].play_sound(sound_var[j].sound_type[channel], 
+									sound_var[j].sound_volume[channel], 
+									channel, 0, 
+									sound_var[j].sound_block[channel]>0);
 			}
 			
-			// Right channel
-			if (sound_var[j].sound_start_right[port_id]){
-				sound[j].play_sound(sound_var[j].sound_type_right[port_id], 
-									sound_var[j].sound_volume_right[port_id],
-									1, port_id, true);
-				
-			}
-
 		}
 
 	}
