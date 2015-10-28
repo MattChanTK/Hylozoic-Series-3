@@ -1,1 +1,8 @@
-1296580 cricket_node_1 WashingtonCricketProtocol
+462390  test_teensy         WashingtonCricketProtocol
+1291870 cricket_node_a      WashingtonCricketProtocol
+1291620 cricket_node_b      WashingtonCricketProtocol
+1292690 cricket_node_c      WashingtonCricketProtocol
+1292060 cricket_node_d      WashingtonCricketProtocol
+1292080 fin_node_B          WashingtonFinProtocol
+1291680 fin_cricket_node_C  WashingtonFinCricketProtocol
+1292620 fin_cricket_node_D  WashingtonFinCricketProtocol
