@@ -16,6 +16,9 @@ class WashingtonManual(interactive_system.InteractiveCmd):
 
         self.all_nodes_created = threading.Condition()
 
+        self.NUM_CRICKET = 3
+        self.NUM_LIGHT = 1
+
         super(WashingtonManual, self).__init__(Teensy_manager, auto_start=auto_start)
 
     def run(self):
@@ -51,7 +54,11 @@ class WashingtonManual(interactive_system.InteractiveCmd):
 
             # -- Cricket Node
             if isinstance(protocol, CP.WashingtonCricketProtocol):
-                components  = self.build_cricket_components(teensy_name)
+                for j in range(self.NUM_CRICKET):
+                    self.node_list.update(self.build_cricket_components(teensy_name, j))
+
+                for j in range(self.NUM_LIGHT):
+                    self.node_list.update(self.build_light_components(teensy_name, j))
 
 
     def build_cricket_components(self, teensy_name, cricket_id):
@@ -79,22 +86,25 @@ class WashingtonManual(interactive_system.InteractiveCmd):
 
         light_comps = OrderedDict()
 
-        # 1 ir sensor each
-        ir = Abs.Input_Node(self.messenger, teensy_name, node_name='c%d.ir' % cricket_id, input='cricket_%d_ir_state' % cricket_id)
-        cricket_comps[ir.node_name] = ir
+        # 2 ir sensor each
+        ir_0 = Abs.Input_Node(self.messenger, teensy_name, node_name='l%d.ir_0' % light_id, input='light_%d_ir_0_state' % light_id)
+        ir_1 = Abs.Input_Node(self.messenger, teensy_name, node_name='l%d.ir_1' % light_id, input='light_%d_ir_1_state' % light_id)
+
+        light_comps[ir_0.node_name] = ir_0
+        light_comps[ir_1.node_name] = ir_1
 
         # 4 motor output each
-        motor_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_0' % cricket_id, output='cricket_%d_output_0' % cricket_id)
-        motor_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_1' % cricket_id, output='cricket_%d_output_1' % cricket_id)
-        motor_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_2' % cricket_id, output='cricket_%d_output_2' % cricket_id)
-        motor_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='c%d.motor_3' % cricket_id, output='cricket_%d_output_3' % cricket_id)
+        led_0 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_0' % light_id, output='light_%d_led_0' % light_id)
+        led_1 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_1' % light_id, output='light_%d_led_1' % light_id)
+        led_2 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_2' % light_id, output='light_%d_led_2' % light_id)
+        led_3 = Abs.Output_Node(self.messenger, teensy_name, node_name='l%d.led_3' % light_id, output='light_%d_led_3' % light_id)
 
-        cricket_comps[motor_0.node_name] = motor_0
-        cricket_comps[motor_1.node_name] = motor_1
-        cricket_comps[motor_2.node_name] = motor_2
-        cricket_comps[motor_3.node_name] = motor_3
+        light_comps[led_0.node_name] = led_0
+        light_comps[led_1.node_name] = led_1
+        light_comps[led_2.node_name] = led_2
+        light_comps[led_3.node_name] = led_3
 
-        return cricket_comps
+        return light_comps
 
 if __name__ == "__main__":
 
