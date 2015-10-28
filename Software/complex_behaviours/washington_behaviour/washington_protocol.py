@@ -13,6 +13,9 @@ class WashingtonCricketProtocol(SystemParameters):
     MODE_MANUAL_CONTROL = 1
     MODE_INACTIVE = 255
 
+    NUM_CRICKET = 3
+    NUM_LIGHT = 1
+
     def __init__(self):
         super(WashingtonCricketProtocol, self).__init__()
 
@@ -126,13 +129,55 @@ class WashingtonCricketProtocol(SystemParameters):
             pass
 
 class WashingtonFinCricketProtocol(SystemParameters):
+    MODE_SELF_RUNNING_TEST = 0
+    MODE_MANUAL_CONTROL = 1
+    MODE_INACTIVE = 255
 
-    pass
+    NUM_CRICKET = 3
+    NUM_FIN = 3
+
+    def __init__(self):
+        super(WashingtonFinCricketProtocol, self).__init__()
+
+    def additional_config_routine(self):
+
+        # import parameters from files
+        self.output_param_config_filename = 'washington_fin_cricket_node_output_config'
+        self.input_param_config_filename = 'washington_fin_cricket_node_input_config'
+        self._import_param_from_file(directory=os.path.join(os.getcwd(), 'protocol_variables'))
+
 
 class WashingtonFinProtocol(SystemParameters):
+    MODE_SELF_RUNNING_TEST = 0
+    MODE_MANUAL_CONTROL = 1
+    MODE_INACTIVE = 255
 
-    pass
+    NUM_FIN = 3
+
+    def __init__(self):
+        super(WashingtonFinProtocol, self).__init__()
+
+    def additional_config_routine(self):
+
+        # import parameters from files
+        self.output_param_config_filename = 'washington_fin_node_output_config'
+        self.input_param_config_filename = 'washington_fin_node_input_config'
+        self._import_param_from_file(directory=os.path.join(os.getcwd(), 'protocol_variables'))
 
 class WashingtonSoundProtocol(SystemParameters):
 
-    pass
+    MODE_SELF_RUNNING_TEST = 0
+    MODE_MANUAL_CONTROL = 1
+    MODE_INACTIVE = 255
+
+    NUM_SOUND = 6
+
+    def __init__(self):
+        super(WashingtonSoundProtocol, self).__init__()
+
+    def additional_config_routine(self):
+
+        # import parameters from files
+        self.output_param_config_filename = 'washington_sound_node_output_config'
+        self.input_param_config_filename = 'washington_sound_node_input_config'
+        self._import_param_from_file(directory=os.path.join(os.getcwd(), 'protocol_variables'))
