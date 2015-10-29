@@ -16,7 +16,17 @@ uint8_t recvMsg[NUM_BUFF]; // first BUFF is always the message type
 
 
 SoundModule sound_module;
+bool cycling = false; 
+uint32_t phase_time = millis();  	
+uint32_t step_time = millis();
+uint32_t next_step_time = 1;
+uint8_t led_level[2] = {0, 0};
+const uint8_t light_max_level = 255;
 
+bool audio_cycling = false; 
+uint32_t audio_phase_time = millis();  	
+uint32_t audio_step_time = millis();
+uint32_t audio_next_step_time = 1;
 
 void clearRecvMsg(){
 	for (uint8_t i = 0; i < NUM_BUFF; i++){
@@ -24,6 +34,7 @@ void clearRecvMsg(){
 	}
 }
 
+	
 void setup(){
 	
 	Serial.begin(9600);
@@ -33,6 +44,8 @@ void setup(){
 	
 	// clear buffer
 	clearRecvMsg();
+	
+
 	
 	// initialize the I2C
 	//--- Set up the audio board ----
@@ -76,7 +89,7 @@ void requestEvent() {
 
 void loop(){
 
-	
+	uint32_t curr_time = millis();
 	// If received message
 	// first buffer is always the message type
 	// if (recvMsg[0] > 0){
@@ -90,27 +103,87 @@ void loop(){
 		// clearRecvMsg();
 	// }
 	
-	//==== Test Code ===
+	//==== Basic Code ===
 	int delay_time = 1000;
-	int ir0 = sound_module.read_analog_state(1);
-	if ( ir0 > 1000){
-		delay_time = 100;
+	int ir0 = sound_module.read_analog_state(0);
+	int ir1 = sound_module.read_analog_state(1);
+
+	if ( ir0 > 1000 || ir1 > 1000){
+		
+		sound_module.playWav("1.wav", 1, 0, 1);
+		// delay(500);
+		sound_module.playWav("1.wav", 2, 1, 1);
+		// delay(1000);
 	}
-	Serial.println(ir0);
-	sound_module.playWav("10.wav", 1, 0, 0);
-	delay(500);
-	sound_module.playWav("10.wav",  1, 1, 0);
 	
-	
-	sound_module.set_output_level(0, 200);
-	sound_module.set_output_level(1, 0);
 
-	delay(delay_time);
-
-	sound_module.set_output_level(1, 200);
-	sound_module.set_output_level(0, 0);
 	
-	delay(delay_time);
+	
+	//>>>> Light <<<<<
+	
+	// starting a cycle
+	if (( ir0 > 1000 || ir1 > 1000) && !cycling){
+		Serial.println("starting cycle");
+		cycling = true; 
+		phase_time = millis();  	
+		step_time = millis();
+		next_step_time = 2;
+	}
+	else if (cycling) {
+					
+		volatile uint32_t cycle_time = curr_time - phase_time;
+
+		//ramping down
+		// if reaches the full period, restart cycle
+		if (cycle_time > 3000){
+			
+			volatile uint32_t ramping_time = curr_time - step_time;
+			
+			if (ramping_time > next_step_time){
+				for (uint8_t output_id=0; output_id<2; output_id++){
+					if (led_level[output_id] > 0) 
+						led_level[output_id] -= 1;
+				}
+				next_step_time += 1;
+				step_time = millis();  	
+			}
+			
+			bool end_cycling = true;
+			for (uint8_t output_id=0; output_id<2; output_id++){
+				end_cycling &= led_level[output_id] <= 0 ;
+			}
+			if (end_cycling){
+				cycling = 0;
+			}
+			
+		}
+		//hold steady
+		else if (cycle_time > 2000){
+			
+		}
+		// ramping up
+		else{
+			volatile uint32_t ramping_time = curr_time - step_time;
+			
+			if (ramping_time > next_step_time){
+				
+				if (led_level[0] < light_max_level) 
+					led_level[0] += 1;
+				if (cycle_time > 500){
+					if (led_level[1] < light_max_level) 
+						led_level[1] += 2;
+				}
+				next_step_time += 1;
+				step_time = millis();  	
+			}
+		
+		}				
+	}
+	
+	sound_module.set_output_level(0, led_level[0]);
+	sound_module.set_output_level(1, led_level[1]);
+
+
 }
 
 

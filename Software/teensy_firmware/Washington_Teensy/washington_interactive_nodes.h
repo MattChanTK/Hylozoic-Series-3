@@ -86,6 +86,12 @@ class FinUnitVar{
 		//~~Fin cycling~~
 		uint8_t cycling = 0;
 		
+		//~~Reflex Light Cycling ~~
+		bool reflex_cycling = false;
+		uint32_t reflex_phase_time = millis();  	
+		uint32_t reflex_step_time = millis();
+		uint32_t reflex_next_step_time = 1;
+		
 		
 		//----OUTPUT (internal variables)----
 		
@@ -272,6 +278,9 @@ class WashingtonFinCricketNode : public FinsCricketsUnit{
 		
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
+		
+		//---- self-running behaviour ----
+		void self_running_behaviour(const uint32_t &curr_time);
 		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);
