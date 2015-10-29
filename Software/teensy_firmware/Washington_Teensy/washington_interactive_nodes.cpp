@@ -345,6 +345,96 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
 }
 
+//---- self_running_behaviour ----
+void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
+	
+	static const uint16_t cricket_max_level = 150;
+	
+	//>>>> Cricket <<<<<
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
+		
+		// starting a cycle
+		if (cricket_var[j].ir_state > 1200 && !cricket_var[j].cycling){
+			
+			cricket_var[j].cycling = true; 
+			cricket_var[j].phase_time = millis();  	
+			cricket_var[j].step_time = millis();
+			cricket_var[j].next_step_time = 20;
+		}
+		else if (cricket_var[j].cycling) {
+						
+			volatile uint32_t cycle_time = curr_time - cricket_var[j].phase_time;
+			
+			//ramping down
+			// if reaches the full period, restart cycle
+			if (cycle_time > 7000){
+				
+				volatile uint32_t ramping_time = curr_time - cricket_var[j].step_time;
+				
+				if (ramping_time > cricket_var[j].next_step_time){
+					for (uint8_t output_id=0; output_id<4; output_id++){
+						if (cricket_var[j].output_level[output_id] > 0) 
+							cricket_var[j].output_level[output_id] -= 1;
+					}
+					cricket_var[j].next_step_time += 20;
+					cricket_var[j].step_time = millis();  	
+				}
+				
+				bool end_cycling = true;
+				for (uint8_t output_id=0; output_id<4; output_id++){
+					end_cycling &= cricket_var[j].output_level[output_id] <= 0 ;
+				}
+				if (end_cycling){
+					cricket_var[j].cycling = 0;
+				}
+				
+			}
+			//hold steady
+			else if (cycle_time > 3000){
+				
+			}
+			// ramping up
+			else{
+	
+				volatile uint32_t ramping_time = curr_time - cricket_var[j].step_time;
+				
+				if (ramping_time > cricket_var[j].next_step_time){
+					for (uint8_t output_id=0; output_id<4; output_id++){
+						if (cricket_var[j].output_level[output_id] < cricket_max_level) 
+							cricket_var[j].output_level[output_id] += 1;
+					}
+					cricket_var[j].next_step_time += 20;
+					cricket_var[j].step_time = millis();  	
+				}
+			
+			}				
+		}
+	
+		//>>>> Cricket <<<<<
+		for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
+			
+			for (uint8_t output_id=0; output_id<4; output_id++){
+				cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);
+			}
+
+		}
+
+		//>>>> Light <<<<<
+
+		for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
+			
+			for (uint8_t output_id=0; output_id<4; output_id++){
+				light[j].set_output_level(output_id, light_var[j].led_level[output_id]);
+			}
+
+		}		
+
+	}
+
+
+	
+}
+
 
 
 //---- indicator LED -----
@@ -390,7 +480,7 @@ void WashingtonCricketNode::led_blink_behaviour(const uint32_t &curr_time) {
 
 
 //----- LOW-LEVEL CONTROL -------
-void WashingtonCricketNode::low_level_control_behaviour(){
+void WashingtonCricketNode::low_level_control_behaviour(const uint32_t &curr_time){
 
 	
 	//>>>> Cricket <<<<<
@@ -734,20 +824,86 @@ void WashingtonFinCricketNode::inactive_behaviour() {
 //---- test behaviour ----
 void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 	
+	//---- Fin cycling variables -----
+	static uint32_t high_level_ctrl_fin_phase_time[WashingtonFinCricketNode::NUM_FIN] = {0, 0, 0};
+
+
+	static uint8_t high_level_ctrl_sma0[WashingtonFinCricketNode::NUM_FIN] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[WashingtonFinCricketNode::NUM_FIN] = {1, 1, 1};
+	
+
+	
+	//~~~ fin cycle~~~~
+	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN; j++){
+	
+
+		
+		if (fin_var[j].motion_on < 1 && fin_var[j].cycling < 1){
+		
+			fin[j].set_sma_level(0, 0);
+			fin[j].set_sma_level(1, 0);
+			fin_var[j].cycling  = 0;
+			fin_var[j].motion_on = 3;
+			continue;
+		}
+		
+		// starting a cycle
+		if (fin_var[j].cycling < 1){
+			
+			// behaviour Type
+			switch (fin_var[j].motion_on){
+				case 1:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 0;
+				break;
+				case 2:
+					high_level_ctrl_sma0[j] = 1;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+				default:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+			}
+			fin_var[j].cycling = 1; //fin_var[j].motion_on;
+			high_level_ctrl_fin_phase_time[j] = millis();  
+			
+			// turn on the first sma
+			fin[j].set_sma_level(high_level_ctrl_sma0[j], fin_var[j].sma_max_level[0]);	
+			fin[j].set_sma_level(high_level_ctrl_sma1[j],  fin_var[j].sma_max_level[1]);				
+		}
+		else{
+			
+			volatile uint32_t cycle_time = curr_time - high_level_ctrl_fin_phase_time[j];
+			
+			// if reaches the full period, restart cycle
+			if (cycle_time > ((fin_var[j].arm_cycle_period[1] + fin_var[j].arm_cycle_period[0]) *100)){
+				fin_var[j].cycling  = 0;
+				fin_var[j].motion_on = 0;
+			}
+			
+			//if reaches the on period 
+			else if (cycle_time > (fin_var[j].arm_cycle_period[0]*100)){
+				fin[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+				fin[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+			}		
+		}
+	}
+
 	//>>>> Fin <<<<<
 
 	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN; j++){
 		if (fin_var[j].ir_state[0] > 1200){
 			fin[j].set_led_level(0, 250);
 			fin[j].set_led_level(1, 250);
-			fin[j].set_sma_level(0, 250);
-			fin[j].set_sma_level(1, 250);
+			// fin[j].set_sma_level(0, 250);
+			// fin[j].set_sma_level(1, 250);
 		}
 		else{
 			fin[j].set_led_level(0, 0);
 			fin[j].set_led_level(1, 0);
-			fin[j].set_sma_level(0, 0);
-			fin[j].set_sma_level(1, 0);
+			// fin[j].set_sma_level(0, 0);
+			// fin[j].set_sma_level(1, 0);
 		}
 		
 	}		
@@ -757,7 +913,7 @@ void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_CRICKET; j++){
 		if (cricket_var[j].ir_state > 1200){
 			for (uint8_t output_id=0; output_id<4; output_id++){
-				cricket[j].set_output_level(output_id, 255);
+				cricket[j].set_output_level(output_id, 100);
 			}
 		}
 		else{
@@ -816,17 +972,26 @@ void WashingtonFinCricketNode::led_blink_behaviour(const uint32_t &curr_time) {
 
 
 //----- LOW-LEVEL CONTROL -------
-void WashingtonFinCricketNode::low_level_control_behaviour(){
+void WashingtonFinCricketNode::low_level_control_behaviour(const uint32_t &curr_time){
 
-	
 	//>>>> FIN <<<<<
 	for (uint8_t j=0; j<WashingtonFinCricketNode::NUM_FIN;j++){
+		
+				
+		//sma protection mechanism
+		if (fin_var[j].sma_level[0] > fin_var[j].sma_max_level[0])
+			fin_var[j].sma_level[0] =  fin_var[j].sma_max_level[0];
+		if (fin_var[j].sma_level[1] > fin_var[j].sma_max_level[1])
+			fin_var[j].sma_level[1] =  fin_var[j].sma_max_level[1];
 		
 		fin[j].set_sma_level(0, fin_var[j].sma_level[0]);
 		fin[j].set_sma_level(1, fin_var[j].sma_level[1]);
 		fin[j].set_led_level(0, fin_var[j].reflex_level[0]);
 		fin[j].set_led_level(1, fin_var[j].reflex_level[1]);
+
+	
 	}
+	
 
 	//>>>> Cricket <<<<<
 
@@ -1211,8 +1376,8 @@ void WashingtonFinNode::test_behaviour(const uint32_t &curr_time) {
 			high_level_ctrl_fin_phase_time[j] = millis();  
 			
 			// turn on the first sma
-			fin[j].set_sma_level(high_level_ctrl_sma0[j], 255);	
-			fin[j].set_sma_level(high_level_ctrl_sma1[j], 255);				
+			fin[j].set_sma_level(high_level_ctrl_sma0[j], fin_var[j].sma_max_level[0]);	
+			fin[j].set_sma_level(high_level_ctrl_sma1[j],  fin_var[j].sma_max_level[1]);				
 		}
 		else{
 			
@@ -1321,16 +1486,25 @@ void WashingtonFinNode::led_blink_behaviour(const uint32_t &curr_time) {
 
 
 //----- LOW-LEVEL CONTROL -------
-void WashingtonFinNode::low_level_control_behaviour(){
-
+void WashingtonFinNode::low_level_control_behaviour(const uint32_t &curr_time){
 	
+
 	//>>>> FIN <<<<<
 	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN;j++){
+		
+				
+		//sma protection mechanism
+		if (fin_var[j].sma_level[0] > fin_var[j].sma_max_level[0])
+			fin_var[j].sma_level[0] =  fin_var[j].sma_max_level[0];
+		if (fin_var[j].sma_level[1] > fin_var[j].sma_max_level[1])
+			fin_var[j].sma_level[1] =  fin_var[j].sma_max_level[1];
 		
 		fin[j].set_sma_level(0, fin_var[j].sma_level[0]);
 		fin[j].set_sma_level(1, fin_var[j].sma_level[1]);
 		fin[j].set_led_level(0, fin_var[j].reflex_level[0]);
 		fin[j].set_led_level(1, fin_var[j].reflex_level[1]);
+
+	
 	}
 
 	//>>>> Light <<<<<
@@ -1698,7 +1872,7 @@ void WashingtonSoundNode::led_blink_behaviour(const uint32_t &curr_time) {
 
 
 //----- LOW-LEVEL CONTROL -------
-void WashingtonSoundNode::low_level_control_behaviour(){
+void WashingtonSoundNode::low_level_control_behaviour(const uint32_t &curr_time){
 
 	//>>>> PWM <<<<<
 	for (uint8_t j=0; j<WashingtonSoundNode::NUM_SOUND;j++){

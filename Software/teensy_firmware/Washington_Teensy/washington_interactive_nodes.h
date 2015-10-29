@@ -19,7 +19,10 @@ class CricketUnitVar{
 		uint16_t ir_state = 0;
 		
 		//----OUTPUT (internal variables)----
-		
+		uint32_t phase_time = 0;
+		uint32_t step_time = 0;
+		bool cycling = false;
+		uint32_t next_step_time = 0;
 		
 		//----OUTPUT (actuators)----
 		
@@ -42,7 +45,10 @@ class LightUnitVar{
 		uint16_t ir_state[2] = {0, 0};
 		
 		//----OUTPUT (internal variables)----
-		
+		uint32_t phase_time = 0;
+		uint32_t step_time = 0;
+		bool cycling = false;
+		uint32_t next_step_time = 0;
 		
 		//----OUTPUT (actuators)----
 		
@@ -90,12 +96,19 @@ class FinUnitVar{
 		
 		//~~~ON and OFF periods of the Fin arm activation here~~~
 		// {on time, off time} (in 0.1 second)
-		uint8_t arm_cycle_period[2] = {20, 100};
+		uint8_t arm_cycle_period[2] = {15, 100};
 
 		
 		//~~~Period of the reflex LED~~~
 		// {channel 1, channel 2} (in millisecond)
 		uint16_t reflex_period[2] = {5000, 100};
+		
+		//~~~Amount of time the SMAs were last on~~~
+		// {channel 1, channel 2} (in millisecond)
+		uint32_t sma_on_time[2] = {0, 0};
+		
+		//~~~Maximum SMA output level~~
+		uint8_t sma_max_level[2] = {150, 150};
 
 		
 		//----OUTPUT (actuators)----
@@ -177,11 +190,14 @@ class WashingtonCricketNode : public CricketsLightsUnit{
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
 		
+		//---- self-running behaviour ----
+		void self_running_behaviour(const uint32_t &curr_time);
+		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);
 	
 		//---- low-level control ---
-		void low_level_control_behaviour();
+		void low_level_control_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================
@@ -261,7 +277,7 @@ class WashingtonFinCricketNode : public FinsCricketsUnit{
 		void led_blink_behaviour(const uint32_t &curr_time);
 	
 		//---- low-level control ---
-		void low_level_control_behaviour();
+		void low_level_control_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================
@@ -341,7 +357,7 @@ class WashingtonFinNode : public FinsLightsUnit{
 		void led_blink_behaviour(const uint32_t &curr_time);
 	
 		//---- low-level control ---
-		void low_level_control_behaviour();
+		void low_level_control_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================
@@ -423,7 +439,7 @@ class WashingtonSoundNode : public SoundsUnit{
 		void led_blink_behaviour(const uint32_t &curr_time);
 	
 		//---- low-level control ---
-		void low_level_control_behaviour();
+		void low_level_control_behaviour(const uint32_t &curr_time);
 
 		
 		//===============================================

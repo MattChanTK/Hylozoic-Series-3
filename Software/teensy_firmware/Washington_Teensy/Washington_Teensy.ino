@@ -37,7 +37,6 @@ void setup() {
 	randomSeed(analogRead(A0));
 
 
-	
 	//--- check msg timer ---
 	//set timer in microsecond
 	//msg_recv_timer.begin(check_msg, 500); 
@@ -55,13 +54,15 @@ void self_running_test(){
 	uint32_t curr_time = get_time();
 	teensy_unit.sample_inputs();
 
-	teensy_unit.test_behaviour(curr_time);
-	teensy_unit.led_blink_behaviour(curr_time);
-	delay(100);
+	// teensy_unit.test_behaviour(curr_time);
+	// teensy_unit.led_blink_behaviour(curr_time);
+	// delay(100);
+	teensy_unit.self_running_behaviour(curr_time);
 }
 void manual_mode(){
-	
-	teensy_unit.low_level_control_behaviour();
+	uint32_t curr_time = get_time();
+
+	teensy_unit.low_level_control_behaviour(curr_time);
 
 }
 void inactive_mode(){
