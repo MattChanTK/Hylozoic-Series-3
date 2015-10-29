@@ -349,25 +349,26 @@ void WashingtonCricketNode::test_behaviour(const uint32_t &curr_time) {
 void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 	
 	static const uint16_t cricket_max_level = 150;
-	
+	static const uint16_t light_max_level = 255;
+
 	//>>>> Cricket <<<<<
 	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
 		
 		// starting a cycle
 		if (cricket_var[j].ir_state > 1200 && !cricket_var[j].cycling){
-			
+			Serial.println("starting cycle");
 			cricket_var[j].cycling = true; 
 			cricket_var[j].phase_time = millis();  	
 			cricket_var[j].step_time = millis();
-			cricket_var[j].next_step_time = 20;
+			cricket_var[j].next_step_time = 1;
 		}
 		else if (cricket_var[j].cycling) {
 						
 			volatile uint32_t cycle_time = curr_time - cricket_var[j].phase_time;
-			
+
 			//ramping down
 			// if reaches the full period, restart cycle
-			if (cycle_time > 7000){
+			if (cycle_time > 4000){
 				
 				volatile uint32_t ramping_time = curr_time - cricket_var[j].step_time;
 				
@@ -376,7 +377,7 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 						if (cricket_var[j].output_level[output_id] > 0) 
 							cricket_var[j].output_level[output_id] -= 1;
 					}
-					cricket_var[j].next_step_time += 20;
+					cricket_var[j].next_step_time += 1;
 					cricket_var[j].step_time = millis();  	
 				}
 				
@@ -395,7 +396,6 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 			}
 			// ramping up
 			else{
-	
 				volatile uint32_t ramping_time = curr_time - cricket_var[j].step_time;
 				
 				if (ramping_time > cricket_var[j].next_step_time){
@@ -403,33 +403,111 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 						if (cricket_var[j].output_level[output_id] < cricket_max_level) 
 							cricket_var[j].output_level[output_id] += 1;
 					}
-					cricket_var[j].next_step_time += 20;
+					if (cricket_var[j].output_level[0] < cricket_max_level) 
+							cricket_var[j].output_level[0] += 1;
+		
+					if (cycle_time > 500){
+						if (cricket_var[j].output_level[1] < cricket_max_level) 
+							cricket_var[j].output_level[1] += 1;
+					}
+					if (cycle_time > 1000){
+						if (cricket_var[j].output_level[2] < cricket_max_level) 
+							cricket_var[j].output_level[2] += 1;
+					}
+					if (cycle_time > 1500){
+						if (cricket_var[j].output_level[3] < cricket_max_level) 
+							cricket_var[j].output_level[3] += 1;
+					}
+					cricket_var[j].next_step_time += 1;
 					cricket_var[j].step_time = millis();  	
 				}
 			
 			}				
 		}
-	
-		//>>>> Cricket <<<<<
-		for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
-			
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);
-			}
+	}
+	//>>>> Light <<<<<
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
+		
+		// starting a cycle
+		if ((light_var[j].ir_state[0] > 1200 || light_var[j].ir_state[1] > 1200) && !light_var[j].cycling){
+			Serial.println("starting cycle");
+			light_var[j].cycling = true; 
+			light_var[j].phase_time = millis();  	
+			light_var[j].step_time = millis();
+			light_var[j].next_step_time = 20;
+		}
+		else if (light_var[j].cycling) {
+						
+			volatile uint32_t cycle_time = curr_time - light_var[j].phase_time;
 
+			//ramping down
+			// if reaches the full period, restart cycle
+			if (cycle_time > 4000){
+				
+				volatile uint32_t ramping_time = curr_time - light_var[j].step_time;
+				
+				if (ramping_time > light_var[j].next_step_time){
+					for (uint8_t output_id=0; output_id<2; output_id++){
+						if (light_var[j].led_level[output_id] > 0) 
+							light_var[j].led_level[output_id] -= 1;
+					}
+					light_var[j].next_step_time += 1;
+					light_var[j].step_time = millis();  	
+				}
+				
+				bool end_cycling = true;
+				for (uint8_t output_id=0; output_id<2; output_id++){
+					end_cycling &= light_var[j].led_level[output_id] <= 0 ;
+				}
+				if (end_cycling){
+					light_var[j].cycling = 0;
+				}
+				
+			}
+			//hold steady
+			else if (cycle_time > 3000){
+				
+			}
+			// ramping up
+			else{
+				volatile uint32_t ramping_time = curr_time - light_var[j].step_time;
+				
+				if (ramping_time > light_var[j].next_step_time){
+					
+					if (light_var[j].led_level[0] < light_max_level) 
+						light_var[j].led_level[0] += 1;
+					if (cycle_time > 1000){
+						if (light_var[j].led_level[1] < light_max_level) 
+						light_var[j].led_level[1] += 1;
+					}
+					light_var[j].next_step_time += 1;
+					light_var[j].step_time = millis();  	
+				}
+			
+			}				
+		}
+	}
+	
+	//>>>> Cricket <<<<<
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
+		
+		for (uint8_t output_id=0; output_id<4; output_id++){
+			cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);
 		}
 
-		//>>>> Light <<<<<
-
-		for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
-			
-			for (uint8_t output_id=0; output_id<4; output_id++){
-				light[j].set_output_level(output_id, light_var[j].led_level[output_id]);
-			}
-
-		}		
-
 	}
+
+	//>>>> Light <<<<<
+
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
+		
+		for (uint8_t output_id=0; output_id<4; output_id++){
+			light[j].set_output_level(output_id, light_var[j].led_level[output_id]);
+		}
+
+	}		
+
+	
 
 
 	

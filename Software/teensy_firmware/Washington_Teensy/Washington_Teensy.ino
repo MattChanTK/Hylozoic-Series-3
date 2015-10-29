@@ -93,7 +93,7 @@ void loop() {
 	
 	//teensy_unit.sample_inputs();
 	
-	//Serial.println(teensy_unit.operation_mode);
+	// Serial.println(teensy_unit.operation_mode);
 	switch (teensy_unit.operation_mode){
 	
 		case 0: 
