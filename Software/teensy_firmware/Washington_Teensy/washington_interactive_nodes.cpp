@@ -378,7 +378,7 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 							cricket_var[j].output_level[output_id] -= 1;
 					}
 					cricket_var[j].next_step_time += 1;
-					cricket_var[j].step_time = millis();  	
+					cricket_var[j].step_time = millis();
 				}
 				
 				bool end_cycling = true;
@@ -508,8 +508,58 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 	}		
 
 	
+	//>> Print to Serial<<
+	
+	// crickets
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
+		
+		// Device name
+		Serial.print("== Cricket ");
+		Serial.print(j);
+		Serial.println(" ==");
+		// IR sensor
+		Serial.print("IR: (");
+		Serial.print(cricket_var[j].ir_state);
+		Serial.println(")");
+		// Outputs
+		Serial.print("Motor: (");
+		for (uint8_t i=0; i<4; i++){
+			Serial.print(cricket_var[j].output_level[i]);
+			if (i<3){
+				Serial.print(", ");
+			}
+		}
+		Serial.println(")");
 
+	}
+	
+	// Light
+	for (uint8_t j=0; j<WashingtonCricketNode::NUM_LIGHT; j++){
+		
+		// Device name
+		Serial.print("== Light ");
+		Serial.print(j);
+		Serial.println(" ==");
+		// IR sensor
+		Serial.print("IR: (");
+		for (uint8_t i=0; i<2; i++){
+			Serial.print(light_var[j].ir_state[i]);
+			if (i<1){
+				Serial.print(", ");
+			}
+		}
+		Serial.println(")");
+		// Outputs
+		Serial.print("LED: (");
+		for (uint8_t i=0; i<4; i++){
+			Serial.print(light_var[j].led_level[i]);
+			if (i<3){
+				Serial.print(", ");
+			}
+		}
+		Serial.println(")");
 
+	}
 	
 }
 
@@ -1751,7 +1801,147 @@ void WashingtonFinNode::test_behaviour(const uint32_t &curr_time) {
 	
 }
 
+//---- self_running_behaviour ----
+void WashingtonFinNode::self_running_behaviour(const uint32_t &curr_time) {
+	//---- Fin cycling variables -----
+	static uint32_t high_level_ctrl_fin_phase_time[WashingtonFinNode::NUM_FIN] = {0, 0, 0};
 
+
+	static uint8_t high_level_ctrl_sma0[WashingtonFinNode::NUM_FIN] = {0, 0, 0};
+	static uint8_t high_level_ctrl_sma1[WashingtonFinNode::NUM_FIN] = {1, 1, 1};
+	
+	
+
+	
+	//~~~ fin cycle~~~~
+	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN; j++){
+	
+
+		if ((fin_var[j].ir_state[1] < 1200 && fin_var[j].ir_state[0] < 1200)
+			&& fin_var[j].cycling < 1){
+		
+			fin[j].set_sma_level(0, 0);
+			fin[j].set_sma_level(1, 0);
+			fin_var[j].cycling  = 0;
+			fin_var[j].motion_on = 3;
+			continue;
+		}
+		
+		// starting a cycle
+		if (fin_var[j].cycling < 1){
+			
+			// behaviour Type
+			switch (fin_var[j].motion_on){
+				case 1:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 0;
+				break;
+				case 2:
+					high_level_ctrl_sma0[j] = 1;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+				default:
+					high_level_ctrl_sma0[j] = 0;
+					high_level_ctrl_sma1[j] = 1;
+				break;
+			}
+			fin_var[j].cycling = 1; //fin_var[j].motion_on;
+			high_level_ctrl_fin_phase_time[j] = millis();  
+			
+			// turn on the first sma
+			fin[j].set_sma_level(high_level_ctrl_sma0[j], fin_var[j].sma_max_level[0]);	
+			fin[j].set_sma_level(high_level_ctrl_sma1[j],  fin_var[j].sma_max_level[1]);				
+		}
+		else{
+			
+			volatile uint32_t cycle_time = curr_time - high_level_ctrl_fin_phase_time[j];
+			
+			// if reaches the full period, restart cycle
+			if (cycle_time > ((fin_var[j].arm_cycle_period[1] + fin_var[j].arm_cycle_period[0]) *100)){
+				fin_var[j].cycling  = 0;
+				fin_var[j].motion_on = 0;
+			}
+			
+			//if reaches the on period 
+			else if (cycle_time > (fin_var[j].arm_cycle_period[0]*100)){
+				fin[j].set_sma_level(high_level_ctrl_sma1[j], 0);
+				fin[j].set_sma_level(high_level_ctrl_sma0[j], 0);
+			}		
+		}
+	}
+
+
+	//>>>> Fin Light <<<<<
+	static uint8_t motor_max_level = 150;
+
+	static uint8_t light_max_level = 255;
+	for (uint8_t j=0; j<WashingtonFinNode::NUM_FIN; j++){
+		
+		// starting a cycle
+		if (fin_var[j].ir_state[0] > 1200 
+			&& !fin_var[j].reflex_cycling){
+			Serial.println("starting cycle");
+			fin_var[j].reflex_cycling = true; 
+			fin_var[j].reflex_phase_time = millis();  	
+			fin_var[j].reflex_step_time = millis();
+			fin_var[j].reflex_next_step_time = 2;
+		}
+		else if (fin_var[j].reflex_cycling) {
+						
+			volatile uint32_t cycle_time = curr_time - fin_var[j].reflex_phase_time;
+
+			//ramping down
+			// if reaches the full period, restart cycle
+			if (cycle_time > 1500){
+				
+				volatile uint32_t ramping_time = curr_time - fin_var[j].reflex_step_time;
+				
+				if (ramping_time > fin_var[j].reflex_next_step_time){
+					for (uint8_t output_id=0; output_id<2; output_id++){
+						if (fin_var[j].reflex_level[output_id] > 0) 
+							fin_var[j].reflex_level[output_id] -= 1;
+					}
+					fin_var[j].reflex_next_step_time += 1;
+					fin_var[j].reflex_step_time = millis();  	
+				}
+				
+				bool end_cycling = true;
+				for (uint8_t output_id=0; output_id<2; output_id++){
+					end_cycling &= fin_var[j].reflex_level[output_id] <= 0 ;
+				}
+				if (end_cycling){
+					fin_var[j].reflex_cycling = 0;
+				}
+				
+			}
+			//hold steady
+			else if (cycle_time > 1000){
+				
+			}
+			// ramping up
+			else{
+				volatile uint32_t ramping_time = curr_time - fin_var[j].reflex_step_time;
+				
+				if (ramping_time > fin_var[j].reflex_next_step_time){
+					
+					if (fin_var[j].reflex_level[0] < light_max_level) 
+						fin_var[j].reflex_level[0] += 1;
+					if (fin_var[j].reflex_level[1] < motor_max_level) 
+						fin_var[j].reflex_level[1] += 1;
+					
+					fin_var[j].reflex_next_step_time += 1;
+					fin_var[j].reflex_step_time = millis();  	
+				}
+			
+			}				
+		}
+	}
+	
+
+
+
+	
+}
 
 //---- indicator LED -----
 

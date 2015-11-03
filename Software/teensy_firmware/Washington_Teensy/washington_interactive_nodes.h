@@ -362,6 +362,10 @@ class WashingtonFinNode : public FinsLightsUnit{
 		//---- test behaviour ----
 		void test_behaviour(const uint32_t &curr_time);
 		
+		//---- self-running behaviour ----
+		void self_running_behaviour(const uint32_t &curr_time);
+		
+		
 		//---- indicator LED -----
 		void led_blink_behaviour(const uint32_t &curr_time);
 	
