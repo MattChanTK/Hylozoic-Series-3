@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        self.plot_histories()
+        # self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -84,18 +84,30 @@ class CBLA_DataPlotter(DataPlotter):
                         num_data_pt = len(data_val['x'])
                         while k < num_data_pt:
 
-                            if data_val['x'][k] >= window_t + WIN_PERIOD:
+                            while data_val['x'][k] >= window_t + WIN_PERIOD:
                                 window_t += WIN_PERIOD
                                 if window_t not in windowed_data:
-                                    windowed_data[window_t] = defaultdict(list)
+                                    windowed_data[window_t] = dict()
+                                if node_name not in windowed_data[window_t]:
+                                    windowed_data[window_t][node_name] = []
 
                             windowed_data[window_t][node_name].append(data_val['y'][k])
                             k += 1
 
             # average every window of values
+            prev_t = None
             for t, vals_t in windowed_data.items():
+
                 for node_name, node_data in vals_t.items():
-                    windowed_data[t][node_name] = np.mean(node_data)
+                    if len(node_data) <= 0:
+                        if prev_t:
+                            windowed_data[t][node_name] = windowed_data[prev_t][node_name]
+                        else:
+                            windowed_data[t][node_name] = 0
+                    else:
+                        windowed_data[t][node_name] = np.mean(node_data)
+
+                prev_t = t
 
             # total activation array
             total_activation_array = []
@@ -122,10 +134,12 @@ class CBLA_DataPlotter(DataPlotter):
                     cluster_values[cluster_id].append(node_data_t)
                 for cluster_id, cluster_value in cluster_values.items():
                     cluster_activation = [np.mean(cluster_value)]
+                    total_activation = [np.mean(cluster_value)]
                     for other_cluster_id, other_cluster_value in cluster_values.items():
                         if other_cluster_id != cluster_id:
-                            cluster_activation.append(np.mean(other_cluster_value)*0.2)
-                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)))
+                            # cluster_activation.append(np.mean(other_cluster_value)*0.2)
+                            total_activation.append(np.mean(other_cluster_value))
+                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)/np.sum(total_activation)))
 
             for cluster_id, cluster_array in prox_activation_cluster_array.items():
                 prox_activation_cluster_array[cluster_id] = np.array(prox_activation_cluster_array[cluster_id])
@@ -151,7 +165,7 @@ class CBLA_DataPlotter(DataPlotter):
 
     def plot_metrics(self):
 
-        grid_dim = (1, 2)
+        grid_dim = (2, 1)
 
         metrics_keys = ('total_activation_array', 'prox_activation_cluster_array')
 
