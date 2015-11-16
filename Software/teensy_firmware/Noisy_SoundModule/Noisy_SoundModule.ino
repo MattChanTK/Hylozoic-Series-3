@@ -63,7 +63,7 @@ int clock_rate = 2000;
 void setup() {
   // Audio connections require memory to work.  For more
   // detailed information, see the MemoryAndCpuUsage example
-  AudioMemory(12);
+  AudioMemory(100);
 
   // Enable the audio shield, select input, and enable output
   sgtl5000_1.enable();

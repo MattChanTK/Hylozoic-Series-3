@@ -115,7 +115,7 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 
 	// Start playing the file.  This sketch continues to
 	// run while the file plays.
-			Serial.println(block);
+			// Serial.println(block);
 
 	if (channel != 2){
 		if (!block && playWav_L[curr_port_L].isPlaying()){

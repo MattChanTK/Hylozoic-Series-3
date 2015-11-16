@@ -4,8 +4,8 @@
 //===========================================================================
 
 //===== INITIALIZATION =====
-WashingtonCricketNode teensy_unit(0, 2, 5, 3);
-//WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
+//WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
 //WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
 //WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 

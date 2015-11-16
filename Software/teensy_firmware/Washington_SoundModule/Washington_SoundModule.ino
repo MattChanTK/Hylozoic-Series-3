@@ -87,6 +87,10 @@ void requestEvent() {
 	// }
 }
 
+uint32_t last_bg_on = millis();
+int sound_id_0 = 0;
+int sound_id_1 = 0;
+
 void loop(){
 
 	uint32_t curr_time = millis();
@@ -107,22 +111,51 @@ void loop(){
 	int delay_time = 1000;
 	int ir0 = sound_module.read_analog_state(0);
 	int ir1 = sound_module.read_analog_state(1);
+	
+	// Random Mode
+	sound_id_0 = random(1, 6);
+	sound_id_1 = random(1, 6);
+	
+	// Playlist Mode
+	// sound_id_0 += 1;
+	// if (sound_id_0 > 6){
+		// sound_id_0 = 1;
+	// }
+	// sound_id_1 += 1;
+	// if (sound_id_1 > 6){
+		// sound_id_1 = 1;
+	// }
+	
+	bool bg_on = false; 
 
-	if ( ir0 > 1000 || ir1 > 1000){
+	// if (curr_time - last_bg_on > 1000){
+		// bg_on = random(1, 10) <= 2;
 		
-		sound_module.playWav("1.wav", 1, 0, 1);
-		// delay(500);
-		sound_module.playWav("1.wav", 2, 1, 1);
-		// delay(1000);
+		// last_bg_on = millis();
+
+	// }
+	// Serial.println(bg_on);
+	if ((ir0 > 1000)){
+		//concatenate file id and extension to a string
+		String filename_string = String(sound_id_0) + ".wav";
+		char filename [filename_string.length()]; // allocate memeory the char_arr
+		filename_string.toCharArray(filename, filename_string.length()+1); // convert String to char_arr
+	
+		sound_module.playWav(filename, 1, 0, 1);
+		
+	}
+	if ((ir1 > 1000)){
+		//concatenate file id and extension to a string
+		String filename_string = String(sound_id_1) + ".wav";
+		char filename [filename_string.length()]; // allocate memeory the char_arr
+		filename_string.toCharArray(filename, filename_string.length()+1); // convert String to char_arr
+	
+		sound_module.playWav(filename, 2, 0, 1);
 	}
 	
-
-	
-	
 	//>>>> Light <<<<<
-	
 	// starting a cycle
-	if (( ir0 > 1000 || ir1 > 1000) && !cycling){
+	if (( ir0 > 1000 || ir1 > 1000 || bg_on) && !cycling){
 		Serial.println("starting cycle");
 		cycling = true; 
 		phase_time = millis();  	
