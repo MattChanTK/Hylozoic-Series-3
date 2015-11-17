@@ -115,11 +115,17 @@ class Half_Fin(Simple_Node):
         # controller
         self.controller = SMA_Controller(self.out_var['output'], **config)
 
+        self.k = 52.59
+
     def run(self):
 
         while self.alive:
+            if (self.in_var['temp_ref'].val >= 1):
+                linear_ref = np.log(self.in_var['temp_ref'].val)*self.k
+            else:
+                linear_ref = self.in_var['temp_ref'].val
 
-            self.controller.update(self.in_var['temp_ref'].val)
+            self.controller.update(linear_ref)
             sleep(self.messenger.estimated_msg_period*2)
 
 
