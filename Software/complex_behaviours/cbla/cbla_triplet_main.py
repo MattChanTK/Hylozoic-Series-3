@@ -552,7 +552,7 @@ class CBLA(interactive_system.InteractiveCmd):
                         linked_sma_version = 'l'
                     elif node_version == 'm':
                         linked_led_id = node_id
-                        linked_sma_id = (node_id + 1) % self.num_fin
+                        linked_sma_id = (node_id - 1) % self.num_fin
                         linked_sma_version = 'r'
                     else:
                         raise ValueError('Reflex nodes must have either "l" or "m" version!')
