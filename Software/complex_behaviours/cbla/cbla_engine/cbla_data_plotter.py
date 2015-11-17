@@ -26,7 +26,7 @@ class CBLA_DataPlotter(DataPlotter):
             for node_name, node_data in session_data.items():
 
                 self.plot_objects[(session_num, node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s (S%d)' % (node_name, session_num))
-                # self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+                self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
 
             self.plot_objects[(session_num, 'metrics')]  = PlotObject(fig_num=len(self.plot_objects)+1,
                                                                       fig_title='S%d - Metrics' % session_num)
@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        # self.plot_histories()
+        self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -59,8 +59,8 @@ class CBLA_DataPlotter(DataPlotter):
     def compute_metrics(self):
 
         WIN_PERIOD = 1.0
-        T_TRIG = 190
-        T_DONE = 260
+        T_TRIG = 300
+        T_DONE = 360
         session_num = 1
         for session_data in self.data:
 
@@ -139,7 +139,7 @@ class CBLA_DataPlotter(DataPlotter):
                         if other_cluster_id != cluster_id:
                             # cluster_activation.append(np.mean(other_cluster_value)*0.2)
                             total_activation.append(np.mean(other_cluster_value))
-                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)/np.sum(total_activation)))
+                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)))
 
             for cluster_id, cluster_array in prox_activation_cluster_array.items():
                 prox_activation_cluster_array[cluster_id] = np.array(prox_activation_cluster_array[cluster_id])
