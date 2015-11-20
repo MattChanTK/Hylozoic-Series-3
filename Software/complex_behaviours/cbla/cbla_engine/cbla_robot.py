@@ -266,13 +266,13 @@ class Robot(object):
             # calculate the mean square of action value
             if len(self.prev_action_value) > min(self.prev_action_value.maxlen, len(self.out_vars)+len(self.in_vars)):
 
-                avg_action_val = float(np.mean(np.square(list(self.prev_action_value))))
+                avg_action_val_2 = float(np.mean(np.square(list(self.prev_action_value))))
                 # making sure that the average action isn't too small
-                avg_action_val = max(self.config['min_avg_action_value'], avg_action_val)
+                avg_action_val_2 = max(self.config['min_avg_action_value'], avg_action_val_2)
 
                 # no value added if it's less than the avg_action Value
                 try:
-                    rel_action_val = action_val**2/avg_action_val
+                    rel_action_val = action_val**2/avg_action_val_2
                 except ZeroDivisionError:
                     rel_action_val = 1.0
 
@@ -283,6 +283,13 @@ class Robot(object):
                                                   b=self.config['min_m_max_val'],
                                                   d=self.config['low_action_m_max_val'],
                                                   c=self.config['low_rel_action_val_thres'])
+
+                # self.m_max_val = self.map_linear(rel_action_val,
+                #                                   b=self.config['min_m_max_val'],
+                #                                   d=self.config['low_action_m_max_val'],
+                #                                   c=self.config['low_rel_action_val_thres'],
+                #                                   k=1.0)
+
 
                 self.internal_state['rel_act_val'].val = rel_action_val
                 self.internal_state['avg_rel_act_val'].val = avg_rel_action_val
@@ -314,6 +321,24 @@ class Robot(object):
         y = 1/(1+math.exp(-k*x + a))
         return y
 
+    @classmethod
+    def map_linear(cls, x, b, d, c, k=0.5) -> float:
+
+        if not isinstance(d, (int, float)) or not 0 < d < 1:
+            raise ValueError("d must be a float between 0 and 1!  Not %s" % str(d))
+
+        if not isinstance(b, (int, float)) or not 0 < b < 1:
+            raise ValueError("b must be a float between 0 and 1!  Not %s" % str(b))
+
+        if not isinstance(c, (int, float)) or not c > 0:
+            raise ValueError("c must be a float greater than 0!  Not %s" % str(c))
+
+        m = k*(1/(c-d))
+
+        y = m*x + b
+
+        return min(max(y, 0), 1)
+
 
 class Robot_Light(Robot):
 
@@ -324,7 +349,7 @@ class Robot_Light(Robot):
         self.config['sample_period'] = 1.0
         self.config['wait_time'] = 0.0  # 4.0
 
-        self.config['prev_values_deque_size'] = 75
+        self.config['prev_values_deque_size'] = 75 # 150
         self.config['prev_rel_values_deque_size'] = 5
 
         self.config['min_m_max_val'] = 0.01
@@ -346,7 +371,7 @@ class Robot_HalfFin(Robot):
         self.config['sample_period'] = 5.0
         self.config['wait_time'] = 0.0  #4.0
 
-        self.config['prev_values_deque_size'] = 15
+        self.config['prev_values_deque_size'] = 15 #30
         self.config['prev_rel_values_deque_size'] = 1
 
         self.config['min_m_max_val'] = 0.1
@@ -391,7 +416,7 @@ class Robot_Reflex(Robot):
         self.config['sample_period'] = 0.5
         self.config['wait_time'] = 0.0  # 2.0
 
-        self.config['prev_values_deque_size'] = 100
+        self.config['prev_values_deque_size'] = 150 # 300 # 100
         self.config['prev_rel_values_deque_size'] = 8
 
         self.config['min_m_max_val'] = 0.005
