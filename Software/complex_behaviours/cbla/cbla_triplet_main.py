@@ -14,6 +14,7 @@ from cbla_isolated_node import *
 
 from cbla_engine import cbla_robot
 import prescripted_engine as ps_engine
+from node_spatial_map import NodeSpatialMap as NodeMap
 
 try:
     from custom_gui import *
@@ -137,6 +138,10 @@ class CBLA(interactive_system.InteractiveCmd):
             self.link_randomly(cbla_nodes)
         elif self.mode == 'functional':
             self.link_functionally(cbla_nodes)
+
+
+        # creating the spatial map
+        self.node_map = self.build_node_map()
 
         # instantiate the node after the linking process
         for cbla_node in cbla_nodes.values():
@@ -287,7 +292,6 @@ class CBLA(interactive_system.InteractiveCmd):
         # network_components[neighbourhood_manager.node_name] = neighbourhood_manager
 
         return network_components
-
 
     def build_isolated_nodes(self, teensy_names, components):
 
@@ -835,6 +839,96 @@ class CBLA(interactive_system.InteractiveCmd):
 
                         cbla_node.add_in_var(var=linked_var, var_key=linked_var_name,
                                              var_range=var_range, var_name=var_name)
+
+    @classmethod
+    def build_node_map(cls):
+        node_map = NodeMap()
+
+        # Cluster 1
+        node_map.add_node('c1.cbla_light_0', 2.0, 0, 0)
+        node_map.add_node('c1.cbla_light_1', 3.0, 1.74, 0)
+        node_map.add_node('c1.cbla_light_2', 1.0, 1.74, 0)
+
+        node_map.add_node('c1.cbla_halfFin_0-l', 2.0, 0.84, 0)
+        node_map.add_node('c1.cbla_halfFin_1-l', 2.34, 1.37, 0)
+        node_map.add_node('c1.cbla_halfFin_2-l', 1.74, 1.37, 0)
+
+        node_map.add_node('c1.cbla_halfFin_0-r', 2.0, 0.84, 0)
+        node_map.add_node('c1.cbla_halfFin_1-r', 2.34, 1.37, 0)
+        node_map.add_node('c1.cbla_halfFin_2-r', 1.74, 1.37, 0)
+
+        node_map.add_node('c1.cbla_reflex_0-l', 2.0, 0.84, 0)
+        node_map.add_node('c1.cbla_reflex_1-l', 2.34, 1.37, 0)
+        node_map.add_node('c1.cbla_reflex_2-l', 1.74, 1.37, 0)
+
+        node_map.add_node('c1.cbla_reflex_0-m', 2.0, 0.84, 0)
+        node_map.add_node('c1.cbla_reflex_1-m', 2.34, 1.37, 0)
+        node_map.add_node('c1.cbla_reflex_2-m', 1.74, 1.37, 0)
+
+        # Cluster 2
+        node_map.add_node('c2.cbla_light_0', 4.1, 3.55, 0)
+        node_map.add_node('c2.cbla_light_1', 3.0, 5.34, 0)
+        node_map.add_node('c2.cbla_light_2', 5.11, 5.34, 0)
+
+        node_map.add_node('c2.cbla_halfFin_0-l', 4.1, 4.35, 0)
+        node_map.add_node('c2.cbla_halfFin_1-l', 4.4, 4.9, 0)
+        node_map.add_node('c2.cbla_halfFin_2-l', 3.8, 4.9, 0)
+
+        node_map.add_node('c2.cbla_halfFin_0-r', 4.1, 4.35, 0)
+        node_map.add_node('c2.cbla_halfFin_1-r', 4.4, 4.9, 0)
+        node_map.add_node('c2.cbla_halfFin_2-r', 3.8, 4.9, 0)
+
+        node_map.add_node('c2.cbla_reflex_0-l', 4.1, 4.35, 0)
+        node_map.add_node('c2.cbla_reflex_1-l', 4.4, 4.9, 0)
+        node_map.add_node('c2.cbla_reflex_2-l', 3.8, 4.9, 0)
+
+        node_map.add_node('c2.cbla_reflex_0-m', 4.1, 4.35, 0)
+        node_map.add_node('c2.cbla_reflex_1-m', 4.4, 4.9, 0)
+        node_map.add_node('c2.cbla_reflex_2-m', 3.8, 4.9, 0)
+
+        # Cluster 3 //NOT DONE
+        node_map.add_node('c3.cbla_light_0', 6.1, 0, 0)
+        node_map.add_node('c3.cbla_light_1', 3.0, 1.74, 0)
+        node_map.add_node('c3.cbla_light_2', 1.0, 1.74, 0)
+
+        node_map.add_node('c3.cbla_halfFin_0-l', 2.0, 0.84, 0)
+        node_map.add_node('c3.cbla_halfFin_1-l', 1.74, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_2-l', 2.34, 1.37, 0)
+
+        node_map.add_node('c3.cbla_halfFin_0-r', 2.0, 0.84, 0)
+        node_map.add_node('c3.cbla_halfFin_1-r', 1.74, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_2-r', 2.34, 1.37, 0)
+
+        node_map.add_node('c3.cbla_reflex_0-l', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_1-l', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_2-l', 0, 0, 0)
+
+        node_map.add_node('c3.cbla_reflex_0-m', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_1-m', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_2-m', 0, 0, 0)
+
+        # Cluster 4 //NOT DONE
+        node_map.add_node('c4.cbla_light_0', 2.0, 0, 0)
+        node_map.add_node('c4.cbla_light_1', 3.0, 1.74, 0)
+        node_map.add_node('c4.cbla_light_2', 1.0, 1.74, 0)
+
+        node_map.add_node('c4.cbla_halfFin_0-l', 2.0, 0.84, 0)
+        node_map.add_node('c4.cbla_halfFin_1-l', 1.74, 1.37, 0)
+        node_map.add_node('c4.cbla_halfFin_2-l', 2.34, 1.37, 0)
+
+        node_map.add_node('c4.cbla_halfFin_0-r', 2.0, 0.84, 0)
+        node_map.add_node('c4.cbla_halfFin_1-r', 1.74, 1.37, 0)
+        node_map.add_node('c4.cbla_halfFin_2-r', 2.34, 1.37, 0)
+
+        node_map.add_node('c4.cbla_reflex_0-l', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_1-l', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_2-l', 0, 0, 0)
+
+        node_map.add_node('c4.cbla_reflex_0-m', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_1-m', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_2-m', 0, 0, 0)
+
+        return node_map
 
     def start_nodes(self):
 

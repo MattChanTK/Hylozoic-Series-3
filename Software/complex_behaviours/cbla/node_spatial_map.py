@@ -13,7 +13,7 @@ class NodeSpatialMap(object):
         if isinstance(node_name, str) and \
             isinstance(x, (int, float)) and \
             isinstance(y, (int, float)) and \
-            isinstance(z, (int, float)) :
+                isinstance(z, (int, float)):
 
             self.node_dict[node_name] = (x, y, z)
 
