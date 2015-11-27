@@ -70,7 +70,7 @@ class Learner(object):
         self.info['is_exploring'] = is_exploring
 
         self.adapt_exploring_rate(action_value=val_best)
-        robot.adapt_m_max_val(action_val=val_best)
+        robot.adapt_m_max_val_windowing(action_val=val_best)
 
         return self.M
 
