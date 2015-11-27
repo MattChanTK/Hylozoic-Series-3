@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        self.plot_histories()
+        #self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -59,8 +59,8 @@ class CBLA_DataPlotter(DataPlotter):
     def compute_metrics(self):
 
         WIN_PERIOD = 1.0
-        T_TRIG = 300
-        T_DONE = 360
+        T_TRIG = 540 # 420
+        T_DONE = 600 #480
         session_num = 1
         for session_data in self.data:
 
@@ -227,7 +227,7 @@ class CBLA_DataPlotter(DataPlotter):
     def plot_histories(self):
 
         grid_dim = (2, 5)
-        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring',) #,best_action,  'is_exploring', 'S1_predicted',)
+        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'avg_act_val_2') #,best_action,  'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         session_num = 1
