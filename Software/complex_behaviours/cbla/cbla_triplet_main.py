@@ -1162,7 +1162,7 @@ if __name__ == "__main__":
     start_prescripted = False
 
     if len(sys.argv) > 3:
-        create_new_log = bool(sys.argv[3])
+        start_prescripted = bool(sys.argv[3])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4',)
