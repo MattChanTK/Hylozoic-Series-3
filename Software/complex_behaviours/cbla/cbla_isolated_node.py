@@ -20,6 +20,7 @@ class Isolated_Light_Node(CBLA_Generic_Node):
         learner_config['reward_smoothing'] = 3
         learner_config['kga_delta'] = 2
         learner_config['kga_tau'] = 4
+        # learner_config['prediction_model'] = linear_model.LinearRegression()
         learner_config['prediction_model'] = linear_model.Lasso(alpha=0.02,
                                                                 positive=False,
                                                                 normalize=False,
@@ -45,6 +46,7 @@ class Isolated_HalfFin_Node(CBLA_Generic_Node):
         learner_config['reward_smoothing'] = 1
         learner_config['kga_delta'] = 1
         learner_config['kga_tau'] = 2
+        # learner_config['prediction_model'] = linear_model.LinearRegression()
         learner_config['prediction_model'] = linear_model.Lasso(alpha=0.02,
                                                                 normalize=False,
                                                                 warm_start=True,
@@ -69,6 +71,7 @@ class Isolated_Reflex_Node(CBLA_Generic_Node):
         learner_config['reward_smoothing'] = 10
         learner_config['kga_delta'] = 2
         learner_config['kga_tau'] = 5
+        # learner_config['prediction_model'] = linear_model.LinearRegression()
         learner_config['prediction_model'] = linear_model.Lasso(alpha=0.02,
                                                                 normalize=False,
                                                                 warm_start=True,
