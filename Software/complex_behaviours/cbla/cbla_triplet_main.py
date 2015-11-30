@@ -33,7 +33,7 @@ class CBLA(interactive_system.InteractiveCmd):
     log_dir = 'cbla_log'
     log_header = 'cbla'
 
-    def __init__(self, Teensy_manager, auto_start=True, mode='isolated', start_prescripted=False):
+    def __init__(self, Teensy_manager, auto_start=True, mode='isolated', start_prescripted=False, in_user_study=False):
 
         # setting up the data collector
         log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
@@ -63,7 +63,8 @@ class CBLA(interactive_system.InteractiveCmd):
         self.node_list = OrderedDict()
 
         # data variables that will be recorded the user study
-        #self.user_study_vars = OrderedDict()
+        self.in_user_study = in_user_study
+        self.user_study_vars = OrderedDict()
 
         # Condition variable indicating that all nodes are created
         self.all_nodes_created = threading.Condition()
@@ -152,24 +153,25 @@ class CBLA(interactive_system.InteractiveCmd):
         self.node_list.update(cbla_nodes)
 
         # add user study panel to the node_list
-        # for node_name, node in self.node_list.items():
-        #     if isinstance(node, cbla_base.CBLA_Base_Node):
-        #         for var_name, var in node.in_var.items():
-        #             var_key = '%s.%s' % (node_name, var_name)
-        #             self.user_study_vars[var_key] = var
-        #         for var_name, var in node.out_var.items():
-        #             var_key = '%s.%s' % (node_name, var_name)
-        #             self.user_study_vars[var_key] = var
-        #         for var_name, var in node.cbla_robot.internal_state.items():
-        #             var_key = '%s.%s' % (node_name, var_name)
-        #             self.user_study_vars[var_key] = var
-        #
-        # user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
-        #                                   prescripted_active_var=self.prescripted_mode_active_var,
-        #                                   auto_snapshot_period = 180.0,
-        #                                   **self.user_study_vars)
-        #
-        # self.node_list[user_study_panel.node_name] = user_study_panel
+        if self.in_user_study:
+            for node_name, node in self.node_list.items():
+                if isinstance(node, cbla_base.CBLA_Base_Node):
+                    for var_name, var in node.in_var.items():
+                        var_key = '%s.%s' % (node_name, var_name)
+                        self.user_study_vars[var_key] = var
+                    for var_name, var in node.out_var.items():
+                        var_key = '%s.%s' % (node_name, var_name)
+                        self.user_study_vars[var_key] = var
+                    for var_name, var in node.cbla_robot.internal_state.items():
+                        var_key = '%s.%s' % (node_name, var_name)
+                        self.user_study_vars[var_key] = var
+
+            user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
+                                              prescripted_active_var=self.prescripted_mode_active_var,
+                                              auto_snapshot_period = 150.0,
+                                              **self.user_study_vars)
+
+            self.node_list[user_study_panel.node_name] = user_study_panel
 
         # notify other threads that all nodes are created
         with self.all_nodes_created:
@@ -992,7 +994,7 @@ class CBLA(interactive_system.InteractiveCmd):
                 node.save_states()
 
 
-def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
+def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict, in_user_study=False):
     if not isinstance(hmi, tk_gui.Master_Frame):
         raise TypeError("HMI must be Master_Frame")
     if not isinstance(node_list, dict):
@@ -1112,11 +1114,12 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
     page_frames = OrderedDict()
 
     # page for the User study control panel
-    # page_name = 'User Study'
-    # user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
-    #                                   display_var=panel_display_vars,
-    #                                   snapshot_taker=snapshot_taker, switch_mode_var=switch_mode_var)
-    # page_frames[page_name] = user_study_frame
+    if in_user_study:
+        page_name = 'User Study'
+        user_study_frame = HMI_User_Study(content_frame, page_name=page_name, page_key=page_name,
+                                          display_var=panel_display_vars,
+                                          snapshot_taker=snapshot_taker, switch_mode_var=switch_mode_var)
+        page_frames[page_name] = user_study_frame
 
     # page for the cbla and device variables
     for page_name, page_vars in tuple(cbla_display_vars.items()) + tuple(device_display_vars.items()):
@@ -1148,21 +1151,23 @@ if __name__ == "__main__":
 
     # mode setting
     mode_config = 'isolated'
-
     if len(sys.argv) > 1:
         mode_config = str(sys.argv[1])
 
     # creating new logs or not
     create_new_log = True
-
     if len(sys.argv) > 2:
         create_new_log = bool(sys.argv[2])
 
     # start with prescripted mode or not
-    start_prescripted = False
-
+    start_prescripted = True
     if len(sys.argv) > 3:
         start_prescripted = bool(sys.argv[3])
+
+    # user study on or off
+    in_user_study = True
+    if len(sys.argv) > 4:
+        in_user_study = bool(sys.argv[4])
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4',)
@@ -1196,7 +1201,7 @@ if __name__ == "__main__":
         # interactive code
         # -- this create all the abstract nodes
         behaviours = CBLA(teensy_manager, auto_start=True,
-                          mode=mode_config, start_prescripted=start_prescripted)
+                          mode=mode_config, start_prescripted=start_prescripted, in_user_study=in_user_study)
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
@@ -1207,7 +1212,7 @@ if __name__ == "__main__":
 
         # initialize the gui
         hmi = tk_gui.Master_Frame()
-        hmi_init(hmi, behaviours.messenger, behaviours.node_list)
+        hmi_init(hmi, behaviours.messenger, behaviours.node_list, in_user_study)
 
         sleep(5.0)
         # input("Enter any character to terminate program...")
