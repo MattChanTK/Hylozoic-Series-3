@@ -1,5 +1,6 @@
 __author__ = 'Matthew'
 from time import perf_counter
+from math import exp
 
 from abstract_node.node import *
 from interactive_system import Messenger
@@ -13,9 +14,8 @@ class Cluster_Activity(Node):
 
         # default parameters
         self.config = dict()
-        self.config['activity_expon'] = 3.0
         self.config['min_prob'] = 0.00
-        self.config['max_prob'] = 0.8
+        self.config['max_prob'] = 0.5
 
         self.out_var['local_prob'] = output
 
@@ -26,20 +26,25 @@ class Cluster_Activity(Node):
 
     def run(self):
 
-        activity_denom = len(self.in_var)
+        activity_denom = float(len(self.in_var))
         while self.alive:
 
             # determine level of activity
             activity = 0
             for var in self.in_var.values():
-                activity += (var.val > 0)
-            activity = activity**self.config['activity_expon']
-            activity = max(0, min(activity_denom**self.config['activity_expon'], activity))
+                activity += (var.val > 0.5)
+            activity = max(0, min(activity_denom, activity))
 
-            prob = activity/activity_denom**self.config['activity_expon']
+            prob = self.gaussian_function(activity, a=self.config['max_prob'], b=activity_denom/2, c=activity_denom/10)
+
             self.out_var['local_prob'].val = max(self.config['min_prob'], min(self.config['max_prob'], prob ))
+            # print('activity', activity, '  denom', activity_denom, '  prob', prob)
 
             sleep(max(0, self.messenger.estimated_msg_period * 2))
+
+    @staticmethod
+    def gaussian_function(x, a, b, c):
+        return a*exp(-((x-b)**2)/(2*(c**2)))
 
 
 class Neighbourhood_Manager(Node):
