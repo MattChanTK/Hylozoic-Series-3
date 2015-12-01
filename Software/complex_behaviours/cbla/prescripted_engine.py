@@ -7,11 +7,13 @@ from abstract_node import Var, DataLogger
 
 class Prescripted_Base_Engine(object):
 
-    def __init__(self, in_vars: dict, out_vars: dict):
+    def __init__(self, in_vars: dict, out_vars: dict, in_ranges: dict, out_ranges:dict):
 
         # setting input and output variables
         self.in_vars = OrderedDict()
+        self.in_ranges = OrderedDict()
         self.out_vars = OrderedDict()
+        self.out_ranges = OrderedDict()
 
         for name, input_var in in_vars.items():
             if isinstance(input_var, Var):
@@ -19,11 +21,18 @@ class Prescripted_Base_Engine(object):
             else:
                 raise TypeError("Input %s is not a Var type!" % name)
 
+            if name in in_ranges and isinstance(in_ranges[name], tuple):
+                self.in_ranges[name] = in_ranges[name]
+
         for name, output_var in out_vars.items():
             if isinstance(output_var, Var):
                 self.out_vars[name] = output_var
             else:
                 raise TypeError("Input %s is not a Var type!" % name)
+
+            if name in out_ranges and isinstance(out_ranges[name], tuple):
+                self.out_ranges[name] = out_ranges[name]
+
 
     def update(self):
 
@@ -32,15 +41,30 @@ class Prescripted_Base_Engine(object):
 
         in_var_dict = dict()
         for name, input_var in self.in_vars.items():
-            in_var_dict[name] = input_var.val
-        data_packet['in_vars'] = in_var_dict
+            if name in self.in_ranges:
+                in_var_dict[name] = self.normalize(input_var.val, self.in_ranges[name][0], self.in_ranges[name][1])
+            else:
+                in_var_dict[name] = input_var.val
+        data_packet['in_vars'] = tuple(in_var_dict.values())
 
         out_var_dict = dict()
         for name, output_var in self.out_vars.items():
-            out_var_dict[name] = output_var.val
-        data_packet['out_vars'] = out_var_dict
+            if name in self.out_ranges:
+                out_var_dict[name] = self.normalize(output_var.val, self.out_ranges[name][0], self.out_ranges[name][1])
+            else:
+                out_var_dict[name] = output_var.val
+        data_packet['out_vars'] = tuple(out_var_dict.values())
 
         return data_packet
+
+    @staticmethod
+    def normalize(orig_val: float, low_bound: float, hi_bound: float) -> float:
+
+        if low_bound >= hi_bound:
+            raise ValueError("Lower Bound cannot be greater than or equal to the Upper Bound!")
+
+        return (orig_val - low_bound)/(hi_bound - low_bound)
+
 
 class Interactive_Light_Engine(Prescripted_Base_Engine):
 
@@ -82,13 +106,23 @@ class Interactive_Light_Engine(Prescripted_Base_Engine):
         self.config['activation_period'] = 3.0
         self.config['neighbour_action_k'] = 0.05
 
+        # normalization factors
+        self.config['fin_ir_range'] = (0, 4095)
+        self.config['led_range'] = (0, self.config['led_max_output'])
+
         # custom configuration
         if isinstance(config, dict):
             for name, arg in config.items():
                 self.config[name] = arg
 
         # initialize
-        super(Interactive_Light_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+        in_ranges = dict()
+        out_ranges = dict()
+        in_ranges['fin_ir'] = self.config['fin_ir_range']
+        out_ranges['led'] = self.config['led_range']
+
+        super(Interactive_Light_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars,
+                                                       in_ranges=in_ranges, out_ranges=out_ranges)
 
         # variables
         self.random_check_time = perf_counter()
@@ -144,13 +178,23 @@ class Interactive_Reflex_Engine(Prescripted_Base_Engine):
         self.config['max_output'] = 100
         self.config['pulsing_period'] = 2.0
 
+        # normalization factors
+        self.config['scout_ir_range'] = (0, 4095)
+        self.config['actuator_range'] = (0, self.config['max_output'])
+
         # custom configuration
         if isinstance(config, dict):
             for name, arg in config.items():
                 self.config[name] = arg
 
         # initialize
-        super(Interactive_Reflex_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+        in_ranges = dict()
+        out_ranges = dict()
+        in_ranges['scout_ir'] = self.config['scout_ir_range']
+        out_ranges['actuator'] = self.config['actuator_range']
+
+        super(Interactive_Reflex_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars,
+                                                        in_ranges=in_ranges, out_ranges=out_ranges)
 
         # variables
         self.on_time = perf_counter()
@@ -228,12 +272,28 @@ class Interactive_HalfFin_Engine(Prescripted_Base_Engine):
         self.config['activation_period'] = 2.0
         self.config['neighbour_action_k'] = 0.2
 
+        # normalization factors
+        self.config['fin_ir_range'] = (0, 4095)
+        self.config['scout_ir_range'] = (0, 4095)
+        self.config['side_ir_range'] = (0, 4095)
+        self.config['actuator_range'] = (self.config['off_output'], self.config['on_output'])
+
         # custom configuration
         if isinstance(config, dict):
             for name, arg in config.items():
                 self.config[name] = arg
 
-        super(Interactive_HalfFin_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars)
+
+        # initialize
+        in_ranges = dict()
+        out_ranges = dict()
+        in_ranges['fin_ir'] = self.config['fin_ir_range']
+        in_ranges['scout_ir'] = self.config['scout_ir_range']
+        in_ranges['side_ir'] = self.config['side_ir_range']
+        out_ranges['actuator'] = self.config['actuator_range']
+
+        super(Interactive_HalfFin_Engine, self).__init__(in_vars=in_vars, out_vars=out_vars,
+                                                         in_ranges=in_ranges, out_ranges=out_ranges)
 
         # variables
         self.random_check_time = perf_counter()
