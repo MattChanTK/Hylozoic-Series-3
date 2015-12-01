@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        #self.plot_histories()
+        self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -182,52 +182,56 @@ class CBLA_DataPlotter(DataPlotter):
                 if metrics_key not in session_metrics:
                     continue
 
-                # instantiate axis
-                ax_name = '%s' % metrics_key
-                ax_num = metrics_keys.index(metrics_key) + 1
-                self.plot_objects[session_key].add_ax(ax_name=ax_name,
-                                                      location=(grid_dim[0], grid_dim[1], ax_num))
+                try:
+                    # instantiate axis
+                    ax_name = '%s' % metrics_key
+                    ax_num = metrics_keys.index(metrics_key) + 1
+                    self.plot_objects[session_key].add_ax(ax_name=ax_name,
+                                                          location=(grid_dim[0], grid_dim[1], ax_num))
 
-                if metrics_key == 'total_activation_array':
-                    # configure the plot
-                    plot_config = dict()
-                    plot_config['xlabel'] = 'time (second)'
-                    plot_config['ylabel'] = 'activation'
-                    plot_config['title'] = 'Total Activation (S%d)' % session_num
+                    if metrics_key == 'total_activation_array':
+                        # configure the plot
+                        plot_config = dict()
+                        plot_config['xlabel'] = 'time (second)'
+                        plot_config['ylabel'] = 'activation'
+                        plot_config['title'] = 'Total Activation (S%d)' % session_num
 
-                    # plot the evolution plot
-                    metrics_vals = session_metrics[metrics_key].transpose()
-                    self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
-                                                                  metrics_vals[1], metrics_vals[0], **plot_config)
-
-                    print('Plotted the total activation array (S%d)' % session_num)
-
-                elif metrics_key == 'prox_activation_cluster_array':
-                    # configure the plot
-                    plot_config = dict()
-                    plot_config['xlabel'] = 'time (second)'
-                    plot_config['ylabel'] = 'activation'
-                    plot_config['title'] = 'Proximal Cluster Activation (S%d)' % session_num
-
-                    # plot the evolution plot
-                    metrics_dict = session_metrics[metrics_key]
-                    metrics_vals = []
-                    for cluster_id, cluster_vals in metrics_dict.items():
-                        metrics_vals.append((cluster_id, cluster_vals.transpose()))
-                    metrics_vals = sorted(metrics_vals, key=lambda x: x[0])
-
-                    for cluster_id, metrics_val in metrics_vals:
+                        # plot the evolution plot
+                        metrics_vals = session_metrics[metrics_key].transpose()
                         self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
-                                                                      metrics_val[1], metrics_val[0], **plot_config)
+                                                                      metrics_vals[1], metrics_vals[0], **plot_config)
 
-                    print('Plotted the proximal activation array (S%d)' % session_num)
+                        print('Plotted the total activation array (S%d)' % session_num)
+
+                    elif metrics_key == 'prox_activation_cluster_array':
+                        # configure the plot
+                        plot_config = dict()
+                        plot_config['xlabel'] = 'time (second)'
+                        plot_config['ylabel'] = 'activation'
+                        plot_config['title'] = 'Proximal Cluster Activation (S%d)' % session_num
+
+                        # plot the evolution plot
+                        metrics_dict = session_metrics[metrics_key]
+                        metrics_vals = []
+                        for cluster_id, cluster_vals in metrics_dict.items():
+                            metrics_vals.append((cluster_id, cluster_vals.transpose()))
+                        metrics_vals = sorted(metrics_vals, key=lambda x: x[0])
+
+                        for cluster_id, metrics_val in metrics_vals:
+                            self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
+                                                                          metrics_val[1], metrics_val[0], **plot_config)
+
+                        print('Plotted the proximal activation array (S%d)' % session_num)
+
+                except Exception:
+                    continue
 
             session_num += 1
 
     def plot_histories(self):
 
         grid_dim = (2, 5)
-        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'avg_act_val_2') #,best_action,  'is_exploring', 'S1_predicted',)
+        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'out_vars')#'avg_act_val_2') #,best_action,  'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         session_num = 1

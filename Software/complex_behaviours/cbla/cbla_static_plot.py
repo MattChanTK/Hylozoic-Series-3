@@ -19,7 +19,7 @@ if __name__ == '__main__':
         log_timestamp = None
 
     plotter = CBLA_DataPlotter(log_dir=log_dir, log_header=log_header, log_timestamp=log_timestamp,
-                               packet_types=(CBLA_Base_Node.cbla_data_type_key,),
+                               packet_types=(CBLA_Base_Node.cbla_data_type_key, CBLA_Base_Node.prescripted_data_type_key),
                                info_types=(CBLA_Base_Node.cbla_state_type_key, CBLA_Base_Node.cbla_label_name_key,))
     plotter.plot()
     # plotter.update_plot()
