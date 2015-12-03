@@ -75,7 +75,7 @@ class CBLA_DataPlotter(DataPlotter):
                 for data_type, data_val in node_data.items():
 
                     # M value for each node
-                    if data_type == 'M':
+                    if data_type == 'M' or data_type =='out_vars':
 
                         # slots sets of data points in windows
                         k = 0
@@ -231,7 +231,7 @@ class CBLA_DataPlotter(DataPlotter):
     def plot_histories(self):
 
         grid_dim = (2, 5)
-        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'out_vars')#'avg_act_val_2') #,best_action,  'is_exploring', 'S1_predicted',)
+        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'out_vars', ) #'avg_act_val_2',) #,best_action,  'is_exploring', 'S1_predicted',)
         expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         session_num = 1
