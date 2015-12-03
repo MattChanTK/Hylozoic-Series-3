@@ -33,11 +33,17 @@ class CBLA(interactive_system.InteractiveCmd):
     log_dir = 'cbla_log'
     log_header = 'cbla'
 
-    def __init__(self, Teensy_manager, auto_start=True, mode='isolated', start_prescripted=False, in_user_study=False):
+    def __init__(self, Teensy_manager, auto_start=True, mode='isolated',
+                 create_new_log=True, log_dir_path=None,
+                 start_prescripted=False, in_user_study=False):
 
         # setting up the data collector
-        log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
+        if not isinstance(log_dir_path, str):
+            log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
 
+        print(log_dir_path)
+        print(create_new_log)
+        print(os.path.exists(log_dir_path))
         # create new entry folder if creating new log
         if create_new_log or not os.path.exists(log_dir_path):
             latest_log_dir = None
@@ -1157,17 +1163,31 @@ if __name__ == "__main__":
     # creating new logs or not
     create_new_log = True
     if len(sys.argv) > 2:
-        create_new_log = bool(sys.argv[2])
+        if sys.argv[2] == '1' or sys.argv[2] == 'True':
+            create_new_log = True
+        else:
+            create_new_log = False
+
+    # start log dir path
+    log_dir_path = None
+    if len(sys.argv) > 3:
+        log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir, str(sys.argv[3]))
 
     # start with prescripted mode or not
-    start_prescripted = True
-    if len(sys.argv) > 3:
-        start_prescripted = bool(sys.argv[3])
+    start_prescripted = False
+    if len(sys.argv) > 4:
+        if sys.argv[4] == '1' or sys.argv[4] == 'True':
+            start_prescripted = True
+        else:
+            start_prescripted = False
 
     # user study on or off
     in_user_study = True
-    if len(sys.argv) > 4:
-        in_user_study = bool(sys.argv[4])
+    if len(sys.argv) > 5:
+        if sys.argv[5] == '1' or sys.argv[5] == 'True':
+            in_user_study = True
+        else:
+            in_user_study = False
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = ('c1', 'c2', 'c3', 'c4',)
@@ -1200,8 +1220,9 @@ if __name__ == "__main__":
 
         # interactive code
         # -- this create all the abstract nodes
-        behaviours = CBLA(teensy_manager, auto_start=True,
-                          mode=mode_config, start_prescripted=start_prescripted, in_user_study=in_user_study)
+        behaviours = CBLA(teensy_manager, auto_start=True, mode=mode_config,
+                          create_new_log=create_new_log, log_dir_path=log_dir_path,
+                          start_prescripted=start_prescripted, in_user_study=in_user_study)
 
         if not isinstance(behaviours, CBLA):
             raise TypeError("Behaviour must be CBLA type!")
