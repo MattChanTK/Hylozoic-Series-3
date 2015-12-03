@@ -894,47 +894,47 @@ class CBLA(interactive_system.InteractiveCmd):
         node_map.add_node('c2.cbla_reflex_1-m', 4.4, 4.9, 0)
         node_map.add_node('c2.cbla_reflex_2-m', 3.8, 4.9, 0)
 
-        # Cluster 3 //NOT DONE
-        node_map.add_node('c3.cbla_light_0', 6.1, 0, 0)
-        node_map.add_node('c3.cbla_light_1', 3.0, 1.74, 0)
-        node_map.add_node('c3.cbla_light_2', 1.0, 1.74, 0)
+        # Cluster 3
+        node_map.add_node('c3.cbla_light_0', 6.15, 0, 0)
+        node_map.add_node('c3.cbla_light_1', 7.15, 1.74, 0)
+        node_map.add_node('c3.cbla_light_2', 5.12, 1.74, 0)
 
-        node_map.add_node('c3.cbla_halfFin_0-l', 2.0, 0.84, 0)
-        node_map.add_node('c3.cbla_halfFin_1-l', 1.74, 1.37, 0)
-        node_map.add_node('c3.cbla_halfFin_2-l', 2.34, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_0-l', 6.15, 0.84, 0)
+        node_map.add_node('c3.cbla_halfFin_1-l', 6.47, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_2-l', 5.78, 1.37, 0)
 
-        node_map.add_node('c3.cbla_halfFin_0-r', 2.0, 0.84, 0)
-        node_map.add_node('c3.cbla_halfFin_1-r', 1.74, 1.37, 0)
-        node_map.add_node('c3.cbla_halfFin_2-r', 2.34, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_0-r', 6.15, 0.84, 0)
+        node_map.add_node('c3.cbla_halfFin_1-r', 6.47, 1.37, 0)
+        node_map.add_node('c3.cbla_halfFin_2-r', 5.78, 1.37, 0)
 
-        node_map.add_node('c3.cbla_reflex_0-l', 0, 0, 0)
-        node_map.add_node('c3.cbla_reflex_1-l', 0, 0, 0)
-        node_map.add_node('c3.cbla_reflex_2-l', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_0-l', 6.15, 0.84, 0)
+        node_map.add_node('c3.cbla_reflex_1-l', 6.47, 1.37, 0)
+        node_map.add_node('c3.cbla_reflex_2-l', 5.78, 1.37, 0)
 
-        node_map.add_node('c3.cbla_reflex_0-m', 0, 0, 0)
-        node_map.add_node('c3.cbla_reflex_1-m', 0, 0, 0)
-        node_map.add_node('c3.cbla_reflex_2-m', 0, 0, 0)
+        node_map.add_node('c3.cbla_reflex_0-m', 6.15, 0.84, 0)
+        node_map.add_node('c3.cbla_reflex_1-m', 6.47, 1.37, 0)
+        node_map.add_node('c3.cbla_reflex_2-m', 5.78, 1.37, 0)
 
-        # Cluster 4 //NOT DONE
-        node_map.add_node('c4.cbla_light_0', 2.0, 0, 0)
-        node_map.add_node('c4.cbla_light_1', 3.0, 1.74, 0)
-        node_map.add_node('c4.cbla_light_2', 1.0, 1.74, 0)
+        # Cluster 4
+        node_map.add_node('c4.cbla_light_0', 8.20, 3.55, 0)
+        node_map.add_node('c4.cbla_light_1', 9.21, 5.34, 0)
+        node_map.add_node('c4.cbla_light_2', 7.15, 5.34, 0)
 
-        node_map.add_node('c4.cbla_halfFin_0-l', 2.0, 0.84, 0)
-        node_map.add_node('c4.cbla_halfFin_1-l', 1.74, 1.37, 0)
-        node_map.add_node('c4.cbla_halfFin_2-l', 2.34, 1.37, 0)
+        node_map.add_node('c4.cbla_halfFin_0-l', 8.20, 4.35, 0)
+        node_map.add_node('c4.cbla_halfFin_1-l', 8.56, 4.9, 0)
+        node_map.add_node('c4.cbla_halfFin_2-l', 7.80, 4.9, 0)
 
-        node_map.add_node('c4.cbla_halfFin_0-r', 2.0, 0.84, 0)
-        node_map.add_node('c4.cbla_halfFin_1-r', 1.74, 1.37, 0)
-        node_map.add_node('c4.cbla_halfFin_2-r', 2.34, 1.37, 0)
+        node_map.add_node('c4.cbla_halfFin_0-r', 8.20, 4.35, 0)
+        node_map.add_node('c4.cbla_halfFin_1-r', 8.56, 4.9, 0)
+        node_map.add_node('c4.cbla_halfFin_2-r', 7.80, 4.9, 0)
 
-        node_map.add_node('c4.cbla_reflex_0-l', 0, 0, 0)
-        node_map.add_node('c4.cbla_reflex_1-l', 0, 0, 0)
-        node_map.add_node('c4.cbla_reflex_2-l', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_0-l', 8.20, 4.35, 0)
+        node_map.add_node('c4.cbla_reflex_1-l', 8.56, 4.9, 0)
+        node_map.add_node('c4.cbla_reflex_2-l', 7.80, 4.9, 0)
 
-        node_map.add_node('c4.cbla_reflex_0-m', 0, 0, 0)
-        node_map.add_node('c4.cbla_reflex_1-m', 0, 0, 0)
-        node_map.add_node('c4.cbla_reflex_2-m', 0, 0, 0)
+        node_map.add_node('c4.cbla_reflex_0-m', 8.20, 4.35, 0)
+        node_map.add_node('c4.cbla_reflex_1-m', 8.56, 4.9, 0)
+        node_map.add_node('c4.cbla_reflex_2-m', 7.80, 4.9, 0)
 
         return node_map
 
