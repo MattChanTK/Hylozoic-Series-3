@@ -41,9 +41,9 @@ class CBLA(interactive_system.InteractiveCmd):
         if not isinstance(log_dir_path, str):
             log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir)
 
-        print(log_dir_path)
-        print(create_new_log)
-        print(os.path.exists(log_dir_path))
+        print("Create New Log? ", create_new_log)
+        print("Log Directory: ", log_dir_path)
+        print("Directory Exists? ", os.path.exists(log_dir_path))
         # create new entry folder if creating new log
         if create_new_log or not os.path.exists(log_dir_path):
             latest_log_dir = None
@@ -161,16 +161,26 @@ class CBLA(interactive_system.InteractiveCmd):
         # add user study panel to the node_list
         if self.in_user_study:
             for node_name, node in self.node_list.items():
+
+                for var_name, var in node.in_var.items():
+                    var_key = '%s.%s' % (node_name, var_name)
+                    self.user_study_vars[var_key] = var
+                for var_name, var in node.out_var.items():
+                    var_key = '%s.%s' % (node_name, var_name)
+                    self.user_study_vars[var_key] = var
                 if isinstance(node, cbla_base.CBLA_Base_Node):
-                    for var_name, var in node.in_var.items():
-                        var_key = '%s.%s' % (node_name, var_name)
-                        self.user_study_vars[var_key] = var
-                    for var_name, var in node.out_var.items():
-                        var_key = '%s.%s' % (node_name, var_name)
-                        self.user_study_vars[var_key] = var
                     for var_name, var in node.cbla_robot.internal_state.items():
                         var_key = '%s.%s' % (node_name, var_name)
                         self.user_study_vars[var_key] = var
+
+                    if node.prescripted_engine:
+                        for var_name, var in node.prescripted_engine.in_vars.items():
+                            var_key = '%s.%s' % (node_name, var_name)
+                            self.user_study_vars[var_key] = var
+
+                        for var_name, var in node.prescripted_engine.out_vars.items():
+                            var_key = '%s.%s' % (node_name, var_name)
+                            self.user_study_vars[var_key] = var
 
             user_study_panel = UserStudyPanel(self.messenger, log_file_name=self.data_logger.log_name + '.csv',
                                               prescripted_active_var=self.prescripted_mode_active_var,
@@ -1174,7 +1184,7 @@ if __name__ == "__main__":
         log_dir_path = os.path.join(os.getcwd(), CBLA.log_dir, str(sys.argv[3]))
 
     # start with prescripted mode or not
-    start_prescripted = False
+    start_prescripted = True
     if len(sys.argv) > 4:
         if sys.argv[4] == '1' or sys.argv[4] == 'True':
             start_prescripted = True

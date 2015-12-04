@@ -6,7 +6,7 @@ from cbla_generic_node import *
 if __name__ == '__main__':
 
 
-    log_dir = os.path.join(os.getcwd(), 'cbla_log')
+    log_dir = os.path.join(os.getcwd(), 'cbla_log',) # 'study_1')
 
     if len(sys.argv) > 1:
         log_header = str(sys.argv[1])
