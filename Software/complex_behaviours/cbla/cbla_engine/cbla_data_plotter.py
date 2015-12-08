@@ -75,7 +75,7 @@ class CBLA_DataPlotter(DataPlotter):
                 for data_type, data_val in node_data.items():
 
                     # M value for each node
-                    if data_type == 'M' or data_type =='out_vars':
+                    if data_type == 'M' or data_type == 'out_vars':
 
                         # slots sets of data points in windows
                         k = 0
