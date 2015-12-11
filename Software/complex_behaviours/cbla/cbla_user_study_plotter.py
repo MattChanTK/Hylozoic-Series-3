@@ -14,6 +14,7 @@ class UserStudyPlotter(cdp.CBLA_DataPlotter):
         self.node_active_array = None
         self.win_period = None
         self.study_number = study_number
+        self.session_start_time = None
 
         self.session_num = session_num
         super(UserStudyPlotter, self).__init__(log_dir=log_dir, log_header=log_header,
@@ -37,6 +38,9 @@ class UserStudyPlotter(cdp.CBLA_DataPlotter):
 
         # pick out the data of the relevant session
         session_data = self.data[self.session_num-1]
+
+        # determine the session start time
+        self.session_start_time = str(self.state_info["session_datetime0"]["%d" % self.session_num])
 
         # creating the activation array which will be returned at the end of this function
         active_arrays = dict()
@@ -120,7 +124,9 @@ class UserStudyPlotter(cdp.CBLA_DataPlotter):
             self.sorted_array_list.append((node_name, node_data))
         self.sorted_array_list = sorted(self.sorted_array_list, key=lambda x: x[0])
 
+        sheet.write(0, 0, self.session_start_time)
         sheet.write(1, 0, 'time (s)')
+
         for node_name, node_data in self.sorted_array_list:
 
             sheet.write(0, cur_col_id, node_name)
@@ -150,8 +156,10 @@ class UserStudyPlotter(cdp.CBLA_DataPlotter):
         # if a file name is specified
         if isinstance(file_name, str):
             book.save(file_name)
+            print("Data saved as %s" % file_name)
         else:
             book.save("study_data.xls")
+            print("Data saved as %s" % "study_data.xls")
 
         # go back to the "current directory"
         os.chdir(cur_dir)

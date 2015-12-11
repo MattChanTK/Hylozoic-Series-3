@@ -59,6 +59,7 @@ class DataPlotter(object):
 
             session_clock0 = session_log[DataLogger.session_clock0_key]
             session_data = self._get_data_template()
+            self.state_info["session_datetime0"].update({"%d" % session_num : session_log[DataLogger.session_datetime0_key]})
 
             for node_name, node_data in session_log.items():
 
