@@ -29,8 +29,15 @@ class NodeSpatialMap(object):
 
     def get_displacement(self, from_node, to_node):
 
-        pos_1 = self.get_position(from_node)
-        pos_2 = self.get_position(to_node)
+        if isinstance(from_node, (tuple, list)) and len(from_node) == 3:
+            pos_1 = tuple(from_node)
+        else:
+            pos_1 = self.get_position(from_node)
+
+        if isinstance(to_node, (tuple, list)) and len(to_node) == 3:
+            pos_2 = tuple(to_node)
+        else:
+            pos_2 = self.get_position(to_node)
 
         if isinstance(pos_2, (tuple, list)) and \
                 isinstance(pos_2, (tuple, list))\
