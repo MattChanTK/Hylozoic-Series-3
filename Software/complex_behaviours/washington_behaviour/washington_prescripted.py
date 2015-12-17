@@ -67,6 +67,9 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             # -- Fin Node ---
             elif isinstance(protocol, CP.WashingtonFinProtocol):
                 self.node_list.update(self.build_fin_node_components(teensy_name, protocol.NUM_FIN))
+            # -- Sound Node ---
+            elif isinstance(protocol, CP.WashingtonSoundProtocol):
+                self.node_list.update(self.build_sound_node_components(teensy_name, protocol.NUM_SOUND))
 
 
         self.start_nodes()
@@ -245,6 +248,14 @@ class WashingtonManual(interactive_system.InteractiveCmd):
 
             components.update(fin_comps)
         return components
+
+
+    def build_sound_node_components(self, teensy_name, num_sound):
+
+        components = OrderedDict()
+
+        return components
+
 
 def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
 

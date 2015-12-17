@@ -472,7 +472,7 @@ class WashingtonSoundProtocol(SystemParameters):
                 # byte x4 --- Sound Volume Left
                 content[byte_offset+4] = self.output_param[device_header+'sound_left_volume']
                 # byte x5 --- Sound Volume Right
-                content[byte_offset+5] = self.output_param[device_header+'sound_right_right']
+                content[byte_offset+5] = self.output_param[device_header+'sound_right_volume']
                 # byte x6 --- Sound Block Left
                 content[byte_offset+6] = self.output_param[device_header+'sound_left_block']
                 # byte x7 --- Sound Block Right
