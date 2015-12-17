@@ -1058,6 +1058,8 @@ void WashingtonFinCricketNode::test_behaviour(const uint32_t &curr_time) {
 
 //---- self_running_behaviour ----
 void WashingtonFinCricketNode::self_running_behaviour(const uint32_t &curr_time) {
+	
+	
 	//---- Fin cycling variables -----
 	static uint32_t high_level_ctrl_fin_phase_time[WashingtonFinCricketNode::NUM_FIN] = {0, 0, 0};
 
@@ -1277,14 +1279,19 @@ void WashingtonFinCricketNode::self_running_behaviour(const uint32_t &curr_time)
 	
 	//>>>> Cricket <<<<<
 	for (uint8_t j=0; j<WashingtonCricketNode::NUM_CRICKET; j++){
-		
+
 		for (uint8_t output_id=0; output_id<4; output_id++){
+			// Serial.print("c");
+			// Serial.print(j);
+			// Serial.print(".motor");
+			// Serial.print(output_id);
+			// Serial.print(": ");
+			// Serial.println(cricket_var[j].output_level[output_id]);
 			cricket[j].set_output_level(output_id, cricket_var[j].output_level[output_id]);
 		}
-
 	}
-
-
+	
+	
 
 	
 }
