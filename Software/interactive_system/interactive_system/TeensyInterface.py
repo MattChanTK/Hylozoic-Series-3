@@ -336,7 +336,7 @@ class TeensyInterface(threading.Thread):
                                     break
                                 else:
                                     # request another reply
-                                    data = self.listen_to_Teensy(timeout=100, byte_num=TeensyInterface.packet_size_in)
+                                    data = self.listen_to_Teensy(timeout=1000, byte_num=TeensyInterface.packet_size_in)
                         else:
                             no_reply_counter += 1
 
