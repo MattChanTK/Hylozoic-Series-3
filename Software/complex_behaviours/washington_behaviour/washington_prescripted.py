@@ -71,6 +71,10 @@ class WashingtonManual(interactive_system.InteractiveCmd):
             elif isinstance(protocol, CP.WashingtonSoundProtocol):
                 self.node_list.update(self.build_sound_node_components(teensy_name, protocol.NUM_SOUND))
 
+            # -- operation mode ----
+            operation_mode_var = Abs.Output_Node(self.messenger, teensy_name, node_name="operation_mode_var",
+                                                 output='operation_mode')
+            self.node_list.update({operation_mode_var.node_name: operation_mode_var})
 
         self.start_nodes()
 
