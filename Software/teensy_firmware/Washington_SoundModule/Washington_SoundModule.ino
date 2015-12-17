@@ -57,6 +57,8 @@ void setup(){
 
 	delay(1000);
 	
+	// sound_module.setVolume(10, 0, 0);
+	
 }
 
 void receiveEvent(int bytes) {
@@ -96,6 +98,7 @@ void loop(){
 	uint32_t curr_time = millis();
 	// If received message
 	// first buffer is always the message type
+	// // Serial.println(curr_time);
 	// if (recvMsg[0] > 0){
 		
 		// Serial.print("Received Message -- ");
