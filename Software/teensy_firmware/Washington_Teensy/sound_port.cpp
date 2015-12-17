@@ -93,13 +93,12 @@ bool TeensyUnit::SoundPort::read_analog_state(uint16_t &analog_1, uint16_t &anal
 
 	uint8_t i = 0;
 	byte buffer[6] = {0};
-	
+	noInterrupts();
 	while(teensy_unit.Wire.available() && i<6)
 	{
 		buffer[i] = teensy_unit.Wire.read();
 		i++;
 	}
-			
 	interrupts();
 
 	analog_1 = buffer[1] << 8 | buffer[0];
