@@ -261,7 +261,7 @@ class WashingtonManual(interactive_system.InteractiveCmd):
         return components
 
 
-def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict):
+def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict, monitor_only=False):
 
     if not isinstance(hmi, tk_gui.Master_Frame):
         raise TypeError("HMI must be Master_Frame")
@@ -295,11 +295,12 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 display_vars[teensy_name] = OrderedDict()
 
             # specifying the controlable variables
-            if device_name not in control_vars[teensy_name]:
-                control_vars[teensy_name][device_name] = OrderedDict()
+            if not monitor_only:
+                if  device_name not in control_vars[teensy_name]:
+                    control_vars[teensy_name][device_name] = OrderedDict()
 
-            if isinstance(node, Output_Node) and 'sma' not in name:
-                control_vars[teensy_name][device_name][output_name] = node.in_var['output']
+                if isinstance(node, Output_Node) and 'sma' not in name:
+                    control_vars[teensy_name][device_name][output_name] = node.in_var['output']
 
             # specifying the displayable variables
             if device_name not in display_vars[teensy_name]:
