@@ -34,7 +34,11 @@ class WashingtonManual(interactive_system.InteractiveCmd):
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
-            protocol = self.teensy_manager.get_protocol(teensy_name)
+            try:
+                protocol = self.teensy_manager.get_protocol(teensy_name)
+            except AttributeError:
+                self.teensy_manager.kill_teensy_thread(teensy_name)
+                break
             cmd_obj.add_param_change('operation_mode', protocol.MODE_MANUAL_CONTROL)
             self.enter_command(cmd_obj)
         self.send_commands()
@@ -299,7 +303,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 if  device_name not in control_vars[teensy_name]:
                     control_vars[teensy_name][device_name] = OrderedDict()
 
-                if isinstance(node, Output_Node) and 'sma' not in name:
+                if isinstance(node, Output_Node): # and 'sma' not in name:
                     control_vars[teensy_name][device_name][output_name] = node.in_var['output']
 
             # specifying the displayable variables
@@ -339,8 +343,9 @@ if __name__ == "__main__":
     cmd = WashingtonManual
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None
-    MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
+    ACTIVE_TEENSY_NAMES = (#'cricket_node_a' , 'cricket_node_b', 'cricket_node_c', 'cricket_node_d',
+                           'fin_node_A', 'fin_node_B', 'fin_cricket_node_C', 'fin_cricket_node_D', 'sound_node')
+    MANDATORY_TEENSY_NAMES = None
 
     def main():
 
