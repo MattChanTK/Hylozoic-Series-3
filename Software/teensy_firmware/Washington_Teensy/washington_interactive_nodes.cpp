@@ -12,7 +12,7 @@ WashingtonCricketNode::WashingtonCricketNode(uint8_t cricket0_port_id,
 											   ):
 	CricketsLightsUnit(cricket0_port_id, cricket1_port_id, cricket2_port_id, light0_port_id)	
 {
-	
+	//Serial.println("This is a Washington Cricket Node");
 }
 
 WashingtonCricketNode::~WashingtonCricketNode(){
@@ -21,7 +21,6 @@ WashingtonCricketNode::~WashingtonCricketNode(){
 
 void WashingtonCricketNode::parse_msg(){
 
-	
 	// byte 1 --- type of request
 	request_type = recv_data_buff[1];
 	
@@ -648,7 +647,7 @@ WashingtonFinCricketNode::WashingtonFinCricketNode(uint8_t fin0_port_id,
 	FinsCricketsUnit(fin0_port_id, fin1_port_id, fin2_port_id, 
 					 cricket0_port_id, cricket1_port_id, cricket2_port_id)
 {
-	
+	//Serial.println("This is a WashingtonFin-Cricket Node");
 }
 
 WashingtonFinCricketNode::~WashingtonFinCricketNode(){
@@ -1386,7 +1385,7 @@ WashingtonFinNode::WashingtonFinNode(uint8_t fin0_port_id,
 	FinsLightsUnit(fin0_port_id, fin1_port_id, fin2_port_id, 
 					 light0_port_id, light1_port_id, light2_port_id)
 {
-	
+	//Serial.println("This is a Washington Fin Node");
 }
 
 WashingtonFinNode::~WashingtonFinNode(){
