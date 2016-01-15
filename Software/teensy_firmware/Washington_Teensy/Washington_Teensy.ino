@@ -1,13 +1,14 @@
 #include "washington_interactive_nodes.h"
 #include <SerialCommand.h>
 
+
 //===========================================================================
 //===========================================================================
 
 //===== INITIALIZATION =====
 //WashingtonCricketNode teensy_unit(0, 2, 5, 3);
-WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
-//WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
+//WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
+WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
 //WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 
 //check for new messages
@@ -50,6 +51,7 @@ void setup() {
   delay(1000);
   
   sCmd.addCommand("VER",    cmdVersion);          // Prints version
+  sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
 }
 
 
@@ -135,4 +137,20 @@ void loop() {
 
 void cmdVersion(){
   Serial.println("TEENSY SOFTWARE COMPILED: " __DATE__ " " __TIME__);
+}
+
+void cmdBlink(){
+  // THESE ARE NOT QUITE RIGHT. Figure out how to do them properly.  
+  Serial.println("Blinking...");
+  for( int i=0; i<10; i++ ){
+    teensy_unit.light0.set_output_level(0, 255);
+    teensy_unit.light1.set_output_level(2, 0);
+    teensy_unit.light2.set_output_level(5, 255);
+    delay(100);
+    teensy_unit.light0.set_output_level(0, 0);
+    teensy_unit.light1.set_output_level(2, 255);
+    teensy_unit.light2.set_output_level(5, 0);
+    delay(100);
+  }
+  Serial.println("Done Blinking...");
 }
