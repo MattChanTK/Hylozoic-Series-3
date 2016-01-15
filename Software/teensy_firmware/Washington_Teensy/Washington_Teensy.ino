@@ -1,4 +1,5 @@
 #include "washington_interactive_nodes.h"
+#include <SerialCommand.h>
 
 //===========================================================================
 //===========================================================================
@@ -29,6 +30,8 @@ uint32_t get_time(){
 
 }
 
+SerialCommand sCmd (&Serial);     // The demo SerialCommand object
+
 void setup() {
 	
 	//--- Teensy Unit ---
@@ -44,6 +47,9 @@ void setup() {
 	Serial.begin(9600);
 	Serial.print("Setup Done");
 
+  delay(1000);
+  
+  sCmd.addCommand("VER",    cmdVersion);          // Prints version
 }
 
 
@@ -78,6 +84,7 @@ const uint16_t keep_alive_thres = 2000;
 volatile uint16_t prev_operation_mode = 0;
 
 void loop() {
+  sCmd.readSerial();     // We don't do much, just process serial commands
 
 	if (teensy_unit.receive_msg()){
 		
@@ -122,3 +129,10 @@ void loop() {
 
 }
 
+/* Handling Serial Commands
+ *  
+ */
+
+void cmdVersion(){
+  Serial.println("TEENSY SOFTWARE COMPILED: " __DATE__ " " __TIME__);
+}
