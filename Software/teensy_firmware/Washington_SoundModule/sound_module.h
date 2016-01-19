@@ -1,11 +1,15 @@
 #ifndef _SOUND_MODULE_H
 #define _SOUND_MODULE_H
 
-
+#define __USE_I2C_T3__
 
 #include "Arduino.h"
 #include <Audio.h>
-#include <Wire.h>
+#ifdef __USE_I2C_T3__
+  #include <i2c_t3.h> // Had to edit control_wm8731.cpp and control_sgtl5000.cpp to use i2c_t3.h instead of Wire.h
+#else
+  #include <Wire.h> 
+#endif
 #include <SPI.h>
 #include <SD.h>
 #include <String.h>

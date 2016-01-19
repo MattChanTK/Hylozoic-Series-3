@@ -1,10 +1,23 @@
+#define __USE_I2C_T3__
+#define __USE_SERIALCOMMAND__
 
 #include <Audio.h>
-#include <Wire.h>
+#ifdef __USE_I2C_T3__
+  #include <i2c_t3.h> // Had to edit control_wm8731.cpp and control_sgtl5000.cpp to use i2c_t3.h instead of Wire.h
+#else
+  #include <Wire.h> 
+#endif
 #include <SPI.h>
 #include <SD.h>
+#include <SerialFlash.h>
+#include <Bounce.h>
 
 #include "sound_module.h"
+
+#ifdef __USE_SERIALCOMMAND__
+  #include <SerialCommand.h>
+  SerialCommand sCmd (&Serial);     // The demo SerialCommand object
+#endif
 
 const uint8_t LED_PIN = 13;
 
@@ -58,10 +71,16 @@ void setup(){
 	delay(1000);
 	
 	// sound_module.setVolume(10, 0, 0);
+  
+
+  #ifdef __USE_SERIALCOMMAND__
+  sCmd.addCommand("VER",    cmdVersion);          // Prints version
+  sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
+  #endif
 	
 }
 
-void receiveEvent(int bytes) {
+void receiveEvent(unsigned int bytes) {
 	for (uint8_t i = 0; i < bytes; i++){
 		if (i >= NUM_BUFF){
 			//BUFFER Full
@@ -222,4 +241,23 @@ void loop(){
 
 }
 
-
+#ifdef __USE_SERIALCOMMAND__
+  void cmdVersion(){
+    Serial.println("TEENSY SOFTWARE COMPILED: " __DATE__ " " __TIME__);
+  }
+  
+  void cmdBlink(){
+    Serial.println("Blinking...");
+    for( int i=0; i<10; i++ ){
+      sound_module.set_output_level(0, 255);
+      sound_module.set_output_level(1, 0);
+      delay(100);
+      sound_module.set_output_level(0, 0);
+      sound_module.set_output_level(1, 255);
+      delay(100);
+    }
+    sound_module.set_output_level(0, 0);
+    sound_module.set_output_level(1, 0);
+    Serial.println("Done Blinking...");
+  }
+#endif
