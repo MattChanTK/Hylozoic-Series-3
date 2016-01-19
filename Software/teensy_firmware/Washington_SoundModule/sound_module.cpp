@@ -100,10 +100,6 @@ void SoundModule::init(){
 //port: if not 1 <= port <= 4, port = 1
 bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool block){
 	
-
-	Serial.print("Playing file: ");
-	Serial.println(wavfile);
-	
 	if (port < 1 || port > 4){
 		port = 1;
 	}
@@ -125,6 +121,8 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 				curr_port_L = 0;
 		}
 		if (!(block && playWav_L[port-1].isPlaying() ))
+      Serial.print("Playing file on Left: ");
+      Serial.println(wavfile);
 			fileFound &= playWav_L[curr_port_L].play(wavfile);
 		
 	}
@@ -139,6 +137,8 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
 		}
 		if (!(block && playWav_R[port-1].isPlaying() ))
 
+      Serial.print("Playing file on Right: ");
+      Serial.println(wavfile);
 			fileFound &= playWav_R[curr_port_R].play(wavfile);
 	}
 	

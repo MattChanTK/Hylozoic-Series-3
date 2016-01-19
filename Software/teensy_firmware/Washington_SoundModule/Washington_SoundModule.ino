@@ -14,6 +14,8 @@
 
 #include "sound_module.h"
 
+#define N_SOUNDS 170
+
 #ifdef __USE_SERIALCOMMAND__
   #include <SerialCommand.h>
   SerialCommand sCmd (&Serial);     // The demo SerialCommand object
@@ -135,8 +137,8 @@ void loop(){
 	int ir1 = sound_module.read_analog_state(1);
 	
 	// Random Mode
-	sound_id_0 = random(1, 6);
-	sound_id_1 = random(1, 6);
+	sound_id_0 = random(1, N_SOUNDS);
+	sound_id_1 = random(1, N_SOUNDS);
 	
 	// Playlist Mode
 	// sound_id_0 += 1;
