@@ -9,8 +9,6 @@
 #endif
 #include <SPI.h>
 #include <SD.h>
-#include <SerialFlash.h>
-#include <Bounce.h>
 
 #include "sound_module.h"
 
@@ -55,7 +53,7 @@ void setup(){
 	Serial.begin(9600);
 	
 	// set up the indicator LED
-    pinMode (LED_PIN, OUTPUT);
+  pinMode (LED_PIN, OUTPUT);
 	
 	// clear buffer
 	clearRecvMsg();
@@ -119,14 +117,7 @@ void loop(){
 	uint32_t curr_time = millis();
 	// If received message
 	// first buffer is always the message type
-	// // Serial.println(curr_time);
 	// if (recvMsg[0] > 0){
-		
-		// Serial.print("Received Message -- ");
-		// Serial.print(recvMsg[0]);
-		// Serial.print(": ");
-		// Serial.println(recvMsg[1]);
-		
 		// sound_module.decodeMsg(recvMsg);
 		// clearRecvMsg();
 	// }
@@ -158,7 +149,6 @@ void loop(){
 		// last_bg_on = millis();
 
 	// }
-	// Serial.println(bg_on);
 	if ((ir0 > 1000)){
 		//concatenate file id and extension to a string
 		String filename_string = String(sound_id_0) + ".wav";
@@ -240,7 +230,10 @@ void loop(){
 	sound_module.set_output_level(0, led_level[0]);
 	sound_module.set_output_level(1, led_level[1]);
 
-
+  
+  #ifdef __USE_SERIALCOMMAND__
+    sCmd.readSerial();     // We don't do much, just process serial commands
+  #endif
 }
 
 #ifdef __USE_SERIALCOMMAND__
