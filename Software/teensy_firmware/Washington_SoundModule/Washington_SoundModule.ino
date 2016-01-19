@@ -1,6 +1,6 @@
 #define __USE_I2C_T3__
 #define __USE_SERIALCOMMAND__
-//#define __DEBUG__
+#define __DEBUG__
 #define DEBUG_FREQUENCY 500
 
 #include <Audio.h>
@@ -32,7 +32,7 @@ const uint8_t ir_pins[] = {A6, A14};
 
 #ifdef __DEBUG__
 // Debug messages
-elapsedMillis sensorMessageDelay[2];
+elapsedMillis sensorMessageDelay[2], sensorTrigMessageDelay[2];
 #endif
 
 const uint8_t NUM_BUFF = 6;
@@ -96,8 +96,8 @@ void setup() {
   }
 
 #ifdef __USE_SERIALCOMMAND__
-  sCmd.addCommand("VER",    cmdVersion);          // Prints version
-  sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
+  sCmd.addCommand("VER", cmdVersion);          // Prints version
+  sCmd.addCommand("BLINK", cmdBlink);          // Blinks lights
 #endif
 
 }
@@ -163,7 +163,7 @@ void loop() {
   for( int i=0; i < N_IR; i++){
     if ((ir[i].value() > PROXIMITY_THRESHOLD)) {
       #ifdef __DEBUG__
-        if( sensorMessageDelay[i] > DEBUG_FREQUENCY ){
+        if( sensorTrigMessageDelay[i] > DEBUG_FREQUENCY ){
           Serial.print("Proximity Sensor ");
           Serial.print(i);
           Serial.print(" Found: reading ");
@@ -171,12 +171,12 @@ void loop() {
           Serial.print(" | normal ");
           Serial.print(ir[i].value());
           Serial.print(" | ");
-          Serial.print(analogRead(A6));
+          Serial.print(ir[i].limits.decay_minimum());
           Serial.print(" | ");
-          Serial.print(analogRead(A7));
+          Serial.print(ir[i].limits.average());
           Serial.print(" | ");
-          Serial.println(analogRead(A14));
-          sensorMessageDelay[i] = 0;
+          Serial.println(ir[i].limits.decay_maximum());
+          sensorTrigMessageDelay[i] = 0;
         }
       #endif
       
@@ -198,11 +198,11 @@ void loop() {
         Serial.print(" | normal ");
         Serial.print(ir[i].value());
         Serial.print(" | ");
-        Serial.print(analogRead(A6));
+        Serial.print(ir[i].limits.decay_minimum());
         Serial.print(" | ");
-        Serial.print(analogRead(A7));
+        Serial.print(ir[i].limits.average());
         Serial.print(" | ");
-        Serial.println(analogRead(A14));
+        Serial.println(ir[i].limits.decay_maximum());
         sensorMessageDelay[i] = 0;
       }
     #endif
