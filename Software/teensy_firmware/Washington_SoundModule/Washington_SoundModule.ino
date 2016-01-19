@@ -12,12 +12,20 @@
 
 #include "sound_module.h"
 
+#include "proximity.h"
+
 #define N_SOUNDS 170
 
 #ifdef __USE_SERIALCOMMAND__
   #include <SerialCommand.h>
   SerialCommand sCmd (&Serial);     // The demo SerialCommand object
 #endif
+
+#define N_IR 2
+#define IR_DECAY 0.001
+#define PROXIMITY_THRESHOLD 0.5
+Proximity ir[N_IR];
+const uint8_t ir_pins[] = {A6, A7};
 
 const uint8_t NUM_BUFF = 6;
 
@@ -47,6 +55,7 @@ void clearRecvMsg(){
 
 //TODO: Watchdog Timer
 
+// Heartbeat Timer
 elapsedMillis heartbeatTimer;
 bool heartbeatToggle;
   
@@ -73,7 +82,10 @@ void setup(){
 	delay(1000);
 	
 	// sound_module.setVolume(10, 0, 0);
-  
+
+  for(int i=0; i<N_IR; i++){
+    ir[i].init(ir_pins[i], IR_DECAY);
+  }
 
   #ifdef __USE_SERIALCOMMAND__
   sCmd.addCommand("VER",    cmdVersion);          // Prints version
@@ -126,8 +138,11 @@ void loop(){
 	
 	//==== Basic Code ===
 	int delay_time = 1000;
-	int ir0 = sound_module.read_analog_state(0);
-	int ir1 = sound_module.read_analog_state(1);
+
+  // Update IR readings
+  for(int i=0; i < N_IR; i++){
+    ir[i].read();
+  }
 	
 	// Random Mode
 	sound_id_0 = random(1, N_SOUNDS);
@@ -141,7 +156,7 @@ void loop(){
 		// last_bg_on = millis();
 
 	// }
-	if ((ir0 > 1000)){
+	if ((ir[0].value() > PROXIMITY_THRESHOLD)){
 		//concatenate file id and extension to a string
 		String filename_string = String(sound_id_0) + ".wav";
 		char filename [filename_string.length()]; // allocate memeory the char_arr
@@ -150,7 +165,7 @@ void loop(){
 		sound_module.playWav(filename, 1, 0, 1);
 		
 	}
-	if ((ir1 > 1000)){
+	if ((ir[1].value() > PROXIMITY_THRESHOLD)){
 		//concatenate file id and extension to a string
 		String filename_string = String(sound_id_1) + ".wav";
 		char filename [filename_string.length()]; // allocate memeory the char_arr
@@ -161,9 +176,9 @@ void loop(){
 	
 	//>>>> Light <<<<<
 	// starting a cycle
-	if (( ir0 > 1000 || ir1 > 1000 || bg_on) && !cycling){
+	if (( ir[0].value() > PROXIMITY_THRESHOLD || ir[1].value() > PROXIMITY_THRESHOLD || bg_on) && !cycling){
 		Serial.println("starting cycle");
-		cycling = true; 
+		cycling = true;
 		phase_time = millis();  	
 		step_time = millis();
 		next_step_time = 2;
