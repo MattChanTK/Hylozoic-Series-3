@@ -13,9 +13,10 @@ Proximity::Proximity()
   }
 
 void Proximity::init(int _pin, float _decay)  {
-
+  pin = _pin;
+  
   // Ensure the proper pinMode for the analogRead pin that is being used.
-  pinMode(pin, INPUT);
+  //pinMode(pin, INPUT);
   limits.clear();
 }
 

@@ -1,6 +1,7 @@
 #define __USE_I2C_T3__
 #define __USE_SERIALCOMMAND__
-#define __DEBUG__
+//#define __DEBUG__
+#define DEBUG_FREQUENCY 500
 
 #include <Audio.h>
 #ifdef __USE_I2C_T3__
@@ -13,6 +14,8 @@
 
 #include "sound_module.h"
 
+#include "proximity.h"
+
 #define N_SOUNDS 170
 
 #ifdef __USE_SERIALCOMMAND__
@@ -23,9 +26,9 @@ SerialCommand sCmd (&Serial);     // The demo SerialCommand object
 // IR Sensor defines and variables
 #define N_IR 2
 #define IR_DECAY 0.001
-#define PROXIMITY_THRESHOLD 0.5
+#define PROXIMITY_THRESHOLD 0.8
 Proximity ir[N_IR];
-const uint8_t ir_pins[] = {A6, A7};
+const uint8_t ir_pins[] = {A6, A14};
 
 #ifdef __DEBUG__
 // Debug messages
@@ -160,11 +163,19 @@ void loop() {
   for( int i=0; i < N_IR; i++){
     if ((ir[i].value() > PROXIMITY_THRESHOLD)) {
       #ifdef __DEBUG__
-        if( sensorMessageDelay[i] > 1000 ){
-          Serial.print("Proximity Sensor Found: reading ");
+        if( sensorMessageDelay[i] > DEBUG_FREQUENCY ){
+          Serial.print("Proximity Sensor ");
+          Serial.print(i);
+          Serial.print(" Found: reading ");
           Serial.print(ir[i].reading);
           Serial.print(" | normal ");
-          Serial.println(ir[i].value());
+          Serial.print(ir[i].value());
+          Serial.print(" | ");
+          Serial.print(analogRead(A6));
+          Serial.print(" | ");
+          Serial.print(analogRead(A7));
+          Serial.print(" | ");
+          Serial.println(analogRead(A14));
           sensorMessageDelay[i] = 0;
         }
       #endif
@@ -179,11 +190,19 @@ void loop() {
   
     }
     #ifdef __DEBUG__
-      if( sensorMessageDelay[i] > 1000 ){
-        Serial.print("Proximity Sensor: reading ");
+      if( sensorMessageDelay[i] > DEBUG_FREQUENCY ){
+        Serial.print("Proximity Sensor ");
+        Serial.print(i);
+        Serial.print(": reading ");
         Serial.print(ir[i].reading);
         Serial.print(" | normal ");
-        Serial.println(ir[i].value());
+        Serial.print(ir[i].value());
+        Serial.print(" | ");
+        Serial.print(analogRead(A6));
+        Serial.print(" | ");
+        Serial.print(analogRead(A7));
+        Serial.print(" | ");
+        Serial.println(analogRead(A14));
         sensorMessageDelay[i] = 0;
       }
     #endif
