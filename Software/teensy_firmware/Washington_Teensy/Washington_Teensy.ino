@@ -1,15 +1,20 @@
+#define SOUND_NODE
+
 #include "washington_interactive_nodes.h"
 #include <SerialCommand.h>
 
-
-//===========================================================================
-//===========================================================================
-
 //===== INITIALIZATION =====
-//WashingtonCricketNode teensy_unit(0, 2, 5, 3);
-//WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
-WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
-//WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+#if defined(CRICKET_NODE)
+WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+#elif defined(FINCRICKET_NODE)
+WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
+#elif defined(FIN_NODE)
+WashingtonFinNode teensy_unit(1,2,3,4,5,6); //Washington Configuration (1, 3, 4, 0, 2, 5); 
+#elif defined(SOUND_NODE)
+WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+#elif defined(FINLIGHTS_NODE)
+FinsSingleLightsUnit teensy_unit(0, 1, 2, 3, 4, 5)
+#endif
 
 //check for new messages
 void check_msg(){
@@ -46,12 +51,13 @@ void setup() {
 	//msg_recv_timer.begin(check_msg, 500); 
 	
 	Serial.begin(9600);
-	Serial.print("Setup Done");
-
   delay(1000);
+	Serial.println("Setup Done");
+
   
   sCmd.addCommand("VER",    cmdVersion);          // Prints version
   sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
+  sCmd.addCommand("PING",    cmdPing);            // Pings the Sound Modules
 }
 
 
@@ -140,9 +146,9 @@ void cmdVersion(){
 }
 
 void cmdBlink(){
-  // THESE ARE NOT QUITE RIGHT. Figure out how to do them properly.  
   Serial.println("Blinking...");
   for( int i=0; i<10; i++ ){
+    #ifndef SOUND_NODE
     teensy_unit.light0.set_output_level(0, 255);
     teensy_unit.light1.set_output_level(2, 0);
     teensy_unit.light2.set_output_level(5, 255);
@@ -151,6 +157,20 @@ void cmdBlink(){
     teensy_unit.light1.set_output_level(2, 255);
     teensy_unit.light2.set_output_level(5, 0);
     delay(100);
+    #else 
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    #endif
+  }
+  Serial.println("Done Blinking...");
+}
+
+void cmdPing(){
+  Serial.println("Pinging Sound Modules...");
+  for( int i=0; i<6; i++ ){
+    teensy_unit.sound[i].check_alive();
   }
   Serial.println("Done Blinking...");
 }

@@ -22,7 +22,6 @@ WashingtonCricketNode::~WashingtonCricketNode() {
 
 void WashingtonCricketNode::parse_msg() {
 
-
   // byte 1 --- type of request
   request_type = recv_data_buff[1];
 
@@ -357,7 +356,7 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 
     // starting a cycle
     if (cricket_var[j].ir_state > 1200 && !cricket_var[j].cycling) {
-      Serial.println("starting cycle");
+      Serial.println("Starting cricket cycle [" __FILE__ ": " "__LINE__" "]");
       cricket_var[j].cycling = true;
       cricket_var[j].phase_time = millis();
       cricket_var[j].step_time = millis();
@@ -2302,9 +2301,9 @@ void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
   static int song_id = 1;
 
   for (uint8_t j = 0; j < WashingtonSoundNode::NUM_SOUND; j++) {
-    Serial.println(sound_var[j].analog_state[0]);
+    //Serial.println(sound_var[j].analog_state[0]);
     if (sound_var[j].analog_state[0] > 1200) {
-      Serial.println(song_id);
+      //Serial.println(song_id);
 
       sound[j].set_output_level(0, 100);
       sound[j].play_sound(song_id,  10, 2, 0, true);

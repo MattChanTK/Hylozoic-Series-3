@@ -21,6 +21,12 @@
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14	
 
+/*enum I2CCommands { // Switch to this later
+  ReadAnalog,
+  OutputPWM,
+  PlayWAV
+};*/
+
 
 class SoundModule{
 	
@@ -77,8 +83,10 @@ class SoundModule{
 		//===============================================
 		
 		void decodeMsg(uint8_t* recvMsg);
-	
 
+    // Ping to see if it's alive
+    static const uint8_t CMD_CHECK_ALIVE = 0; // Commands should be 0-indexed anyways
+	
 		//--- Read Analog ---
 		static const uint8_t CMD_READ_ANALOG = 1;
 		

@@ -68,8 +68,8 @@ void SoundModule::audio_board_setup() {
 
   // configuration
   sgtl5000_1.enable(); // Enable LINE-OUT
-  sgtl5000_1.volume(0.8); //Set Iniitial LINE-OUT Gain
-  sgtl5000_1.dacVolume(1.0);
+  sgtl5000_1.volume(0.8); //Set Iniitial LINE-OUT Gain NOPE. Sets only headphones. See docs.
+  sgtl5000_1.dacVolume(0.75); // Changed to set volume lower. This also lowers quality :( DK
   sgtl5000_1.adcHighPassFilterEnable();
   // sgtl5000_1.audioPreProcessorEnable();
   // sgtl5000_1.enhanceBassEnable();
@@ -229,8 +229,12 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
 
   switch (cmd_type) {
 
+    case SoundModule::CMD_CHECK_ALIVE:{
+        requested_data_type = CMD_CHECK_ALIVE;
+        break;
+    }
     // Analog read
-    case SoundModule::CMD_READ_ANALOG: {
+    case SoundModule::CMD_READ_ANALOG:{
 
         requested_data_type = CMD_READ_ANALOG;
         // sample data from analog ports
@@ -238,10 +242,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
           analog_data[i] = read_analog_state(i);
         }
         break;
-      }
-
+    }
     // PWM Output
-    case SoundModule::CMD_PWM_OUTPUT: {
+    case SoundModule::CMD_PWM_OUTPUT:{
 
         // byte 1 - PWM ID
         uint8_t pwm_id = recvMsg[1];
@@ -252,10 +255,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         set_output_level(pwm_id, pwm_level);
 
         break;
-      }
-
+    }
     // Play Wav File
-    case SoundModule::CMD_PLAY_WAV: {
+    case SoundModule::CMD_PLAY_WAV:{
 
         // byte 1 - File ID
         uint8_t file_id = recvMsg[1];
@@ -284,7 +286,7 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         playWav(filename, channel, port, blocking);
 
         break;
-      }
+    }
     // Is Playing or Not
     // case SoundModule::CMD_IS_PLAYING:{
 
@@ -295,9 +297,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
     // }
     // break;
     //
-    default: {
+    default:{
         break;
-      }
+    }
   }
 
 

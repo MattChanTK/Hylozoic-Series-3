@@ -12,6 +12,7 @@ class TeensyUnit::SoundPort{
 		void init();
 
 		//~~outputs~~
+    bool check_alive();
 		
 		//--- PWM output ----
 		void set_output_level(const uint8_t id, const uint8_t level);
@@ -43,7 +44,11 @@ class TeensyUnit::SoundPort{
 		//~~Sound Module I2C constants~~
 			
 		const uint8_t  SOUND_I2C_ADDR = 13; //I2C Address    
-		
+
+    //TODO: THIS SHOULD NOT BE DEFINED IN TWO PLACES
+    // Ping to see if it's alive
+    static const uint8_t CMD_CHECK_ALIVE = 0; // Commands should be 0-indexed anyways
+    
 		//--- Read Analog ---
 		const uint8_t CMD_READ_ANALOG = 1;
 		

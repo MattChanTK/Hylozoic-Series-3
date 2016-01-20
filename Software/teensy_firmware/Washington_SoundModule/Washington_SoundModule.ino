@@ -12,8 +12,9 @@
 #include <SPI.h>
 #include <SD.h>
 
-#include "sound_module.h"
+#include "T3Mac.h"
 
+#include "sound_module.h"
 #include "proximity.h"
 
 #define N_SOUNDS 170
@@ -95,15 +96,21 @@ void setup() {
     ir[i].init(ir_pins[i], IR_DECAY);
   }
 
+  // Reads in the MAC address from T3Mac.h. Stored as uint8_t mac[6]
+  read_mac();
+
 #ifdef __USE_SERIALCOMMAND__
   sCmd.addCommand("VER", cmdVersion);          // Prints version
   sCmd.addCommand("BLINK", cmdBlink);          // Blinks lights
-  sCmd.addCommand("VOL", cmdVolume);          // Blinks lights
+  sCmd.addCommand("VOL", cmdVolume);          // Changes volume
+  sCmd.addCommand("MAC", cmdMAC);          // Prints MAC Address
+  sCmd.addCommand("I2CSTAT", cmdI2CStatus);          // Prints MAC Address
 #endif
 
 }
 
 void receiveEvent(unsigned int bytes) {
+  //Serial.print("Got a message from the Control Node: ");
   for (uint8_t i = 0; i < bytes; i++) {
     if (i >= NUM_BUFF) {
       //BUFFER Full
@@ -111,16 +118,27 @@ void receiveEvent(unsigned int bytes) {
     }
     recvMsg[i] = Wire.read();
   }
+  /*for( int i=0; i < NUM_BUFF; i++ ){
+    Serial.print(recvMsg[i]);
+  }
+  Serial.println();*/
 }
 
 void requestEvent() {
 
-  if (sound_module.requested_data_type == SoundModule::CMD_READ_ANALOG) {
-    for (uint8_t i = 0; i < 3; i++) {
-      Wire.write(lowByte(sound_module.analog_data[i]));
-      Wire.write(highByte(sound_module.analog_data[i]));
+  //Serial.println("Got a request for data from the Control Node");
+
+  switch(sound_module.requested_data_type){
+    case SoundModule::CMD_READ_ANALOG:
+      for (uint8_t i = 0; i < 3; i++) {
+        Wire.write(lowByte(sound_module.analog_data[i]));
+        Wire.write(highByte(sound_module.analog_data[i]));
+      }
+      break;
+    case SoundModule::CMD_CHECK_ALIVE: {
+       Wire.write(lowByte(mac[0]));
+       break;
     }
-  }
   // else if (sound_module.requested_data_type == SoundModule::CMD_IS_PLAYING){
   // for (uint8_t i=0; i<4; i++){
   // Wire.write(sound_module.is_playing_L[i]);
@@ -129,6 +147,7 @@ void requestEvent() {
   // Wire.write(sound_module.is_playing_R[i]);
   // }
   // }
+  }
 }
 
 uint32_t last_bg_on = millis();
@@ -314,13 +333,9 @@ void cmdVolume(){
   char *arg;
   
   arg = sCmd.next();
-  if( arg != NULL ){
+  if( arg != NULL ){    
     vol = atoi(arg);
-    sound_module.playWav("2.wav", 1, 0, 1);
-    delay(2000);
     sound_module.sgtl5000_1.dacVolume(((float)vol)/9.0); // Digitally adjusts volume from 0.0-1.0
-    delay(10);
-    sound_module.playWav("2.wav", 1, 0, 1);
     
     Serial.print("Set volume to ");
     Serial.println(((float)vol)/9.0);
@@ -328,5 +343,38 @@ void cmdVolume(){
     Serial.println("Volume could not be set. Argument was NULL. [" __FILE__ ": " "__LINE__" "]");
   }
   
+}
+
+// Prints the Teensy's MAC address
+void cmdMAC(){
+  print_mac();
+  Serial.println();
+}
+
+// Print the I2C Status
+void cmdI2CStatus(){
+  print_i2c_status();
+}
+
+//
+// print I2C status
+//
+void print_i2c_status(void)
+{
+    switch(Wire.status())
+    {
+    case I2C_WAITING:  Serial.print("I2C waiting, no errors\n"); break;
+    case I2C_ADDR_NAK: Serial.print("Slave addr not acknowledged\n"); break;
+    case I2C_DATA_NAK: Serial.print("Slave data not acknowledged\n"); break;
+    case I2C_ARB_LOST: Serial.print("Bus Error: Arbitration Lost\n"); break;
+    case I2C_TIMEOUT:  Serial.print("I2C timeout\n"); break;
+    case I2C_BUF_OVF:  Serial.print("I2C buffer overflow\n"); break;
+    case I2C_SENDING:  Serial.print("I2C sending\n"); break;
+    case I2C_SEND_ADDR: Serial.print("I2C send addr\n"); break;
+    case I2C_RECEIVING: Serial.print("I2C receiving\n"); break;
+    case I2C_SLAVE_TX: Serial.print("I2C slave TX\n"); break;
+    case I2C_SLAVE_RX: Serial.print("I2C slave RX\n"); break;
+    default:           Serial.print("I2C busy\n"); break;
+    }
 }
 #endif
