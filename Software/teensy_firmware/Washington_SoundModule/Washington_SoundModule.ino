@@ -69,6 +69,7 @@ elapsedMillis heartbeatTimer;
 bool heartbeatToggle;
 
 void setup() {
+  enableWatchdog();
 
   Serial.begin(9600);
 
@@ -88,7 +89,7 @@ void setup() {
   Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
 
-  delay(1000);
+  delay(100);
 
   // sound_module.setVolume(10, 0, 0);
 
@@ -104,7 +105,8 @@ void setup() {
   sCmd.addCommand("BLINK", cmdBlink);          // Blinks lights
   sCmd.addCommand("VOL", cmdVolume);          // Changes volume
   sCmd.addCommand("MAC", cmdMAC);          // Prints MAC Address
-  sCmd.addCommand("I2CSTAT", cmdI2CStatus);          // Prints MAC Address
+  sCmd.addCommand("I2CSTAT", cmdI2CStatus);          // Prints I2C Status
+  sCmd.addCommand("CONF", cmdConfigPrint);          // Prints Configuration
 #endif
 
 }
@@ -153,6 +155,7 @@ void requestEvent() {
 uint32_t last_bg_on = millis();
 
 void loop() {
+  kickWatchdog(); // Make sure the Watchdog Timer doesn't expire
 
   uint32_t curr_time = millis();
   // If received message
@@ -351,6 +354,31 @@ void cmdMAC(){
   Serial.println();
 }
 
+// Print the Code's Configuration Flags
+void cmdConfigPrint(){
+  Serial.print("Config: ");
+  Serial.print("Debug[");
+  #ifdef __DEBUG__
+  Serial.print("y");
+  #else
+  Serial.print("n");
+  #endif
+  Serial.print("] i2c_t3[");
+  #ifdef __USE_I2C_T3__
+  Serial.print("y");
+  #else
+  Serial.print("n");
+  #endif
+  Serial.print("] SerialCommand[");
+  #ifdef __USE_SERIALCOMMAND__
+  Serial.print("y");
+  #else
+  Serial.print("n");
+  #endif
+  Serial.println("]");
+  
+}
+
 // Print the I2C Status
 void cmdI2CStatus(){
   print_i2c_status();
@@ -378,3 +406,21 @@ void print_i2c_status(void)
     }
 }
 #endif
+
+void enableWatchdog(){
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+  delayMicroseconds(1); // Need to wait a bit..
+  WDOG_STCTRLH = 0x0001; // Enable WDG
+  WDOG_TOVALL = 2000; // The next 2 lines sets the time-out value. This is the value that the watchdog timer compare itself to in milliseconds
+  WDOG_TOVALH = 0;
+  WDOG_PRESC = 0; // This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ
+}
+
+void kickWatchdog(){
+  noInterrupts();
+  WDOG_REFRESH = 0xA602;
+  WDOG_REFRESH = 0xB480;
+  interrupts();
+}
+
