@@ -1,6 +1,6 @@
 #define __USE_I2C_T3__
 #define __USE_SERIALCOMMAND__
-#define __DEBUG__
+//#define __DEBUG__
 #define DEBUG_FREQUENCY 500
 
 #include <Audio.h>
@@ -308,7 +308,7 @@ void cmdBlink() {
   Serial.println("Done Blinking...");
 }
 
-// Changes volume to x in "VOLx" where x=0-9
+// Changes volume to x in "VOL x" where x=0-9
 void cmdVolume(){
   int vol = 0;
   char *arg;
@@ -316,14 +316,14 @@ void cmdVolume(){
   arg = sCmd.next();
   if( arg != NULL ){
     vol = atoi(arg);
-    sound_module.playWav("1.wav", 1, 0, 1);
-    delay(1000);
-    sound_module.sgtl5000_1.lineOutLevel(31-vol); // Higher numbers are lower volumes, so range from 31-22
+    sound_module.playWav("2.wav", 1, 0, 1);
+    delay(2000);
+    sound_module.sgtl5000_1.dacVolume(((float)vol)/9.0); // Digitally adjusts volume from 0.0-1.0
     delay(10);
-    sound_module.playWav("1.wav", 1, 0, 1);
+    sound_module.playWav("2.wav", 1, 0, 1);
     
     Serial.print("Set volume to ");
-    Serial.println(31-vol);
+    Serial.println(((float)vol)/9.0);
   } else {
     Serial.println("Volume could not be set. Argument was NULL. [" __FILE__ ": " "__LINE__" "]");
   }
