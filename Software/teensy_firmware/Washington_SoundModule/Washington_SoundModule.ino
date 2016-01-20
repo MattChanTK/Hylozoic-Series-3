@@ -26,7 +26,7 @@ SerialCommand sCmd (&Serial);     // The demo SerialCommand object
 // IR Sensor defines and variables
 #define N_IR 2
 #define IR_DECAY 0.001
-#define PROXIMITY_THRESHOLD 0.8
+#define PROXIMITY_THRESHOLD 0.9
 Proximity ir[N_IR];
 const uint8_t ir_pins[] = {A6, A14};
 
@@ -98,6 +98,7 @@ void setup() {
 #ifdef __USE_SERIALCOMMAND__
   sCmd.addCommand("VER", cmdVersion);          // Prints version
   sCmd.addCommand("BLINK", cmdBlink);          // Blinks lights
+  sCmd.addCommand("VOL", cmdVolume);          // Blinks lights
 #endif
 
 }
@@ -305,5 +306,27 @@ void cmdBlink() {
   sound_module.set_output_level(0, 0);
   sound_module.set_output_level(1, 0);
   Serial.println("Done Blinking...");
+}
+
+// Changes volume to x in "VOLx" where x=0-9
+void cmdVolume(){
+  int vol = 0;
+  char *arg;
+  
+  arg = sCmd.next();
+  if( arg != NULL ){
+    vol = atoi(arg);
+    sound_module.playWav("1.wav", 1, 0, 1);
+    delay(1000);
+    sound_module.sgtl5000_1.lineOutLevel(31-vol); // Higher numbers are lower volumes, so range from 31-22
+    delay(10);
+    sound_module.playWav("1.wav", 1, 0, 1);
+    
+    Serial.print("Set volume to ");
+    Serial.println(31-vol);
+  } else {
+    Serial.println("Volume could not be set. Argument was NULL. [" __FILE__ ": " "__LINE__" "]");
+  }
+  
 }
 #endif

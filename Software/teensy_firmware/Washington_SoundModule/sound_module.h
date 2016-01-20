@@ -109,6 +109,9 @@ class SoundModule{
 		
 		// bool is_playing_L[4] = {false, false, false, false};
 		// bool is_playing_R[4] = {false, false, false, false};
+   
+   // instantiate the audio controller 
+    AudioControlSGTL5000     sgtl5000_1;
 	
 	protected:
 		
@@ -145,9 +148,6 @@ class SoundModule{
 		// Connections between the mixer and audio output
 		AudioConnection			 mixer_output_L;
 		AudioConnection			 mixer_output_R;
-		
-		// instantiate the audio controller 
-		AudioControlSGTL5000     sgtl5000_1;
 
 
 };

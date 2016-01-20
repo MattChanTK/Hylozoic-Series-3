@@ -141,8 +141,11 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
     }
   }
 
-  if (!fileFound)
+  if (!fileFound){
+    Serial.print("404 NOT FOUND: ");
+    Serial.println(wavfile);
     return false;
+  }
 
   // A brief delay for the library read WAV info
   delay(5);
