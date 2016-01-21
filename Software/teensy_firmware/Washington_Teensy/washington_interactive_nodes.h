@@ -7,6 +7,7 @@
 #include "fins_lights_unit.h"
 #include "sounds_unit.h"
 
+#include <Statistic.h>
 
 class CricketUnitVar{
 
@@ -72,7 +73,7 @@ class FinUnitVar{
 		
 		//~~IR sensors state~~
 		uint16_t ir_state[2] = {0, 0};
-		
+    Statistic ir_averages[2];
 		
 		//~~Accelerometer~~
 		// {x,y,z}
@@ -84,7 +85,7 @@ class FinUnitVar{
 		bool sensor_waveform_cycling = 0;
 		
 		//~~Fin cycling~~
-		uint8_t cycling = 0;
+		uint8_t cycling = 0; // What does this mean? DK
 		
 		//~~Reflex Light Cycling ~~
 		bool reflex_cycling = false;
