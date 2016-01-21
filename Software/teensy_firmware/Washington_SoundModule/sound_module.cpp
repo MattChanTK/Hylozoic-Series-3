@@ -234,7 +234,7 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         break;
     }
     // Analog read
-    case SoundModule::CMD_READ_ANALOG:{
+    case SoundModule::CMD_READ_ANALOG:{ //TODO This should not need a message? DK
 
         requested_data_type = CMD_READ_ANALOG;
         // sample data from analog ports

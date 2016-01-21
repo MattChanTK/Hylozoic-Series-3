@@ -120,27 +120,54 @@ void receiveEvent(unsigned int bytes) {
     }
     recvMsg[i] = Wire.read();
   }
-  /*for( int i=0; i < NUM_BUFF; i++ ){
+  Serial.print("Received a message from the Control Node: ");
+  for( int i=NUM_BUFF; i >= 0; i-- ){
     Serial.print(recvMsg[i]);
+    Serial.print(" ");
   }
-  Serial.println();*/
+  switch (recvMsg[0]) {
+    case SoundModule::CMD_CHECK_ALIVE:{
+        Serial.print("| Check Alive");
+        break;
+    }
+    // Analog read
+    case SoundModule::CMD_READ_ANALOG:{ //TODO This should not need a message? DK
+        Serial.print("| Read Analog Values");
+        break;
+    }
+    // PWM Output
+    case SoundModule::CMD_PWM_OUTPUT:{
+        Serial.print("| PWM Output");
+        break;
+    }
+    // Play Wav File
+    case SoundModule::CMD_PLAY_WAV:{
+        Serial.print("| Play Sound");
+        break;
+    }
+    default:{
+        break;
+    }
+  }
+  Serial.println();
 }
 
 void requestEvent() {
 
-  //Serial.println("Got a request for data from the Control Node");
+  Serial.print("Got a request for data from the Control Node: ");
+  Serial.println(sound_module.requested_data_type);
 
   switch(sound_module.requested_data_type){
+    case SoundModule::CMD_CHECK_ALIVE: {
+       Wire.write(lowByte(mac[0]));
+       break;
+    }
     case SoundModule::CMD_READ_ANALOG:
       for (uint8_t i = 0; i < 3; i++) {
         Wire.write(lowByte(sound_module.analog_data[i]));
         Wire.write(highByte(sound_module.analog_data[i]));
       }
       break;
-    case SoundModule::CMD_CHECK_ALIVE: {
-       Wire.write(lowByte(mac[0]));
-       break;
-    }
   // else if (sound_module.requested_data_type == SoundModule::CMD_IS_PLAYING){
   // for (uint8_t i=0; i<4; i++){
   // Wire.write(sound_module.is_playing_L[i]);

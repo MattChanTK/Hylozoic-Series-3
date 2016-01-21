@@ -1,3 +1,4 @@
+// Set a define here to determine the type of node that is being coded
 #define SOUND_NODE
 
 #include "washington_interactive_nodes.h"
@@ -58,6 +59,7 @@ void setup() {
   sCmd.addCommand("VER",    cmdVersion);          // Prints version
   sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
   sCmd.addCommand("PING",    cmdPing);            // Pings the Sound Modules
+  sCmd.addCommand("OPMODE",    cmdOperationMode); // Prints the current operation mode
 }
 
 
@@ -152,18 +154,26 @@ void cmdBlink(){
     teensy_unit.light0.set_output_level(0, 255);
     teensy_unit.light1.set_output_level(2, 0);
     teensy_unit.light2.set_output_level(5, 255);
-    delay(100);
+    delay(25);
     teensy_unit.light0.set_output_level(0, 0);
     teensy_unit.light1.set_output_level(2, 255);
     teensy_unit.light2.set_output_level(5, 0);
-    delay(100);
+    delay(25);
     #else 
     digitalWrite(LED_BUILTIN, LOW);
-    delay(100);
+    delay(25);
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(100);
+    delay(25);
     #endif
-  }
+  }   
+  #ifndef SOUND_NODE
+    teensy_unit.light0.set_output_level(0, 0);
+    teensy_unit.light1.set_output_level(2, 0);
+    teensy_unit.light2.set_output_level(5, 0);
+    delay(25);
+  #else 
+    digitalWrite(LED_BUILTIN, LOW);
+  #endif
   Serial.println("Done Blinking...");
 }
 
@@ -172,5 +182,24 @@ void cmdPing(){
   for( int i=0; i<6; i++ ){
     teensy_unit.sound[i].check_alive();
   }
-  Serial.println("Done Blinking...");
+  Serial.println("Done Pinging...");
+}
+void cmdOperationMode(){
+  Serial.print("Current operation mode: ");
+    switch (teensy_unit.operation_mode){
+      case 0: 
+        Serial.println("self-running test");
+        break;
+      case 1:
+        if (loop_since_last_msg > keep_alive_thres){
+          Serial.println("inactive mode");
+        }
+        else{
+          Serial.println("manual mode");
+        }
+        break;
+      default:
+        Serial.println("inactive mode");
+        break;
+  }
 }
