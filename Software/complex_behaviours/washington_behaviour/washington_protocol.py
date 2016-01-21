@@ -251,7 +251,7 @@ class WashingtonFinCricketProtocol(SystemParameters):
 
             for j in range(self.NUM_CRICKET):
                 device_header = 'cricket_%d_' % j
-                byte_offset = 8*j
+                byte_offset = 8*j + device_offset
 
                 # byte x0 --- Cricket actuator 0 output
                 content[byte_offset+0] = self.output_param[device_header+'output_0_level']

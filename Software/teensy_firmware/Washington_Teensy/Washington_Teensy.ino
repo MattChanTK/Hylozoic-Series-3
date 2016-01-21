@@ -75,6 +75,7 @@ void inactive_mode(){
 
 uint16_t loop_since_last_msg = 0;
 const uint16_t keep_alive_thres = 2000;
+volatile uint16_t prev_operation_mode = 0;
 
 void loop() {
 
@@ -91,9 +92,13 @@ void loop() {
 	loop_since_last_msg++;
 
 	
-	//teensy_unit.sample_inputs();
+	//teensy_unit.sample_inputs()
 	
-	// Serial.println(teensy_unit.operation_mode);
+	if (teensy_unit.operation_mode != prev_operation_mode){
+		Serial.print("Operation Mode: ");
+		Serial.println(teensy_unit.operation_mode);
+		prev_operation_mode = teensy_unit.operation_mode;
+	}
 	switch (teensy_unit.operation_mode){
 	
 		case 0: 
