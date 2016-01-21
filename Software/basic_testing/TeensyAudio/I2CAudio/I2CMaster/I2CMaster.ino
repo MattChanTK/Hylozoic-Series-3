@@ -138,6 +138,7 @@ void loop()
     switch(Wire.status())
     {
       case I2C_ADDR_NAK:
+        resetCount++;
         Wire.resetBus();
 
         //Essentially a rewriting of resetBus()
