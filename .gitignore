@@ -74,6 +74,7 @@ eagle.epf
 *.exe
 *.o
 *.so
+*.d
 
 # Packages #
 ############
@@ -321,3 +322,4 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
+*.hex
