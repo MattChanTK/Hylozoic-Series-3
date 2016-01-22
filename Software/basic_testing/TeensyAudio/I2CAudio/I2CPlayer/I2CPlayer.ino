@@ -156,23 +156,6 @@ void receiveEvent(int len)
         Serial.println(cmd);
         switch(cmd)
         {
-        /*case WRITE:
-            addr = Wire.readByte();                // grab addr
-            while(Wire.available())
-                if(addr < MEM_LEN)                 // drop data beyond mem boundary
-                    mem[addr++] = Wire.readByte(); // copy data to mem
-                else
-                    Wire.readByte();               // drop data if mem full
-            break;
-
-        case READ:
-            addr = Wire.readByte();                // grab addr
-            break;
-
-        case SETRATE:
-            rate = (i2c_rate)Wire.readByte();      // grab rate
-            Wire.setRate(rate);                    // set rate
-            break;*/
           case 0:
             sound0.play(AudioSampleSnare);
             break;
