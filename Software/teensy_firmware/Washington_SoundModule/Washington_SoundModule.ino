@@ -347,10 +347,10 @@ void cmdBlink() {
   for ( int i = 0; i < 10; i++ ) {
     sound_module.set_output_level(0, 255);
     sound_module.set_output_level(1, 0);
-    delay(100);
+    delay(10);
     sound_module.set_output_level(0, 0);
     sound_module.set_output_level(1, 255);
-    delay(100);
+    delay(10);
   }
   sound_module.set_output_level(0, 0);
   sound_module.set_output_level(1, 0);
