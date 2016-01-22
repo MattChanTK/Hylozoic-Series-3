@@ -34,39 +34,6 @@ void TeensyUnit::SoundPort::init(){
 	delay(5);
 
 }
-
-//~~Tests~~
-bool TeensyUnit::SoundPort::check_alive(){
-  
-  switchToThis();
-  noInterrupts();
-  teensy_unit.Wire.beginTransmission(SOUND_I2C_ADDR);
-  teensy_unit.Wire.write(CMD_CHECK_ALIVE);
-  teensy_unit.Wire.endTransmission(I2C_STOP, I2C_TIMEOUT);
-  teensy_unit.Wire.requestFrom(SOUND_I2C_ADDR, (size_t) 1, I2C_STOP, I2C_TIMEOUT); // Read 1 byte      
-  interrupts();
-  delay(5);
-
-  bool isAvailable = false;
-  byte b = 0;
-  noInterrupts();
-  if(teensy_unit.Wire.available())
-  {
-    b = teensy_unit.Wire.read();
-    isAvailable = true;
-  }
-  interrupts();
-
-  if(isAvailable){
-    Serial.print("Got response from Teensy ");
-    Serial.println(b);
-  } else {
-    Serial.println("No response from Teensy");
-  }
-  
-  return isAvailable;
-}
-
 //~~outputs~~
 
 void TeensyUnit::SoundPort::set_output_level(const uint8_t id, const uint8_t level){
@@ -168,3 +135,4 @@ void TeensyUnit::SoundPort::writeToDevice(const byte address, const byte val) {
 	teensy_unit.Wire.endTransmission(I2C_NOSTOP, I2C_TIMEOUT);         // end transmission
 	interrupts();
 }
+
