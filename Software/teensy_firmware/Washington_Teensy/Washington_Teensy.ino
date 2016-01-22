@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Set a define here to determine the type of node that is being coded
 #define SOUND_NODE
 
@@ -16,6 +17,33 @@ WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
 #elif defined(FINLIGHTS_NODE)
 FinsSingleLightsUnit teensy_unit(0, 1, 2, 3, 4, 5)
 #endif
+=======
+//#define CRICKET_NODE
+//#define FINCRICKET_NODE
+//#define FIN_NODE
+#define SOUND_NODE
+//#define FINLIGHTS_NODE
+
+//===== INITIALIZATION =====
+#if defined(CRICKET_NODE)
+#include "cricket.h"
+WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+#elif defined(FINCRICKET_NODE)
+#include "fin_cricket.h"
+WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
+#elif defined(FIN_NODE)
+#include "fin.h"
+WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5); 
+#elif defined(SOUND_NODE)
+#include "sound.h"
+WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+#elif defined(FINLIGHTS_NODE)
+#include "fin.h"
+FinsSingleLightsUnit teensy_unit(0, 1, 2, 3, 4, 5)
+#endif
+
+#include <SerialCommand.h>
+>>>>>>> modularization-reorg
 
 //check for new messages
 void check_msg(){
@@ -150,13 +178,19 @@ void cmdVersion(){
 void cmdBlink(){
   Serial.println("Blinking...");
   for( int i=0; i<10; i++ ){
+<<<<<<< HEAD
     #ifndef SOUND_NODE
     teensy_unit.light0.set_output_level(0, 255);
+=======
+    //TODO Get back blink functionality
+    /*teensy_unit.light0.set_output_level(0, 255);
+>>>>>>> modularization-reorg
     teensy_unit.light1.set_output_level(2, 0);
     teensy_unit.light2.set_output_level(5, 255);
     delay(25);
     teensy_unit.light0.set_output_level(0, 0);
     teensy_unit.light1.set_output_level(2, 255);
+<<<<<<< HEAD
     teensy_unit.light2.set_output_level(5, 0);
     delay(25);
     #else 
@@ -174,6 +208,11 @@ void cmdBlink(){
   #else 
     digitalWrite(LED_BUILTIN, LOW);
   #endif
+=======
+    teensy_unit.light2.set_output_level(5, 0);*/
+    delay(100);
+  }
+>>>>>>> modularization-reorg
   Serial.println("Done Blinking...");
 }
 

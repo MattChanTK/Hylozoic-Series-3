@@ -558,13 +558,13 @@ void CBLATestBed::fin_arm_test_behaviour(const uint32_t &curr_time) {
       volatile uint32_t cycle_time = curr_time - high_level_ctrl_fin_phase_time[j];
 
       // if reaches the full period, restart cycle
-      if (cycle_time > ((fin_var[j].arm_cycle_period[1] + fin_var[j].arm_cycle_period[0]) * 100)) {
+      if (cycle_time > (uint32_t)(((fin_var[j].arm_cycle_period[1] + fin_var[j].arm_cycle_period[0]) * 100))) {
         fin_var[j].cycling  = 0;
         fin_var[j].motion_on = 0;
       }
 
       //if reaches the on period
-      else if (cycle_time > (fin_var[j].arm_cycle_period[0] * 100)) {
+      else if (cycle_time > (uint32_t)(fin_var[j].arm_cycle_period[0] * 100)) {
         fin[j].set_sma_level(high_level_ctrl_sma1[j], 0);
         fin[j].set_sma_level(high_level_ctrl_sma0[j], 0);
 
@@ -585,7 +585,7 @@ void CBLATestBed::led_blink_behaviour(const uint32_t &curr_time) {
 
   //---- indicator LED blinking variables -----
   //~~indicator LED on~~
-  static bool indicator_led_on_0 = 1;
+  //static bool indicator_led_on_0 = 1;
   //~~indicator LED blink~~
   static bool indicator_led_blink_cycling = false;
   static uint32_t indicator_led_blink_phase_time = 0;
@@ -687,7 +687,7 @@ void CBLATestBed::high_level_control_fin_reflex_behaviour(const uint32_t &curr_t
 
 
   //---- Fin cycling variables -----
-  static uint16_t high_level_ctrl_fin_reflex_period[NUM_FIN] = {1000, 1000, 1000};
+  //static uint16_t high_level_ctrl_fin_reflex_period[NUM_FIN] = {1000, 1000, 1000};
 
   for (uint8_t j = 0; j < NUM_FIN; j++) {
 
@@ -697,7 +697,7 @@ void CBLATestBed::high_level_control_fin_reflex_behaviour(const uint32_t &curr_t
     //if something is very close
     if (fin_var[j].ir_state[0] > fin_var[j].ir_threshold[0]) {
       reflex_on = true;
-      high_level_ctrl_fin_reflex_period[j] = fin_var[j].reflex_period[0];
+      //high_level_ctrl_fin_reflex_period[j] = fin_var[j].reflex_period[0];
     }
     //if there is no object detected
     else {
