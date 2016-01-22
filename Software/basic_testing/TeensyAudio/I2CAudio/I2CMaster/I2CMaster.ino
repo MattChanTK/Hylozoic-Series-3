@@ -41,7 +41,7 @@ void setup()
     delay(100);
 
     // Setup for Master mode, pins 18/19, internal pullups, 400kHz
-    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_INT, I2C_RATE_3000);
+    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_INT, I2C_RATE_100);
 
     Serial.println("Wire Connected.");
 }
