@@ -1,1 +1,0 @@
-python washington_upload_firmware.py crickets
