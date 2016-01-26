@@ -4,7 +4,7 @@ from abstract_node.data_plotter import *
 import matplotlib.axes as axes
 from collections import OrderedDict
 
-
+offset = 7 #4
 class CBLA_DataPlotter(DataPlotter):
 
     saved_figures_dir = 'cbla_saved_figures'
@@ -26,7 +26,7 @@ class CBLA_DataPlotter(DataPlotter):
             for node_name, node_data in session_data.items():
 
                 self.plot_objects[(session_num, node_name, 'history')] = CBLA_PlotObject(fig_title='History Plot - %s (S%d)' % (node_name, session_num))
-                self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
+                #self.plot_objects[(session_num, node_name, 'regions_snapshot')] = CBLA_PlotObject(fig_title='Regions Snapshots - %s' % node_name)
 
             self.plot_objects[(session_num, 'metrics')]  = PlotObject(fig_num=len(self.plot_objects)+1,
                                                                       fig_title='S%d - Metrics' % session_num)
@@ -39,7 +39,7 @@ class CBLA_DataPlotter(DataPlotter):
         self.compute_metrics()
         self.plot_metrics()
 
-        self.plot_histories()
+        # self.plot_histories()
         # self.plot_regions(plot_dim=(3, 0))
         # self.plot_models(_plot_dim=(3, 0))
         #
@@ -59,8 +59,8 @@ class CBLA_DataPlotter(DataPlotter):
     def compute_metrics(self):
 
         WIN_PERIOD = 1.0
-        T_TRIG = 540 # 420
-        T_DONE = 600 #480
+        T_TRIG = 450
+        T_DONE = 480
         session_num = 1
         for session_data in self.data:
 
@@ -112,7 +112,7 @@ class CBLA_DataPlotter(DataPlotter):
             # total activation array
             total_activation_array = []
             for t, data_t in windowed_data.items():
-                total_activation_array.append((t, np.mean(tuple(data_t.values()))))
+                total_activation_array.append((t-offset, np.mean(tuple(data_t.values()))))
             total_activation_array = np.array(total_activation_array)
 
             session_metric['total_activation_array'] = total_activation_array
@@ -139,7 +139,7 @@ class CBLA_DataPlotter(DataPlotter):
                         if other_cluster_id != cluster_id:
                             # cluster_activation.append(np.mean(other_cluster_value)*0.2)
                             total_activation.append(np.mean(other_cluster_value))
-                    prox_activation_cluster_array[cluster_id].append((t, np.sum(cluster_activation)))
+                    prox_activation_cluster_array[cluster_id].append((t-offset, np.sum(cluster_activation)))
 
             for cluster_id, cluster_array in prox_activation_cluster_array.items():
                 prox_activation_cluster_array[cluster_id] = np.array(prox_activation_cluster_array[cluster_id])
@@ -170,9 +170,36 @@ class CBLA_DataPlotter(DataPlotter):
         metrics_keys = ('total_activation_array', 'prox_activation_cluster_array')
 
         session_num = 1
+
+        trigger_states = []
+
+        # Plot the point when trigger happens
+        for session_data in self.data:
+            trigger_state = [[], []]
+            trigger_node_name = 'c3.cbla_reflex_1-l'
+            trigger_node_data = session_data[trigger_node_name]
+            trigger_node_in_vars = trigger_node_data['in_vars']
+            trigger_node_s = trigger_node_data['S']
+
+            for i in range(len(trigger_node_in_vars['y'])):
+                if trigger_node_in_vars['y'][i][0] > 0.05:
+                    trigger_state[0].append(trigger_node_in_vars['x'][i]-offset)
+                    trigger_state[1].append(0.02)
+                    print(trigger_node_in_vars['x'][i])
+
+
+            for i in range(len(trigger_node_s['y'])):
+                if trigger_node_s['y'][i][0] > 0.05 and trigger_node_s['x'][i] > 100:
+                    trigger_state[0].append(trigger_node_s['x'][i]-offset)
+                    trigger_state[1].append(0.02)
+                    print(trigger_node_s['x'][i])
+
+            trigger_states.append(trigger_state)
+
         for session_metrics in self.metrics:
 
             session_key = (session_num, 'metrics')
+
 
             if session_key not in self.plot_objects:
                     continue
@@ -194,12 +221,19 @@ class CBLA_DataPlotter(DataPlotter):
                         plot_config = dict()
                         plot_config['xlabel'] = 'time (second)'
                         plot_config['ylabel'] = 'activation'
-                        plot_config['title'] = 'Total Activation (S%d)' % session_num
+                        plot_config['title'] = 'Total Activation'
 
                         # plot the evolution plot
                         metrics_vals = session_metrics[metrics_key].transpose()
-                        self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
-                                                                      metrics_vals[1], metrics_vals[0], **plot_config)
+                        self.plot_objects[session_key].plot_metrics_evolution(self.plot_objects[session_key].ax[ax_name],
+                                                          metrics_vals[1], metrics_vals[0], **plot_config)
+
+                        self.plot_objects[session_key].plot_metrics_evolution(self.plot_objects[session_key].ax[ax_name],
+                                                                              trigger_states[session_num-1][1],
+                                                                              trigger_states[session_num-1][0],
+                                                                              colour='m', **plot_config)
+
+
 
                         print('Plotted the total activation array (S%d)' % session_num)
 
@@ -208,7 +242,7 @@ class CBLA_DataPlotter(DataPlotter):
                         plot_config = dict()
                         plot_config['xlabel'] = 'time (second)'
                         plot_config['ylabel'] = 'activation'
-                        plot_config['title'] = 'Proximal Cluster Activation (S%d)' % session_num
+                        plot_config['title'] = 'Cluster Activation'
 
                         # plot the evolution plot
                         metrics_dict = session_metrics[metrics_key]
@@ -218,7 +252,7 @@ class CBLA_DataPlotter(DataPlotter):
                         metrics_vals = sorted(metrics_vals, key=lambda x: x[0])
 
                         for cluster_id, metrics_val in metrics_vals:
-                            self.plot_objects[session_key].plot_evolution(self.plot_objects[session_key].ax[ax_name],
+                            self.plot_objects[session_key].plot_metrics_evolution(self.plot_objects[session_key].ax[ax_name],
                                                                           metrics_val[1], metrics_val[0], **plot_config)
 
                         print('Plotted the proximal activation array (S%d)' % session_num)
@@ -230,9 +264,9 @@ class CBLA_DataPlotter(DataPlotter):
 
     def plot_histories(self):
 
-        grid_dim = (2, 5)
-        engine_based_type = ('S', 'M', 'm_max_val', 'rel_act_val', 'is_exploring', 'out_vars', ) #'avg_act_val_2',) #,best_action,  'is_exploring', 'S1_predicted',)
-        expert_based_type = ('action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
+        grid_dim = (2,1)
+        engine_based_type = ('in_vars', 'out_vars',  ) #'M', 'm_max_val', 'rel_act_val', 'is_exploring', ) #'avg_act_val_2',) #,best_action,  'is_exploring', 'S1_predicted',)
+        expert_based_type = () #'action_values', 'mean_errors', 'action_counts', 'latest_rewards',)
 
         session_num = 1
         for session_data in self.data:
@@ -275,7 +309,8 @@ class CBLA_DataPlotter(DataPlotter):
                             plot_config['marker'] = '.'
 
                         # plot the evolution plot
-                        CBLA_PlotObject.plot_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name], data_val['y'], data_val['x'], **plot_config)
+                        x_data = [val - offset for val in data_val['x'] ]
+                        CBLA_PlotObject.plot_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name], data_val['y'], x_data, **plot_config)
 
                         print('%s: plotted evolution of %s (S%d)' % (node_name, data_type, session_num))
 
@@ -295,8 +330,10 @@ class CBLA_DataPlotter(DataPlotter):
                         plot_config['title'] = '%s vs. time plot' % data_type
 
                         # plot the evolution plot
+                        x_data = [val - offset for val in data_val['x'] ]
                         CBLA_PlotObject.plot_regional_evolution(self.plot_objects[(session_num, node_name, 'history')].ax[ax_name],
-                                                                data_val['y'], data_val['x'], **plot_config)
+                                                                data_val['y'], x_data, **plot_config)
+
 
                         print('%s: plotted regional evolution of %s (S%d)' % (node_name, data_type, session_num))
 
