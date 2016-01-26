@@ -13,3 +13,5 @@ cd ..
 cd cbla
 call install.bat
 cd ..
+
+pause

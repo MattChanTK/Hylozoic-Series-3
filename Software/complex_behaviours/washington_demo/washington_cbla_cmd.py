@@ -3,23 +3,6 @@ __author__ = 'Matthew'
 import interactive_system
 import washington_protocol as CP
 import abstract_node as Abs
-from abstract_node import *
-
-try:
-    from custom_gui import *
-except ImportError:
-    import sys
-    import os
-    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from custom_gui import *
-
-try:
-    from cbla_engine import *
-except ImportError:
-    import sys
-    import os
-    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from cbla_engine import *
 
 from collections import OrderedDict
 import  threading
@@ -83,6 +66,7 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
 
         self.init_utilities()
         self.init_basic_components()
+        self.init_cbla_nodes()
 
         self.start_nodes()
 
@@ -141,137 +125,8 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
 
         return components
 
-def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict, monitor_only=False):
+    def init_cbla_nodes(self):
 
-    if not isinstance(hmi, tk_gui.Master_Frame):
-        raise TypeError("HMI must be Master_Frame")
-    if not isinstance(node_list, dict):
-        raise TypeError("node_list must be a dictionary")
-
-    hmi.wm_title('Manual Control Mode')
-
-    status_frame = tk_gui.Messenger_Status_Frame(hmi, messenger)
-    content_frame = tk_gui.Content_Frame(hmi)
-    nav_frame = tk_gui.Navigation_Frame(hmi, content_frame)
-
-    control_vars = OrderedDict()
-    display_vars = OrderedDict()
-
-    if len(node_list) > 0:
-
-        for name, node in node_list.items():
-            node_name = name.split('.')
-            teensy_name = node_name[0]
-            device_name = node_name[1]
-            try:
-                output_name = node_name[2]
-            except IndexError:
-                output_name = "variables"
-
-            if teensy_name not in control_vars:
-                control_vars[teensy_name] = OrderedDict()
-
-            if teensy_name not in display_vars:
-                display_vars[teensy_name] = OrderedDict()
-
-            # specifying the controlable variables
-            if not monitor_only:
-                if  device_name not in control_vars[teensy_name]:
-                    control_vars[teensy_name][device_name] = OrderedDict()
-
-                if isinstance(node, Output_Node) and 'sma' not in name:
-                    control_vars[teensy_name][device_name][output_name] = node.in_var['output']
-
-            # specifying the displayable variables
-            if device_name not in display_vars[teensy_name]:
-                display_vars[teensy_name][device_name] = OrderedDict()
-
-            if isinstance(node, Input_Node):
-                display_vars[teensy_name][device_name][output_name] = (node.out_var, 'input_node')
-            elif isinstance(node, Output_Node):
-                display_vars[teensy_name][device_name][output_name] = (node.in_var, 'output_node')
-            else:
-                display_vars[teensy_name][device_name][output_name + "_input"] = (node.in_var, 'input_node')
-                display_vars[teensy_name][device_name][output_name + "_output"] = (node.out_var, 'output_node')
-
-    page_frames = OrderedDict()
-    for teensy_name, teensy_display_vars in display_vars.items():
-
-        teensy_control_vars = OrderedDict()
-        if teensy_name in control_vars.keys():
-            teensy_control_vars = control_vars[teensy_name]
-        frame = HMI_Manual_Mode(content_frame, teensy_name, (teensy_name, 'manual_ctrl_page'),
-                                teensy_control_vars, teensy_display_vars)
-        page_frames[frame.page_key] = frame
-
-        content_frame.build_pages(page_frames)
-
-        nav_frame.build_nav_buttons()
-
-    print('GUI initialized.')
-    hmi.start(status_frame=status_frame,
-              nav_frame=nav_frame,
-              content_frame=content_frame,
-              start_page_key=next(iter(page_frames.keys()), ''))
-
-if __name__ == "__main__":
-
-    cmd = WashingtonCBLA
-
-    # None means all Teensy's connected will be active; otherwise should be a tuple of names
-    ACTIVE_TEENSY_NAMES = None
-    MANDATORY_TEENSY_NAMES = ACTIVE_TEENSY_NAMES
-
-    def main():
-
-        protocols = dict()
-        protocols['WashingtonSoundModuleProtocol'] = CP.WashingtonSoundModuleProtocol
+        print("warning: No CBLA Nodes defined")
 
 
-        # instantiate Teensy Monitor
-        teensy_manager = interactive_system.TeensyManager(import_config=True, protocols_dict=protocols, print_to_term=False)
-
-        # find all the Teensy
-        print("Number of Teensy devices found: " + str(teensy_manager.get_num_teensy_thread()))
-
-        # kill all and only leave those specified in ACTIVE_TEENSY_NAMES
-        all_teensy_names = list(teensy_manager.get_teensy_name_list())
-        if isinstance(ACTIVE_TEENSY_NAMES, tuple):
-            for teensy_name in all_teensy_names:
-                if teensy_name not in ACTIVE_TEENSY_NAMES:
-                    teensy_manager.kill_teensy_thread(teensy_name)
-
-        # check if all the mandatory ones are still there
-        all_teensy_names = list(teensy_manager.get_teensy_name_list())
-        if isinstance(MANDATORY_TEENSY_NAMES, tuple):
-            for teensy_name in MANDATORY_TEENSY_NAMES:
-                if teensy_name not in all_teensy_names:
-                    raise Exception('%s is missing!!' % teensy_name)
-
-        # find all the Teensy
-        print("Number of active Teensy devices: %s\n" % str(teensy_manager.get_num_teensy_thread()))
-
-        # interactive code
-        behaviour = cmd(teensy_manager)
-
-        if not isinstance(behaviour, WashingtonCBLA):
-            raise TypeError("Behaviour must be WashingtonCBLA type!")
-
-        with behaviour.all_nodes_created:
-            behaviour.all_nodes_created.wait()
-
-        # initialize the gui
-        hmi = tk_gui.Master_Frame()
-        hmi_init(hmi, behaviour.messenger, behaviour.node_list)
-
-        behaviour.terminate()
-
-        behaviour.join()
-
-        for teensy_thread in teensy_manager._get_teensy_thread_list():
-            teensy_thread.join()
-
-        print("All Teensy threads terminated")
-
-    main()
-    print("\n===== Program Safely Terminated=====")

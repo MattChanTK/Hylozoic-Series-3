@@ -6,7 +6,8 @@ from abstract_node.node import *
 from abstract_node import DataLogger
 from interactive_system import Messenger
 from sklearn import linear_model
-import prescripted_engine as ps_engine
+
+from . import Prescripted_Base_Engine
 
 import cbla_engine
 
@@ -117,7 +118,7 @@ class CBLA_Base_Node(Node):
             speed_limit = self.messenger.estimated_msg_period * 2
 
             # update CBLA Engine
-            if isinstance(self.prescripted_engine, ps_engine.Prescripted_Base_Engine) and\
+            if isinstance(self.prescripted_engine, Prescripted_Base_Engine) and\
                self.prescripted_mode_active.val:
 
                 data_packet = self.prescripted_engine.update()
