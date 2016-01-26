@@ -1,13 +1,28 @@
-#include "washington_interactive_nodes.h"
-
-//===========================================================================
-//===========================================================================
+//#define CRICKET_NODE
+//#define FINCRICKET_NODE
+//#define FIN_NODE
+#define SOUND_NODE
+//#define FINLIGHTS_NODE
 
 //===== INITIALIZATION =====
-//WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+#if defined(CRICKET_NODE)
+#include "cricket.h"
+WashingtonCricketNode teensy_unit(0, 2, 5, 3);
+#elif defined(FINCRICKET_NODE)
+#include "fin_cricket.h"
 WashingtonFinCricketNode teensy_unit(1, 3, 4, 0, 2, 5);
-//WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5);
-//WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+#elif defined(FIN_NODE)
+#include "fin.h"
+WashingtonFinNode teensy_unit(1, 3, 4, 0, 2, 5); 
+#elif defined(SOUND_NODE)
+#include "sound.h"
+WashingtonSoundNode teensy_unit(0, 1, 2, 3, 4, 5);
+#elif defined(FINLIGHTS_NODE)
+#include "fin.h"
+FinsSingleLightsUnit teensy_unit(0, 1, 2, 3, 4, 5)
+#endif
+
+#include <SerialCommand.h>
 
 //check for new messages
 void check_msg(){
@@ -29,6 +44,8 @@ uint32_t get_time(){
 
 }
 
+SerialCommand sCmd (&Serial);     // The demo SerialCommand object
+
 void setup() {
 	
 	//--- Teensy Unit ---
@@ -44,6 +61,10 @@ void setup() {
 	Serial.begin(9600);
 	Serial.print("Setup Done");
 
+  delay(1000);
+  
+  sCmd.addCommand("VER",    cmdVersion);          // Prints version
+  sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
 }
 
 
@@ -75,8 +96,10 @@ void inactive_mode(){
 
 uint16_t loop_since_last_msg = 0;
 const uint16_t keep_alive_thres = 2000;
+volatile uint16_t prev_operation_mode = 0;
 
 void loop() {
+  sCmd.readSerial();     // We don't do much, just process serial commands
 
 	if (teensy_unit.receive_msg()){
 		
@@ -91,9 +114,13 @@ void loop() {
 	loop_since_last_msg++;
 
 	
-	//teensy_unit.sample_inputs();
+	//teensy_unit.sample_inputs()
 	
-	// Serial.println(teensy_unit.operation_mode);
+	if (teensy_unit.operation_mode != prev_operation_mode){
+		Serial.print("Operation Mode: ");
+		Serial.println(teensy_unit.operation_mode);
+		prev_operation_mode = teensy_unit.operation_mode;
+	}
 	switch (teensy_unit.operation_mode){
 	
 		case 0: 
@@ -117,3 +144,27 @@ void loop() {
 
 }
 
+/* Handling Serial Commands
+ *  
+ */
+
+void cmdVersion(){
+  Serial.println("TEENSY SOFTWARE COMPILED: " __DATE__ " " __TIME__);
+}
+
+void cmdBlink(){
+  // THESE ARE NOT QUITE RIGHT. Figure out how to do them properly.  
+  Serial.println("Blinking...");
+  for( int i=0; i<10; i++ ){
+    //TODO Get back blink functionality
+    /*teensy_unit.light0.set_output_level(0, 255);
+    teensy_unit.light1.set_output_level(2, 0);
+    teensy_unit.light2.set_output_level(5, 255);
+    delay(100);
+    teensy_unit.light0.set_output_level(0, 0);
+    teensy_unit.light1.set_output_level(2, 255);
+    teensy_unit.light2.set_output_level(5, 0);*/
+    delay(100);
+  }
+  Serial.println("Done Blinking...");
+}
