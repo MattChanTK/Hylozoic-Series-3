@@ -4,14 +4,7 @@ import interactive_system
 import washington_protocol as CP
 import abstract_node as Abs
 from abstract_node import *
-
-try:
-    from custom_gui import *
-except ImportError:
-    import sys
-    import os
-    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from custom_gui import *
+from custom_gui import *
 
 from collections import OrderedDict
 import  threading
