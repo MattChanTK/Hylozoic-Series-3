@@ -30,6 +30,9 @@ class Proximity{
 
     // Get a normalized value, ranged between 0 and 255
     int normalized_value();
+	
+	// cpp:function:: int Proximity::raw()
+	int raw();
 };
 
 #endif
