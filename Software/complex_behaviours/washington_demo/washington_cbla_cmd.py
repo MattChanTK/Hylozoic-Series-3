@@ -71,8 +71,8 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
             protocol = self.teensy_manager.get_protocol(teensy_name)
 
             # -- Sound Node ---
-            if isinstance(protocol, CP.WashingtonSoundProtocol):
-                self.node_list.update(self.build_sound_node_components(teensy_name, protocol.NUM_SOUND))
+            if isinstance(protocol, CP.WashingtonSoundModuleProtocol):
+                self.node_list.update(self.build_sound_module_components(teensy_name))
 
             # -- operation mode ----
             operation_mode_var = Abs.Output_Node(self.messenger, teensy_name, node_name="operation_mode_var",
@@ -121,40 +121,24 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
         for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
             self.teensy_manager.kill_teensy_thread(teensy_name)
 
-    def build_sound_node_components(self, teensy_name, num_sound):
+    def build_sound_module_components(self, teensy_name):
 
         components = OrderedDict()
-        fin_comps = OrderedDict()
 
-        for j in range(num_sound):
+        # Input Variables
+        mic_0_max_freq = Abs.Input_Node(self.messenger, teensy_name, node_name='mic_mf-0', input='mic_0_max_freq')
+        mic_1_max_freq = Abs.Input_Node(self.messenger, teensy_name, node_name='mic_mf-1', input='mic_1_max_freq')
 
-            # 2 ir sensors each
-            ir_s = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-s' % j, input='fin_%d_ir_0_state' % j)
-            ir_f = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.ir-f' % j, input='fin_%d_ir_1_state' % j)
+        # Output Variables
+        speaker_0_freq	= Abs.Output_Node(self.messenger, teensy_name, node_name='spk_frq-0', output='speaker_0_freq')
+        speaker_1_freq	= Abs.Output_Node(self.messenger, teensy_name, node_name='spk_frq-1', output='speaker_1_freq')
 
-            # 1 3-axis acceleromter each
-            acc = Abs.Input_Node(self.messenger, teensy_name, node_name='f%d.acc' % j,
-                             x='fin_%d_acc_x_state' % j,
-                             y='fin_%d_acc_y_state' % j,
-                             z='fin_%d_acc_z_state' % j)
+        # Putting Input and Output Variables into a dictionary of components
+        components[mic_0_max_freq.node_name] = mic_0_max_freq
+        components[mic_1_max_freq.node_name] = mic_1_max_freq
+        components[speaker_0_freq.node_name] = speaker_0_freq
+        components[speaker_1_freq.node_name] = speaker_1_freq
 
-            # 2 SMA wires each
-            sma_r = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-r' % j, output='fin_%d_sma_0_level' % j)
-            sma_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.sma-l' % j, output='fin_%d_sma_1_level' % j)
-
-            # 2 reflex each
-            reflex_l = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-l' % j, output='fin_%d_reflex_0_level' % j)
-            reflex_m = Abs.Output_Node(self.messenger, teensy_name, node_name='f%d.rfx-m' % j, output='fin_%d_reflex_1_level' % j)
-
-            fin_comps[ir_s.node_name] = ir_s
-            fin_comps[ir_f.node_name] = ir_f
-            fin_comps[acc.node_name] = acc
-            fin_comps[sma_l.node_name] = sma_l
-            fin_comps[sma_r.node_name] = sma_r
-            fin_comps[reflex_l.node_name] = reflex_l
-            fin_comps[reflex_m.node_name] = reflex_m
-
-            components.update(fin_comps)
         return components
 
 def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, node_list: dict, monitor_only=False):
@@ -232,7 +216,7 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
 
 if __name__ == "__main__":
 
-    cmd = WashingtonManual
+    cmd = WashingtonCBLA
 
     # None means all Teensy's connected will be active; otherwise should be a tuple of names
     ACTIVE_TEENSY_NAMES = None
@@ -241,10 +225,8 @@ if __name__ == "__main__":
     def main():
 
         protocols = dict()
-        protocols['WashingtonCricketProtocol'] = CP.WashingtonCricketProtocol
-        protocols['WashingtonFinCricketProtocol'] = CP.WashingtonFinCricketProtocol
-        protocols['WashingtonFinProtocol'] = CP.WashingtonFinProtocol
-        protocols['WashingtonSoundProtocol'] = CP.WashingtonSoundProtocol
+        protocols['WashingtonSoundModuleProtocol'] = CP.WashingtonSoundModuleProtocol
+
 
         # instantiate Teensy Monitor
         teensy_manager = interactive_system.TeensyManager(import_config=True, protocols_dict=protocols, print_to_term=False)
@@ -272,8 +254,8 @@ if __name__ == "__main__":
         # interactive code
         behaviour = cmd(teensy_manager)
 
-        if not isinstance(behaviour, WashingtonManual):
-            raise TypeError("Behaviour must be WashingtonBehaviour type!")
+        if not isinstance(behaviour, WashingtonCBLA):
+            raise TypeError("Behaviour must be WashingtonCBLA type!")
 
         with behaviour.all_nodes_created:
             behaviour.all_nodes_created.wait()
