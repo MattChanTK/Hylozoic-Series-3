@@ -60,6 +60,8 @@ void RawHIDCommunicator::send_msg(){
 uint8_t RawHIDCommunicator::get_msg_setting(){
 
 	return msg_setting;
+}
 
-
+uint16_t RawHIDCommunicator::getInt16(uint8_t offset){
+	return recv_data_buff[offset] | uint16_t(recv_data_buff[offset+1]) << 8;
 }
