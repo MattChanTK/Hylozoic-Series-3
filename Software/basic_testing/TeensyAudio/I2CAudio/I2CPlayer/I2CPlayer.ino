@@ -108,8 +108,8 @@ void setup() {
     pinMode(LED_BUILTIN,OUTPUT); // LED
 
     // Setup for Slave mode, address 0x44, pins 29/30, external pullups, 400kHz
-    //Wire.begin(I2C_SLAVE, 0x44, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_100); //Version for i2c_t3.h
-    Wire.begin(0x44);
+    Wire1.begin(I2C_SLAVE, 0x44, I2C_PINS_29_30, I2C_PULLUP_EXT, I2C_RATE_100); //Version for i2c_t3.h
+    //Wire.begin(0x44);
 
     // init vars
     cmd = 0;
@@ -117,8 +117,8 @@ void setup() {
     memset(mem, 0, sizeof(mem));
 
     // register events
-    Wire.onReceive(receiveEvent);
-    Wire.onRequest(requestEvent);
+    Wire1.onReceive(receiveEvent);
+    Wire1.onRequest(requestEvent);
 
     Serial.begin(9600);
     delay(2000);
@@ -148,31 +148,14 @@ void receiveEvent(size_t len)
 void receiveEvent(int len)
 #endif
 {
-    if(Wire.available())
+    if(Wire1.available())
     {
         // grab command
-        cmd = Wire.read();
+        cmd = Wire1.read();
         Serial.print("Playing: ");
         Serial.println(cmd);
         switch(cmd)
         {
-        /*case WRITE:
-            addr = Wire.readByte();                // grab addr
-            while(Wire.available())
-                if(addr < MEM_LEN)                 // drop data beyond mem boundary
-                    mem[addr++] = Wire.readByte(); // copy data to mem
-                else
-                    Wire.readByte();               // drop data if mem full
-            break;
-
-        case READ:
-            addr = Wire.readByte();                // grab addr
-            break;
-
-        case SETRATE:
-            rate = (i2c_rate)Wire.readByte();      // grab rate
-            Wire.setRate(rate);                    // set rate
-            break;*/
           case 0:
             sound0.play(AudioSampleSnare);
             break;
@@ -205,7 +188,7 @@ void requestEvent(void)
     switch(cmd)
     {
     case READ:
-        Wire.write(&mem[addr], MEM_LEN-addr); // fill Tx buffer (from addr location to end of mem)
+        Wire1.write(&mem[addr], MEM_LEN-addr); // fill Tx buffer (from addr location to end of mem)
         break;
     }
 }
@@ -215,7 +198,7 @@ void requestEvent(void)
 //
 void print_i2c_status(void)
 {
-    switch(Wire.status())
+    switch(Wire1.status())
     {
     case I2C_WAITING:  Serial.print("I2C waiting, no errors\n"); break;
     case I2C_ADDR_NAK: Serial.print("Slave addr not acknowledged\n"); break;

@@ -3,7 +3,7 @@
 #include "cricket.h"
 
 //===========================================================================
-//===== Washington Fin Cricket Node =====
+//===== Washington Cricket Node =====
 //===========================================================================
 
 WashingtonCricketNode::WashingtonCricketNode(uint8_t cricket0_port_id,
@@ -22,12 +22,11 @@ WashingtonCricketNode::~WashingtonCricketNode() {
 
 void WashingtonCricketNode::parse_msg() {
 
-
-  // byte 1 --- type of request
-  request_type = recv_data_buff[1];
-
-
-  uint16_t temp_val = 0;
+	// byte 1 --- type of request
+	request_type = recv_data_buff[1];
+	
+    
+	uint16_t temp_val = 0;
 
   switch (request_type) {
 
@@ -357,7 +356,7 @@ void WashingtonCricketNode::self_running_behaviour(const uint32_t &curr_time) {
 
     // starting a cycle
     if (cricket_var[j].ir_state > 1200 && !cricket_var[j].cycling) {
-      Serial.println("starting cycle");
+      Serial.println("Starting cricket cycle [" __FILE__ ": " "__LINE__" "]");
       cricket_var[j].cycling = true;
       cricket_var[j].phase_time = millis();
       cricket_var[j].step_time = millis();
@@ -608,7 +607,7 @@ void WashingtonCricketNode::led_blink_behaviour(const uint32_t &curr_time) {
 
 
 //----- LOW-LEVEL CONTROL -------
-void WashingtonCricketNode::low_level_control_behaviour(const uint32_t &curr_time) {
+void WashingtonCricketNode::low_level_control_behaviour(const uint32_t &curr_time){
 
 
   //>>>> Cricket <<<<<

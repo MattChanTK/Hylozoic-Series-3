@@ -1,11 +1,15 @@
 #ifndef _SOUND_MODULE_H
 #define _SOUND_MODULE_H
 
-
+#define __USE_I2C_T3__
 
 #include "Arduino.h"
 #include <Audio.h>
-#include <Wire.h>
+#ifdef __USE_I2C_T3__
+  #include <i2c_t3.h> // Had to edit control_wm8731.cpp and control_sgtl5000.cpp to use i2c_t3.h instead of Wire.h
+#else
+  #include <Wire.h> 
+#endif
 #include <SPI.h>
 #include <SD.h>
 #include <String.h>
@@ -16,6 +20,12 @@
 #define SDCARD_CS_PIN    10
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14	
+
+/*enum I2CCommands { // Switch to this later
+  ReadAnalog,
+  OutputPWM,
+  PlayWAV
+};*/
 
 
 class SoundModule{
@@ -73,8 +83,10 @@ class SoundModule{
 		//===============================================
 		
 		void decodeMsg(uint8_t* recvMsg);
-	
 
+    // Ping to see if it's alive
+    static const uint8_t CMD_CHECK_ALIVE = 0; // Commands should be 0-indexed anyways
+	
 		//--- Read Analog ---
 		static const uint8_t CMD_READ_ANALOG = 1;
 		
@@ -105,6 +117,9 @@ class SoundModule{
 		
 		// bool is_playing_L[4] = {false, false, false, false};
 		// bool is_playing_R[4] = {false, false, false, false};
+   
+   // instantiate the audio controller 
+    AudioControlSGTL5000     sgtl5000_1;
 	
 	protected:
 		
@@ -141,9 +156,6 @@ class SoundModule{
 		// Connections between the mixer and audio output
 		AudioConnection			 mixer_output_L;
 		AudioConnection			 mixer_output_R;
-		
-		// instantiate the audio controller 
-		AudioControlSGTL5000     sgtl5000_1;
 
 
 };
