@@ -47,3 +47,8 @@ int Proximity::normalized_value(){
   return limits.decay_fraction_int(reading);
 }
 
+int Proximity::raw(){
+  return reading;
+}
+
+
