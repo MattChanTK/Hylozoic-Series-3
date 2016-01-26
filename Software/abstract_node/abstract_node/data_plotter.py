@@ -224,6 +224,7 @@ class PlotObject(object):
         for key, value in plot_config.items():
             config[key] = value
 
+
         # plotting the graph
         if x is None:
             x = np.arange(len(y))
@@ -239,14 +240,52 @@ class PlotObject(object):
             lines.append(line)
 
         cls.apply_plot_config(ax, config)
+        plt.tight_layout()
 
         return lines
+
+    @classmethod
+    def plot_metrics_evolution(cls, ax: axes.Axes, y, x=None, **plot_config):
+
+        # default config
+        config = defaultdict(lambda: None)
+        config['xlabel'] = 'time'
+        for key, value in plot_config.items():
+            config[key] = value
+
+
+        # major ticks every 50
+        # major_ticks = np.arange(0, 900, 50)
+        # ax.set_xticks(major_ticks)
+
+        # plotting the graph
+        if x is None:
+            x = np.arange(len(y))
+
+        # check if element of x is tuple or just number
+        lines = []
+        if isinstance(y[0], (list, tuple)):
+            for y_i in zip(*y):
+                line, = ax.plot(x, y_i)
+                lines.append(line)
+        else:
+            line, = ax.plot(x, y)
+            # colour
+            if config['colour'] is not None:
+                line.set_color(config['colour'])
+            lines.append(line)
+
+
+        cls.apply_plot_config(ax, config)
+
+        return lines
+
 
     @classmethod
     def apply_plot_config(cls, ax: axes.Axes, config):
 
         # set label
-        ax.set_title(config['title'])
+        ax.set_title(config['title'], fontsize=21)
         ax.set_xlabel(config['xlabel'])
 
         if isinstance(ax, Axes3D):
@@ -263,6 +302,7 @@ class PlotObject(object):
             ax.set_ylim(config['x2lim'])
         else:
             ax.set_ylim(config['ylim'])
+
 
         # set tick
         if config['int_xaxis']:
@@ -319,6 +359,7 @@ class PlotObject(object):
                 line.set_markeredgewidth(marker_edge_width)
             except:
                 pass
+
 
     @staticmethod
     def to_time_value(time_delta: timedelta, time_type='second'):
