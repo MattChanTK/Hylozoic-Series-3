@@ -1,9 +1,14 @@
 #include "sound_module.h"
 
+#define N_SPEAKERS 2
+#define N_FFT_BINS 512
+
 //===========================================================================
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 SoundModule::SoundModule():
+  pc_leftFreq(lineInput, 0, leftFreq, 0),
+  pc_rightFreq(lineInput, 0, rightFreq, 0),
   wav_mixer_L1(playWav_L[0], 0, mixer_left, 0),
   wav_mixer_L2(playWav_L[1], 0, mixer_left, 1),
   wav_mixer_L3(playWav_L[2], 0, mixer_left, 2),
@@ -14,7 +19,6 @@ SoundModule::SoundModule():
   wav_mixer_R4(playWav_R[3], 0, mixer_right, 3),
   mixer_output_L(mixer_left, 0, audio_output, 0),
   mixer_output_R(mixer_right, 0, audio_output, 1)
-
 {
 
 
@@ -46,9 +50,6 @@ SoundModule::SoundModule():
   analogReadResolution(12);
   analogReadAveraging(32);
   analogWriteResolution(8);
-
-
-
 }
 
 SoundModule::~SoundModule() {
@@ -76,6 +77,8 @@ void SoundModule::audio_board_setup() {
   sgtl5000_1.lineOutLevel(29);
   mixer_left.gain(1, 0.8);
   mixer_right.gain(1, 0.8);
+  
+  sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
 
   SPI.setMOSI(SDCARD_MOSI_PIN);
   SPI.setSCK(SDCARD_SCK_PIN);
@@ -91,8 +94,6 @@ void SoundModule::audio_board_setup() {
 
 }
 void SoundModule::init() {
-
-
 }
 
 //==== Play Wav file ===
@@ -141,7 +142,7 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
     }
   }
 
-  if (!fileFound){
+  if (!fileFound) {
     Serial.print("404 NOT FOUND: ");
     Serial.println(wavfile);
     return false;
@@ -219,6 +220,143 @@ bool SoundModule::read_digital_state(const uint8_t id) {
   return 0;
 }
 
+void SoundModule::parse_msg() {
+  // byte 1 --- type of request
+  request_type = (RequestType) recv_data_buff[1];
+
+
+  uint16_t temp_val = 0;
+
+  switch (request_type) {
+
+    // Basic
+    case RequestType::Basic: {
+
+        // >>>>>> byte 2 to 9: ON-BOARD <<<<<<<
+
+        // byte 2 --- indicator led on or off
+        //indicator_led_on = recv_data_buff[2];
+
+        // byte 3 and 4 --- indicator led blinking frequency
+        temp_val = 0;
+        for (uint8_t i = 0; i < 2 ; i++){
+          temp_val += recv_data_buff[3 + i] << (8 * i);
+        }
+        indicator_led_blink_period = temp_val;
+
+        // >>>> byte 10: CONFIG VARIABLES <<<<<
+
+        // byte 10 ---- operation mode
+        operation_mode = recv_data_buff[10];
+
+        // byte 11 ---- reply message type request
+        reply_type = (ResponseType)recv_data_buff[11];
+
+        // >>>>> byte 30 to byte 39:
+        neighbour_activation_state = recv_data_buff[30];
+
+        break;
+      }
+      
+    // mid level requests
+    case RequestType::MidLevel: {
+
+        // First byte and last byte are special codes
+        uint8_t  device_offset = 2;
+
+        // (2 bytes each)
+        // >>>>> byte 2 to byte 3: Fin 0
+
+        for( int i=0; i<N_SPEAKERS; i++){
+          // byte --- frequency to play on speaker i
+          state[i].freqPlay = getInt16(device_offset+2*i);
+        }
+    }
+
+    // read-only
+    case RequestType::ReadOnly: {
+        break;
+      }
+    default: {
+        break;
+      }
+
+  }
+
+}
+
+//====== Input functions ======
+
+//--- Sampling function ---
+void SoundModule::sample_inputs() {
+  //=== Sound FFT ===
+  for (int j = 0; j < N_SPEAKERS; j++) {
+    state[j].freqDetect = getAudioState(j);
+  }
+}
+
+int SoundModule::getAudioState(int i){
+  int max_window_index = 0;
+  float max_window_value = 0.0;
+  if (frequencies[i].available()) {
+    for( int j=0; j < N_FFT_BINS; j++ ){
+      if( frequencies[i].read(j) > max_window_value ){
+        max_window_value = frequencies[i].read(j);
+        max_window_index = j;
+      }
+    }
+  }
+
+  return max_window_index;
+}
+
+//====== COMMUNICATION Protocol ======
+
+void SoundModule::compose_reply(byte front_signature, byte back_signature, byte msg_setting) {
+
+  // add the signatures to first and last byte
+  send_data_buff[0] = front_signature;
+  send_data_buff[num_outgoing_byte - 1] = back_signature;
+
+  if (msg_setting == 0) {
+    // sample the sensors
+    this->sample_inputs();
+  }
+
+  // byte 1 --- type of reply
+  send_data_buff[1] =  reply_type;
+
+  switch (reply_type) {
+
+    case ResponseType::Readings:  {
+
+        uint8_t  device_offset = 2;
+
+        // >>>>> byte 2 to byte 15: FIN 0
+        // >>>>> byte 16 to byte 29: FIN 1
+        // >>>>> byte 30 to byte 43: FIN 2
+        for( int i=0; i<N_SPEAKERS; i++ ){
+          send_data_buff[device_offset+2*i] = state[i].freqDetect & 0xFF;
+          send_data_buff[device_offset+2*i+1] = state[i].freqDetect >> 8;
+        }
+        
+        break;
+      }
+
+    // echo
+    case ResponseType::Echo: {
+        for (uint8_t i = 2; i < 63; i++) {
+          send_data_buff[i] = recv_data_buff[i];
+        }
+        break;
+      }
+    default: {
+        break;
+      }
+
+  }
+}
+
 //===============================================
 //==== I2C Communication Protocol ====
 //===============================================
@@ -229,12 +367,12 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
 
   switch (cmd_type) {
 
-    case SoundModule::CMD_CHECK_ALIVE:{
+    case SoundModule::CMD_CHECK_ALIVE: {
         requested_data_type = CMD_CHECK_ALIVE;
         break;
-    }
+      }
     // Analog read
-    case SoundModule::CMD_READ_ANALOG:{ //TODO This should not need a message? DK
+    case SoundModule::CMD_READ_ANALOG: { //TODO This should not need a message? DK
 
         requested_data_type = CMD_READ_ANALOG;
         // sample data from analog ports
@@ -242,9 +380,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
           analog_data[i] = read_analog_state(i);
         }
         break;
-    }
+      }
     // PWM Output
-    case SoundModule::CMD_PWM_OUTPUT:{
+    case SoundModule::CMD_PWM_OUTPUT: {
 
         // byte 1 - PWM ID
         uint8_t pwm_id = recvMsg[1];
@@ -255,9 +393,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         set_output_level(pwm_id, pwm_level);
 
         break;
-    }
+      }
     // Play Wav File
-    case SoundModule::CMD_PLAY_WAV:{
+    case SoundModule::CMD_PLAY_WAV: {
 
         // byte 1 - File ID
         uint8_t file_id = recvMsg[1];
@@ -286,7 +424,7 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         playWav(filename, channel, port, blocking);
 
         break;
-    }
+      }
     // Is Playing or Not
     // case SoundModule::CMD_IS_PLAYING:{
 
@@ -297,9 +435,9 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
     // }
     // break;
     //
-    default:{
+    default: {
         break;
-    }
+      }
   }
 
 

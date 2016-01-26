@@ -181,19 +181,58 @@ void requestEvent() {
 
 uint32_t last_bg_on = millis();
 
+// From other code in Washinton_Teensy
+uint16_t loop_since_last_msg = 0;
+const uint16_t keep_alive_thres = 2000;
+volatile uint16_t prev_operation_mode = 0;
+
 void loop() {
   kickWatchdog(); // Make sure the Watchdog Timer doesn't expire
 
   uint32_t curr_time = millis();
-  // If received message
-  // first buffer is always the message type
-  // if (recvMsg[0] > 0){
-  // sound_module.decodeMsg(recvMsg);
-  // clearRecvMsg();
-  // }
 
-  //==== Basic Code ===
-  int delay_time = 1000;
+  // Change what you're doing based on the current operation mode
+  if (sound_module.operation_mode != prev_operation_mode){
+    Serial.print("Operation Mode: ");
+    Serial.println(sound_module.operation_mode);
+    prev_operation_mode = sound_module.operation_mode;
+  }
+  switch (sound_module.operation_mode){
+    case 0: 
+      self_running_test();
+      break;
+    case 1:
+      if (loop_since_last_msg > keep_alive_thres){
+        inactive_mode();
+      }
+      else{
+        manual_mode();
+      }
+      break;
+    default:
+      inactive_mode();
+      break;
+  }
+
+  heartbeat();
+
+#ifdef __USE_SERIALCOMMAND__
+  sCmd.readSerial();     // We don't do much, just process serial commands
+#endif
+}
+
+// Blink the indicator LED to know it's alive
+void heartbeat() {
+  if ( heartbeatTimer > 500 ) {
+    heartbeatTimer = 0;
+    heartbeatToggle = !heartbeatToggle;
+    digitalWrite(LED_BUILTIN, heartbeatToggle);
+  }
+}
+
+void self_running_test(){
+  uint32_t curr_time = millis();
+    //==== Basic Code ===
 
   // Update IR readings
   for (int i = 0; i < N_IR; i++) {
@@ -266,8 +305,7 @@ void loop() {
     phase_time = millis();
     step_time = millis();
     next_step_time = 2;
-  }
-  else if (cycling) {
+  } else if (cycling) {
 
     volatile uint32_t cycle_time = curr_time - phase_time;
 
@@ -320,22 +358,10 @@ void loop() {
 
   sound_module.set_output_level(0, led_level[0]);
   sound_module.set_output_level(1, led_level[1]);
-
-  heartbeat();
-
-#ifdef __USE_SERIALCOMMAND__
-  sCmd.readSerial();     // We don't do much, just process serial commands
-#endif
 }
 
-// Blink the indicator LED to know it's alive
-void heartbeat() {
-  if ( heartbeatTimer > 500 ) {
-    heartbeatTimer = 0;
-    heartbeatToggle = !heartbeatToggle;
-    digitalWrite(LED_BUILTIN, heartbeatToggle);
-  }
-}
+void manual_mode(){}
+void inactive_mode(){}
 
 #ifdef __USE_SERIALCOMMAND__
 void cmdVersion() {
