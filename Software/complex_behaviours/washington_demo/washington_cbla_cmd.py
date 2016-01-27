@@ -26,7 +26,7 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
             # ------ set mode ------
             cmd_obj = interactive_system.command_object(teensy_name, 'basic')
             protocol = self.teensy_manager.get_protocol(teensy_name)
-            cmd_obj.add_param_change('operation_mode', protocol.MODE_MANUAL_CONTROL)
+            cmd_obj.add_param_change('operation_mode', protocol.MODE_CBLA)
             self.enter_command(cmd_obj)
         self.send_commands()
 
@@ -58,9 +58,9 @@ class WashingtonCBLA(interactive_system.InteractiveCmd):
                 self.node_list.update(self.build_sound_module_components(teensy_name))
 
             # -- operation mode ----
-            operation_mode_var = Abs.Output_Node(self.messenger, teensy_name, node_name="operation_mode_var",
-                                                 output='operation_mode')
-            self.node_list.update({operation_mode_var.node_name: operation_mode_var})
+            # operation_mode_var = Abs.Output_Node(self.messenger, teensy_name, node_name="operation_mode_var",
+            #                                      output='operation_mode')
+            # self.node_list.update({operation_mode_var.node_name: operation_mode_var})
 
     def run(self):
 

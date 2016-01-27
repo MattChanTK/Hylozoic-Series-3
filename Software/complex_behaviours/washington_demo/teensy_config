@@ -8,4 +8,9 @@
 1419600 fin_cricket_node_D  WashingtonFinCricketProtocol
 1410830 sound_node          WashingtonSoundProtocol
 462390  test_teensy_1       WashingtonSoundModuleProtocol
-1411600  test_teensy_2       WashingtonCricketProtocol
+1411600 test_teensy_2       WashingtonCricketProtocol
+1363370 sound_module_1      WashingtonSoundModuleProtocol
+1363090 sound_module_2      WashingtonSoundModuleProtocol
+1292720 sound_module_3      WashingtonSoundModuleProtocol
+1363050 sound_module_4      WashingtonSoundModuleProtocol
+1363240 sound_module_5      WashingtonSoundModuleProtocol
