@@ -149,7 +149,7 @@ class SoundModule : public RawHIDCommunicator {
 
     SoundModuleState state[2];
 	
-	elapsedMillis playTimer[2];
+	elapsedMillis playTimer[2], readTimer[2];
 
 
 	// GUItool: begin automatically generated code
@@ -162,8 +162,8 @@ class SoundModule : public RawHIDCommunicator {
 	AudioPlaySdWav           playWav_L2; //xy=173.88888549804688,160.88888549804688
 	AudioEffectEnvelope      envelope_L;      //xy=332.8888854980469,450.888916015625
 	AudioEffectEnvelope      envelope_R; //xy=332.8888854980469,505.8888854980469
-	AudioAnalyzeFFT1024      frequencies_L;      //xy=340.88888655768505,623.8888854980469
-	AudioAnalyzeFFT1024      frequencies_R; //xy=340.8888854980469,665.8889465332031
+	AudioAnalyzeFFT256      frequencies_L;      //xy=340.88888655768505,623.8888854980469
+	AudioAnalyzeFFT256      frequencies_R; //xy=340.8888854980469,665.8889465332031
 	AudioMixer4              mixer_right; //xy=558.888916015625,370.8888854980469
 	AudioMixer4              mixer_left;         //xy=559.888916015625,273.8888854980469
 	AudioOutputI2S           audio_output;           //xy=775.8889770507812,351.8888854980469
@@ -184,7 +184,7 @@ class SoundModule : public RawHIDCommunicator {
 	
 	
     // Input processing
-    AudioAnalyzeFFT1024      *frequencies[2] = {&frequencies_L, &frequencies_R};
+    AudioAnalyzeFFT256      *frequencies[2] = {&frequencies_L, &frequencies_R};
 	
 	// Audio output
 	AudioSynthWaveformSine   *sineWave[2] = {&sine_L, &sine_R};

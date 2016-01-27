@@ -1,7 +1,7 @@
 #include "sound_module.h"
 
 #define N_SPEAKERS 2
-#define N_FFT_BINS 512
+#define N_FFT_BINS 128
 
 //===========================================================================
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
@@ -90,6 +90,9 @@ void SoundModule::audio_board_setup() {
   sgtl5000_1.lineOutLevel(29);
   mixer_left.gain(1, 0.8);
   mixer_right.gain(1, 0.8);
+  
+  frequencies_L.windowFunction(AudioWindowHanning1024);
+  frequencies_R.windowFunction(AudioWindowHanning1024);
   
   sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
 
@@ -305,7 +308,10 @@ void SoundModule::parse_msg() {
 void SoundModule::sample_inputs() {
   //=== Sound FFT ===
   for (int j = 0; j < N_SPEAKERS; j++) {
-    state[j].freqDetect = getAudioState(j);
+	if(readTimer[j] > 500){
+		state[j].freqDetect = getAudioState(j);
+		readTimer[j] = 0;
+	}
   }
 }
 
@@ -313,9 +319,15 @@ int SoundModule::getAudioState(int i){
   int max_window_index = 0;
   float max_window_value = 0.0;
   if (frequencies[i]->available()) {
+	//Serial.print("Frequency is available on line ");
+	//Serial.println(i);
     for( int j=0; j < N_FFT_BINS; j++ ){
-      if( frequencies[i]->read(j) > max_window_value ){
-        max_window_value = frequencies[i]->read(j);
+	  float reading = frequencies[i]->read(j);
+	  /*Serial.print(j);
+	  Serial.print(" | ");
+	  Serial.println(reading);*/
+      if( reading > max_window_value ){
+        max_window_value = reading;
         max_window_index = j;
       }
     }
