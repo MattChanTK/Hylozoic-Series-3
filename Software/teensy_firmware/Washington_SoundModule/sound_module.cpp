@@ -7,18 +7,31 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 SoundModule::SoundModule():
-  pc_leftFreq(lineInput, 0, leftFreq, 0),
-  pc_rightFreq(lineInput, 0, rightFreq, 0),
+  /*pc_leftFreq(lineInput, 0, frequencies[0], 0),
+  pc_rightFreq(lineInput, 0, frequencies[0], 0),
+  //frequencies{leftFreq, rightFreq},
   wav_mixer_L1(playWav_L[0], 0, mixer_left, 0),
   wav_mixer_L2(playWav_L[1], 0, mixer_left, 1),
-  wav_mixer_L3(playWav_L[2], 0, mixer_left, 2),
-  wav_mixer_L4(playWav_L[3], 0, mixer_left, 3),
   wav_mixer_R1(playWav_R[0], 0, mixer_right, 0),
   wav_mixer_R2(playWav_R[1], 0, mixer_right, 1),
-  wav_mixer_R3(playWav_R[2], 0, mixer_right, 2),
-  wav_mixer_R4(playWav_R[3], 0, mixer_right, 3),
+  patchCord1(sineWave[0], envelope[0]),
+  patchCord2(sineWave[1], envelope[1]),
+  patchCord3(envelope[0], 0, mixer_left, 2),
+  patchCord4(envelope[1], 0, mixer_right, 2),
   mixer_output_L(mixer_left, 0, audio_output, 0),
-  mixer_output_R(mixer_right, 0, audio_output, 1)
+  mixer_output_R(mixer_right, 0, audio_output, 1)*/
+	patchCord1(sine_L, envelope_L),
+	patchCord2(sine_R, envelope_R),
+	patchCord3(lineInput, 0, frequencies_L, 0),
+	patchCord4(lineInput, 1, frequencies_R, 0),
+	patchCord5(playWav_L1, 0, mixer_left, 1),
+	patchCord6(playWav_L2, 0, mixer_left, 0),
+	patchCord7(playWav_R1, 0, mixer_right, 0),
+	patchCord8(playWav_R2, 0, mixer_right, 1),
+	patchCord9(envelope_L, 0, mixer_right, 2),
+	patchCord10(envelope_R, 0, mixer_left, 2),
+	patchCord11(mixer_left, 0, audio_output, 1),
+	patchCord12(mixer_right, 0, audio_output, 0)
 {
 
 
@@ -70,7 +83,7 @@ void SoundModule::audio_board_setup() {
   // configuration
   sgtl5000_1.enable(); // Enable LINE-OUT
   sgtl5000_1.volume(0.8); //Set Iniitial LINE-OUT Gain NOPE. Sets only headphones. See docs.
-  sgtl5000_1.dacVolume(0.75); // Changed to set volume lower. This also lowers quality :( DK
+  sgtl5000_1.dacVolume(1.0); // Changed to set volume lower. This also lowers quality :( DK
   sgtl5000_1.adcHighPassFilterEnable();
   // sgtl5000_1.audioPreProcessorEnable();
   // sgtl5000_1.enhanceBassEnable();
@@ -101,7 +114,7 @@ void SoundModule::init() {
 //port: if not 1 <= port <= 4, port = 1
 bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool block) {
 
-  if (port < 1 || port > 4) {
+  if (port < 1 || port > 2) {
     port = 1;
   }
 
@@ -113,32 +126,32 @@ bool SoundModule::playWav(char* wavfile, uint8_t channel, uint8_t port, bool blo
   // Start playing the file.  This sketch continues to
   // run while the file plays.
   if (channel != 2) {
-    if (!block && playWav_L[curr_port_L].isPlaying()) {
+    if (!block && playWav_L[curr_port_L]->isPlaying()) {
       //fileFound &= playWav_L[port].play(wavfile);
       curr_port_L += 1;
-      if (curr_port_L >= 3)
+      if (curr_port_L >= 1)
         curr_port_L = 0;
     }
-    if (!(block && playWav_L[port - 1].isPlaying() )) {
+    if (!(block && playWav_L[port - 1]->isPlaying() )) {
       Serial.print("Playing file on Left: ");
       Serial.println(wavfile);
-      fileFound &= playWav_L[curr_port_L].play(wavfile);
+      fileFound &= playWav_L[curr_port_L]->play(wavfile);
     }
 
   }
 
   if (channel != 1 ) {
 
-    if (!block && playWav_R[curr_port_R].isPlaying()) {
+    if (!block && playWav_R[curr_port_R]->isPlaying()) {
       // fileFound &= playWav_L[curr_port_R].play(wavfile);
       curr_port_R += 1;
-      if (curr_port_R >= 3)
+      if (curr_port_R >= 1)
         curr_port_R = 0;
     }
-    if (!(block && playWav_R[port - 1].isPlaying() )) {
+    if (!(block && playWav_R[port - 1]->isPlaying() )) {
       Serial.print("Playing file on Right: ");
       Serial.println(wavfile);
-      fileFound &= playWav_R[curr_port_R].play(wavfile);
+      fileFound &= playWav_R[curr_port_R]->play(wavfile);
     }
   }
 
@@ -269,6 +282,7 @@ void SoundModule::parse_msg() {
 
         for( int i=0; i<N_SPEAKERS; i++){
           // byte --- frequency to play on speaker i
+			playTimer[i] = 0;
           state[i].freqPlay = getInt16(device_offset+2*i);
         }
     }
@@ -298,14 +312,19 @@ void SoundModule::sample_inputs() {
 int SoundModule::getAudioState(int i){
   int max_window_index = 0;
   float max_window_value = 0.0;
-  if (frequencies[i].available()) {
+  if (frequencies[i]->available()) {
     for( int j=0; j < N_FFT_BINS; j++ ){
-      if( frequencies[i].read(j) > max_window_value ){
-        max_window_value = frequencies[i].read(j);
+      if( frequencies[i]->read(j) > max_window_value ){
+        max_window_value = frequencies[i]->read(j);
         max_window_index = j;
       }
     }
   }
+  
+	Serial.print("Frequency: ");
+	Serial.print(max_window_index);
+	Serial.print(" | ");
+	Serial.println(max_window_value);
 
   return max_window_index;
 }
@@ -439,6 +458,18 @@ void SoundModule::decodeMsg(uint8_t* recvMsg) {
         break;
       }
   }
+  }
+  
+  
+void  SoundModule::cbla_behaviour(){
+	  for(int i=0; i<N_SPEAKERS; i++){
+		  if(playTimer[i] < 500){
+			  sineWave[i]->frequency(state[i].freqPlay);
+			  
+			  envelope[i]->noteOn();
+		  } else {
+			  envelope[i]->noteOff();
+		  }
+	  }
+  }
 
-
-}

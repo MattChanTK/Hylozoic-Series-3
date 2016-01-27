@@ -62,6 +62,12 @@ void clearRecvMsg() {
   }
 }
 
+enum OperationMode{
+	SelfRunning,
+	Manual,
+	CBLA,
+	Inactive = 255
+};
 //TODO: Watchdog Timer
 
 // Heartbeat Timer
@@ -69,7 +75,6 @@ elapsedMillis heartbeatTimer;
 bool heartbeatToggle;
 
 void setup() {
-  enableWatchdog();
 
   Serial.begin(9600);
 
@@ -99,7 +104,9 @@ void setup() {
 
   // Reads in the MAC address from T3Mac.h. Stored as uint8_t mac[6]
   read_mac();
-
+  
+  
+  
 #ifdef __USE_SERIALCOMMAND__
   sCmd.addCommand("VER", cmdVersion);          // Prints version
   sCmd.addCommand("BLINK", cmdBlink);          // Blinks lights
@@ -108,7 +115,9 @@ void setup() {
   sCmd.addCommand("I2CSTAT", cmdI2CStatus);          // Prints I2C Status
   sCmd.addCommand("CONF", cmdConfigPrint);          // Prints Configuration
 #endif
-
+	
+	
+	enableWatchdog();
 }
 
 void receiveEvent(unsigned int bytes) {
@@ -190,6 +199,16 @@ void loop() {
   kickWatchdog(); // Make sure the Watchdog Timer doesn't expire
 
   uint32_t curr_time = millis();
+  
+  if (sound_module.receive_msg()){
+
+	// parse the message and save to parameters
+	sound_module.parse_msg();
+
+	loop_since_last_msg = 0;
+
+  }
+
 
   // Change what you're doing based on the current operation mode
   if (sound_module.operation_mode != prev_operation_mode){
@@ -198,15 +217,23 @@ void loop() {
     prev_operation_mode = sound_module.operation_mode;
   }
   switch (sound_module.operation_mode){
-    case 0: 
+    case SelfRunning: 
       self_running_test();
       break;
-    case 1:
+    case Manual:
       if (loop_since_last_msg > keep_alive_thres){
         inactive_mode();
       }
       else{
         manual_mode();
+      }
+      break;
+	case CBLA:
+      if (loop_since_last_msg > keep_alive_thres){
+        inactive_mode();
+      }
+    else{
+        cbla_mode();
       }
       break;
     default:
@@ -362,6 +389,11 @@ void self_running_test(){
 
 void manual_mode(){}
 void inactive_mode(){}
+void cbla_mode(){
+	
+	sound_module.cbla_behaviour();
+	
+}
 
 #ifdef __USE_SERIALCOMMAND__
 void cmdVersion() {

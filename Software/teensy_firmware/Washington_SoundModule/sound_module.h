@@ -82,6 +82,7 @@ class SoundModule : public RawHIDCommunicator {
 
     //--- Input functions----
     void sample_inputs();
+	
 
     //===============================================
     //==== Communication functions =====
@@ -133,6 +134,11 @@ class SoundModule : public RawHIDCommunicator {
     // instantiate the audio controller
     AudioControlSGTL5000     sgtl5000_1;
 
+	 //===============================================
+    //==== Behaviour Functions ====
+    //===============================================
+	void cbla_behaviour();
+	
   protected:
 
 
@@ -142,40 +148,51 @@ class SoundModule : public RawHIDCommunicator {
     //==== variables ===
 
     SoundModuleState state[2];
+	
+	elapsedMillis playTimer[2];
 
+
+	// GUItool: begin automatically generated code
+	AudioSynthWaveformSine   sine_L;          //xy=153.88888549804688,453.8888854980469
+	AudioSynthWaveformSine   sine_R;          //xy=153.88888549804688,501.8888854980469
+	AudioInputI2S            lineInput;           //xy=165.88888549804688,644.8889465332031
+	AudioPlaySdWav           playWav_R2; //xy=169.88888549804688,260.8888854980469
+	AudioPlaySdWav           playWav_R1; //xy=171.88888549804688,211.88888549804688
+	AudioPlaySdWav           playWav_L1;     //xy=173.88888549804688,112.88888549804688
+	AudioPlaySdWav           playWav_L2; //xy=173.88888549804688,160.88888549804688
+	AudioEffectEnvelope      envelope_L;      //xy=332.8888854980469,450.888916015625
+	AudioEffectEnvelope      envelope_R; //xy=332.8888854980469,505.8888854980469
+	AudioAnalyzeFFT1024      frequencies_L;      //xy=340.88888655768505,623.8888854980469
+	AudioAnalyzeFFT1024      frequencies_R; //xy=340.8888854980469,665.8889465332031
+	AudioMixer4              mixer_right; //xy=558.888916015625,370.8888854980469
+	AudioMixer4              mixer_left;         //xy=559.888916015625,273.8888854980469
+	AudioOutputI2S           audio_output;           //xy=775.8889770507812,351.8888854980469
+	AudioConnection          patchCord1;//(sine_L, envelope_L);
+	AudioConnection          patchCord2;//(sine_R, envelope_R);
+	AudioConnection          patchCord3;//(lineInput, 0, frequencies_L, 0);
+	AudioConnection          patchCord4;//(lineInput, 1, frequencies_R, 0);
+	AudioConnection          patchCord5;//(playWav_L1, 0, mixer_left, 1);
+	AudioConnection          patchCord6;//(playWav_L2, 0, mixer_left, 0);
+	AudioConnection          patchCord7;//(playWav_R1, 0, mixer_right, 0);
+	AudioConnection          patchCord8;//(playWav_R2, 0, mixer_right, 1);
+	AudioConnection          patchCord9;//(envelope_L, 0, mixer_right, 2);
+	AudioConnection          patchCord10;//(envelope_R, 0, mixer_left, 2);
+	AudioConnection          patchCord11;//(mixer_left, 0, audio_output, 1);
+	AudioConnection          patchCord12;//(mixer_right, 0, audio_output, 0);
+	// GUItool: end automatically generated code
+
+	
+	
     // Input processing
-    AudioInputI2S            lineInput;
-    AudioAnalyzeFFT1024      leftFreq;
-    AudioAnalyzeFFT1024      rightFreq;
-    AudioAnalyzeFFT1024      frequencies[2] = {leftFreq, rightFreq};
-    AudioConnection          pc_leftFreq;
-    AudioConnection          pc_rightFreq;
-
-    // the left and right mixers
-    AudioMixer4              mixer_left;         // mixer1 - Left Channel
-    AudioMixer4              mixer_right;        // mixer2 - Right Channel
+    AudioAnalyzeFFT1024      *frequencies[2] = {&frequencies_L, &frequencies_R};
+	
+	// Audio output
+	AudioSynthWaveformSine   *sineWave[2] = {&sine_L, &sine_R};
+	AudioEffectEnvelope      *envelope[2] = {&envelope_L, &envelope_R};
 
     // 4 waves max per mixer
-    AudioPlaySdWav			 playWav_L[4];
-    AudioPlaySdWav			 playWav_R[4];
-
-    // audio output
-    AudioOutputI2S           audio_output;
-
-    // Connections between the wav player and the mizer
-    AudioConnection          wav_mixer_L1;
-    AudioConnection          wav_mixer_L2;
-    AudioConnection          wav_mixer_L3;
-    AudioConnection          wav_mixer_L4;
-
-    AudioConnection          wav_mixer_R1;
-    AudioConnection          wav_mixer_R2;
-    AudioConnection          wav_mixer_R3;
-    AudioConnection          wav_mixer_R4;
-
-    // Connections between the mixer and audio output
-    AudioConnection			 mixer_output_L;
-    AudioConnection			 mixer_output_R;
+    AudioPlaySdWav			 *playWav_L[2] = {&playWav_L1, &playWav_L2};
+    AudioPlaySdWav			 *playWav_R[2] = {&playWav_R1, &playWav_R2};
 
     int getAudioState(int i);
 };
