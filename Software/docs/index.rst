@@ -6,6 +6,8 @@
 Welcome to Hylozoic Series 3's documentation!
 =============================================
 
+We're doing documentation!
+
 Contents:
 
 .. toctree::
