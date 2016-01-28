@@ -322,3 +322,4 @@ pip-log.txt
 .mr.developer.cfg
 
 *.hex
+Software/docs/_build/
