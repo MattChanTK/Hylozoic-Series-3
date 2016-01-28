@@ -74,6 +74,7 @@ eagle.epf
 *.exe
 *.o
 *.so
+*.d
 
 # Packages #
 ############

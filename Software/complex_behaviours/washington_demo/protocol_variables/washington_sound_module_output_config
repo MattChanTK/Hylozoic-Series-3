@@ -1,0 +1,7 @@
+indicator_led_on					bool		basic					0	False
+indicator_led_period 				int16 		basic					0	180			
+operation_mode						int8		basic					0	0
+reply_type_request					int8		basic					0	0
+neighbour_activation_state			int8		basic 					0	0
+speaker_0_freq				        int16	    freq_ctrl				3	0
+speaker_1_freq				        int16	    freq_ctrl				3	0
