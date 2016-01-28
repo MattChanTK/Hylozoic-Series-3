@@ -39,8 +39,13 @@ extensions = [
 ]
 
 # Autodoc helpers
-#codepath = os.path.abspath('../')
-#sys.path.insert(0,codepath)
+codepath = os.path.abspath('..\pyHylozoic3')
+sys.path.insert(0,codepath)
+for p in os.listdir(codepath):
+	if os.path.isdir(os.path.join(codepath,p)):
+		sys.path.insert(0,os.path.join(codepath,p))
+
+print sys.path
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
