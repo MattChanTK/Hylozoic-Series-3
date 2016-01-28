@@ -1,7 +1,7 @@
 #include "sound_module.h"
 
 #define N_SPEAKERS 2
-#define N_FFT_BINS 128
+#define N_FFT_BINS 512
 
 //===========================================================================
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
