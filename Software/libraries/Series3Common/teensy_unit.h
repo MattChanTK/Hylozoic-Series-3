@@ -6,12 +6,13 @@
 #include "i2c_t3.h"
 #include "PWMDriver.h"
 #include "Arduino.h"
+#include "rawhid_communicator.h"
 
 #define PACKET_SIZE 64
 #define I2C_TIMEOUT 1000 //microsecond
 
 
-class TeensyUnit{
+class TeensyUnit: public RawHIDCommunicator{
 	
 	public:
 	
@@ -66,11 +67,7 @@ class TeensyUnit{
 		//--- I2C Multiplexer pins ---
 		const uint8_t I2C_MUL_ADR_pin[3] = {2, 24, 33};
 		const uint8_t I2C_MUL_ADR[6] = {4, 6, 7, 2, 1, 0};
-		
-
-
-		
-		
+				
 		//===============================================
 		//==== Functions ====
 		//===============================================
@@ -82,28 +79,9 @@ class TeensyUnit{
 		//--- Initialization ---
 		void init();
 		
-		//--- Communication functions ----
-		bool receive_msg();
-		void send_msg();
-		uint8_t get_msg_setting();
-		virtual void parse_msg() = 0;
-		virtual void compose_reply(byte front_signature, byte back_signature, byte msg_setting) = 0;
-		
-		
 	protected:
 		
-		//==== constants ====
-		const uint8_t num_outgoing_byte = PACKET_SIZE;
-		const uint8_t num_incoming_byte = PACKET_SIZE;
-		
 		i2c_t3 Wire;
-		
-		//==== COMMUNICATION variables =====
-		byte send_data_buff[PACKET_SIZE];
-		byte recv_data_buff[PACKET_SIZE];
-		uint8_t request_type = 0;
-		uint8_t reply_type = 0;
-		uint8_t msg_setting = 0;
 		
 		//=== initialize slow pwm ===
 		PWMDriver spwm;	

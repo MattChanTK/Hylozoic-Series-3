@@ -3,13 +3,8 @@ from interactive_system import CommunicationProtocol as CP
 
 from complex_node import *
 
-try:
-    from custom_gui import *
-except ImportError:
-    import sys
-    import os
-    sys.path.insert(1, os.path.join(os.getcwd(), '..'))
-    from custom_gui import *
+from custom_gui import *
+
 
 
 class Prescripted_Behaviour(interactive_system.InteractiveCmd):
