@@ -38,6 +38,10 @@ extensions = [
     'sphinx.ext.viewcode',
 ]
 
+# Autodoc helpers
+#codepath = os.path.abspath('../')
+#sys.path.insert(0,codepath)
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -54,7 +58,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Hylozoic Series 3'
-copyright = u'2016, Matthew Chan'
+copyright = u'2016, PBAI'
 author = u'Matthew Chan'
 
 # The version info for the project you're documenting, acts as replacement for
