@@ -1,3 +1,5 @@
+'''Main program to run CBLA with integrated prescripted behaviour.'''
+
 import sys
 # import resource
 # # Increase max stack size from 8MB to 512MB
@@ -79,8 +81,13 @@ class CBLA(interactive_system.InteractiveCmd):
 
     # ========= the Run function for the CBLA system based on the abstract node system=====
     def run(self):
-
+        
         self.messenger = interactive_system.Messenger(self, 0.000)
+        '''Messenger updates all of the Teensys and makes sure that they are kept up to date.
+        
+        This allows larger messages to be sent (instead of flooding the communications system with sparse messages).
+        It synchronizes states between the Teensys and the Teensy threads.
+        '''
 
         for teensy_name in self.teensy_manager.get_teensy_name_list():
             # ------ set mode ------

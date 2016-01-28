@@ -1,3 +1,7 @@
+'''Base classes for all Nodes and variables in the Hylozoic 3 system'''
+# Author: Matthew TK Chan <matthewchan@ieee.org>
+
+
 import threading
 
 from interactive_system import Messenger
@@ -7,6 +11,31 @@ from collections import OrderedDict
 
 
 class Var(object):
+
+    """Generic variable type use in the Hylozoic 3 system
+    
+    This provides a standard interface for all variables within the system. 
+    This allows all variables, including those of immutable types, to be passed by refernce through this mutable object.
+    
+    Parameters
+    ------------
+    
+    val (default = 0)
+        Value of the variable
+        
+    Attributes
+    ------------
+    
+    __val
+        Value of the variable
+        
+    Examples
+    ------------
+        >>> a = Var((1, 2, 3))
+        >>> a.val = {a_dict: (9, 8, 7)}
+        >>> print(a.val['a_dict'])
+    
+    """
 
     def __init__(self, val=0):
         self.__val = val
@@ -21,6 +50,25 @@ class Var(object):
 
 
 class Node(threading.Thread):
+    '''The base class for all Nodes in the Hylozoic 3 system
+    
+    This provides a standard structure that represents each independent abstract component in the system.
+    Each Node is a thread. This allows Nodes in the system to run asynchronously.
+    Each Node has a set of input and output variables of type Var. A Node interacts with other Nodes by means of having common variables.
+    
+    Parameters
+    -----------
+    
+    messenger: Messenger
+        The Messenger associated with the Node. The loop period of a Node should not be shorter than its Messenger.
+        
+    node_name : str (default = None)
+        The name of the node. It is used to differentiate the different Nodes in the system. If no name is provided, it will be called "generic"
+        
+    Attributes
+    -----------
+    
+    '''
 
     def __init__(self, messenger: Messenger, node_name=None):
 

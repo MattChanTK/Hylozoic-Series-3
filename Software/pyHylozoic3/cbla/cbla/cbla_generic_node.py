@@ -13,7 +13,7 @@ import cbla_engine
 
 
 class CBLA_Base_Node(Node):
-	"""This is the base node for all CBLA objects."""
+    """This is the base node for all CBLA objects."""
 
     cbla_state_type_key = 'cbla_states'
     cbla_label_name_key = 'label_names'

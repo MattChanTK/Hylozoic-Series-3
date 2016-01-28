@@ -20,9 +20,16 @@ TEENSY_PRODUCT_ID = 0x0486
 
 
 class TeensyManager():
+    '''
+
+    Creates a Python interface for each Teensy that is plugged into the computer so that they can be communicated with.
+
+    Searches for Teensys by serial number and then create an interface instance for each one.
+    Is used with TeensyInterface to manage the set of Teensys that are connected.
+    '''
 
     def __init__(self, import_config=True, protocols_dict=None, print_to_term=False):
-
+		
         # table that store all the Teensy threads
         self.teensy_thread_table = OrderedDict()
 
