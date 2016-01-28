@@ -1,3 +1,5 @@
+'''Computer-based interface for communciating with a Teensy as an HID-mode USB device.'''
+
 import threading
 import random
 import struct
