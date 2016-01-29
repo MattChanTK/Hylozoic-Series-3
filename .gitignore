@@ -323,3 +323,21 @@ pip-log.txt
 .mr.developer.cfg
 
 *.hex
+Software/docs/_build/
+Software/docs/_apidoc/abstract_node/abstract_node.rst
+Software/docs/_apidoc/abstract_node/modules.rst
+Software/docs/_apidoc/abstract_node/setup.rst
+Software/docs/_apidoc/cbla/cbla.cbla_engine.rst
+Software/docs/_apidoc/cbla/cbla.rst
+Software/docs/_apidoc/cbla/modules.rst
+Software/docs/_apidoc/cbla/setup.rst
+Software/docs/_apidoc/custom_gui/custom_gui.rst
+Software/docs/_apidoc/custom_gui/modules.rst
+Software/docs/_apidoc/custom_gui/setup.rst
+Software/docs/_apidoc/custom_gui/tk_plot_test.rst
+Software/docs/_apidoc/hmi_gui/hmi_gui.rst
+Software/docs/_apidoc/hmi_gui/modules.rst
+Software/docs/_apidoc/hmi_gui/setup.rst
+Software/docs/_apidoc/interactive_system/interactive_system.rst
+Software/docs/_apidoc/interactive_system/modules.rst
+Software/docs/_apidoc/interactive_system/setup.rst

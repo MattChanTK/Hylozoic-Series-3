@@ -1,3 +1,5 @@
+'''Engine to run prescripted behaviour within CBLA.'''
+
 __author__ = 'Matthew'
 from collections import OrderedDict
 import random

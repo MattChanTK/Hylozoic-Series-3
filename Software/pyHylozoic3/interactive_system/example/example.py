@@ -1,3 +1,10 @@
+'''Example of how to interface with a Teensy.
+
+This is how you would iterface with the Teensy, not using CBLA.
+
+THIS MAY NOT WORK. PLEASE TEST AND UPDATE THE COMMENTS.
+'''
+
 __author__ = 'Matthew'
 from interactive_system import TeensyManager
 from interactive_system.InteractiveCmd import InteractiveCmd
@@ -7,6 +14,10 @@ from time import clock
 
 # class that polls the IR sensor
 class read_ir_sensors(InteractiveCmd):
+	'''Read the IR sensor values.
+	
+	Extends the InteractiveCmd class. InteractiveCommand is an emulated terminal to be able to control low-level sculptural functions and read data from the sculpture.
+	'''
 
     def run(self):
 
@@ -51,7 +62,7 @@ class read_ir_sensors(InteractiveCmd):
 
 if __name__ == "__main__":
 
-    # instantiate Teensy Monitor
+    # instantiate Teensy Monitor -> Monitor=Manager
     teensy_manager = TeensyManager(import_config=True)
 
     # find the number of Teensy devices

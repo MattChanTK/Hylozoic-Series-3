@@ -6,6 +6,7 @@ from .cbla_robot import *
 from .cbla_learner import *
 
 class CBLA_Engine(object):
+	'''CBLA Engine. Runs CBLA.'''
 
     def __init__(self, robot: Robot, learner: Learner, **config_kwargs):
 

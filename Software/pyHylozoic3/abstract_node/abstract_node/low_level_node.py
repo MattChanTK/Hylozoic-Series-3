@@ -1,3 +1,8 @@
+'''Pre-built nodes with higher function than simple input/output nodes.
+
+For example, the LED_Driver node is able to fade LEDs in and out.
+'''
+
 __author__ = 'Matthew'
 
 from time import perf_counter, clock
