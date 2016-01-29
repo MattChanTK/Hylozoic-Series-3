@@ -11,7 +11,7 @@ class PFTB_Triplet_Protocol(SystemParameters):
 
     MODE_SELF_RUNNING_TEST = 0
     MODE_MANUAL_CONTROL = 1
-    MODE_CBLA = 2
+    MODE_CBLA = 9
     MODE_INACTIVE = 255
 
     NUM_FIN = 3

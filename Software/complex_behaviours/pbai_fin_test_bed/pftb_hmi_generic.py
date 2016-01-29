@@ -43,8 +43,8 @@ def hmi_init(hmi: tk_gui.Master_Frame, messenger: interactive_system.Messenger, 
                 if  device_name not in control_vars[teensy_name]:
                     control_vars[teensy_name][device_name] = OrderedDict()
 
-                if isinstance(node, Output_Node) and 'sma' not in name:
-                    control_vars[teensy_name][device_name][output_name] = node.in_var['output']
+                if isinstance(node, Output_Node): #and 'sma' not in name:
+                     control_vars[teensy_name][device_name][output_name] = node.in_var['output']
 
             # specifying the displayable variables
             if device_name not in display_vars[teensy_name]:

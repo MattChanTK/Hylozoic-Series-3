@@ -56,15 +56,18 @@ class PFTB_Cmd(interactive_system.InteractiveCmd):
             # -- PFTB Triplet Node ---
             if isinstance(protocol, CP.PFTB_Triplet_Protocol):
 
+                self.NUM_LIGHT = protocol.NUM_LIGHT
+                self.NUM_FIN = protocol.NUM_FIN
+
                 # ==== creating components related to the Light =====
                 light_components = OrderedDict()
-                for j in range(protocol.NUM_LIGHT):
+                for j in range(self.NUM_LIGHT):
                     light_components.update(self.build_light_components(teensy_name=teensy_name, light_id=j))
                 self.node_list.update(light_components)
 
                 # ===== creating components for related to the Fins ====
                 fin_components = OrderedDict()
-                for j in range(protocol.NUM_FIN):
+                for j in range(self.NUM_FIN):
                     fin_components.update(self.build_fin_components(teensy_name=teensy_name, fin_id=j))
                 self.node_list.update(fin_components)
 
@@ -129,12 +132,13 @@ class PFTB_Cmd(interactive_system.InteractiveCmd):
 
         return light_comps
 
+    def init_routines(self):
+        self.init_utilities()
+        self.init_basic_components()
 
     def run(self):
 
-        self.init_utilities()
-        self.init_basic_components()
-        self.init_cbla_nodes()
+        self.init_routines()
 
         self.start_nodes()
 
@@ -172,9 +176,3 @@ class PFTB_Cmd(interactive_system.InteractiveCmd):
         # killing each of the Teensy threads
         for teensy_name in list(self.teensy_manager.get_teensy_name_list()):
             self.teensy_manager.kill_teensy_thread(teensy_name)
-
-    def init_cbla_nodes(self):
-
-        print("warning: No CBLA Nodes defined")
-
-
