@@ -152,7 +152,7 @@ public:
 	
 	elapsedMillis playTimer[2], readTimer[2], cpuAnalyzeTimer;
 
-
+	const int lineIn = AUDIO_INPUT_LINEIN;
 	// GUItool: begin automatically generated code
 	AudioSynthWaveformSine   sine_L;          //xy=153.88888549804688,453.8888854980469
 	AudioSynthWaveformSine   sine_R;          //xy=153.88888549804688,501.8888854980469
@@ -163,8 +163,10 @@ public:
 	AudioPlaySdWav           playWav_L2; //xy=173.88888549804688,160.88888549804688
 	AudioEffectEnvelope      envelope_L;      //xy=332.8888854980469,450.888916015625
 	AudioEffectEnvelope      envelope_R; //xy=332.8888854980469,505.8888854980469
+	// AudioAnalyzePeak			 analyzer_L;
+	// AudioAnalyzePeak			 analyzer_R;
 	AudioAnalyzeFFT256      frequencies_L;      //xy=340.88888655768505,623.8888854980469
-	//AudioAnalyzeFFT256      frequencies_R; //xy=340.8888854980469,665.8889465332031
+	AudioAnalyzeFFT256      frequencies_R; //xy=340.8888854980469,665.8889465332031
 	
 	AudioMixer4              mixer_right; //xy=558.888916015625,370.8888854980469
 	AudioMixer4              mixer_left;         //xy=559.888916015625,273.8888854980469
@@ -172,7 +174,7 @@ public:
 	AudioConnection          patchCord1;//(sine_L, envelope_L);
 	AudioConnection          patchCord2;//(sine_R, envelope_R);
 	AudioConnection          patchCord3;//(lineInput, 0, frequencies_L, 0);
-	//AudioConnection          patchCord4;//(lineInput, 1, frequencies_R, 0);
+	AudioConnection          patchCord4;//(lineInput, 1, frequencies_R, 0);
 	AudioConnection          patchCord5;//(playWav_L1, 0, mixer_left, 1);
 	AudioConnection          patchCord6;//(playWav_L2, 0, mixer_left, 0);
 	AudioConnection          patchCord7;//(playWav_R1, 0, mixer_right, 0);
@@ -186,7 +188,8 @@ public:
 	
 	
 	// Input processing
-	AudioAnalyzeFFT256      *frequencies[2] = {&frequencies_L, &frequencies_L};
+	// AudioAnalyzePeak			 *analyzers[2] = {&analyzer_L, &analyzer_R};
+	AudioAnalyzeFFT256      *frequencies[2] = {&frequencies_L, &frequencies_R};
 	
 	// Audio output
 	AudioSynthWaveformSine   *sineWave[2] = {&sine_L, &sine_R};

@@ -43,7 +43,8 @@ const uint8_t i2c_device_addr = 13;
 uint8_t recvMsg[NUM_BUFF]; // first BUFF is always the message type
 
 
-SoundModule sound_module;
+
+
 bool cycling = false;
 uint32_t phase_time = millis();
 uint32_t step_time = millis();
@@ -73,6 +74,7 @@ enum OperationMode{
 // Heartbeat Timer
 elapsedMillis heartbeatTimer;
 bool heartbeatToggle;
+SoundModule sound_module;
 
 void setup() {
 
@@ -192,12 +194,16 @@ uint32_t last_bg_on = millis();
 
 // From other code in Washinton_Teensy
 uint16_t loop_since_last_msg = 0;
-const uint16_t keep_alive_thres = 2000;
+const uint16_t keep_alive_thres = 10;
 volatile uint16_t prev_operation_mode = 0;
 
 uint16_t LOOP_PERIOD = 200;
 elapsedMillis loop_time;
 
+/*
+Something in the loop crashes when running too quickly. 
+Need further probing.
+*/
 void loop() {
 	
 	kickWatchdog(); // Make sure the Watchdog Timer doesn't expire
@@ -212,8 +218,9 @@ void loop() {
 		loop_since_last_msg = 0;
 
 	}
+	loop_since_last_msg++;
 
-
+	
 	// Change what you're doing based on the current operation mode
 	if (sound_module.operation_mode != prev_operation_mode){
 		Serial.print("Operation Mode: ");
@@ -235,7 +242,8 @@ void loop() {
 		break;
 	case CBLA:
 		if (loop_since_last_msg > keep_alive_thres){
-			inactive_mode();
+			//inactive_mode();
+			self_running_test();
 		}
 		else{
 			cbla_mode();
@@ -254,11 +262,12 @@ void loop() {
 	sCmd.readSerial();     // We don't do much, just process serial commands
 	#endif
 	
+	//This is important. Even with the sine wave instead of the microphone input, it failed without this delay.
 	//wait if not enough time has passed
 	int16_t remain_time = LOOP_PERIOD - loop_time;
 	if (remain_time > 0){
-		Serial.print("Remaining Time: ");
-		Serial.println(remain_time);
+		// Serial.print("Remaining Time: ");
+		// Serial.println(remain_time);
 		delay(remain_time);
 	}
 	loop_time = 0;
@@ -276,6 +285,8 @@ void heartbeat() {
 void self_running_test(){
 	uint32_t curr_time = millis();
 	//==== Basic Code ===
+	
+	//sound_module.getAudioState(0);
 
 	//Update IR readings
 	for (int i = 0; i < N_IR; i++) {

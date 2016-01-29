@@ -7,31 +7,22 @@
 //===== CONSTRUCTOR and DECONSTRUCTOR =====
 //===========================================================================
 SoundModule::SoundModule():
-/*pc_leftFreq(lineInput, 0, frequencies[0], 0),
-pc_rightFreq(lineInput, 0, frequencies[0], 0),
-//frequencies{leftFreq, rightFreq},
-wav_mixer_L1(playWav_L[0], 0, mixer_left, 0),
-wav_mixer_L2(playWav_L[1], 0, mixer_left, 1),
-wav_mixer_R1(playWav_R[0], 0, mixer_right, 0),
-wav_mixer_R2(playWav_R[1], 0, mixer_right, 1),
-patchCord1(sineWave[0], envelope[0]),
-patchCord2(sineWave[1], envelope[1]),
-patchCord3(envelope[0], 0, mixer_left, 2),
-patchCord4(envelope[1], 0, mixer_right, 2),
-mixer_output_L(mixer_left, 0, audio_output, 0),
-mixer_output_R(mixer_right, 0, audio_output, 1)*/
-patchCord1(sine_L, envelope_L),
-patchCord2(sine_R, envelope_R),
-patchCord3(lineInput, 0, frequencies_L, 0),
-//patchCord4(lineInput, 1, frequencies_R, 0),
-patchCord5(playWav_L1, 0, mixer_left, 1),
-patchCord6(playWav_L2, 0, mixer_left, 0),
-patchCord7(playWav_R1, 0, mixer_right, 0),
-patchCord8(playWav_R2, 0, mixer_right, 1),
-patchCord9(envelope_L, 0, mixer_left, 2),
-patchCord10(envelope_R, 0, mixer_right, 2),
-patchCord11(mixer_left, 0, audio_output, 1),
-patchCord12(mixer_right, 0, audio_output, 0)
+	patchCord1(sine_L, envelope_L),
+	patchCord2(sine_R, envelope_R),
+	// patchCord3(sine_L, 0, analyzer_L, 0),
+	// patchCord4(sine_R, 0, analyzer_R, 0),
+	patchCord3(lineInput, 0, frequencies_L, 0),
+	patchCord4(lineInput, 1, frequencies_R, 0),
+	// patchCord4(sine_L, 0, frequencies_L, 0),
+	// patchCord4(sine_R, 0, frequencies_R, 0),
+	patchCord5(playWav_L1, 0, mixer_left, 1),
+	patchCord6(playWav_L2, 0, mixer_left, 0),
+	patchCord7(playWav_R1, 0, mixer_right, 0),
+	patchCord8(playWav_R2, 0, mixer_right, 1),
+	patchCord9(envelope_L, 0, mixer_left, 2),
+	patchCord10(envelope_R, 0, mixer_right, 2),
+	patchCord11(mixer_left, 0, audio_output, 0),
+	patchCord12(mixer_right, 0, audio_output, 1)
 {
 
 
@@ -91,10 +82,10 @@ void SoundModule::audio_board_setup() {
 	mixer_left.gain(1, 0.8);
 	mixer_right.gain(1, 0.8);
 
-	frequencies_L.windowFunction(AudioWindowHanning1024);
+	// frequencies_L.windowFunction(AudioWindowHanning1024);
 	// frequencies_R.windowFunction(AudioWindowHanning1024);
 
-	sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
+	sgtl5000_1.inputSelect(lineIn);
 
 	SPI.setMOSI(SDCARD_MOSI_PIN);
 	SPI.setSCK(SDCARD_SCK_PIN);
@@ -107,6 +98,19 @@ void SoundModule::audio_board_setup() {
 			delay(500);
 		}
 	}
+	
+	// AudioConnection          patchCord1(sine_L, envelope_L);
+	// AudioConnection          patchCord2;//(sine_R, envelope_R);
+	// AudioConnection          patchCord3;//(lineInput, 0, frequencies_L, 0);
+	// AudioConnection          patchCord4;//(lineInput, 1, frequencies_R, 0);
+	// AudioConnection          patchCord5;//(playWav_L1, 0, mixer_left, 1);
+	// AudioConnection          patchCord6;//(playWav_L2, 0, mixer_left, 0);
+	// AudioConnection          patchCord7;//(playWav_R1, 0, mixer_right, 0);
+	// AudioConnection          patchCord8;//(playWav_R2, 0, mixer_right, 1);
+	// AudioConnection          patchCord9;//(envelope_L, 0, mixer_left, 2);
+	// AudioConnection          patchCord10;//(envelope_R, 0, mixer_right, 2);
+	// AudioConnection          patchCord11;//(mixer_left, 0, audio_output, 1);
+	// AudioConnection          patchCord12;//(mixer_right, 0, audio_output, 0);
 
 }
 void SoundModule::init() {
@@ -315,6 +319,18 @@ void SoundModule::sample_inputs() {
 	}
 }
 
+// int SoundModule::getAudioState(int i){
+	// float reading = -100;
+	// if (analyzers[i]->available()) {
+
+		// reading = analyzers[i]->read();
+
+	// }
+	// Serial.print("Reading: ");
+	// Serial.println(reading);
+	// return ((int) reading*2048);
+// }
+
 int SoundModule::getAudioState(int i){
 	int max_window_index = 0;
 	int16_t max_window_value = 0;
@@ -323,9 +339,12 @@ int SoundModule::getAudioState(int i){
 		//Serial.println(i);
 
 		Serial.print("BEGIN ");
+		Serial.print(i);
+		Serial.print(": ");
 		for( int j=0; j < N_FFT_BINS; j++ ){
 			int16_t reading = frequencies[i]->output[j];
 			Serial.print(reading);
+			Serial.print(" ");
 			/*Serial.print(j);
 	Serial.print(" | ");
 	Serial.println(reading);*/
@@ -346,7 +365,6 @@ int SoundModule::getAudioState(int i){
 
 	return max_window_index;
 }
-
 //====== COMMUNICATION Protocol ======
 
 void SoundModule::compose_reply(byte front_signature, byte back_signature, byte msg_setting) {
@@ -507,7 +525,16 @@ void SoundModule::cpu_analysis(){
 			Serial.print(sineWave[i]->processorUsage());
 			Serial.print(",");
 			Serial.print(sineWave[i]->processorUsageMax());
+			Serial.print("  lineIn=");
+			Serial.print(lineInput.processorUsage());
+			Serial.print(",");
+			Serial.print(lineInput.processorUsageMax());
 			Serial.print("  ");
+			// Serial.print("analyzer=");
+			// Serial.print(analyzers[i]->processorUsage());
+			// Serial.print(",");
+			// Serial.print(analyzers[i]->processorUsageMax());
+			// Serial.print("  ");
 			Serial.print("fft=");
 			Serial.print(frequencies[i]->processorUsage());
 			Serial.print(",");
