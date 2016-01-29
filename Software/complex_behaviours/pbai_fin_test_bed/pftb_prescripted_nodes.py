@@ -86,3 +86,55 @@ class InteractiveFin(Abs.Node):
             self.ctrl_right.update(self.out_var['right_fin_level'].val)
 
             sleep(self.messenger.estimated_msg_period*2)
+
+
+class InteractiveReflex(Abs.Node):
+
+    MAX_LED_LEVEL = 255
+    MAX_MOTOR_LEVEL = 150
+
+    def __init__(self, messenger: Messenger, node_name='interactiveReflex',
+                 # Input IR sensor
+                 reflex_ir: Var=Var(0),
+                 # Output LED and motor
+                 led_target: Var=Var(0), motor_target: Var=Var(0),
+                 # Control variables
+                 target_level: Var=Var(0)
+                 ):
+
+        super(InteractiveReflex, self).__init__(messenger, node_name=node_name)
+
+        # control variable
+        self.in_var['target_level'] = target_level
+
+        # output variables
+        self.out_var['led_target'] = led_target
+        self.out_var['motor_target'] = motor_target
+
+        # input variables
+        self.reflex_ir = reflex_ir
+
+        # other internal variables
+        self.reflex_ir_thres = 1000
+
+        self.print_to_term = False
+
+    def run(self):
+
+        while self.alive:
+
+            # When IR sensor detects an object
+            if self.reflex_ir.val > self.reflex_ir_thres:
+
+                led_target_level = max(0, min(self.in_var['target_level'].val, self.MAX_LED_LEVEL))
+                motor_target_level = max(0, min(self.in_var['target_level'].val, self.MAX_MOTOR_LEVEL))
+
+                self.out_var['led_target'].val = led_target_level
+                self.out_var['motor_target'].val = motor_target_level
+
+            else:
+
+                self.out_var['led_target'].val = 0
+                self.out_var['motor_target'].val = 0
+
+            sleep(self.messenger.estimated_msg_period*2)

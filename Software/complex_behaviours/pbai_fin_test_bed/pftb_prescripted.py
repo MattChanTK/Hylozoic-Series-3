@@ -2,8 +2,8 @@ __author__ = 'Matthew'
 
 from pftb_cmd import PFTB_Cmd, CP
 from collections import OrderedDict
-from pftb_prescripted_nodes import InteractiveFin
-from abstract_node import Var
+from pftb_prescripted_nodes import *
+from abstract_node import Var, LED_Driver
 
 class PFTB_Prescripted(PFTB_Cmd):
     log_dir = 'cbla_log'
@@ -36,6 +36,7 @@ class PFTB_Prescripted(PFTB_Cmd):
                 fin_components = OrderedDict()
                 for j in range(protocol.NUM_FIN):
                     fin_components.update(self.build_interactive_fin(teensy_name=teensy_name, fin_id=j))
+                    fin_components.update(self.build_interactive_reflex(teensy_name=teensy_name, fin_id=j))
                 self.node_list.update(fin_components)
 
     def build_interactive_fin(self, teensy_name, fin_id):
@@ -69,9 +70,39 @@ class PFTB_Prescripted(PFTB_Cmd):
 
         return fin_components
 
-    def build_interactive_reflex(self, teensy_name, reflex_id):
+    def build_interactive_reflex(self, teensy_name, fin_id):
 
         reflex_components = OrderedDict()
 
+        led_target = Abs.Var(0)
+        motor_target = Abs.Var(0)
+
+        # Reflex Driver
+        led = self.node_list['%s.f%d.rfx-l' % (teensy_name, fin_id)].in_var['output']
+        motor = self.node_list['%s.f%d.rfx-m' % (teensy_name, fin_id)].in_var['output']
+
+        reflex_l_driver = LED_Driver(self.messenger,  node_name="%s.f%d.rfx_driver-l" % (teensy_name, fin_id),
+                                     led_ref=led_target,
+                                     led_out=led, step_period=0.0005)
+        reflex_m_driver = LED_Driver(self.messenger,  node_name="%s.f%d.rfx_driver-m" % (teensy_name, fin_id),
+                                     led_ref=motor_target,
+                                     led_out=motor, step_period=0.0005)
+
+        reflex_components[reflex_l_driver.node_name] = reflex_l_driver
+        reflex_components[reflex_m_driver.node_name] = reflex_m_driver
+
+        reflex_ir = self.node_list['%s.f%d.ir-s' % (teensy_name, fin_id)].out_var['input']
+        reflex_target_level = Abs.Var(255)
+
+        interactive_reflex = InteractiveReflex(self.messenger, node_name='%s.f%d.iReflex' % (teensy_name, fin_id),
+                                                 # Input IR sensor
+                                                 reflex_ir=reflex_ir,
+                                                 # Output LED and motor
+                                                 led_target=led_target, motor_target=motor_target,
+                                                 # Control variables
+                                                 target_level = reflex_target_level
+                                                 )
+
+        reflex_components[interactive_reflex.node_name] = interactive_reflex
 
         return reflex_components

@@ -57,7 +57,7 @@ def main():
 
     # initialize the gui
     hmi = tk_gui.Master_Frame()
-    HMI.hmi_init(hmi, behaviour.messenger, behaviour.node_list)
+    HMI.hmi_init(hmi, behaviour.messenger, behaviour.node_list, monitor_only=True)
 
     behaviour.terminate()
 
