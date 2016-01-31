@@ -1,3 +1,8 @@
+"""
+The base class of PBAI Fin Test Bed (PFTB).
+This class creates the basic components (Input and Output Node) of the PFTB.
+"""
+
 __author__ = 'Matthew'
 
 import interactive_system
@@ -9,6 +14,23 @@ import  threading
 
 
 class PFTB_Cmd(interactive_system.InteractiveCmd):
+
+    """Base Command for the PBAI Fin Test Bed (PFTB)
+
+    This class inherits the InteractiveCmd and creates all Input and Output Nodes that make up the PFTB.
+
+    Parameters
+    ------------
+
+    Teensy Manager
+        The Teensy Manager associated with the PFTB.
+
+    auto_start: bool (default=True)
+        With auto_start=False, the behaviour won't run until 'start' is called.
+
+
+    """
+
 
     def __init__(self, Teensy_manager, auto_start=True):
 

@@ -1,3 +1,7 @@
+"""
+This script runs the PBAI Fin Test Ned (PFTB) in Prescripted mode.
+"""
+
 __author__ = 'Matthew'
 
 

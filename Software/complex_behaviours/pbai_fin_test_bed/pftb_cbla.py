@@ -1,3 +1,7 @@
+"""
+The extension of PBAI Fin Test Bed (PFTB) that creates the Nodes that enable CBLA behaviours
+"""
+
 __author__ = 'Matthew'
 
 from pftb_prescripted import PFTB_Prescripted as PFTB_Cmd
@@ -10,6 +14,13 @@ import os
 from sklearn import linear_model
 
 class PFTB_CBLA(PFTB_Cmd):
+
+    """CBLA Extension for the PBAI Fin Test Bed (PFTB)
+
+    This class inherits the PFTB_Prescripted and creates the CBLA Nodes that control and sample the Prescripted Nodes
+
+    """
+
     log_dir = 'cbla_log'
     log_header = 'pftb_cbla'
 

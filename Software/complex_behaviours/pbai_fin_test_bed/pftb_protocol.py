@@ -1,3 +1,7 @@
+"""
+The communication protocol that communicates with the PBAI Fin Test Bed.
+"""
+
 __author__ = 'Matthew'
 
 from interactive_system import SystemParameters
@@ -8,6 +12,12 @@ import os
 
 
 class PFTB_Triplet_Protocol(SystemParameters):
+
+    """Communication Protocol for the PBAI Fin Test Bed (PFTB)
+
+    This class inherits the SystemParameters.
+
+    """
 
     MODE_SELF_RUNNING_TEST = 0
     MODE_MANUAL_CONTROL = 1
@@ -36,7 +46,6 @@ class PFTB_Triplet_Protocol(SystemParameters):
 
         #=== Default reply type =====
         if self.reply_type == 0:
-
 
             # === FIN =====
 

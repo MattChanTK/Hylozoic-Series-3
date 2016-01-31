@@ -1,3 +1,8 @@
+"""
+The extension of PBAI Fin Test Bed (PFTB) that creates the Nodes that enable prescripted responsive behaviours
+"""
+
+
 __author__ = 'Matthew'
 
 from pftb_cmd import PFTB_Cmd, CP
@@ -6,6 +11,13 @@ from pftb_prescripted_nodes import *
 from abstract_node import Var, LED_Driver
 
 class PFTB_Prescripted(PFTB_Cmd):
+
+    """Prescripted Behaviour Extension for the PBAI Fin Test Bed (PFTB)
+
+    This class inherits the PFTB_Cmd and creates the InteractiveFin and InteractiveReflex Nodes.
+
+    """
+
     log_dir = 'cbla_log'
     log_header = 'pftb_cbla'
 
