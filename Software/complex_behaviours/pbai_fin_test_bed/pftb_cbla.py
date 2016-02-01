@@ -141,6 +141,10 @@ class PFTB_CBLA(PFTB_Cmd):
 
 class PFTB_CBLA_iFin_Node(cbla.CBLA_Generic_Node):
 
+    """
+    This class extends a CBLA Generic Node and modifies some of its parameters.
+    """
+
     def _get_learner_config(self):
 
         # learner configuration
@@ -164,7 +168,7 @@ class PFTB_iFin_Robot(cbla_engine.Robot):
         super(PFTB_iFin_Robot, self)._set_default_config()
 
         self.config['sample_number'] = 8
-        self.config['sample_period'] = 0.5
+        self.config['sample_period'] = 0.5 #seconds
         self.config['wait_time'] = 0.0  # 4.0
 
         self.config['prev_values_deque_size'] = 30 # 150

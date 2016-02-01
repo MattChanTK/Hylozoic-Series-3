@@ -1,15 +1,19 @@
 .. How to install Hylozoic Series 3 Software
 
-Installing Hylozoic Series 3 Software
+Installing pyHylozoic3 Software
 =====================================
 
 Install Python 3.3+ (Anaconda)
 -----------------------------
+Anaconda can be downloaded here: https://www.continuum.io/downloads. 
+
+**IMPORTANT**: Download the one for Python 3.x only. The one for Python 2.7 would not work!
 
 Download the PBLA software from github
 --------------------------------------
+Git Respository: https://github.com/dkadish/Hylozoic-Series-3
 
-Install the PyHylozoic3 Software
+Install the pyHylozoic3 Software
 --------------------------------
 Under the Software/pyHylozoic3/ directory, run install_pyHylozoic3.bat
 

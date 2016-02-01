@@ -8,6 +8,14 @@ from time import sleep
 
 class InteractiveFin(Abs.Node):
 
+    """
+    Interactive Fin
+    ==================
+    It is a Node that implements the responsive behaviours of the Fins.
+
+    level means actuation level
+    """
+
     MAX_T_ON_REF = 300
 
     def __init__(self, messenger: Messenger, node_name='interactiveFin',
