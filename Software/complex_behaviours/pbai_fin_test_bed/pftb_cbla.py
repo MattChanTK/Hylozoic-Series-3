@@ -118,16 +118,16 @@ class PFTB_CBLA(PFTB_Cmd):
 
                 # Constructing the CBLA Node with Speaker 0
                 iReflex = PFTB_CBLA_iReflex_Node(RobotClass=PFTB_iReflex_Robot,
-                                                messenger=self.messenger, data_logger=self.data_logger,
-                                                cluster_name=teensy_name, node_type='iReflex', node_id=j,
-                                                in_vars=in_vars, out_vars=out_vars,
-                                                s_keys=('reflex_ir',),
-                                                s_ranges=((0, 4095), ),
-                                                s_names=('Reflex IR',),
-                                                m_keys=('target_level', ),
-                                                m_ranges=((40, 255), ),
-                                                m_names=('Reflex Actuator', ),
-                                                )
+                                                 messenger=self.messenger, data_logger=self.data_logger,
+                                                 cluster_name=teensy_name, node_type='iReflex', node_id=j,
+                                                 in_vars=in_vars, out_vars=out_vars,
+                                                 s_keys=('reflex_ir',),
+                                                 s_ranges=((0, 4095), ),
+                                                 s_names=('Reflex IR',),
+                                                 m_keys=('target_level', ),
+                                                 m_ranges=((40, 255), ),
+                                                 m_names=('Reflex Actuator', ),
+                                                 )
 
                 cbla_nodes[iReflex.node_name] = iReflex
 
@@ -149,15 +149,15 @@ class PFTB_CBLA_iFin_Node(cbla.CBLA_Generic_Node):
 
         # learner configuration
         learner_config = dict()
-        learner_config['split_thres'] = 70
-        learner_config['split_thres_growth_rate'] = 1.2
-        learner_config['split_lock_count_thres'] = 20
-        learner_config['split_quality_thres_0'] = 0.3
-        learner_config['split_quality_decay'] = 0.9
-        learner_config['mean_err_thres'] = 0.02
-        learner_config['reward_smoothing'] = 3
-        learner_config['kga_delta'] = 2
-        learner_config['kga_tau'] = 4
+        learner_config['split_thres'] = 16              # Number of exemplars needed to split
+        learner_config['split_thres_growth_rate'] = 1.2 # growth of split_thres after each split
+        learner_config['split_lock_count_thres'] = 3    # number of loop of not splitting after an unsuccessful split
+        learner_config['split_quality_thres_0'] = 0.3   # initial split quality threshold
+        learner_config['split_quality_decay'] = 0.9     # reduction in split quality after every split
+        learner_config['mean_err_thres'] = 0.02         # the mean error required before splitting
+        learner_config['reward_smoothing'] = 1          # number of reward to average when computing action value
+        learner_config['kga_delta'] = 1                 # window size for the KGA
+        learner_config['kga_tau'] = 2                   # tau for the KGA
         learner_config['prediction_model'] = linear_model.LinearRegression()
 
         return learner_config
@@ -167,16 +167,17 @@ class PFTB_iFin_Robot(cbla_engine.Robot):
     def _set_default_config(self):
         super(PFTB_iFin_Robot, self)._set_default_config()
 
-        self.config['sample_number'] = 8
-        self.config['sample_period'] = 0.5 #seconds
-        self.config['wait_time'] = 0.0  # 4.0
+        self.config['sample_number'] = 20 # Number of samples within sample period
+        self.config['sample_period'] = 5.0
+        self.config['wait_time'] = 0.0
 
-        self.config['prev_values_deque_size'] = 30 # 150
-        self.config['prev_rel_values_deque_size'] = 5
+        # Windows Size for calculating Relative Action Value
+        self.config['prev_values_deque_size'] = 10
 
-        self.config['min_m_max_val'] = 0.1
-        self.config['low_action_m_max_val'] = 0.90
-        self.config['low_rel_action_val_thres'] = 0.01 #10.0 #20.0
+        # Sigmoid function: https://www.desmos.com/calculator/nwqfj9bgud
+        self.config['min_m_max_val'] = 0.05 #b
+        self.config['low_action_m_max_val'] = 0.90 #d
+        self.config['low_rel_action_val_thres'] = 7.5 #c
 
 
     def read(self, sample_method=None):
@@ -190,15 +191,15 @@ class PFTB_CBLA_iReflex_Node(cbla.CBLA_Generic_Node):
 
         # learner configuration
         learner_config = dict()
-        learner_config['split_thres'] = 70
-        learner_config['split_thres_growth_rate'] = 1.2
-        learner_config['split_lock_count_thres'] = 20
-        learner_config['split_quality_thres_0'] = 0.3
-        learner_config['split_quality_decay'] = 0.9
-        learner_config['mean_err_thres'] = 0.02
-        learner_config['reward_smoothing'] = 3
-        learner_config['kga_delta'] = 2
-        learner_config['kga_tau'] = 4
+        learner_config['split_thres'] = 100             # Number of exemplars needed to split
+        learner_config['split_thres_growth_rate'] = 1.2 # growth of split_thres after each split
+        learner_config['split_lock_count_thres'] = 20   # number of loop of not splitting after an unsuccessful split
+        learner_config['split_quality_thres_0'] = 0.3   # initial split quality threshold
+        learner_config['split_quality_decay'] = 0.9     # reduction in split quality after every split
+        learner_config['mean_err_thres'] = 0.04         # the mean error required before splitting
+        learner_config['reward_smoothing'] = 10         # number of reward to average when computing action value
+        learner_config['kga_delta'] = 2                 # window size for the KGA
+        learner_config['kga_tau'] = 5                   # tau for the KGA
         learner_config['prediction_model'] = linear_model.LinearRegression()
 
         return learner_config
@@ -208,16 +209,17 @@ class PFTB_iReflex_Robot(cbla_engine.Robot):
     def _set_default_config(self):
         super(PFTB_iReflex_Robot, self)._set_default_config()
 
-        self.config['sample_number'] = 8
+        self.config['sample_number'] = 5 # Number of samples within sample period
         self.config['sample_period'] = 0.5
-        self.config['wait_time'] = 0.0  # 4.0
+        self.config['wait_time'] = 0.0
 
-        self.config['prev_values_deque_size'] = 30 # 150
-        self.config['prev_rel_values_deque_size'] = 5
+        # Windows Size for calculating Relative Action Value
+        self.config['prev_values_deque_size'] = 150
 
-        self.config['min_m_max_val'] = 0.1
-        self.config['low_action_m_max_val'] = 0.90
-        self.config['low_rel_action_val_thres'] = 0.01 #10.0 #20.0
+        # Sigmoid function: https://www.desmos.com/calculator/nwqfj9bgud
+        self.config['min_m_max_val'] = 0.005 #b
+        self.config['low_action_m_max_val'] = 0.99 #d
+        self.config['low_rel_action_val_thres'] = 10.0 #c
 
 
     def read(self, sample_method=None):
