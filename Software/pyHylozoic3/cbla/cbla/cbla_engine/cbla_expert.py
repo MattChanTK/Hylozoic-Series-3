@@ -209,7 +209,6 @@ class Expert():
                 # instantiate the left and right expert
                 child_config = self.config.copy()
                 child_config['split_thres'] = self.split_thres*self.split_thres_growth_rate
-                child_config['split_quality_decay'] = self.split_quality_decay*(2-self.split_quality_decay)
 
                 self.right = Expert(id=(self.expert_id + (1 << self.expert_level)), level=self.expert_level+1,
                                     **child_config)
@@ -243,7 +242,7 @@ class Expert():
                 self.right.kga.errors = copy(self.kga.errors)
                 self.right.training_count = 0
                 self.right.action_count = self.action_count
-                self.right.split_quality_thres = self.region_splitter.split_quality * self.split_quality_decay
+                self.right.split_quality_thres = self.region_splitter.split_quality_thres * self.split_quality_decay
 
                 self.left.train()
                 self.left.mean_error = self.mean_error
@@ -252,7 +251,7 @@ class Expert():
                 self.left.kga.errors = copy(self.kga.errors)
                 self.left.training_count = 0
                 self.left.action_count = self.action_count
-                self.left.split_quality_thres = self.region_splitter.split_quality * self.split_quality_decay
+                self.left.split_quality_thres = self.region_splitter.split_quality_thres * self.split_quality_decay
 
                 # clear the training data at the parent node so they don't get modified accidentally
                 self.training_data.clear()

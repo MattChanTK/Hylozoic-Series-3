@@ -5,10 +5,6 @@ This script runs the PBAI Fin Test Ned (PFTB) in Prescripted mode.
 __author__ = 'Matthew'
 
 
-if __name__ != "__main__":
-
-    quit()
-
 from pftb_cmd import *
 from pftb_prescripted import PFTB_Prescripted
 import pftb_hmi_generic as HMI
@@ -72,4 +68,6 @@ def main():
 
     print("All Teensy threads terminated")
 
-main()
+if __name__ != "__main__":
+
+    main()

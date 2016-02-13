@@ -5,9 +5,6 @@ This script runs the PBAI Fin Test Ned (PFTB) in CBLA mode.
 __author__ = 'Matthew'
 
 
-if __name__ != "__main__":
-
-    quit()
 
 from pftb_cmd import *
 from pftb_cbla import PFTB_CBLA
@@ -72,4 +69,7 @@ def main():
 
     print("All Teensy threads terminated")
 
-main()
+
+if __name__ == "__main__":
+
+    main()

@@ -5,10 +5,6 @@ This script runs the PBAI Fin Test Ned (PFTB) in Manual mode.
 __author__ = 'Matthew'
 
 
-if __name__ != "__main__":
-
-    quit()
-
 from pftb_cmd import *
 import pftb_hmi_generic as HMI
 
@@ -71,4 +67,6 @@ def main():
 
     print("All Teensy threads terminated")
 
-main()
+if __name__ == "__main__":
+
+    main()

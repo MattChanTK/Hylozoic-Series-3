@@ -40,7 +40,7 @@ Teensy Interface are created by instantiating the Teensy Manager. It will search
 
 >>> teensy_manager = interactive_system.TeensyManager(import_config=True, protocols_dict=protocols)
 
-If *import_config* is true, in the directory where the program executes, a directory named *protocol_variables* must be created. In it, two files that list out the input and output variables and their properites respectively must be created. Otherwise, only the default set of input nad output variables would be created. 
+If *import_config* is true, in the directory where the program executes, a directory named *protocol_variables* must be created. In it, two files that list out the input and output variables and their properites respectively must be created. Otherwise, only the default set of input nad output variables would be created. Each pair of file correspond to a particular protocol.
 
 In addition, a dictionary of protocol should also be pased to the *protocol_dict* parameter. Each protocol extends *interactive_system.SystemParameter*. 
 

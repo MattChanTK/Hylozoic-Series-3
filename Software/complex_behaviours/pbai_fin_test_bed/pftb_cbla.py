@@ -4,7 +4,7 @@ The extension of PBAI Fin Test Bed (PFTB) that creates the Nodes that enable CBL
 
 __author__ = 'Matthew'
 
-from pftb_prescripted import PFTB_Prescripted as PFTB_Cmd
+from pftb_prescripted import PFTB_Prescripted
 import cbla
 from cbla import cbla_engine
 from abstract_node import DataLogger
@@ -13,7 +13,7 @@ from collections import OrderedDict
 import os
 from sklearn import linear_model
 
-class PFTB_CBLA(PFTB_Cmd):
+class PFTB_CBLA(PFTB_Prescripted):
 
     """CBLA Extension for the PBAI Fin Test Bed (PFTB)
 
@@ -54,7 +54,8 @@ class PFTB_CBLA(PFTB_Cmd):
         # create the data_logger
         self.data_logger = DataLogger(log_dir=self.log_dir, log_header='%s_%s' % (self.log_header, mode),
                                       log_path=latest_log_dir,
-                                      save_freq=60.0, sleep_time=0.20, mode=mode)
+                                      save_freq=2.0, sleep_time=0.20, mode=mode)
+
 
         super(PFTB_CBLA, self).__init__(Teensy_manager=Teensy_manager, auto_start=auto_start)
 
@@ -116,7 +117,7 @@ class PFTB_CBLA(PFTB_Cmd):
                 out_vars = OrderedDict()
                 out_vars['target_level'] = self.node_list['%s.f%d.iReflex' % (teensy_name, j)].in_var['target_level']
 
-                # Constructing the CBLA Node with Speaker 0
+                # Constructing the CBLA Reflex Node
                 iReflex = PFTB_CBLA_iReflex_Node(RobotClass=PFTB_iReflex_Robot,
                                                  messenger=self.messenger, data_logger=self.data_logger,
                                                  cluster_name=teensy_name, node_type='iReflex', node_id=j,
@@ -138,6 +139,22 @@ class PFTB_CBLA(PFTB_Cmd):
 
         self.node_list.update(cbla_nodes)
 
+    def start_nodes(self):
+
+        super(PFTB_CBLA, self).start_nodes()
+
+        # start the Data Collector
+        self.data_logger.start()
+        print('Data Collector initialized.')
+
+    def terminate(self):
+
+        super(PFTB_CBLA, self).terminate()
+         # terminating the data_collection thread
+        self.data_logger.end_data_collection()
+        self.data_logger.join()
+        print("Data Logger is terminated.")
+
 
 class PFTB_CBLA_iFin_Node(cbla.CBLA_Generic_Node):
 
@@ -153,7 +170,7 @@ class PFTB_CBLA_iFin_Node(cbla.CBLA_Generic_Node):
         learner_config['split_thres_growth_rate'] = 1.2 # growth of split_thres after each split
         learner_config['split_lock_count_thres'] = 3    # number of loop of not splitting after an unsuccessful split
         learner_config['split_quality_thres_0'] = 0.3   # initial split quality threshold
-        learner_config['split_quality_decay'] = 0.9     # reduction in split quality after every split
+        learner_config['split_quality_decay'] = 0.9     # reduction in split quality threshold after every split
         learner_config['mean_err_thres'] = 0.02         # the mean error required before splitting
         learner_config['reward_smoothing'] = 1          # number of reward to average when computing action value
         learner_config['kga_delta'] = 1                 # window size for the KGA
@@ -220,6 +237,8 @@ class PFTB_iReflex_Robot(cbla_engine.Robot):
         self.config['min_m_max_val'] = 0.005 #b
         self.config['low_action_m_max_val'] = 0.99 #d
         self.config['low_rel_action_val_thres'] = 10.0 #c
+
+
 
 
     def read(self, sample_method=None):
