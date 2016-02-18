@@ -274,9 +274,9 @@ void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
   static int song_id = 1;
 
   for (uint8_t j = 0; j < WashingtonSoundNode::NUM_SOUND; j++) {
-    Serial.println(sound_var[j].analog_state[0]);
+    //Serial.println(sound_var[j].analog_state[0]);
     if (sound_var[j].analog_state[0] > 1200) {
-      Serial.println(song_id);
+      //Serial.println(song_id);
 
       sound[j].set_output_level(0, 100);
       sound[j].play_sound(song_id,  10, 2, 0, true);
@@ -308,8 +308,38 @@ void WashingtonSoundNode::test_behaviour(const uint32_t &curr_time) {
 
 //---- self_running_behaviour ----
 void WashingtonSoundNode::self_running_behaviour(const uint32_t &curr_time) {
+    static int song_id = 1;
+/* THIS CODE IS TOTALLY NON-FUNCTIONAL ANYMORE*/
+  for (uint8_t j = 0; j < WashingtonSoundNode::NUM_SOUND; j++) {
   // low_level_control_behaviour(curr_time);
-  test_behaviour(curr_time);
+    if (sound_var[j].analog_state[0] > 1200) { //TODO Change to reflect adaptive thresholding.
+      //Serial.println(song_id);
+
+      sound[j].set_output_level(0, 100);
+      sound[j].play_sound(song_id,  10, 2, 0, true);
+      song_id += 1;
+      if (song_id > 4) {
+        song_id = 1;
+}
+
+    }
+    else {
+      sound[j].set_output_level(0, 0);
+//---- indicator LED -----
+    }
+
+    if (sound_var[j].analog_state[1] > 1200) {
+      sound[j].set_output_level(1, 100);
+      sound[j].play_sound(2, 10, 1, 0, true);
+    }
+    else {
+
+      sound[j].set_output_level(1, 0);
+
+    }
+
+
+  }
 }
 
 //---- indicator LED -----

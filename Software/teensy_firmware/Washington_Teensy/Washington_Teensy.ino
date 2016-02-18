@@ -59,12 +59,14 @@ void setup() {
 	//msg_recv_timer.begin(check_msg, 500); 
 	
 	Serial.begin(9600);
-	Serial.print("Setup Done");
-
   delay(1000);
+	Serial.println("Setup Done");
+
   
   sCmd.addCommand("VER",    cmdVersion);          // Prints version
   sCmd.addCommand("BLINK",    cmdBlink);          // Blinks lights
+  sCmd.addCommand("PING",    cmdPing);            // Pings the Sound Modules
+  sCmd.addCommand("OPMODE",    cmdOperationMode); // Prints the current operation mode
 }
 
 
@@ -153,18 +155,59 @@ void cmdVersion(){
 }
 
 void cmdBlink(){
-  // THESE ARE NOT QUITE RIGHT. Figure out how to do them properly.  
   Serial.println("Blinking...");
   for( int i=0; i<10; i++ ){
+    #ifndef SOUND_NODE
     //TODO Get back blink functionality
     /*teensy_unit.light0.set_output_level(0, 255);
     teensy_unit.light1.set_output_level(2, 0);
     teensy_unit.light2.set_output_level(5, 255);
-    delay(100);
+    delay(25);
     teensy_unit.light0.set_output_level(0, 0);
     teensy_unit.light1.set_output_level(2, 255);
-    teensy_unit.light2.set_output_level(5, 0);*/
-    delay(100);
-  }
+    teensy_unit.light2.set_output_level(5, 0);
+    delay(25);*/
+    #else 
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(25);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(25);
+    #endif
+  }   
+  #ifndef SOUND_NODE
+    teensy_unit.light0.set_output_level(0, 0);
+    teensy_unit.light1.set_output_level(2, 0);
+    teensy_unit.light2.set_output_level(5, 0);
+    delay(25);
+  #else 
+    digitalWrite(LED_BUILTIN, LOW);
+  #endif
   Serial.println("Done Blinking...");
+}
+
+void cmdPing(){
+  Serial.println("Pinging Sound Modules...");
+  for( int i=0; i<6; i++ ){
+    teensy_unit.sound[i].check_alive();
+  }
+  Serial.println("Done Pinging...");
+}
+void cmdOperationMode(){
+  Serial.print("Current operation mode: ");
+    switch (teensy_unit.operation_mode){
+      case 0: 
+        Serial.println("self-running test");
+        break;
+      case 1:
+        if (loop_since_last_msg > keep_alive_thres){
+          Serial.println("inactive mode");
+        }
+        else{
+          Serial.println("manual mode");
+        }
+        break;
+      default:
+        Serial.println("inactive mode");
+        break;
+  }
 }

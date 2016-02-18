@@ -1,3 +1,0 @@
-cd complex_behaviours
-cd prescripted_behaviour
-python manual_control.py
