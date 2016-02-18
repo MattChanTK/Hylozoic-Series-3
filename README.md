@@ -21,7 +21,7 @@ The electronics that interface with the sensors and actuators were mostly custom
 
 The [firmware](Software/teensy_firmware) that runs on the Teensy microcontroller, the [Python-based software framework](Software/pyHylozoic3) (pyHylozoic3), and [installation-specific behaviours](Software/complex_behaviours) can be found in the [Software](Software) directory. In addition, some of the necessary [libraries](Software/_libraries), and some [basic demo codes](Software/basic_behaviours) can also be in the directory.
 
-In addition to the [communcation framework](Software\pyHylozoic3\interactive_system\interactive_system), the pyHylozoic3 module includes an implemenation of the [CBLA Engine](Software\pyHylozoic3\cbla\cbla\cbla_engine), and [Abstract Node system](Software\pyHylozoic3\abstract_node\abstract_node) that supports the deployments of a network of multiple [CBLA Nodes](Software\pyHylozoic3\cbla\cbla).
+In addition to the [communcation framework](Software/pyHylozoic3/interactive_system/interactive_system), the pyHylozoic3 module includes an implemenation of the [CBLA Engine](Software/pyHylozoic3/cbla/cbla/cbla_engine), and [Abstract Node system](Software/pyHylozoic3/abstract_node/abstract_node) that supports the deployments of a network of multiple [CBLA Nodes](Software/pyHylozoic3/cbla/cbla).
 
 
 ## Contributors
